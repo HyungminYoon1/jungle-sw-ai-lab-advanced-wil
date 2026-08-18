@@ -1,7 +1,7 @@
 # SW-AI랩 심화과정 1기 학습 계획서
 
 > 상태: Superseded — 초기 계획 및 변경 이력 보존용  
-> 현재 공식 계획: [AgentOps Lab 12주 학습 및 구현 계획](../agentops-lab-12-week-plan.md)  
+> 현재 공식 계획: [SW AI Lab 심화과정 12주 학습 계획](../advanced-track-12-week-plan.md)
 > 참고: 현재 일정·범위·완료 기준은 공식 계획을 따른다.
 
 ## 1. 기본 정보

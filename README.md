@@ -1,74 +1,102 @@
 # Jungle SW AI Lab Advanced WIL
 
-> 상태: Active  
-> 시작일: 2026-08-18  
-> 전체 기간: 기술 심화 8주 + 취업 심화 4주  
-> 현재 단계: Week 1 Baseline
+> 상태: Active
+> 시작일: 2026-08-18
+> 전체 기간: 기술 심화 8주 + 취업 심화 4주
+> 현재 단계: Week 1 — Git·Java 객체지향·JUnit
 
-이 저장소는 AgentOps Lab을 실제 운영 가능한 Production Pilot로 발전시키는 12주 동안의 학습, 구현 계획, 판단과 검증 근거를 공개한다. 완성 기능만 나열하지 않고 무엇을 학습했고 어떤 가설을 제품에 적용했으며 Test·실험·운영 결과로 어떻게 확인했는지를 기록한다.
-
-AgentOps Lab 제품 Source와 시스템 설계는 별도 제품 저장소가 관리한다. 이 저장소는 제품 Code를 복제하지 않고 주차별 계획, WIL, Learning Note, 구현 Report와 공개 기술 콘텐츠를 관리한다.
+이 저장소는 SW AI Lab 심화과정에서 선택한 기술을 학습하고, 이해가 바뀐 과정과 재현 가능한 근거를 주차별로 기록한다. 목표는 큰 제품을 기간 안에 완성하는 것이 아니라 AI/AX·Java Backend 직무에 필요한 개념을 직접 설명하고, 작은 실험과 Test로 검증하며, 필요한 범위만 서비스에 적용할 수 있는 역량을 만드는 것이다.
 
 ## 12주 목표
 
-- 실제 LLM, PostgreSQL과 통제된 Side Effect를 사용하는 R1 Production Pilot 완성
-- Human·Agent·Service의 업무, 권한, 승인, 실행과 Audit를 다루는 공통 Kernel 검증
-- AI Workflow Plan의 시각적 검토, Revision, Diff와 Approval 구현
-- 캐릭터 회사를 첫 Reference Application으로 사용하고 두 번째 업무로 범용성 확인
-- Java·Spring·Database·Web·Security·AI Agent 개념을 제품 구현과 운영 근거로 학습
-- 매주 WIL과 재현 가능한 기술 콘텐츠로 판단, 실패와 한계를 공개
+- Java 객체지향, Spring Backend와 PostgreSQL의 핵심 동작을 설명하고 수정한다.
+- HTTP·Browser·인증·인가와 주요 Web Security 경계를 재현 실험으로 확인한다.
+- 단위·통합·E2E Test의 책임을 구분하고 실패를 재현하는 Test를 작성한다.
+- LLM Structured Output, 평가와 Guardrail을 고정된 입력과 실패 Case로 검증한다.
+- Git, Docker, CI, Secret 분리와 최소 운영 관측을 실제 학습 과정에 적용한다.
+- 매주 WIL을 게시하고 학습 선택, 실패, 한계와 다음 질문을 공개 근거로 남긴다.
+- 기술 심화 이후에는 학습 근거를 이력서·Portfolio·면접 답변으로 전환한다.
+
+## 공통 실습 주제
+
+### AI Helpdesk Learning Lab
+
+사용자가 문의를 등록하면 AI가 요약·카테고리·우선순위를 제안하고, 담당자가 제안을 확인한 뒤 상태를 변경하는 작은 Helpdesk를 공통 실습 대상으로 사용한다.
+
+    로그인 → 문의 등록 → AI 분류 제안 → 담당자 확인 → 상태 변경 → 이력 조회
+
+이 Lab은 완성해야 할 Production 제품이 아니다. 한 주의 학습 질문을 관찰할 수 있을 때만 최소 기능을 추가하며, 개념에 따라 독립된 재현 실험이 더 적절하면 작은 예제로 분리한다.
+
+### 초기 범위
+
+- 핵심 개념: User, Ticket, Comment와 AI Suggestion
+- 인증: Session 방식 한 가지
+- AI: 요약·카테고리·우선순위 Structured Output와 평가
+- UI: 핵심 흐름을 확인할 수 있는 최소 Browser 화면
+- 운영: 한 개 실행 환경, Docker Compose와 GitHub Actions
+
+### 초기 제외 범위
+
+- 다중 Organization, 범용 Workflow Builder와 승인 Engine
+- Multi-Agent, RAG, 외부 Side Effect Connector와 격리 Runner
+- Kafka, GraphQL, Database 복제·Sharding
+- Kubernetes, Terraform, Auto Scaling과 무중단 배포
+- LoRA, VLM과 대규모 Model 비교
+
+제외한 항목은 실패가 아니라 선택 결과다. 핵심 학습이 완료되고 실제 필요나 측정 근거가 생길 때만 다시 검토한다.
 
 ## 현재 진행 상황
 
-| 주차 | Release | 핵심 Milestone | 상태 | 공개 기록 |
-|---:|---|---|---|---|
-| 1 | R1 | 제품 계약, Framework 결정과 Walking Skeleton | Planned | [Week 1](./week1/README.md) |
-| 2 | R1 | Work·Identity·Workflow Planning Kernel | Not Started | 주차 시작 시 추가 |
-| 3 | R1 | Workflow Review·Approval과 Agent 실행 | Not Started | 주차 시작 시 추가 |
-| 4 | R1 | 캐릭터 Reference Application Vertical Slice | Not Started | 주차 시작 시 추가 |
-| 5 | R1 | Knowledge·평가·Security와 Pilot Feedback | Not Started | 주차 시작 시 추가 |
-| 6 | R1 | Production Pilot 배포와 운영 검증 | Not Started | 주차 시작 시 추가 |
-| 7 | R2 | Director 위임과 저위험 Approver Actor | Not Started | 주차 시작 시 추가 |
-| 8 | R2 | Human·Agent 혼합 팀과 두 번째 업무 | Not Started | 주차 시작 시 추가 |
-| 9 | R3 | Knowledge 수명주기와 Connector | Not Started | 주차 시작 시 추가 |
-| 10 | R3 | 격리 Coding Runner 기반 | Not Started | 주차 시작 시 추가 |
-| 11 | R3 | Runner 흐름과 운영 복원력 | Not Started | 주차 시작 시 추가 |
-| 12 | R3 | 제품 안정화와 최종 근거 정리 | Not Started | 주차 시작 시 추가 |
+| 주차 | 핵심 학습 | 상태 | 공개 기록 |
+|---:|---|---|---|
+| 1 | Git·Java 객체지향·JUnit | Planned | [Week 1](./week1/README.md) |
+| 2 | HTTP·REST·Spring MVC·Layered Architecture | Not Started | 주차 시작 시 추가 |
+| 3 | PostgreSQL·Transaction·Lock·Index | Not Started | 주차 시작 시 추가 |
+| 4 | 인증·인가·Session·Web Security | Not Started | 주차 시작 시 추가 |
+| 5 | Browser JavaScript·Frontend·E2E·품질 | Not Started | 주차 시작 시 추가 |
+| 6 | LLM Structured Output·평가·Guardrail | Not Started | 주차 시작 시 추가 |
+| 7 | Docker·CI·관측·Linux Process | Not Started | 주차 시작 시 추가 |
+| 8 | 최소 Cloud·HTTPS·통합 복습 | Not Started | 주차 시작 시 추가 |
+| 9 | 취업 Baseline·Portfolio 근거 정리 | Not Started | 주차 시작 시 추가 |
+| 10 | 맞춤 지원·기술 면접 보완 | Not Started | 주차 시작 시 추가 |
+| 11 | 면접·과제 대응과 취약 개념 재학습 | Not Started | 주차 시작 시 추가 |
+| 12 | 취업 결과 정리와 최종 회고 | Not Started | 주차 시작 시 추가 |
 
-상태는 계획만 존재하는 `Planned`, 진행 중인 `In Progress`, 완료 조건을 통과한 `Completed`, 일부만 검증한 `Partially Completed`와 진행 불가능한 `Blocked`로 구분한다.
+상태는 `Planned`, `In Progress`, `Completed`, `Partially Completed`와 `Blocked`로 구분한다. 많은 코드를 작성했더라도 설명·재현·검증 근거가 없으면 완료로 표시하지 않는다.
 
 ## 문서 안내
 
-- [12주 총괄 계획](./plan/agentops-lab-12-week-plan.md): 목표, Release 순서, Gate와 성공 기준
-- [주차별 Roadmap](./plan/weekly-roadmap.md): 각 주의 학습·구현·검증 범위와 완료 조건
-- [학습 및 기술 콘텐츠 계획](./plan/learning-and-content-plan.md): 학습 방식, WIL·기술 블로그와 공개 근거 원칙
-- [계획 문서 안내](./plan/README.md): 문서 권한, Archive와 제품 저장소 경계
-- [주차별 산출물 Template](./templates/README.md): 계획, WIL, 구현·실험 Report와 기술 글 작성 방법
+- [12주 총괄 학습 계획](./plan/advanced-track-12-week-plan.md): 목표, 범위, 운영 원칙과 성공 기준
+- [주차별 Roadmap](./plan/weekly-roadmap.md): 8주 기술 학습과 4주 취업 심화 순서
+- [학습 및 기술 콘텐츠 계획](./plan/learning-and-content-plan.md): 학습 방법, 증거, WIL과 AI 활용 원칙
+- [AgentOps Lab 보류 안내](./plan/agentops-lab-12-week-plan.md): 과정 이후 별도로 검토할 장기 프로젝트
+- [계획 문서 안내](./plan/README.md): 현재 기준 문서와 Archive
+- [산출물 Template](./templates/README.md): Weekly Plan, Lab Report, Learning Note와 WIL 작성 방법
 
-## 기록 Workflow
+## 학습 기록 Workflow
 
-1. 주차 시작 시 `weekly-plan`으로 목표, 학습 적용 방식과 완료 조건을 Baseline으로 확정한다.
-2. 제품 Issue와 가장 작은 Vertical Slice를 구현하며 실패 Case와 검증 자료를 함께 수집한다.
-3. 중요한 선택은 Decision Log, 비교·측정은 Experiment Report에 기록한다.
-4. 실제 결과를 Implementation Report와 WIL에 남기고 계획과 달라진 범위를 구분한다.
-5. 다른 개발자가 재사용할 수 있는 문제 해결 과정은 기술 블로그로 재구성한다.
+1. 주차 시작 시 핵심 질문 한 가지와 선택한 공지 학습 주제를 정한다.
+2. 개념을 학습하고 예상 결과를 먼저 적은 뒤 가장 작은 실패·비교 실험을 수행한다.
+3. 관찰 결과를 설명하고 필요할 때만 Helpdesk Lab에 최소 범위로 적용한다.
+4. Test, Trace, Query Plan, Header, Metric 또는 직접 설명으로 이해를 검증한다.
+5. 실패와 범위 변경을 숨기지 않고 Lab Report·Learning Note와 WIL에 남긴다.
 
-계획은 구현 중 새로 확인한 근거에 따라 바꿀 수 있지만 Baseline을 조용히 덮어쓰지 않는다. 변경 날짜, 이유, Product Gate 영향과 뒤로 이동한 범위를 해당 주차 계획에 기록한다.
+계획 변경은 기존 기준선을 조용히 덮어쓰지 않는다. 변경 날짜, 이유, 학습 질문과 다음 주 영향이 남도록 기록한다.
 
 ## 저장소 구조
 
     .
-    ├── plan/        # 총괄 계획, 주차별 Roadmap과 학습·콘텐츠 원칙
-    ├── templates/   # 주차별 공개 산출물 양식
-    ├── week1/       # 현재 주차의 계획과 이후 생성되는 검증 근거
-    └── weekN/       # 각 주차가 시작될 때 실제 산출물과 함께 추가
+    ├── plan/        # 12주 총괄 계획, 주차별 Roadmap과 학습 원칙
+    ├── templates/   # 공개 학습 산출물 양식
+    ├── week1/       # 현재 주차 계획과 이후 생성되는 학습 근거
+    └── weekN/       # 해당 주차에 실제 산출물이 생길 때 추가
 
-빈 문서나 완료되지 않은 기능을 형식적으로 공개하지 않는다. 해당 주차에 실제 산출물이 생길 때 문서와 Link를 추가한다.
+실습 Source는 별도 Learning Lab 저장소를 만든 뒤 관리할 예정이다. 이 저장소에는 주차별 계획, 실험 결과, Learning Note, WIL과 공개 가능한 근거를 남긴다.
 
-## 제품 저장소와 공개 경계
+## 공개 경계
 
-- 제품 요구사항과 Architecture는 별도 AgentOps Lab 제품 저장소의 기준 문서가 관리한다.
-- 두 저장소는 독립적으로 이동·공개될 수 있으므로 서로의 로컬 절대·상대 경로를 참조하지 않는다.
-- 과정 전에 수행한 완전 자동화 Prototype은 12주 구현·학습 성과에 포함하지 않는다.
 - Secret, Credential, 개인정보, 비공개 대화, 내부 URL과 로컬 경로를 공개하지 않는다.
-- 성능·비용·품질 개선은 비교 가능한 측정 근거가 있을 때만 주장한다.
+- 과정 전 자동화 Prototype과 이번 과정에서 직접 학습·수정·검증한 결과를 구분한다.
+- 측정하지 않은 성능·비용·품질 개선을 주장하지 않는다.
+- AI가 만든 결과를 그대로 학습 성과로 표시하지 않고 직접 검토·설명한 범위를 기록한다.
+- 보류한 AgentOps Lab은 현재 심화과정의 완료 조건이나 주차 일정에 포함하지 않는다.
