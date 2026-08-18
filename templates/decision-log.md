@@ -3,12 +3,12 @@
 > 상태: Proposed | Accepted | Superseded | Rejected  
 > 결정일: <YYYY-MM-DD>  
 > 결정 책임자: <역할 또는 이름>  
-> 관련 Issue·PR: <Link>  
+> 관련 Weekly Plan·Lab·Issue: <Link>
 > 대체 문서: <Superseded인 경우 Link>
 
 ## Context
 
-<어떤 사용자 문제, 기술 제약 또는 운영 위험 때문에 결정이 필요한지 설명한다.>
+<어떤 학습 질문, 기술 제약, Scope 또는 운영 위험 때문에 결정이 필요한지 설명한다.>
 
 ## Decision Drivers
 
@@ -53,14 +53,13 @@
 
 | 영역 | 영향 | 대응 |
 |---|---|---|
-| Architecture·Module 경계 | <영향> | <대응> |
-| API·호환성 | <영향> | <대응> |
-| Data·Migration | <영향> | <대응> |
-| 데이터 보존·삭제 | <영향> | <대응> |
-| 접근 통제·권한 | <영향> | <대응> |
+| 학습 질문·범위 | <영향> | <대응> |
+| Source·Module | <영향> | <대응> |
+| API·Data | <영향> | <대응> |
+| Test·재현성 | <영향> | <대응> |
 | Security·Privacy | <영향> | <대응> |
-| 운영·관측·복구 | <영향> | <대응> |
-| 비용·성능 | <영향> | <대응> |
+| 운영·비용 | <영향> | <대응> |
+| WIL·공개 근거 | <영향> | <대응> |
 
 ## Affected Files
 
@@ -85,6 +84,6 @@
 ## Follow-up Review
 
 - 재검토 조건: <Version 변경, 사용량, 오류율, 일정 등>
-- 재검토 시점: <날짜 또는 Release>
+- 재검토 시점: <날짜, 주차 또는 선행 조건>
 - 후속 작업: <Issue Link>
 - 검토 Note: <결정 후 확인할 사항>

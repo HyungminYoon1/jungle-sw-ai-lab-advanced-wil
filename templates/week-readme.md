@@ -1,81 +1,86 @@
 # Week <주차> — <주간 제목>
 
-> 기간: <YYYY-MM-DD ~ YYYY-MM-DD>  
-> 상태: Planned | In Progress | Completed | Partially Completed | Blocked  
-> 대상 Release: <R1 | R2 | R3 | 후속 Release>  
-> Product Gate: <이번 주가 통과해야 하는 Gate>
+> 기간: <YYYY-MM-DD ~ YYYY-MM-DD>
+> 상태: Planned | In Progress | Completed | Partially Completed | Blocked
+> 핵심 질문: <이번 주가 답하려는 질문 한 가지>
 
-이 문서는 Week <주차>의 목표, 실제 결과와 공개 산출물로 연결되는 Index다. 세부 계획은 weekly-plan.md, 구현 근거는 implementation-report.md, 학습 과정과 회고는 wil.md에서 확인할 수 있다.
+이 문서는 Week <주차>의 질문, 선택 범위, 실제 결과와 공개 산출물을 연결하는 Index다. 계획은 `weekly-plan.md`, 실행 관찰은 Lab Report·Learning Note, 한 주의 이해 변화는 `wil.md`에서 확인한다.
 
 ## 한눈에 보기
 
-<처음 방문한 독자가 이번 주에 해결한 문제와 결과를 3~5문장으로 이해할 수 있도록 작성한다. 계획 단계에는 목표를, 종료 후에는 실제 결과와 한계를 함께 표시한다.>
+- 시작할 때의 이해: <한두 문장>
+- 가장 중요한 실험: <한두 문장>
+- 현재 결론: <결과가 생긴 뒤 작성>
+- 남은 질문: <결과가 생긴 뒤 작성>
 
-## 핵심 질문
+## 선택 범위
 
-> <제품과 기술 관점에서 이번 주가 답하려는 질문 한 가지>
+### 핵심 학습
+
+- <반드시 설명·재현할 개념>
+
+### 선택 적용·독립 Spike
+
+- <Helpdesk 적용 또는 별도 실험>
+
+### 비범위
+
+- <이번 주 하지 않는 항목과 이유>
 
 ## 상태
 
-| 영역 | 목표 | 현재 결과 | 상태 | 근거 |
-|---|---|---|---|---|
-| 제품 | <사용자 가치> | <실제 결과> | Planned | <Link> |
-| 학습 | <핵심 개념> | <검증 결과> | Planned | <Link> |
-| Test·운영 | <품질·운영 목표> | <실제 결과> | Planned | <Link> |
-| 기술 콘텐츠 | <WIL·블로그 목표> | <게시 상태> | Planned | <Link> |
+| 학습 주제 | 계획 상태 | 실제 상태 | 근거 |
+|---|---|---|---|
+| <주제> | 핵심 학습 | Planned | <Link> |
+
+`Completed`는 설명·재현·검증 근거가 있을 때만 사용한다.
 
 ## 공개 산출물
 
 ### 필수
 
-- [주간 학습 및 구현 계획](./weekly-plan.md)
-- [구현 Report](./implementation-report.md)
+- [주간 학습 계획](./weekly-plan.md)
 - [WIL](./wil.md)
-- [공개 산출물 Checklist](./public-release-checklist.md)
 
-### 학습·검증
+### 학습·실험
 
-- <Learning Note Link와 한 줄 설명>
-- <Decision Log Link와 한 줄 설명>
-- <Experiment Report Link와 한 줄 설명>
-- <Dataset·Test·Diagram Link와 한 줄 설명>
+- [Lab Report — <주제>](./lab-<topic>.md)
+- [Learning Note — <주제>](./learning-<topic>.md)
 
-### 기술 블로그
+실제 파일이 없으면 Placeholder Link를 남기지 않는다.
 
-- 제목: <가제 또는 게시 제목>
-- 상태: Note | Draft | Review | Published
-- Link: <문서 또는 게시물>
-- 공개 근거: <Code·Test·Dataset·Metric·Trace>
+### 선택
 
-### 취업 심화
+- Experiment Report
+- Decision Log
+- 기술 블로그
+- 취업 활동 요약
 
-- <9~12주차에만 Employment Summary Link>
+## Learning Evidence Gate 결과
 
-## Product Gate 결과
-
-| 완료 조건 | 결과 | 근거 |
+| 확인 항목 | 결과 | 근거 |
 |---|---|---|
-| <Acceptance Criteria 또는 Release Gate> | Pass | <Link> |
+| 핵심 원리를 설명할 수 있음 | Pass | <Link> |
+| 정상·실패를 직접 재현함 | Pass | <Link> |
+| 예상과 관찰의 차이를 해석함 | Pass | <Link> |
+| AI 도움과 직접 검증 범위를 구분함 | Pass | <Link> |
 
-Gate를 통과하지 못했다면 실패 원인, 사용자 영향과 다음 Release를 숨기지 않고 표시한다.
+통과하지 못한 항목은 숨기지 않고 `Partially Completed` 또는 `Blocked`로 표시한다.
 
 ## 계획 대비 변경
 
-- 계획대로 진행한 항목: <내용>
-- 변경한 항목: <내용과 이유>
-- 뒤로 이동한 항목: <Release와 선행 조건>
-- 새로 발견한 위험: <내용>
+| 변경 | 이유 | 학습 영향 | 기록 |
+|---|---|---|---|
+| <변경 내용> | <이유> | <핵심 질문·일정 영향> | <Link> |
 
-세부 변경 이력은 [주간 계획](./weekly-plan.md)의 계획 변경 기록을 따른다.
+## 알려진 한계와 남은 질문
 
-## 알려진 한계
+- 설명이 불완전한 부분:
+- 재현하지 못한 조건:
+- 다음에 다시 볼 선행 조건:
 
-- <현재 사용할 수 없는 기능 또는 검증하지 못한 조건>
-- <사용자 영향과 임시 대응>
-- <해결 목표 Release>
+## 다음 주 연결
 
-## 주차 이동
-
-- 이전 주차: <Link>
-- 다음 주차: <Link>
-- 전체 계획: <Repository-relative Link>
+- 이어갈 질문:
+- 의도적으로 남겨 둔 비범위:
+- 다음 주 시작 전에 확인할 것:

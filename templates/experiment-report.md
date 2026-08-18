@@ -3,11 +3,11 @@
 > 상태: Planned | Running | Completed | Invalidated  
 > 실행일: <YYYY-MM-DD>  
 > 관련 학습 질문: <Link>  
-> 관련 Decision·Feature: <Link>
+> 관련 Decision·Lab: <Link>
 
 ## 요약
 
-<실험 목적, 가장 중요한 결과와 제품 결정에 미친 영향을 3~5문장으로 작성한다.>
+<실험 목적, 가장 중요한 결과와 학습·기술 선택에 미친 영향을 3~5문장으로 작성한다.>
 
 ## 배경
 
@@ -66,7 +66,7 @@
 
 - 가설 판정: Supported | Rejected | Inconclusive
 - 판정 근거: <내용>
-- 제품에 적용할 결정: <내용>
+- Lab에 적용하거나 학습에 반영할 결정: <내용>
 - 적용하지 않을 결론: <과도한 일반화를 방지하는 설명>
 
 ## 유효성의 한계
