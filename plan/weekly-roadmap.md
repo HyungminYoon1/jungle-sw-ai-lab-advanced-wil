@@ -15,26 +15,32 @@
 - 서비스 통합 비용이 개념 학습보다 커지면 독립 Spike로 전환한다.
 - 매주 최소 한 개의 설명·Test·Trace·Query Plan·Metric 또는 평가 결과를 남긴다.
 - 미완료 주제를 다음 주에 무조건 누적하지 않고 중요도와 선행 조건을 다시 판단한다.
+- 이미 사용하는 도구는 운영 Baseline으로 짧게 진단하고, 확인된 공백만 보충한다.
 - 기술 심화 8주 동안 AgentOps Lab 구현을 시작하지 않는다.
 
 ## 학습 항목 선택 절차
 
 1. 이번 주 직무 역량에서 가장 중요한 질문을 정한다.
-2. 공지의 관련 키워드를 `핵심 학습`, `선택 적용`, `독립 Spike`, `조건부 후속`, `선정 제외`로 구분한다.
+2. 공지의 관련 키워드를 `핵심 학습`, `운영 Baseline`, `선택 적용`, `독립 Spike`, `조건부 후속`, `선정 제외`로 구분한다.
 3. 실험 전에 예상 결과와 실패 조건을 적는다.
 4. 관찰 결과를 설명한 뒤 필요한 경우에만 Helpdesk Lab에 적용한다.
 5. 주말에 설명 가능성, 실패 원인과 다음 질문을 WIL로 정리한다.
 
-## 1주차 — Git·Java 객체지향·JUnit
+## 1주차 — Java 객체지향·JUnit (Git 운영 Baseline)
 
 ### 핵심 질문
 
 > Framework 없이 객체가 자신의 상태와 규칙을 지키게 만들고, 그 계약을 Test로 설명할 수 있는가?
 
+### Git 운영 Baseline
+
+- Git은 별도 학습 Block을 배정하지 않고 모든 문서·Source 변경에 계속 적용한다.
+- Week 1 시작 시 20~30분 자가진단으로 Working Tree·Index·HEAD를 구분하고 `status`, `diff`, `diff --staged`의 결과를 설명한다.
+- 실제 변경을 검토 가능한 작은 Commit으로 나누고, 되돌릴 대상이 Working Tree·Index·공개된 Commit 중 어디에 있는지 먼저 판단한다.
+- Merge·Rebase·Conflict는 자가진단에서 공백이 확인되거나 실제 협업 상황이 생길 때만 안전한 실험 Repository에서 보충한다.
+
 ### 핵심 학습
 
-- Git Working Tree·Staging Area·Commit과 `status`·`diff`·`log`
-- 작은 Commit, Branch와 Commit Message Convention
 - Java Class·Object, 불변 값, Collection과 Exception
 - Encapsulation, Abstraction, Polymorphism과 Composition
 - SOLID를 규칙 암기가 아니라 변경 영향으로 판단하는 방법
@@ -42,8 +48,6 @@
 
 ### 실험과 적용
 
-- 안전한 Branch에서 Staging·Unstage·Restore·Revert 흐름 관찰
-- 같은 Conflict를 Merge와 Rebase에서 재현하고 History 비교
 - Framework 없는 Ticket 상태 전이와 담당자 할당 규칙 구현
 - 외부에서 상태를 직접 변경할 수 있는 코드와 객체가 규칙을 지키는 코드 비교
 - 분기문 기반 Policy를 작은 Strategy 또는 Composition으로 바꾸고 변경 범위 비교
@@ -51,15 +55,17 @@
 
 ### 완료 근거
 
-- Git 3단계 영역과 안전한 되돌리기 방식을 설명하는 Learning Note
 - Ticket Domain Unit Test와 실패 Case
 - 상속·Composition 또는 분기·다형성 비교 Lab Report
 - Week 1 WIL
+
+Git은 핵심 학습 완료 조건과 분리한다. 운영 Baseline의 개념·안전 경계와 자가진단 상태는 Week 1 Learning Note에 남기되, 실행하지 않은 항목은 완료로 표시하지 않는다.
 
 ### 이번 주 비범위
 
 - Spring Boot, Database, Browser UI와 LLM 연동
 - Design Pattern 개수 채우기
+- Git 명령 전반을 다시 수강하는 Tutorial과 필수 Merge·Rebase 비교 실험
 - AgentOps Lab Domain 재사용
 
 ## 2주차 — HTTP·REST·Spring 요청 흐름

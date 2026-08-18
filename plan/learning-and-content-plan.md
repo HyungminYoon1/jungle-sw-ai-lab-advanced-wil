@@ -37,6 +37,7 @@
 | 상태 | 사용할 때 | 기록할 내용 |
 |---|---|---|
 | 핵심 학습 | 직무 기반에 필요하고 이번 주 우선순위가 높음 | 설명, 실패 재현, 검증 근거 |
+| 운영 Baseline | 이미 사용하는 도구를 모든 학습 활동에 계속 적용 | 짧은 자가진단, 실제 작업 History와 필요한 보충 항목 |
 | 선택 적용 | 공통 Lab에서 실제 경계를 확인할 가치가 있음 | 최소 변경, 적용 이유와 Test |
 | 독립 Spike | 서비스 통합 없이 원리 비교가 더 명확함 | 가설, 변수, 관찰과 결론 |
 | 조건부 후속 | 요구·측정·선행 학습이 생겨야 의미가 있음 | 선행 조건, 보류 이유와 재검토 시점 |
@@ -48,7 +49,7 @@
 
 | 과정 영역 | 상태 | 선택 학습 | 증거 | 초기 제외·후속 |
 |---|---|---|---|---|
-| Git·협업 | 핵심·운영 실습 | Staging, Branch, Merge·Rebase, Conflict, PR, Revert, Commit과 Actions | History 비교, Review·CI 결과, 복구 Note | Stash·Cherry-pick은 실제 필요 또는 안전한 Spike |
+| Git·협업 | 운영 Baseline | `status`·`diff`, Staging, 작은 Commit, Branch, `restore`·`revert`, PR과 Actions | 자가진단 Note, 실제 Commit·Review·CI 결과와 복구 기록 | Merge·Rebase·Conflict·Stash·Cherry-pick은 공백 또는 실제 필요가 있을 때만 Spike |
 | 객체지향 | 핵심 | Encapsulation, Abstraction, Polymorphism, Composition, SOLID와 필요한 Pattern | Domain Unit Test, 변경 전후 Diff와 설명 | Pattern 개수 채우기 제외 |
 | Web 원리 | 핵심·독립 Spike | DNS·TCP 기초, HTTP, REST, Cookie·Session, CORS와 Cache | Request Trace, Header와 Network 관찰 | HTTP 버전 Benchmark, CDN·WebSocket은 조건부 |
 | Backend | 핵심·선택 적용 | MVC, Layered Architecture, DI·IoC, 예외 처리, Idempotency와 동시성 | Layer Trace, HTTP Test와 책임 설명 | Queue, Cache, Load Balancing, GraphQL과 Batch는 조건부 |
@@ -62,6 +63,8 @@
 | System | 독립 Spike | Linux CLI, Process·Signal, Exit Code와 `/proc` | Process 관찰, Log Pipeline과 종료 Test | Mini Shell·VM과 복잡한 IPC 제외 |
 
 Matrix는 해야 할 일 목록이 아니다. 핵심 질문에 답하지 않는 항목은 선택하지 않는다.
+
+Git처럼 이미 실제 작업에 사용하는 도구는 별도 반나절 학습 일정으로 편성하지 않는다. 20~30분 자가진단을 통과하면 즉시 주간 핵심 학습으로 이동하고, 설명하거나 안전하게 수행하지 못한 항목만 작은 보충 Spike로 전환한다. 평소의 상태 확인, Diff Review, 작은 Commit, PR과 복구 기록을 누적 근거로 사용한다.
 
 ## 5. 시간 배분
 
@@ -87,6 +90,8 @@ Matrix는 해야 할 일 목록이 아니다. 핵심 질문에 답하지 않는 
 - [ ] 동료 질문 또는 스스로 만든 면접 질문에 답했다.
 
 `Partially Completed`는 실패가 아니라 근거가 부족하거나 질문 일부만 답한 상태다. 남은 질문과 재검토 조건을 기록한다.
+
+운영 Baseline은 핵심 학습의 `3개 Checklist` Gate를 적용하지 않는다. 자가진단 결과와 실제 작업 근거가 있으면 `확인`, 개념 정리만 있고 직접 실행·설명이 없으면 `실행 점검 전`, 공백이 발견되면 `보충 필요`로 기록한다.
 
 ## 7. AI 활용 원칙
 

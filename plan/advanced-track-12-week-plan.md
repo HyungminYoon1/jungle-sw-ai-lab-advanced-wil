@@ -58,6 +58,7 @@
 | 상태 | 의미 | 완료 근거 |
 |---|---|---|
 | 핵심 학습 | 직무 기반을 위해 반드시 학습 | 설명, 최소 재현 실험, Test 또는 Trace |
+| 운영 Baseline | 이미 사용하는 도구를 별도 학습 Block으로 편성하지 않고 전 과정에 적용 | 짧은 자가진단, 실제 History·Review·복구 기록 |
 | 선택 적용 | 공통 Lab에서 원리를 확인할 가치가 있음 | 작은 기능, Test와 적용 전후 해석 |
 | 독립 Spike | Lab에 통합하지 않고 별도 실험 | 질문, 예상, 조건, 관찰과 결론 |
 | 조건부 후속 | 실제 필요나 측정 결과가 생길 때 수행 | 선행 조건과 보류 이유 |
@@ -65,11 +66,13 @@
 
 모든 공지 항목을 완료하는 것은 목표가 아니다. 하지 않기로 한 이유를 설명할 수 있는 것도 학습 판단의 일부다.
 
+운영 Baseline은 주간 핵심 학습 수에 포함하지 않는다. 자가진단에서 설명하거나 안전하게 수행하지 못한 항목만 독립 Spike 또는 조건부 후속으로 전환한다.
+
 ## 5. 선택 범위
 
 | 영역 | 8주 선택 범위 | 초기 경계 |
 |---|---|---|
-| Git | Staging, Branch, Merge·Rebase, Conflict, PR, Revert, Commit과 Actions | 위험한 이력 변경은 안전한 실험 Repository에서만 수행 |
+| Git | 운영 Baseline: `status`·`diff`, Staging, 작은 Commit, Branch, `restore`·`revert`와 PR | Merge·Rebase·Conflict는 공백이 확인되거나 실제 필요가 있을 때만 안전한 실험 Repository에서 보충 |
 | Java·객체지향 | Encapsulation, Abstraction, Polymorphism, Composition, SOLID, Exception, Collection | Pattern 개수를 성과로 삼지 않음 |
 | Web·Backend | HTTP, REST, CORS, Cookie·Session, MVC, Layered Architecture, DI와 예외 처리 | GraphQL, Queue와 Load Balancing은 조건부 후속 |
 | Database | 정규화, ACID, Transaction, Isolation, Lock, Index, 실행 계획과 N+1 | NoSQL 비교는 설계 Note, 복제·Sharding은 제외 |
@@ -95,7 +98,7 @@
 
 | 주차 | 중심 영역 | 주간 결과 |
 |---:|---|---|
-| 1 | Git·Java 객체지향·JUnit | Framework 없는 Ticket Domain과 단위 Test |
+| 1 | Java 객체지향·JUnit (Git 운영 Baseline) | Framework 없는 Ticket Domain과 단위 Test, Git 자가진단 기록 |
 | 2 | HTTP·REST·Spring | Request 흐름과 Layer 책임을 설명하는 최소 API |
 | 3 | PostgreSQL | Transaction·Lock·Index와 Query Plan 실험 |
 | 4 | 인증·보안 | Session과 권한·공격 방어 실패 Case |
@@ -126,6 +129,8 @@
 6. 언제 사용하지 않을지와 Trade-off를 설명했다.
 
 Tutorial 완료, 생성 코드량, Commit 수와 Coverage 수치만으로는 완료하지 않는다.
+
+Git 운영 Baseline은 위 핵심 주제 완료 기준을 별도로 적용하지 않는다. 실제 변경에서 상태를 확인하고 Diff를 검토해 작은 Commit을 만들며, 상황에 맞는 안전한 복구 방식을 설명할 수 있으면 Baseline을 충족한 것으로 본다. Merge·Rebase History 비교는 필수 완료 조건이 아니다.
 
 ## 10. AI 활용 원칙
 

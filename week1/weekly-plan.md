@@ -1,15 +1,18 @@
-# Week 1 학습 계획 — Git·Java 객체지향·JUnit
+# Week 1 학습 계획 — Java 객체지향·JUnit
 
 > 작성일: 2026-08-18
-> 상태: Baseline v2
+> 상태: Baseline v3
 > 기간: 2026-08-18 ~ 2026-08-22
 > 핵심 질문: Framework 없이 객체가 자신의 규칙을 지키고 Test로 계약을 설명할 수 있는가?
+> 운영 Baseline: Git 상태 확인·Diff Review·안전한 복구
 
 ## 계획 배경
 
 최초 기준선은 AgentOps Lab의 Walking Skeleton을 만들면서 Java·Spring·PostgreSQL·LLM·Workflow를 동시에 학습하도록 구성했다. 구현을 시작하기 전에 제품 범위가 8주 학습 목적에 비해 크고, Java와 Spring을 직접 이해하는 시간보다 통합과 AI 생성 Code 검토가 더 커질 위험을 확인했다.
 
 따라서 이번 주부터 과정 공지의 선택형 학습 원칙에 맞춰 개념 학습, 최소 재현 실험과 설명 가능성을 우선한다. AgentOps Lab은 보류하고, AI Helpdesk Learning Lab의 순수 Java Ticket Domain만 공통 실습 대상으로 사용한다.
+
+Git은 2026-08-19부터 별도 핵심 학습 Block이 아니라 전 과정의 운영 Baseline으로 다룬다. 짧은 자가진단과 실제 문서·Source 변경에서 역량을 확인하며, 공백이 발견된 항목만 보충한다.
 
 ## 이번 주 핵심 질문
 
@@ -19,7 +22,7 @@
 
 | 구분 | 목표 | 완료 근거 |
 |---|---|---|
-| Git | 변경이 Working Tree·Staging Area·Commit 사이에서 이동하는 과정을 설명 | 명령 전후 `status`·`diff`·`log` 관찰 Note |
+| Git 운영 Baseline | 변경 위치를 확인하고 검토 가능한 Commit과 안전한 복구 방법을 선택 | 자가진단 상태와 실제 Commit·복구 기록 |
 | Java | Ticket 상태와 잘못된 변경을 객체가 스스로 통제 | Framework 없는 Domain Code와 실패 Case |
 | 객체지향 | Encapsulation·Polymorphism·Composition을 변경 요구로 비교 | 비교 Lab Report와 Unit Test |
 | Test | 정상·경계·거부 규칙을 JUnit으로 표현 | 읽을 수 있는 Given-When-Then Test |
@@ -39,7 +42,7 @@
 
 | 항목 | 확인 상태 | 이번 주 조치 |
 |---|---|---|
-| Git | WIL 저장소 사용 가능, 학습 계획 개편 변경 존재 | 관련 문서를 검토 가능한 단위로 관리하고 실험은 별도 안전한 Branch에서 수행 |
+| Git | WIL 저장소 사용 가능, 학습 계획 개편 변경 존재 | 별도 학습 Block 없이 실제 변경의 상태·Diff·Commit을 점검하고 공백만 보충 |
 | Java | JDK 21 설치 확인 | 순수 Java·JUnit 실습에 사용하고 실제 Version을 기록 |
 | Build Tool | 전역 Maven·Gradle 설치에 의존하지 않음 | 필요할 때 한 개 Wrapper만 선택 |
 | Learning Lab Source | 아직 생성하지 않음 | 문서와 Source 경계를 정한 뒤 최소 Project만 구성 |
@@ -51,7 +54,6 @@ Version을 기억에 의존해 단정하지 않는다. 실제 명령과 공식 �
 
 ### Must
 
-- Git 3단계 영역을 실제 상태 변화로 설명
 - Framework 없는 Ticket 상태 전이와 불변 조건
 - 잘못된 상태 변경이 실패하는 Unit Test
 - Encapsulation과 Composition 선택 이유 설명
@@ -59,10 +61,15 @@ Version을 기억에 의존해 단정하지 않는다. 실제 명령과 공식 �
 
 ### Should
 
-- Merge와 Rebase History 비교
-- 의도적인 Conflict 발생과 해결
 - 절차형 분기에서 다형성 또는 Strategy로 변경한 비교
 - 정적 분석 또는 Test Coverage의 의미 확인
+
+### Git 운영 Baseline
+
+- 학습 시작 전 20~30분 이내로 Working Tree·Index·HEAD와 두 종류의 `diff`를 자가진단한다.
+- 실제 변경은 상태와 Diff를 확인한 뒤 하나의 의도로 설명되는 작은 Commit으로 나눈다.
+- `restore`, `restore --staged`, `revert`의 선택 기준을 설명하지 못하면 그 항목만 보충한다.
+- Merge·Rebase·Conflict 실습은 공백 또는 실제 협업 필요가 확인될 때만 조건부로 수행한다.
 
 ### 먼저 줄이는 항목
 
@@ -78,7 +85,7 @@ Must가 끝나지 않은 상태에서 Should나 다음 주 기술을 시작하�
 
 | 활동 | 계획 비율 | 종료 조건 |
 |---|---:|---|
-| 개념·도서·공식 자료 | 30% | Git 상태와 객체 책임을 자신의 말로 설명 |
+| 개념·도서·공식 자료 | 30% | 객체 책임을 자신의 말로 설명 |
 | 최소 재현 실험 | 35% | 예상·실행·관찰·원인 기록 |
 | Ticket Domain 선택 적용 | 20% | 학습 질문에 필요한 최소 Code와 Test |
 | 설명·Review·WIL | 15% | 동료 질문 반영과 다음 질문 정리 |
@@ -87,8 +94,6 @@ Must가 끝나지 않은 상태에서 Should나 다음 주 기술을 시작하�
 
 ### 포함
 
-- Git Working Tree, Staging Area, Commit과 안전한 되돌리기
-- Branch, Merge·Rebase, Conflict와 History
 - Java Class·Object, 불변 값, Collection과 Exception
 - Encapsulation, Abstraction, Polymorphism과 Composition
 - SRP·OCP·DIP를 변경 영향으로 관찰
@@ -105,6 +110,7 @@ Must가 끝나지 않은 상태에서 Should나 다음 주 기술을 시작하�
 
 ### 조건부 후속
 
+- Git Merge·Rebase·Conflict는 자가진단에서 공백이 발견되거나 실제 협업 문제가 생길 때만 안전한 실험 Repository에서 수행한다.
 - Factory·Observer 등 추가 Pattern은 실제 변경 문제를 단순하게 할 때만 적용한다.
 - Test Coverage 도구는 핵심 Test가 먼저 작성된 뒤 사각지대 확인에만 사용한다.
 - GitHub Actions는 Source Repository와 Test가 준비되면 운영 실습으로 추가한다.
@@ -113,8 +119,8 @@ Must가 끝나지 않은 상태에서 Should나 다음 주 기술을 시작하�
 
 | 학습 주제 | 상태 | 질문 | 방법 | 증거 |
 |---|---|---|---|---|
-| Git 3단계 영역 | 핵심 학습 | 변경은 현재 어느 영역에 있는가? | 명령 전후 `status`·`diff` 관찰 | Learning Note |
-| Merge·Rebase | 독립 Spike | 같은 변경의 History가 어떻게 달라지는가? | 같은 Branch Scenario 비교 | Graph와 결론 |
+| Git 상태·복구 | 운영 Baseline | 변경은 어디에 있고 어떤 복구가 안전한가? | 20~30분 자가진단과 실제 변경 Review | [Learning Note](./study-docs/learning-git-operational-baseline.md) |
+| Merge·Rebase·Conflict | 조건부 후속 | 실제 공백이나 협업 필요가 있는가? | 필요할 때만 안전한 별도 Scenario | 수행 시 Graph와 결론 |
 | Encapsulation | 핵심 학습 | 객체가 잘못된 상태를 스스로 막는가? | 직접 변경 가능 Code와 Method 기반 Code 비교 | Unit Test |
 | Polymorphism·Composition | 핵심 학습 | 새 Policy가 기존 Code 수정 범위를 줄이는가? | 분기와 Strategy·Composition 비교 | Diff와 설명 |
 | SOLID | 선택 적용 | 원칙이 실제 변경을 단순하게 하는가? | 한 가지 변경 요구를 전후 구조에 적용 | Lab Report |
@@ -125,21 +131,22 @@ Must가 끝나지 않은 상태에서 Should나 다음 주 기술을 시작하�
 | 순서 | Lab | 질문 | 완료 조건 | 상태 |
 |---:|---|---|---|---|
 | 0 | Source·Toolchain 최소 Baseline | 새 Terminal에서 같은 Test를 실행할 수 있는가? | 선택한 Wrapper로 Test 실행 | Planned |
-| 1 | Git 상태 변화 | 변경이 세 영역 사이에서 어떻게 이동하는가? | 명령과 관찰 결과 기록 | Planned |
-| 2 | Ticket Encapsulation | 외부가 상태를 임의로 바꿀 수 있는가? | 허용 Method만 상태 변경 | Planned |
-| 3 | 상태 전이와 Exception | 잘못된 전이를 예측 가능하게 거부하는가? | 실패 Type·Message와 Test | Planned |
-| 4 | Policy 비교 | 분기와 다형성의 변경 비용은 어떻게 다른가? | 같은 요구를 두 구조에 적용해 비교 | Planned |
-| 5 | Review와 설명 | Code를 보지 않고 흐름과 선택을 설명할 수 있는가? | 질문·수정 기록과 WIL 근거 | Planned |
+| 1 | Ticket Encapsulation | 외부가 상태를 임의로 바꿀 수 있는가? | 허용 Method만 상태 변경 | Planned |
+| 2 | 상태 전이와 Exception | 잘못된 전이를 예측 가능하게 거부하는가? | 실패 Type·Message와 Test | Planned |
+| 3 | Policy 비교 | 분기와 다형성의 변경 비용은 어떻게 다른가? | 같은 요구를 두 구조에 적용해 비교 | Planned |
+| 4 | Review와 설명 | Code를 보지 않고 흐름과 선택을 설명할 수 있는가? | 질문·수정 기록과 WIL 근거 | Planned |
 
 ## 일정
 
 | 날짜 | 오전 | 오후 | 야간 | 일일 종료 조건 | 상태 |
 |---|---|---|---|---|---|
 | 8월 18일 화요일 | 작업 없음 | 작업 없음 | 범위 전환, 핵심 질문과 Week 1 Baseline 확정 | AgentOps 구현이 중단되고 새 학습 범위가 문서화됨 | Completed |
-| 8월 19일 수요일 | Git 3단계 영역 학습·실험 | Java Class·Object·Encapsulation 학습 | 최소 Source 구성과 Ticket 불변 조건 | Git 상태와 객체 책임을 예제로 설명 | Planned |
+| 8월 19일 수요일 | Java Class·Object·Encapsulation 학습 | 최소 Source 구성과 Ticket 불변 조건 | 객체 책임 설명과 첫 Unit Test 준비 | 객체 책임과 불변 조건을 예제로 설명 | Planned |
 | 8월 20일 목요일 | Exception·Collection과 상태 전이 | JUnit 정상·경계·거부 Test | 실패 메시지와 Test 이름 Review | 잘못된 Ticket 전이가 Test에서 명확히 거부됨 | Planned |
-| 8월 21일 금요일 | Polymorphism·Composition·SOLID 학습 | 분기와 Policy 구조 비교 | Merge·Rebase·Conflict Spike와 동료 설명 | 변경 요구에서 선택한 구조의 차이를 설명 | Planned |
+| 8월 21일 금요일 | Polymorphism·Composition·SOLID 학습 | 분기와 Policy 구조 비교 | 취약 개념 재설명과 Test 보완 | 변경 요구에서 선택한 구조의 차이를 설명 | Planned |
 | 8월 22일 토요일 | 전체 Test 재현과 취약 개념 재실험 | 새 기능 없이 Review·정리 | Lab Report·Learning Note·WIL 작성 | Gate 결과와 미완료 질문이 근거와 함께 기록됨 | Planned |
+
+Git 자가진단은 8월 19일 학습 시작 전 최대 30분만 사용하며 위 학습 Block을 대체하지 않는다. 통과하면 추가 Git 일정을 만들지 않고, 공백이 확인된 경우에만 보충 시간을 다시 판단한다.
 
 ## 위험과 대응
 
@@ -148,7 +155,7 @@ Must가 끝나지 않은 상태에서 Should나 다음 주 기술을 시작하�
 | Helpdesk 기능 확장 | Comment·UI·Database를 먼저 추가하려 함 | Ticket 상태와 Test 외 기능 중단 | Open |
 | Pattern 수집 | 문제 없이 Pattern Class가 늘어남 | 변경 요구가 없는 Pattern 제외 | Open |
 | AI 생성 Code 과다 | 흐름을 설명하거나 작은 변형을 직접 못함 | 변경 축소, 직접 재작성과 질문 Review | Open |
-| Git 실험의 실제 History 영향 | 공유 Branch에서 Rebase·Reset을 시도 | 안전한 실험 Branch·Repository에서만 수행 | Open |
+| Git 보충 실습의 실제 History 영향 | 공유 Branch에서 Rebase·Reset을 시도 | 필요할 때만 안전한 실험 Branch·Repository에서 수행 | Open |
 | 설정 시간 과다 | Build 설정이 반나절 이상 걸림 | 최소 Wrapper와 단일 Module로 축소 | Open |
 | 기록 과다 | Template 작성이 실험보다 길어짐 | 핵심 Lab Report 한 개와 WIL만 작성 | Open |
 
@@ -157,16 +164,15 @@ Must가 끝나지 않은 상태에서 Should나 다음 주 기술을 시작하�
 | 산출물 | 목표 시점 | 초기 상태 |
 |---|---|---|
 | [주차 안내](./README.md) | 주차 시작 | 작성 완료 |
-| [주간 학습 계획](./weekly-plan.md) | 주차 시작 | Baseline v2 |
-| Git 또는 객체지향 Learning Note | 핵심 실험 후 | 근거 확보 시 생성 |
+| [주간 학습 계획](./weekly-plan.md) | 주차 시작 | Baseline v3 |
+| [Git 운영 Baseline Learning Note](./study-docs/learning-git-operational-baseline.md) | 8월 19일 | 개념 정리 완료, 자가진단 실행 전 |
+| 객체지향 Learning Note | 핵심 실험 후 | 근거 확보 시 생성 |
 | Ticket 객체지향 Lab Report | 8월 22일 | 실제 실행 후 생성 |
 | Week 1 WIL | 8월 22일 작성, 다음 월요일 게시 | 실제 결과 후 생성 |
 | 공개 Checklist | 게시 직전 | 검토 시 생성 |
 
 ## 주간 Learning Evidence Gate
 
-- [ ] Git 3단계 영역을 실제 상태 변화로 설명한다.
-- [ ] Merge와 Rebase의 History 차이와 안전 경계를 설명한다.
 - [ ] Ticket 객체가 잘못된 상태를 스스로 거부한다.
 - [ ] 정상·경계·거부 규칙이 읽을 수 있는 JUnit Test로 검증된다.
 - [ ] Composition 또는 다형성 선택을 변경 요구로 설명한다.
@@ -176,11 +182,21 @@ Must가 끝나지 않은 상태에서 Should나 다음 주 기술을 시작하�
 - [ ] 완료·부분 완료·미수행 범위와 다음 주 질문을 WIL에 남긴다.
 - [ ] Secret, 개인정보와 로컬 경로가 공개 자료에 없다.
 
+### Git 운영 Baseline 점검
+
+- [ ] `status`, `diff`, `diff --staged`로 변경 위치와 Commit 포함 범위를 확인한다.
+- [ ] `restore`, `restore --staged`, `revert`의 대상과 영향 차이를 설명한다.
+- [ ] 실제 변경을 하나의 의도로 설명되는 작은 Commit으로 남긴다.
+- [ ] 공백이 확인되면 해당 항목만 보충하고 Learning Note의 상태를 갱신한다.
+
+Git 점검과 Merge·Rebase 비교는 Week 1 핵심 Learning Evidence Gate의 통과 조건이 아니다.
+
 ## 계획 변경 기록
 
 | 날짜 | 변경 전 | 변경 후 | 이유 | 학습·일정 영향 | 승인·근거 |
 |---|---|---|---|---|---|
 | 2026-08-18 | AgentOps Lab Walking Skeleton과 Java·Spring·PostgreSQL·LLM·DAG 병행 | Git·Java 객체지향·JUnit과 Framework 없는 Ticket Domain | 단독 구현 범위가 학습 시간을 압도할 위험, 과정 목적에 맞춘 학습 우선 | AgentOps 구현 보류, Week 1 기술 수와 Integration 제거 | 사용자 승인, [ADR-0001](../plan/decisions/0001-learning-first-scope.md) |
+| 2026-08-19 | Git을 Week 1 핵심 학습과 필수 실험·Gate로 운영 | Git을 전 주차 운영 Baseline으로 적용하고 공백만 보충 | 이미 사용하는 기초 도구에 별도 학습 시간을 쓰기보다 객체지향·JUnit 학습에 집중 | Git 반나절 일정과 필수 Merge·Rebase 실험 제거, 20~30분 자가진단으로 축소 | 사용자 승인 |
 
 ## 관련 기준
 

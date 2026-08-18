@@ -3,7 +3,7 @@
 > 상태: Active
 > 시작일: 2026-08-18
 > 전체 기간: 기술 심화 8주 + 취업 심화 4주
-> 현재 단계: Week 1 — Git·Java 객체지향·JUnit
+> 현재 단계: Week 1 — Java 객체지향·JUnit (Git 운영 Baseline)
 
 이 저장소는 SW AI Lab 심화과정에서 선택한 기술을 학습하고, 이해가 바뀐 과정과 재현 가능한 근거를 주차별로 기록한다. 목표는 큰 제품을 기간 안에 완성하는 것이 아니라 AI/AX·Java Backend 직무에 필요한 개념을 직접 설명하고, 작은 실험과 Test로 검증하며, 필요한 범위만 서비스에 적용할 수 있는 역량을 만드는 것이다.
 
@@ -13,7 +13,7 @@
 - HTTP·Browser·인증·인가와 주요 Web Security 경계를 재현 실험으로 확인한다.
 - 단위·통합·E2E Test의 책임을 구분하고 실패를 재현하는 Test를 작성한다.
 - LLM Structured Output, 평가와 Guardrail을 고정된 입력과 실패 Case로 검증한다.
-- Git, Docker, CI, Secret 분리와 최소 운영 관측을 실제 학습 과정에 적용한다.
+- Git의 상태 확인·안전한 복구·작은 Commit을 운영 Baseline으로 적용하고, Docker, CI, Secret 분리와 최소 운영 관측을 실제 학습 과정에서 검증한다.
 - 매주 WIL을 게시하고 학습 선택, 실패, 한계와 다음 질문을 공개 근거로 남긴다.
 - 기술 심화 이후에는 학습 근거를 이력서·Portfolio·면접 답변으로 전환한다.
 
@@ -49,7 +49,7 @@
 
 | 주차 | 핵심 학습 | 상태 | 공개 기록 |
 |---:|---|---|---|
-| 1 | Git·Java 객체지향·JUnit | Planned | [Week 1](./week1/README.md) |
+| 1 | Java 객체지향·JUnit (Git 운영 Baseline) | In Progress | [Week 1](./week1/README.md) |
 | 2 | HTTP·REST·Spring MVC·Layered Architecture | Not Started | 주차 시작 시 추가 |
 | 3 | PostgreSQL·Transaction·Lock·Index | Not Started | 주차 시작 시 추가 |
 | 4 | 인증·인가·Session·Web Security | Not Started | 주차 시작 시 추가 |
@@ -63,6 +63,8 @@
 | 12 | 취업 결과 정리와 최종 회고 | Not Started | 주차 시작 시 추가 |
 
 상태는 `Planned`, `In Progress`, `Completed`, `Partially Completed`와 `Blocked`로 구분한다. 많은 코드를 작성했더라도 설명·재현·검증 근거가 없으면 완료로 표시하지 않는다.
+
+Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 모든 주차에 적용하는 운영 Baseline이다. Week 1에서 짧은 자가진단으로 상태 확인·변경 검토·안전한 복구 역량을 점검하고, 공백이 확인되거나 실제 협업 문제가 생길 때만 필요한 주제를 보충한다.
 
 ## 문서 안내
 
@@ -88,7 +90,8 @@
     .
     ├── plan/        # 12주 총괄 계획, 주차별 Roadmap과 학습 원칙
     ├── templates/   # 공개 학습 산출물 양식
-    ├── week1/       # 현재 주차 계획과 이후 생성되는 학습 근거
+    ├── week1/       # 현재 주차 계획, WIL과 Lab 결과
+    │   └── study-docs/  # 개념별 Learning Note와 운영 Baseline 점검 기록
     └── weekN/       # 해당 주차에 실제 산출물이 생길 때 추가
 
 실습 Source는 별도 Learning Lab 저장소를 만든 뒤 관리할 예정이다. 이 저장소에는 주차별 계획, 실험 결과, Learning Note, WIL과 공개 가능한 근거를 남긴다.

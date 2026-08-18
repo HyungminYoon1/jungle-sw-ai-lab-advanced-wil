@@ -1,11 +1,12 @@
-# Week 1 — Git·Java 객체지향·JUnit
+# Week 1 — Java 객체지향·JUnit
 
-> 상태: Planned
+> 상태: In Progress
 > 기간: 2026-08-18 ~ 2026-08-22
-> 핵심 학습: Git 3단계 영역, Java 객체 책임과 JUnit
+> 핵심 학습: Java 객체 책임과 JUnit
+> 운영 Baseline: Git 상태 확인·Diff Review·안전한 복구
 > 공통 실습: AI Helpdesk Learning Lab의 Framework 없는 Ticket Domain
 
-이번 주는 큰 Application을 시작하지 않고 Git의 변경 상태와 Java 객체의 책임을 직접 관찰한다. Ticket의 상태 전이와 담당자 할당 규칙을 순수 Java로 표현하고, 정상·경계·실패 Case를 JUnit으로 설명하는 것이 목표다.
+이번 주는 큰 Application을 시작하지 않고 Java 객체의 책임을 직접 관찰한다. Ticket의 상태 전이와 담당자 할당 규칙을 순수 Java로 표현하고, 정상·경계·실패 Case를 JUnit으로 설명하는 것이 목표다. Git은 별도 심화 주제가 아니라 실제 학습 변경을 안전하고 검토 가능하게 관리하는 운영 Baseline으로 적용한다.
 
 ## 핵심 질문
 
@@ -21,15 +22,22 @@
 
 기존 계획은 Archive에 보존하며 현재 완료 조건으로 사용하지 않는다.
 
-## 이번 주 학습 범위
+2026-08-19에는 Git 기초에 별도 학습 시간을 배정하는 대신 짧은 자가진단과 실제 저장소 작업으로 역량을 확인하도록 범위를 다시 조정했다. Merge·Rebase·Conflict는 필수 일정에서 제외하고, 공백이나 실제 필요가 확인될 때만 보충한다.
 
-- Git Working Tree·Staging Area·Commit
-- `status`, `diff`, `log`, `restore`, `revert`
-- Branch, Merge·Rebase와 Conflict의 차이
+## 이번 주 핵심 학습 범위
+
 - Java Class·Object, 불변 값, Collection과 Exception
 - Encapsulation, Abstraction, Polymorphism과 Composition
 - SOLID를 변경 영향으로 관찰하는 방법
 - JUnit과 Given-When-Then
+
+## Git 운영 Baseline
+
+- Working Tree·Index·HEAD를 구분하고 `status`, `diff`, `diff --staged` 결과를 해석한다.
+- 실제 변경을 작은 Commit으로 나누고 Commit 전에 포함 범위를 검토한다.
+- 되돌릴 대상이 아직 Commit되지 않은 변경인지, Staging된 변경인지, 공개된 Commit인지 먼저 판단한다.
+- Merge·Rebase·Conflict는 자가진단에서 공백이 드러나거나 실제 협업 상황이 생길 때만 안전한 환경에서 보충한다.
+- 개념과 자가진단 기준은 [Git 운영 Baseline Learning Note](./study-docs/learning-git-operational-baseline.md)에 기록한다.
 
 ## 이번 주 비범위
 
@@ -45,10 +53,10 @@
 
 - [주간 학습 계획](./weekly-plan.md)
 - [주차 안내](./README.md)
+- [Git 운영 Baseline Learning Note](./study-docs/learning-git-operational-baseline.md) — 개념 정리 완료, 자가진단 실행 전
 
 ### 실제 근거가 생길 때 추가
 
-- Git 3단계 영역 또는 Merge·Rebase Learning Note
 - Ticket 객체지향 Lab Report
 - JUnit Test와 설명 가능성 점검 기록
 - Week 1 WIL
@@ -57,8 +65,6 @@ Placeholder만 있는 문서는 미리 만들지 않는다.
 
 ## Week 1 Learning Evidence Gate
 
-- [ ] Working Tree, Staging Area와 Commit의 차이를 실제 상태 변화로 설명한다.
-- [ ] Merge와 Rebase의 History 차이와 공유 Branch의 위험을 설명한다.
 - [ ] Ticket 상태를 외부에서 임의로 변경할 수 없게 한다.
 - [ ] 허용·거부 상태 전이를 객체 규칙과 JUnit으로 검증한다.
 - [ ] 상속과 Composition 중 선택한 이유를 변경 요구로 설명한다.
@@ -66,11 +72,21 @@ Placeholder만 있는 문서는 미리 만들지 않는다.
 - [ ] 완료·부분 완료·미수행 범위를 WIL에 기록한다.
 - [ ] 공개 문서와 Source에 Secret, 개인정보와 로컬 경로가 없다.
 
+### Git 운영 Baseline 점검
+
+- [ ] 변경이 Working Tree와 Index 중 어디에 있는지 `status`와 두 종류의 `diff`로 확인한다.
+- [ ] Commit 전 포함 범위를 검토하고 하나의 의도로 설명되는 변경만 Staging한다.
+- [ ] `restore`, `restore --staged`와 `revert`의 대상·영향 차이를 설명한다.
+- [ ] 점검에서 공백이 발견되면 해당 항목만 보충하고 결과를 Learning Note에 갱신한다.
+
+이 점검은 Week 1 핵심 학습 완료를 막는 별도 Gate가 아니다. Merge·Rebase 비교 실험도 기본 완료 조건에 포함하지 않는다.
+
 ## WIL 작성 기준
 
 WIL은 구현한 Class 목록보다 다음 내용을 중심으로 작성한다.
 
-- 시작할 때 객체지향과 Git을 어떻게 이해하고 있었는가
+- 시작할 때 객체지향을 어떻게 이해하고 있었는가
+- Git 운영 Baseline 점검에서 실제로 보완할 공백이 있었는가
 - 어떤 실험에서 예상과 실제가 달랐는가
 - Ticket 규칙을 객체 안에 둘 때 무엇이 달라졌는가
 - Test가 요구사항과 설계를 어떻게 드러냈는가
