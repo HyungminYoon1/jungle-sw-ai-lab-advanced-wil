@@ -141,7 +141,7 @@ Must가 끝나지 않은 상태에서 Should나 다음 주 기술을 시작하�
 | 날짜 | 오전 | 오후 | 야간 | 일일 종료 조건 | 상태 |
 |---|---|---|---|---|---|
 | 8월 18일 화요일 | 작업 없음 | 작업 없음 | 범위 전환, 핵심 질문과 Week 1 Baseline 확정 | AgentOps 구현이 중단되고 새 학습 범위가 문서화됨 | Completed |
-| 8월 19일 수요일 | Java Class·Object·Encapsulation 학습 | 최소 Source 구성과 Ticket 불변 조건 | 객체 책임 설명과 첫 Unit Test 준비 | 객체 책임과 불변 조건을 예제로 설명 | In Progress — 오전·오후 완료, 야간 전 |
+| 8월 19일 수요일 | Java Class·Object·Encapsulation 학습 | 최소 Source 구성과 Ticket 불변 조건 | 객체 책임 설명과 첫 Unit Test 준비 | 객체 책임과 불변 조건을 예제로 설명 | Completed |
 | 8월 20일 목요일 | Exception·Collection과 상태 전이 | JUnit 정상·경계·거부 Test | 실패 메시지와 Test 이름 Review | 잘못된 Ticket 전이가 Test에서 명확히 거부됨 | Planned |
 | 8월 21일 금요일 | Polymorphism·Composition·SOLID 학습 | 분기와 Policy 구조 비교 | 취약 개념 재설명과 Test 보완 | 변경 요구에서 선택한 구조의 차이를 설명 | Planned |
 | 8월 22일 토요일 | 전체 Test 재현과 취약 개념 재실험 | 새 기능 없이 Review·정리 | Lab Report·Learning Note·WIL 작성 | Gate 결과와 미완료 질문이 근거와 함께 기록됨 | Planned |
@@ -170,7 +170,7 @@ Git 자가진단은 8월 19일 학습 시작 전 최대 30분만 사용하며 �
 | [Ticket 상태 전이 Lab](./study-docs/lab-ticket-state-transition.md) | 8월 19일 | 수동 실험 완료, JUnit 자동 검증 전 |
 | [Maven Build와 Wrapper Learning Note](./study-docs/learning-maven-build-and-wrapper.md) | 8월 19일 | 개념 정리 완료 |
 | [JUnit과 Unit Test 설계 Learning Note](./study-docs/learning-junit-and-unit-test-design.md) | 8월 19일 | 개념 정리 완료, 자동 Test 실행 전 |
-| [Ticket 학습 점검 질문](./study-docs/study-questions.md) | 8월 19일 | 객체 책임 설명 질문 정리 |
+| [Ticket 객체와 JUnit 기초 학습 점검](./study-docs/study-questions.md) | 8월 19일 | 객체 책임·Given–When–Then·JUnit 핵심 개념 답변 완료 |
 | Week 1 WIL | 8월 22일 작성, 다음 월요일 게시 | 실제 결과 후 생성 |
 | 공개 Checklist | 게시 직전 | 검토 시 생성 |
 

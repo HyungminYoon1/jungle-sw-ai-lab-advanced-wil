@@ -58,11 +58,11 @@
 - [Ticket 상태 전이 Lab](./study-docs/lab-ticket-state-transition.md) — 정상·거부·반례 실험 기록
 - [Maven Build와 Wrapper Learning Note](./study-docs/learning-maven-build-and-wrapper.md) — Project Model, Lifecycle, Artifact와 Gradle 비교
 - [JUnit과 Unit Test 설계 Learning Note](./study-docs/learning-junit-and-unit-test-design.md) — JUnit 구조, Assertion, Given–When–Then과 Test 독립성
-- [Ticket 학습 점검 질문](./study-docs/study-questions.md) — 객체 책임과 상태 전이 설명 점검
+- [Ticket 객체와 JUnit 기초 학습 점검](./study-docs/study-questions.md) — 객체 책임, 상태 전이 시나리오와 JUnit 실행 구조 점검
 
 ### 실제 근거가 생길 때 추가
 
-- JUnit Test와 설명 가능성 점검 기록
+- JUnit Test 실행 결과
 - Week 1 WIL
 
 Placeholder만 있는 문서는 미리 만들지 않는다.
