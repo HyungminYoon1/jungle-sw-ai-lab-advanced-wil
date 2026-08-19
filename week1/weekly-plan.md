@@ -169,6 +169,7 @@ Git 자가진단은 8월 19일 학습 시작 전 최대 30분만 사용하며 �
 | [Encapsulation과 불변조건 Learning Note](./study-docs/learning-encapsulation-and-invariants.md) | 8월 19일 | 개념 정리와 JShell 실험 기록 완료 |
 | [Ticket 상태 전이 Lab](./study-docs/lab-ticket-state-transition.md) | 8월 19일 | 수동 실험 완료, JUnit 자동 검증 전 |
 | [Maven Build와 Wrapper Learning Note](./study-docs/learning-maven-build-and-wrapper.md) | 8월 19일 | 개념 정리 완료 |
+| [JUnit과 Unit Test 설계 Learning Note](./study-docs/learning-junit-and-unit-test-design.md) | 8월 19일 | 개념 정리 완료, 자동 Test 실행 전 |
 | [Ticket 학습 점검 질문](./study-docs/study-questions.md) | 8월 19일 | 객체 책임 설명 질문 정리 |
 | Week 1 WIL | 8월 22일 작성, 다음 월요일 게시 | 실제 결과 후 생성 |
 | 공개 Checklist | 게시 직전 | 검토 시 생성 |

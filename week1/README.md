@@ -57,6 +57,7 @@
 - [Encapsulation과 불변조건 Learning Note](./study-docs/learning-encapsulation-and-invariants.md) — 개념 정리와 JShell 수동 검증
 - [Ticket 상태 전이 Lab](./study-docs/lab-ticket-state-transition.md) — 정상·거부·반례 실험 기록
 - [Maven Build와 Wrapper Learning Note](./study-docs/learning-maven-build-and-wrapper.md) — Project Model, Lifecycle, Artifact와 Gradle 비교
+- [JUnit과 Unit Test 설계 Learning Note](./study-docs/learning-junit-and-unit-test-design.md) — JUnit 구조, Assertion, Given–When–Then과 Test 독립성
 - [Ticket 학습 점검 질문](./study-docs/study-questions.md) — 객체 책임과 상태 전이 설명 점검
 
 ### 실제 근거가 생길 때 추가
