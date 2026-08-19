@@ -54,10 +54,13 @@
 - [주간 학습 계획](./weekly-plan.md)
 - [주차 안내](./README.md)
 - [Git 운영 Baseline Learning Note](./study-docs/learning-git-operational-baseline.md) — 개념 정리 완료, 자가진단 실행 전
+- [Encapsulation과 불변조건 Learning Note](./study-docs/learning-encapsulation-and-invariants.md) — 개념 정리와 JShell 수동 검증
+- [Ticket 상태 전이 Lab](./study-docs/lab-ticket-state-transition.md) — 정상·거부·반례 실험 기록
+- [Maven Build와 Wrapper Learning Note](./study-docs/learning-maven-build-and-wrapper.md) — Project Model, Lifecycle, Artifact와 Gradle 비교
+- [Ticket 학습 점검 질문](./study-docs/study-questions.md) — 객체 책임과 상태 전이 설명 점검
 
 ### 실제 근거가 생길 때 추가
 
-- Ticket 객체지향 Lab Report
 - JUnit Test와 설명 가능성 점검 기록
 - Week 1 WIL
 
@@ -65,7 +68,7 @@ Placeholder만 있는 문서는 미리 만들지 않는다.
 
 ## Week 1 Learning Evidence Gate
 
-- [ ] Ticket 상태를 외부에서 임의로 변경할 수 없게 한다.
+- [x] Ticket 상태를 외부에서 임의로 변경할 수 없게 한다.
 - [ ] 허용·거부 상태 전이를 객체 규칙과 JUnit으로 검증한다.
 - [ ] 상속과 Composition 중 선택한 이유를 변경 요구로 설명한다.
 - [ ] AI가 보조한 부분과 직접 작성·수정·검증한 부분을 구분한다.

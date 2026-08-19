@@ -43,9 +43,9 @@ Git은 2026-08-19부터 별도 핵심 학습 Block이 아니라 전 과정의 �
 | 항목 | 확인 상태 | 이번 주 조치 |
 |---|---|---|
 | Git | WIL 저장소 사용 가능, 학습 계획 개편 변경 존재 | 별도 학습 Block 없이 실제 변경의 상태·Diff·Commit을 점검하고 공백만 보충 |
-| Java | JDK 21 설치 확인 | 순수 Java·JUnit 실습에 사용하고 실제 Version을 기록 |
-| Build Tool | 전역 Maven·Gradle 설치에 의존하지 않음 | 필요할 때 한 개 Wrapper만 선택 |
-| Learning Lab Source | 아직 생성하지 않음 | 문서와 Source 경계를 정한 뒤 최소 Project만 구성 |
+| Java | JDK 25.0.4에서 `java`·`javac`·`jshell` 확인 | Java 25를 순수 Java·JUnit 실습의 실행 기준으로 사용 |
+| Build Tool | Maven Wrapper 3.3.4 `only-script`로 Maven 3.9.16 고정, `mvnw.cmd test` 성공 | JUnit Test를 추가한 뒤 새 Terminal에서 동일 명령 재현 |
+| Learning Lab Source | `ai-helpdesk-learning-lab`에 Java 25 Ticket Source와 최소 POM 구성 | Framework·Database 없이 Ticket 규칙과 Test로 범위 유지 |
 | Spring·Database·LLM | 이번 주 비범위 | Week 2 이후 공식 호환성과 선행 학습을 확인하고 선택 |
 
 Version을 기억에 의존해 단정하지 않는다. 실제 명령과 공식 자료로 확인하고, Credential 값은 확인하거나 출력하지 않는다.
@@ -130,8 +130,8 @@ Must가 끝나지 않은 상태에서 Should나 다음 주 기술을 시작하�
 
 | 순서 | Lab | 질문 | 완료 조건 | 상태 |
 |---:|---|---|---|---|
-| 0 | Source·Toolchain 최소 Baseline | 새 Terminal에서 같은 Test를 실행할 수 있는가? | 선택한 Wrapper로 Test 실행 | Planned |
-| 1 | Ticket Encapsulation | 외부가 상태를 임의로 바꿀 수 있는가? | 허용 Method만 상태 변경 | Planned |
+| 0 | Source·Toolchain 최소 Baseline | 새 Terminal에서 같은 Test를 실행할 수 있는가? | 선택한 Wrapper로 Test 실행 | In Progress — Build Lifecycle 성공, JUnit Test 준비 전 |
+| 1 | Ticket Encapsulation | 외부가 상태를 임의로 바꿀 수 있는가? | 허용 Method만 상태 변경 | Completed — Source와 JShell 근거 확인 |
 | 2 | 상태 전이와 Exception | 잘못된 전이를 예측 가능하게 거부하는가? | 실패 Type·Message와 Test | Planned |
 | 3 | Policy 비교 | 분기와 다형성의 변경 비용은 어떻게 다른가? | 같은 요구를 두 구조에 적용해 비교 | Planned |
 | 4 | Review와 설명 | Code를 보지 않고 흐름과 선택을 설명할 수 있는가? | 질문·수정 기록과 WIL 근거 | Planned |
@@ -141,7 +141,7 @@ Must가 끝나지 않은 상태에서 Should나 다음 주 기술을 시작하�
 | 날짜 | 오전 | 오후 | 야간 | 일일 종료 조건 | 상태 |
 |---|---|---|---|---|---|
 | 8월 18일 화요일 | 작업 없음 | 작업 없음 | 범위 전환, 핵심 질문과 Week 1 Baseline 확정 | AgentOps 구현이 중단되고 새 학습 범위가 문서화됨 | Completed |
-| 8월 19일 수요일 | Java Class·Object·Encapsulation 학습 | 최소 Source 구성과 Ticket 불변 조건 | 객체 책임 설명과 첫 Unit Test 준비 | 객체 책임과 불변 조건을 예제로 설명 | Planned |
+| 8월 19일 수요일 | Java Class·Object·Encapsulation 학습 | 최소 Source 구성과 Ticket 불변 조건 | 객체 책임 설명과 첫 Unit Test 준비 | 객체 책임과 불변 조건을 예제로 설명 | In Progress — 오전·오후 완료, 야간 전 |
 | 8월 20일 목요일 | Exception·Collection과 상태 전이 | JUnit 정상·경계·거부 Test | 실패 메시지와 Test 이름 Review | 잘못된 Ticket 전이가 Test에서 명확히 거부됨 | Planned |
 | 8월 21일 금요일 | Polymorphism·Composition·SOLID 학습 | 분기와 Policy 구조 비교 | 취약 개념 재설명과 Test 보완 | 변경 요구에서 선택한 구조의 차이를 설명 | Planned |
 | 8월 22일 토요일 | 전체 Test 재현과 취약 개념 재실험 | 새 기능 없이 Review·정리 | Lab Report·Learning Note·WIL 작성 | Gate 결과와 미완료 질문이 근거와 함께 기록됨 | Planned |
@@ -166,8 +166,10 @@ Git 자가진단은 8월 19일 학습 시작 전 최대 30분만 사용하며 �
 | [주차 안내](./README.md) | 주차 시작 | 작성 완료 |
 | [주간 학습 계획](./weekly-plan.md) | 주차 시작 | Baseline v3 |
 | [Git 운영 Baseline Learning Note](./study-docs/learning-git-operational-baseline.md) | 8월 19일 | 개념 정리 완료, 자가진단 실행 전 |
-| 객체지향 Learning Note | 핵심 실험 후 | 근거 확보 시 생성 |
-| Ticket 객체지향 Lab Report | 8월 22일 | 실제 실행 후 생성 |
+| [Encapsulation과 불변조건 Learning Note](./study-docs/learning-encapsulation-and-invariants.md) | 8월 19일 | 개념 정리와 JShell 실험 기록 완료 |
+| [Ticket 상태 전이 Lab](./study-docs/lab-ticket-state-transition.md) | 8월 19일 | 수동 실험 완료, JUnit 자동 검증 전 |
+| [Maven Build와 Wrapper Learning Note](./study-docs/learning-maven-build-and-wrapper.md) | 8월 19일 | 개념 정리 완료 |
+| [Ticket 학습 점검 질문](./study-docs/study-questions.md) | 8월 19일 | 객체 책임 설명 질문 정리 |
 | Week 1 WIL | 8월 22일 작성, 다음 월요일 게시 | 실제 결과 후 생성 |
 | 공개 Checklist | 게시 직전 | 검토 시 생성 |
 

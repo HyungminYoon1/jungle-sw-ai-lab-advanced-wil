@@ -94,7 +94,7 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
     │   └── study-docs/  # 개념별 Learning Note와 운영 Baseline 점검 기록
     └── weekN/       # 해당 주차에 실제 산출물이 생길 때 추가
 
-실습 Source는 별도 Learning Lab 저장소를 만든 뒤 관리할 예정이다. 이 저장소에는 주차별 계획, 실험 결과, Learning Note, WIL과 공개 가능한 근거를 남긴다.
+실습 Source는 별도 `ai-helpdesk-learning-lab` 저장소에서 관리한다. 이 WIL 저장소에는 주차별 계획, 실험 결과, Learning Note, WIL과 공개 가능한 근거를 남긴다.
 
 ## 공개 경계
 
