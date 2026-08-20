@@ -23,7 +23,7 @@
 ## Ticket Given–When–Then 시나리오 작성
 
 > 목적: Ticket의 생성 규칙과 상태 전이 규칙을 JUnit Code로 옮기기 전에 자연어로 명확하게 설명한다.
-> 개념 참고: [JUnit과 Unit Test 설계 Learning Note](./learning-junit-and-unit-test-design.md)
+> 개념 참고: [JUnit과 Unit Test 설계 Learning Note](../study-docs/learning-junit-and-unit-test-design.md)
 
 ### 작성 기준
 
