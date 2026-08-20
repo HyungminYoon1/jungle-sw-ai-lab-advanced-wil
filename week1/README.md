@@ -58,6 +58,8 @@
 - [Ticket 상태 전이 Lab](./study-docs/lab-ticket-state-transition.md) — 정상·거부·반례 실험 기록
 - [Maven Build와 Wrapper Learning Note](./study-docs/learning-maven-build-and-wrapper.md) — Project Model, Lifecycle, Artifact와 Gradle 비교
 - [JUnit과 Unit Test 설계 Learning Note](./study-docs/learning-junit-and-unit-test-design.md) — JUnit 구조, Assertion, Given–When–Then과 Test 독립성
+- [Java Exception과 안전한 실패 처리 Learning Note](./study-docs/learning-java-exceptions.md) — Exception 계층, Checked·Unchecked 구분, 전파와 상태 보존
+- [Java Collection과 안전한 상태 노출 Learning Note](./study-docs/learning-java-collections.md) — 자료구조 선택, Generic, 가변성, Snapshot과 읽기 전용 View
 - [Ticket 객체와 JUnit 기초 학습 점검](./study-notes/2026-08-19-study-questions.md) — 객체 책임, 상태 전이 시나리오와 JUnit 실행 구조 점검
 
 ### 실제 근거가 생길 때 추가
