@@ -54,17 +54,24 @@
 - [주간 학습 계획](./weekly-plan.md)
 - [주차 안내](./README.md)
 - [Git 운영 Baseline Learning Note](./study-docs/learning-git-operational-baseline.md) — 개념 정리 완료, 자가진단 실행 전
-- [Encapsulation과 불변조건 Learning Note](./study-docs/learning-encapsulation-and-invariants.md) — 개념 정리와 JShell 수동 검증
-- [Ticket 상태 전이 Lab](./study-docs/lab-ticket-state-transition.md) — 정상·거부·반례 실험 기록
+- [Encapsulation과 불변조건 Learning Note](./study-docs/learning-encapsulation-and-invariants.md) — 개념 정리, JShell 수동 검증과 JUnit 후속 검증
+- [Ticket 상태 전이 Lab](./study-docs/lab-ticket-state-transition.md) — 정상·거부·반례 실험과 JUnit 자동 검증 기록
 - [Maven Build와 Wrapper Learning Note](./study-docs/learning-maven-build-and-wrapper.md) — Project Model, Lifecycle, Artifact와 Gradle 비교
 - [JUnit과 Unit Test 설계 Learning Note](./study-docs/learning-junit-and-unit-test-design.md) — JUnit 구조, Assertion, Given–When–Then과 Test 독립성
 - [Java Exception과 안전한 실패 처리 Learning Note](./study-docs/learning-java-exceptions.md) — Exception 계층, Checked·Unchecked 구분, 전파와 상태 보존
 - [Java Collection과 안전한 상태 노출 Learning Note](./study-docs/learning-java-collections.md) — 자료구조 선택, Generic, 가변성, Snapshot과 읽기 전용 View
 - [Ticket 객체와 JUnit 기초 학습 점검](./study-notes/2026-08-19-study-questions.md) — 객체 책임, 상태 전이 시나리오와 JUnit 실행 구조 점검
+- [Java Exception·Collection과 JUnit 자동 검증 학습 점검](./study-notes/2026-08-20-study-questions.md) — Exception·Collection 설명, Ticket Test Self Review와 최종 실행 근거
+
+### 실제 검증 근거
+
+- AI Helpdesk Learning Lab에서 `.\mvnw.cmd clean test`로 JUnit Test 10개 실행
+- 결과: `Failures: 0`, `Errors: 0`, `Skipped: 0`, `BUILD SUCCESS`
+- Source Commit: `cdcbee0` — Ticket Unit Test 기준선, `944aede` — 대표 Exception Message 검증
+- 8월 20일 야간 Review: Test 이름, Exception Message와 실패 후 상태 보존을 자신의 말로 설명하고 Clean Test 재현
 
 ### 실제 근거가 생길 때 추가
 
-- JUnit Test 실행 결과
 - Week 1 WIL
 
 Placeholder만 있는 문서는 미리 만들지 않는다.
@@ -72,9 +79,9 @@ Placeholder만 있는 문서는 미리 만들지 않는다.
 ## Week 1 Learning Evidence Gate
 
 - [x] Ticket 상태를 외부에서 임의로 변경할 수 없게 한다.
-- [ ] 허용·거부 상태 전이를 객체 규칙과 JUnit으로 검증한다.
+- [x] 허용·거부 상태 전이를 객체 규칙과 JUnit으로 검증한다.
 - [ ] 상속과 Composition 중 선택한 이유를 변경 요구로 설명한다.
-- [ ] AI가 보조한 부분과 직접 작성·수정·검증한 부분을 구분한다.
+- [x] AI가 보조한 부분과 직접 작성·수정·검증한 부분을 구분한다.
 - [ ] 완료·부분 완료·미수행 범위를 WIL에 기록한다.
 - [ ] 공개 문서와 Source에 Secret, 개인정보와 로컬 경로가 없다.
 

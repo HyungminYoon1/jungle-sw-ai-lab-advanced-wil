@@ -130,11 +130,11 @@ Must가 끝나지 않은 상태에서 Should나 다음 주 기술을 시작하�
 
 | 순서 | Lab | 질문 | 완료 조건 | 상태 |
 |---:|---|---|---|---|
-| 0 | Source·Toolchain 최소 Baseline | 새 Terminal에서 같은 Test를 실행할 수 있는가? | 선택한 Wrapper로 Test 실행 | In Progress — Build Lifecycle 성공, JUnit Test 준비 전 |
+| 0 | Source·Toolchain 최소 Baseline | 새 Terminal에서 같은 Test를 실행할 수 있는가? | 선택한 Wrapper로 Test 실행 | Completed — Maven 3.9.16 Wrapper·JDK 25에서 Clean Test 10개 통과 |
 | 1 | Ticket Encapsulation | 외부가 상태를 임의로 바꿀 수 있는가? | 허용 Method만 상태 변경 | Completed — Source와 JShell 근거 확인 |
-| 2 | 상태 전이와 Exception | 잘못된 전이를 예측 가능하게 거부하는가? | 실패 Type·Message와 Test | Planned |
+| 2 | 상태 전이와 Exception | 잘못된 전이를 예측 가능하게 거부하는가? | 실패 Type·Message와 Test | Completed — 정상·경계·거부 Test 10개와 대표 Message 3개 검증 |
 | 3 | Policy 비교 | 분기와 다형성의 변경 비용은 어떻게 다른가? | 같은 요구를 두 구조에 적용해 비교 | Planned |
-| 4 | Review와 설명 | Code를 보지 않고 흐름과 선택을 설명할 수 있는가? | 질문·수정 기록과 WIL 근거 | Planned |
+| 4 | Review와 설명 | Code를 보지 않고 흐름과 선택을 설명할 수 있는가? | 질문·수정 기록과 WIL 근거 | In Progress — 8월 20일 Ticket Test Review 완료, Week 1 종합 Review 남음 |
 
 ## 일정
 
@@ -142,7 +142,7 @@ Must가 끝나지 않은 상태에서 Should나 다음 주 기술을 시작하�
 |---|---|---|---|---|---|
 | 8월 18일 화요일 | 작업 없음 | 작업 없음 | 범위 전환, 핵심 질문과 Week 1 Baseline 확정 | AgentOps 구현이 중단되고 새 학습 범위가 문서화됨 | Completed |
 | 8월 19일 수요일 | Java Class·Object·Encapsulation 학습 | 최소 Source 구성과 Ticket 불변 조건 | 객체 책임 설명과 첫 Unit Test 준비 | 객체 책임과 불변 조건을 예제로 설명 | Completed |
-| 8월 20일 목요일 | Exception·Collection과 상태 전이 | JUnit 정상·경계·거부 Test | 실패 메시지와 Test 이름 Review | 잘못된 Ticket 전이가 Test에서 명확히 거부됨 | Planned |
+| 8월 20일 목요일 | Exception·Collection과 상태 전이 | JUnit 정상·경계·거부 Test | 실패 메시지와 Test 이름 Review | 잘못된 Ticket 전이가 Test에서 명확히 거부됨 | Completed — Self Review와 최종 Clean Test 완료 |
 | 8월 21일 금요일 | Polymorphism·Composition·SOLID 학습 | 분기와 Policy 구조 비교 | 취약 개념 재설명과 Test 보완 | 변경 요구에서 선택한 구조의 차이를 설명 | Planned |
 | 8월 22일 토요일 | 전체 Test 재현과 취약 개념 재실험 | 새 기능 없이 Review·정리 | Lab Report·Learning Note·WIL 작성 | Gate 결과와 미완료 질문이 근거와 함께 기록됨 | Planned |
 
@@ -167,23 +167,24 @@ Git 자가진단은 8월 19일 학습 시작 전 최대 30분만 사용하며 �
 | [주간 학습 계획](./weekly-plan.md) | 주차 시작 | Baseline v3 |
 | [Git 운영 Baseline Learning Note](./study-docs/learning-git-operational-baseline.md) | 8월 19일 | 개념 정리 완료, 자가진단 실행 전 |
 | [Encapsulation과 불변조건 Learning Note](./study-docs/learning-encapsulation-and-invariants.md) | 8월 19일 | 개념 정리와 JShell 실험 기록 완료 |
-| [Ticket 상태 전이 Lab](./study-docs/lab-ticket-state-transition.md) | 8월 19일 | 수동 실험 완료, JUnit 자동 검증 전 |
+| [Ticket 상태 전이 Lab](./study-docs/lab-ticket-state-transition.md) | 8월 19~20일 | JShell 수동 실험과 JUnit 자동 Test 10개 검증 완료 |
 | [Maven Build와 Wrapper Learning Note](./study-docs/learning-maven-build-and-wrapper.md) | 8월 19일 | 개념 정리 완료 |
-| [JUnit과 Unit Test 설계 Learning Note](./study-docs/learning-junit-and-unit-test-design.md) | 8월 19일 | 개념 정리 완료, 자동 Test 실행 전 |
+| [JUnit과 Unit Test 설계 Learning Note](./study-docs/learning-junit-and-unit-test-design.md) | 8월 19~20일 | 개념 정리와 자동 Test 10개 실행 완료 |
 | [Ticket 객체와 JUnit 기초 학습 점검](./study-notes/2026-08-19-study-questions.md) | 8월 19일 | 객체 책임·Given–When–Then·JUnit 핵심 개념 답변 완료 |
 | [Java Exception과 안전한 실패 처리 Learning Note](./study-docs/learning-java-exceptions.md) | 8월 20일 | 개념 정리 완료 |
 | [Java Collection과 안전한 상태 노출 Learning Note](./study-docs/learning-java-collections.md) | 8월 20일 | 개념 정리 완료 |
+| [8월 20일 학습 점검](./study-notes/2026-08-20-study-questions.md) | 8월 20일 | Exception·Collection 답변, Ticket Test Self Review와 최종 Test 재현 완료 |
 | Week 1 WIL | 8월 22일 작성, 다음 월요일 게시 | 실제 결과 후 생성 |
 | 공개 Checklist | 게시 직전 | 검토 시 생성 |
 
 ## 주간 Learning Evidence Gate
 
-- [ ] Ticket 객체가 잘못된 상태를 스스로 거부한다.
-- [ ] 정상·경계·거부 규칙이 읽을 수 있는 JUnit Test로 검증된다.
+- [x] Ticket 객체가 잘못된 상태를 스스로 거부한다.
+- [x] 정상·경계·거부 규칙이 읽을 수 있는 JUnit Test로 검증된다.
 - [ ] Composition 또는 다형성 선택을 변경 요구로 설명한다.
-- [ ] 핵심 Code의 작은 변경을 직접 수행하고 Test를 수정한다.
-- [ ] 예상과 실제가 달랐던 사례를 한 개 이상 기록한다.
-- [ ] AI 활용과 직접 판단·수정·검증한 범위를 구분한다.
+- [x] 핵심 Code의 작은 변경을 직접 수행하고 Test를 수정한다.
+- [x] 예상과 실제가 달랐던 사례를 한 개 이상 기록한다.
+- [x] AI 활용과 직접 판단·수정·검증한 범위를 구분한다.
 - [ ] 완료·부분 완료·미수행 범위와 다음 주 질문을 WIL에 남긴다.
 - [ ] Secret, 개인정보와 로컬 경로가 공개 자료에 없다.
 
@@ -191,7 +192,7 @@ Git 자가진단은 8월 19일 학습 시작 전 최대 30분만 사용하며 �
 
 - [ ] `status`, `diff`, `diff --staged`로 변경 위치와 Commit 포함 범위를 확인한다.
 - [ ] `restore`, `restore --staged`, `revert`의 대상과 영향 차이를 설명한다.
-- [ ] 실제 변경을 하나의 의도로 설명되는 작은 Commit으로 남긴다.
+- [x] 실제 변경을 하나의 의도로 설명되는 작은 Commit으로 남긴다.
 - [ ] 공백이 확인되면 해당 항목만 보충하고 Learning Note의 상태를 갱신한다.
 
 Git 점검과 Merge·Rebase 비교는 Week 1 핵심 Learning Evidence Gate의 통과 조건이 아니다.
