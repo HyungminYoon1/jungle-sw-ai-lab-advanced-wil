@@ -1,15 +1,16 @@
 # Lab Report — Ticket 상태 전이와 캡슐화 반례
 
 > 작성일: 2026-08-19
+> 후속 검증일: 2026-08-20
 > 주차: Week 1
 > 과정 영역: 객체지향
-> 상태: Completed — JShell 수동 검증
+> 상태: Completed — JShell 수동 및 JUnit 자동 검증
 
 ## 한눈에 보기
 
 - 질문: 필드가 `private`이어도 범용 Setter가 있으면 Ticket의 상태 전이 규칙과 불변조건이 깨지는가?
 - 예상: 의도가 드러나는 행동을 제공하는 `Ticket`은 잘못된 전이를 거부하지만, `UnsafeTicket`은 `OPEN → RESOLVED` 직접 변경과 `null` 대입을 허용할 것이다.
-- 관찰: 예상한 예외와 정상 전이를 확인했으며, 실패 후 `Ticket`의 기존 상태가 보존되었다. `UnsafeTicket`에서는 잘못된 상태 변경이 그대로 허용되었다.
+- 관찰: JShell에서 예상한 예외와 정상 전이를 확인했으며, 실패 후 `Ticket`의 기존 상태가 보존되었다. `UnsafeTicket`에서는 잘못된 상태 변경이 그대로 허용되었다. 이후 같은 Ticket 규칙을 JUnit Test 10개로 자동 검증했다.
 - 결론: `private`은 외부의 직접 필드 접근만 제한한다. 객체의 규칙을 보호하려면 변경 인터페이스 자체가 허용된 행동과 검증을 표현해야 한다.
 
 ## 학습 배경
@@ -32,7 +33,6 @@
 - 사용자 인증과 권한 검증
 - Repository, Database와 트랜잭션
 - 동시성 상황의 상태 전이
-- 정식 Java 프로젝트와 JUnit 자동 테스트
 
 ## 예상과 실패 조건
 
@@ -209,21 +209,21 @@ unsafeTicket.status()
 |---|---|---|---|
 | JShell 수동 검증 | 잘못된 전이 허용, 실패 후 상태 변경 | Pass | [결과](#결과) |
 | JShell 반례 검증 | 범용 Setter를 통한 규칙 우회와 `null` 대입 | Pass | [반례 재현 결과](#반례-재현-결과) |
-| JUnit 자동 검증 | 회귀 시 상태 전이 규칙이 깨지는 위험 | Not Run | 프로젝트와 테스트를 아직 구성하지 않음 |
+| JUnit 자동 검증 | 회귀 시 생성·상태 전이 규칙이 깨지는 위험 | Pass | `.\mvnw.cmd clean test`: 10개 통과, `Failures: 0`, `Errors: 0`, `Skipped: 0` |
 
-`Pass`는 이 문서에 적은 사례가 JShell에서 예상대로 관찰되었다는 뜻이며, 전체 구현의 정확성이나 자동 회귀 검증을 의미하지 않는다.
+JUnit 기준선은 `cdcbee0`, 서로 다른 대표 Exception Message 3개 검증은 `944aede` Commit에 기록했다. `Pass`는 현재 단일 Ticket Domain에 작성한 정상·경계·거부 규칙이 수동 실험과 자동 Test에서 예상대로 관찰됐다는 뜻이다. 동시성, 영속화, 권한과 비범위 기능의 정확성을 의미하지 않는다.
 
 ## 선택적 적용
 
-- Helpdesk Lab에 적용 여부: 미적용
-- 이유: 현재는 개념을 분리해 확인하는 독립 JShell Spike 단계이기 때문이다.
-- 향후 적용 범위: Ticket 도메인 객체와 상태 전이 단위 테스트
+- Helpdesk Lab에 적용 여부: 적용 완료
+- 적용 범위: Ticket 생성 규칙, 정상 상태 전이, 잘못된 전이 거부와 실패 후 상태 보존
+- 자동 검증 범위: 정상 3개, 제목 경계 3개, 거부 전이 4개와 대표 Exception Message 3개
 
 ## 설명 가능성 점검
 
 - AI 도움 없이 설명할 수 있는 흐름: Ticket 생성, 정상 전이, 잘못된 전이 거부와 실패 후 상태 보존
-- 직접 수행한 작은 변경: `UnsafeTicket`을 정의하고 `RESOLVED`와 `null`을 직접 대입해 반례 확인
-- 아직 설명이 불완전한 부분: JUnit으로 동일한 사례를 자동 검증하는 방법
+- 직접 수행한 작은 변경: `UnsafeTicket` 반례 실행, Ticket JUnit Test 작성과 대표 Exception Message 검증
+- 후속 설명 가능 범위: `assertThrows()`가 반환한 예외 객체로 Message를 확인하고, 별도 Assertion으로 실패 후 상태를 검증하는 이유
 - Self Review 질문: 상태 전이 검증과 사용자 권한 검증을 각각 어디에서 담당해야 하는가?
 
 ## AI 활용
@@ -232,24 +232,34 @@ unsafeTicket.status()
 |---|---|---|
 | 개념 학습 | 캡슐화, 불변조건과 책임 분리 설명 보조 | 자신의 말로 정의와 확인 질문의 답 작성 |
 | 실험 설계 | Ticket과 UnsafeTicket 예제 및 실행 순서 제안 | 로컬 JShell에서 직접 입력하고 결과 확인 |
-| 문서 검토 | 과도한 표현, 용어와 증거 구분 검토 | 실제 수행 범위와 JUnit 미실행 사실 확인 |
+| JUnit 실습 | 정상·경계·거부 Case와 대표 Message 검증 방법 제안 | Test 10개를 직접 작성·실행하고 `exception cannot be resolved` 오류 수정 |
+| 문서 검토 | 과도한 표현, 용어와 증거 구분 검토 | 실제 실행 결과와 자동 검증의 한계를 확인 |
 
 AI 대화 원문이나 민감한 환경 정보는 문서에 포함하지 않았다.
 
 ## 한계와 다음 질문
 
-- 현재 결론이 유효한 조건: 이 문서에 정의된 단일 Ticket 객체와 단일 JShell 세션
-- 확인하지 않은 조건: 동시성, 영속화, 권한 검증, 여러 프로세스의 변경, JUnit 자동 실행
-- 다음 실험: 같은 정상·실패·반례 Case를 JUnit 테스트로 작성한다.
-- 조건부 후속: 정식 프로젝트를 구성한 후 테스트 실패를 먼저 확인하고 구현으로 통과시킨다.
+- 현재 결론이 유효한 조건: 이 문서와 AI Helpdesk Learning Lab에 정의된 단일 Ticket Domain
+- 확인하지 않은 조건: 동시성, 영속화, 권한 검증과 여러 프로세스의 변경
+- 다음 실험: 구체적인 변경 요구를 정한 뒤 분기와 Polymorphism·Composition 구조의 변경 영향을 비교한다.
+- 조건부 후속: 새로운 상태 전이 요구가 생기면 실패 Test를 먼저 추가해 기존 규칙과 변경 범위를 확인한다.
 
 ## 재현 방법
+
+### JShell 수동 검증
 
 1. JDK 25가 설치된 PowerShell에서 `jshell`을 실행한다.
 2. 이 문서의 `TicketStatus`, `Ticket`과 `UnsafeTicket`을 차례로 입력한다.
 3. 실행 절차의 명령을 한 줄씩 입력한다.
 4. 결과 표와 같은 상태 및 예외 유형·메시지가 나타나는지 확인한다.
 5. `/exit`를 입력해 JShell을 종료한다.
+
+### JUnit 자동 검증
+
+1. AI Helpdesk Learning Lab의 Project Root에서 새 PowerShell을 연다.
+2. `.\mvnw.cmd clean test`를 실행한다.
+3. JDK 25로 Main·Test Source가 Compile되는지 확인한다.
+4. `Tests run: 10`, 실패·오류·건너뜀 0개와 `BUILD SUCCESS`를 확인한다.
 
 ## 참고 자료
 

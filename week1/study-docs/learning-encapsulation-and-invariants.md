@@ -121,6 +121,7 @@ void resolve() {
 |---|---|---|
 | JShell 수동 실험 | 정상 상태 전이, 잘못된 전이 거부, 실패 후 상태 보존 | [실험 보고서](./lab-ticket-state-transition.md) |
 | `UnsafeTicket` 반례 | `private` 필드만으로 불변조건과 상태 전이를 보호할 수 없음 | [실험 보고서](./lab-ticket-state-transition.md#안전하지-않은-ticket-반례) |
+| JUnit 자동 검증 | 생성·정상 전이·거부 전이와 실패 후 상태 보존을 Test 10개로 확인 | [실험 보고서](./lab-ticket-state-transition.md#test와-검증) |
 
 ## 대안과 사용 경계
 
@@ -132,7 +133,7 @@ void resolve() {
 
 - 사용할 조건: 객체가 상태를 가지며 허용된 변경 순서나 값의 범위가 있을 때
 - 사용하지 않을 조건: 단순 데이터 전달처럼 행동과 불변조건이 없는 값 구조
-- 현재 Lab 적용 여부: 독립 JShell 실험으로 원리를 확인했으며 정식 프로젝트에는 아직 적용하지 않음
+- 현재 Lab 적용 여부: JShell로 원리를 확인한 뒤 AI Helpdesk Learning Lab의 Ticket Source와 JUnit Test에 적용 완료
 
 ## JShell과 JUnit
 
@@ -146,26 +147,32 @@ JShell은 Java 9부터 제공되는 Java REPL(Read-Eval-Print Loop) 도구다. �
 
 JUnit은 JVM에서 반복 가능한 자동 테스트를 작성하고 실행하기 위한 테스트 프레임워크 생태계다. 단언문을 사용해 반환값, 객체 상태와 예외 발생 여부 등이 예상과 일치하는지 검증할 수 있다.
 
-이번 오전 학습에서는 JUnit의 목적만 개념으로 정리했으며, 프로젝트 구성과 JUnit 테스트 실행은 수행하지 않았다. 따라서 이 문서의 실행 근거는 JShell 수동 실험으로 한정한다.
+2026-08-19 오전 작성 시점에는 JUnit의 목적만 개념으로 정리했으며, 프로젝트 구성과 JUnit Test 실행은 수행하지 않았다. 따라서 당시 실행 근거는 JShell 수동 실험으로 한정했다.
+
+### 2026-08-20 후속 검증
+
+AI Helpdesk Learning Lab에서 같은 규칙을 JUnit Test 10개로 전환했다. `.\mvnw.cmd clean test`로 Main·Test Source를 JDK 25에서 다시 Compile했으며 `Failures: 0`, `Errors: 0`, `Skipped: 0`과 `BUILD SUCCESS`를 확인했다.
+
+거부 전이는 `assertThrows()`로 Exception Type을 확인하고, 행동 뒤의 상태를 별도 `assertEquals()`로 검증했다. 서로 다른 대표 Exception Message 3개는 `assertThrows()`가 반환한 예외 객체의 `getMessage()`로 확인했다. 이 결과의 범위는 현재 Ticket Domain이며 동시성, 영속화와 사용자 권한을 포함하지 않는다.
 
 ## 설명 가능성 점검
 
 - 필드가 `private`인데도 `UnsafeTicket`의 상태가 잘못 변경된 이유: 외부에서 호출할 수 있는 `setStatus()`가 상태 전이와 입력값을 검증하지 않고 값을 대입했기 때문이다.
 - `setStatus()`에서 `null`만 검사해도 충분하지 않은 이유: `OPEN → RESOLVED`처럼 enum에는 존재하지만 현재 상태에서는 허용되지 않는 전이를 막지 못하기 때문이다.
 - 상태 전이와 사용자 권한 검증의 담당: Ticket은 전이의 유효성을, Application Service나 Authorization Policy는 사용자의 행동 권한을 검증한다.
-- 아직 설명이 불완전한 부분: 실제 Java 프로젝트에서 JUnit으로 같은 규칙을 자동 검증하는 방법
+- 후속 설명 가능 범위: JUnit에서 정상 전이, Exception Type·Message와 실패 후 상태 보존을 검증하는 방법
 
 ## AI 활용
 
 - AI가 도운 부분: 개념 구분, 실험 코드와 확인 질문 제안, 문장과 용어의 정확성 검토
-- 직접 확인한 공식 자료·실행 결과: 로컬 JDK와 JShell 버전, Ticket 및 UnsafeTicket의 JShell 실행 결과
-- 직접 판단·수정한 부분: JShell 명령 실행, 결과 관찰, 질문에 대한 답변 작성과 개념 이해 수정
+- 직접 확인한 공식 자료·실행 결과: 로컬 JDK·JShell Version, Ticket 및 UnsafeTicket의 JShell 결과, JUnit Test 10개 실행 결과
+- 직접 판단·수정한 부분: JShell 명령 실행, Ticket Test 작성, `exception` 변수 오류 수정, 대표 Message 검증과 결과 해석
 
-## 다음 학습
+## 후속 학습 결과
 
-- 남은 질문: JUnit에서 정상 전이, 예외와 실패 후 상태 보존을 어떻게 자동 검증하는가?
-- 조건부 후속: 정식 Java 프로젝트를 만든 뒤 동일한 사례를 JUnit 테스트로 전환한다.
-- 재검토 시점: Week 1의 JUnit 자동 검증 실습 후
+- 완료한 질문: JUnit에서 정상 전이, 예외와 실패 후 상태 보존을 어떻게 자동 검증하는가?
+- 확인 결과: Given–When–Then 구조의 Test 10개와 대표 Exception Message 3개 검증으로 현재 Ticket 규칙을 자동화했다.
+- 다음 질문: 새로운 변경 요구에서 Polymorphism과 Composition이 조건 분기보다 변경 범위를 줄이는가?
 
 ## 참고 자료
 
