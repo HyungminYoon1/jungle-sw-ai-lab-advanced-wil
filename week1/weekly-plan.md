@@ -133,8 +133,8 @@ Must가 끝나지 않은 상태에서 Should나 다음 주 기술을 시작하�
 | 0 | Source·Toolchain 최소 Baseline | 새 Terminal에서 같은 Test를 실행할 수 있는가? | 선택한 Wrapper로 Test 실행 | Completed — Maven 3.9.16 Wrapper·JDK 25에서 Clean Test 10개 통과 |
 | 1 | Ticket Encapsulation | 외부가 상태를 임의로 바꿀 수 있는가? | 허용 Method만 상태 변경 | Completed — Source와 JShell 근거 확인 |
 | 2 | 상태 전이와 Exception | 잘못된 전이를 예측 가능하게 거부하는가? | 실패 Type·Message와 Test | Completed — 정상·경계·거부 Test 10개와 대표 Message 3개 검증 |
-| 3 | Policy 비교 | 분기와 다형성의 변경 비용은 어떻게 다른가? | 같은 요구를 두 구조에 적용해 비교 | Planned |
-| 4 | Review와 설명 | Code를 보지 않고 흐름과 선택을 설명할 수 있는가? | 질문·수정 기록과 WIL 근거 | In Progress — 8월 20일 Ticket Test Review 완료, Week 1 종합 Review 남음 |
+| 3 | Policy 비교 | 분기와 다형성의 변경 비용은 어떻게 다른가? | 같은 요구를 두 구조에 적용해 비교 | Completed — NORMAL·URGENT 기준선과 VIP 확장, JUnit 16개와 Diff 비교 완료 |
+| 4 | Review와 설명 | Code를 보지 않고 흐름과 선택을 설명할 수 있는가? | 질문·수정 기록과 WIL 근거 | In Progress — 8월 21일 취약 개념 점검 완료, Week 1 종합 Review 남음 |
 
 ## 일정
 
@@ -143,7 +143,7 @@ Must가 끝나지 않은 상태에서 Should나 다음 주 기술을 시작하�
 | 8월 18일 화요일 | 작업 없음 | 작업 없음 | 범위 전환, 핵심 질문과 Week 1 Baseline 확정 | AgentOps 구현이 중단되고 새 학습 범위가 문서화됨 | Completed |
 | 8월 19일 수요일 | Java Class·Object·Encapsulation 학습 | 최소 Source 구성과 Ticket 불변 조건 | 객체 책임 설명과 첫 Unit Test 준비 | 객체 책임과 불변 조건을 예제로 설명 | Completed |
 | 8월 20일 목요일 | Exception·Collection과 상태 전이 | JUnit 정상·경계·거부 Test | 실패 메시지와 Test 이름 Review | 잘못된 Ticket 전이가 Test에서 명확히 거부됨 | Completed — Self Review와 최종 Clean Test 완료 |
-| 8월 21일 금요일 | Polymorphism·Composition·SOLID 학습 | 분기와 Policy 구조 비교 | 취약 개념 재설명과 Test 보완 | 변경 요구에서 선택한 구조의 차이를 설명 | Planned |
+| 8월 21일 금요일 | Polymorphism·Composition·SOLID 학습 | 분기와 Policy 구조 비교 | 취약 개념 재설명과 Test 보완 | 변경 요구에서 선택한 구조의 차이를 설명 | Completed — VIP 변경 Diff, JUnit 16개와 취약 개념 점검 완료 |
 | 8월 22일 토요일 | 전체 Test 재현과 취약 개념 재실험 | 새 기능 없이 Review·정리 | Lab Report·Learning Note·WIL 작성 | Gate 결과와 미완료 질문이 근거와 함께 기록됨 | Planned |
 
 Git 자가진단은 8월 19일 학습 시작 전 최대 30분만 사용하며 위 학습 Block을 대체하지 않는다. 통과하면 추가 Git 일정을 만들지 않고, 공백이 확인된 경우에만 보충 시간을 다시 판단한다.
@@ -174,6 +174,8 @@ Git 자가진단은 8월 19일 학습 시작 전 최대 30분만 사용하며 �
 | [Java Exception과 안전한 실패 처리 Learning Note](./study-docs/learning-java-exceptions.md) | 8월 20일 | 개념 정리 완료 |
 | [Java Collection과 안전한 상태 노출 Learning Note](./study-docs/learning-java-collections.md) | 8월 20일 | 개념 정리 완료 |
 | [8월 20일 학습 점검](./study-notes/2026-08-20-study-questions.md) | 8월 20일 | Exception·Collection 답변, Ticket Test Self Review와 최종 Test 재현 완료 |
+| [Polymorphism·Composition과 SOLID Learning Note](./study-docs/learning-polymorphism-composition-and-solid.md) | 8월 21일 | 조건문·Strategy 기준선과 VIP 확장 비교, JUnit 16개 검증 완료 |
+| [8월 21일 학습 점검](./study-notes/2026-08-21-study-questions.md) | 8월 21일 | Policy Diff·OCP 적용 경계와 Abstraction·LSP·DIP 설명 완료 |
 | Week 1 WIL | 8월 22일 작성, 다음 월요일 게시 | 실제 결과 후 생성 |
 | 공개 Checklist | 게시 직전 | 검토 시 생성 |
 
@@ -181,7 +183,7 @@ Git 자가진단은 8월 19일 학습 시작 전 최대 30분만 사용하며 �
 
 - [x] Ticket 객체가 잘못된 상태를 스스로 거부한다.
 - [x] 정상·경계·거부 규칙이 읽을 수 있는 JUnit Test로 검증된다.
-- [ ] Composition 또는 다형성 선택을 변경 요구로 설명한다.
+- [x] Composition 또는 다형성 선택을 변경 요구로 설명한다.
 - [x] 핵심 Code의 작은 변경을 직접 수행하고 Test를 수정한다.
 - [x] 예상과 실제가 달랐던 사례를 한 개 이상 기록한다.
 - [x] AI 활용과 직접 판단·수정·검증한 범위를 구분한다.

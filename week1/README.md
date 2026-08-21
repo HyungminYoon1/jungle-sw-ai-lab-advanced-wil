@@ -55,6 +55,7 @@
 - [주차 안내](./README.md)
 - [Git 운영 Baseline Learning Note](./study-docs/learning-git-operational-baseline.md) — 개념 정리 완료, 자가진단 실행 전
 - [Encapsulation과 불변조건 Learning Note](./study-docs/learning-encapsulation-and-invariants.md) — 개념 정리, JShell 수동 검증과 JUnit 후속 검증
+- [Polymorphism·Composition과 SOLID Learning Note](./study-docs/learning-polymorphism-composition-and-solid.md) — 조건문·Strategy 예상과 실제 변경 범위 비교 완료
 - [Ticket 상태 전이 Lab](./study-docs/lab-ticket-state-transition.md) — 정상·거부·반례 실험과 JUnit 자동 검증 기록
 - [Maven Build와 Wrapper Learning Note](./study-docs/learning-maven-build-and-wrapper.md) — Project Model, Lifecycle, Artifact와 Gradle 비교
 - [JUnit과 Unit Test 설계 Learning Note](./study-docs/learning-junit-and-unit-test-design.md) — JUnit 구조, Assertion, Given–When–Then과 Test 독립성
@@ -62,13 +63,16 @@
 - [Java Collection과 안전한 상태 노출 Learning Note](./study-docs/learning-java-collections.md) — 자료구조 선택, Generic, 가변성, Snapshot과 읽기 전용 View
 - [Ticket 객체와 JUnit 기초 학습 점검](./study-notes/2026-08-19-study-questions.md) — 객체 책임, 상태 전이 시나리오와 JUnit 실행 구조 점검
 - [Java Exception·Collection과 JUnit 자동 검증 학습 점검](./study-notes/2026-08-20-study-questions.md) — Exception·Collection 설명, Ticket Test Self Review와 최종 실행 근거
+- [Java 다형성·합성과 SOLID 원칙 학습 점검](./study-notes/2026-08-21-study-questions.md) — VIP Policy Diff, OCP 적용 경계와 취약 개념 설명 점검
 
 ### 실제 검증 근거
 
-- AI Helpdesk Learning Lab에서 `.\mvnw.cmd clean test`로 JUnit Test 10개 실행
+- AI Helpdesk Learning Lab에서 `.\mvnw.cmd clean test`로 Ticket Test 10개와 Policy 비교 Test 6개 실행
 - 결과: `Failures: 0`, `Errors: 0`, `Skipped: 0`, `BUILD SUCCESS`
 - Source Commit: `cdcbee0` — Ticket Unit Test 기준선, `944aede` — 대표 Exception Message 검증
+- Policy 비교 Commit: `6fb3365` — NORMAL·URGENT 기준선, `3eb8b29` — VIP 확장
 - 8월 20일 야간 Review: Test 이름, Exception Message와 실패 후 상태 보존을 자신의 말로 설명하고 Clean Test 재현
+- 8월 21일 Review: 조건문과 Strategy의 변경 범위, OCP·LSP·DIP와 Ticket 책임 경계를 자신의 말로 설명
 
 ### 실제 근거가 생길 때 추가
 
@@ -80,7 +84,7 @@ Placeholder만 있는 문서는 미리 만들지 않는다.
 
 - [x] Ticket 상태를 외부에서 임의로 변경할 수 없게 한다.
 - [x] 허용·거부 상태 전이를 객체 규칙과 JUnit으로 검증한다.
-- [ ] 상속과 Composition 중 선택한 이유를 변경 요구로 설명한다.
+- [x] 조건문과 Strategy·Composition 중 선택 기준을 실제 변경 요구로 설명한다.
 - [x] AI가 보조한 부분과 직접 작성·수정·검증한 부분을 구분한다.
 - [ ] 완료·부분 완료·미수행 범위를 WIL에 기록한다.
 - [ ] 공개 문서와 Source에 Secret, 개인정보와 로컬 경로가 없다.
