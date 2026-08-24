@@ -76,7 +76,7 @@
 - 8월 21일 Review: 조건문과 Strategy의 변경 범위, OCP·LSP·DIP와 Ticket 책임 경계를 자신의 말로 설명
 - 8월 24일 후속 Review: 배송비 Policy 사례에서 선언 Type과 실제 객체, Method 호출 시점의 동적 바인딩, Composition의 보유·위임, Strategy와 DI·DIP를 구분해 설명
 
-Week 1 WIL의 외부 제출 채널 반영은 실행하지 않았으며 상태는 `NOT_RUN`이다. 문서 완료와 외부 제출을 별도 상태로 관리한다.
+Week 1 WIL은 2026-08-24 블로그에 게시하고 정글 LMS에 링크를 제출하여 외부 제출까지 `Completed`로 처리했다.
 
 ## Week 1 Learning Evidence Gate
 

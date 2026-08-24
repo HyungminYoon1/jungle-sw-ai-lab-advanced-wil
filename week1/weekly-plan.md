@@ -177,8 +177,8 @@ Git 자가진단은 8월 19일 학습 시작 전 최대 30분만 사용하며 �
 | [8월 20일 학습 점검](./study-notes/2026-08-20-study-questions.md) | 8월 20일 | Exception·Collection 답변, Ticket Test Self Review와 최종 Test 재현 완료 |
 | [Polymorphism·Composition과 SOLID Learning Note](./study-docs/learning-polymorphism-composition-and-solid.md) | 8월 21일 | 조건문·Strategy 기준선과 VIP 확장 비교, JUnit 16개 검증 완료 |
 | [8월 21일 학습 점검](./study-notes/2026-08-21-study-questions.md) | 8월 21일 | Policy Diff·OCP 적용 경계와 Abstraction·LSP·DIP 설명 완료 |
-| [Week 1 WIL](./wil.md) | 8월 22일 작성, 다음 월요일 게시 | 작성·복습 반영 완료, 외부 제출 `NOT_RUN` |
-| 공개 Checklist | 게시 직전 | WIL 내부 Checklist 검토 완료, 외부 제출 `NOT_RUN` |
+| [Week 1 WIL](./wil.md) | 8월 22일 작성, 8월 24일 게시·제출 | 작성·후속 복습 반영·블로그 게시·정글 LMS 링크 제출 완료 |
+| 공개 Checklist | 게시 직전 | WIL 내부 Checklist 검토와 외부 제출 완료 |
 
 ## 주간 Learning Evidence Gate
 
