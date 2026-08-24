@@ -8,7 +8,7 @@
 
 ## 계획 배경
 
-Week 1에는 Framework 없이 `Ticket`이 제목 불변조건과 상태 전이 규칙을 보호하도록 구현하고, JUnit으로 정상·경계·거부 Case를 검증했다. 조건문과 Strategy에 같은 VIP 변경을 적용하면서 Composition·DIP·DI의 변경 범위를 관찰했지만, 새 배송비 사례에서 다형성과 Composition을 독립적으로 설명하는 과제는 후속 복습으로 남았다.
+Week 1에는 Framework 없이 `Ticket`이 제목 불변조건과 상태 전이 규칙을 보호하도록 구현하고, JUnit으로 정상·경계·거부 Case를 검증했다. 조건문과 Strategy에 같은 VIP 변경을 적용하면서 Composition·DIP·DI의 변경 범위를 관찰했다. 새 배송비 사례에서 남았던 다형성과 Composition의 독립 설명은 8월 24일 후속 질문에서 선언 Type·실제 객체·Method 호출 시점, 보유·위임과 구현 교체를 구분하여 확인했다.
 
 Week 2에는 Spring 기능을 넓게 수집하지 않는다. 기존 Domain을 유지하면서 HTTP 요청 한 건이 Web Boundary, Controller, Application Service와 Repository를 지나 Domain에 도달하고 다시 HTTP 응답이 되는 과정을 추적한다. Layer 수나 Annotation 목록보다 각 단계의 입력·출력, 책임과 금지 의존성을 설명하고 정상·실패를 Test와 Trace로 재현하는 데 집중한다.
 
@@ -50,7 +50,7 @@ Week 2에는 Spring 기능을 넓게 수집하지 않는다. 기존 Domain을 �
 | Build | Maven Wrapper에서 Maven 3.9.16 실행 근거 있음 | Wrapper Version과 Java Runtime 재확인 |
 | Source | 순수 Java Ticket·Policy Production Code 9개와 Test Code 3개 | 기존 16개 Clean Test 재현 후 Spring 변경 시작 |
 | Spring | Dependency·Application Context·Web Server 없음 | 공식 Stable과 Java·Maven 지원 범위 확인 후 Baseline 구성 |
-| Week 1 문서 | WIL 초안과 후속 개념 복습이 남음 | 월요일 최대 한 시간 안에 제출 상태와 후속 질문 구분 |
+| Week 1 문서 | WIL과 후속 개념 확인 완료, 외부 제출 `NOT_RUN` | Week 2 HTTP 근거와 Week 1 완료 근거를 분리해 유지 |
 | Blocker | 확인된 기술 Blocker 없음 | 설정이 반나절을 넘으면 API 구현을 미루고 최소 Context 기동만 검증 |
 
 2026-08-23 기준 [Spring Boot 공식 System Requirements](https://docs.spring.io/spring-boot/system-requirements.html)는 Stable `4.1.1`이 Java 17 이상, Java 26 이하와 Maven 3.6.3 이상을 지원한다고 명시한다. 이번 주 Baseline은 Spring Boot `4.1.1`, JDK 25와 기존 Maven Wrapper 3.9.16을 사용한다. 정확한 Maven 구성은 Spring Initializr의 공식 생성 결과를 기준으로 기존 `pom.xml`과 Diff를 검토하며, Preview·Snapshot Version은 선택하지 않는다.
@@ -223,7 +223,7 @@ Controller에 규칙을 둔 실패 예제는 별도 Production 구조로 장기�
 
 | 순서 | Lab | 실행 전 예상 | 완료 조건 | 상태 |
 |---:|---|---|---|---|
-| 0 | Week 1 경계 정리와 Source Baseline | 기존 Test 16개가 Spring 변경 전에도 재현됨 | 후속 질문과 Week 2 시작 범위가 분리되고 Clean Test 결과 확인 | Planned |
+| 0 | Week 1 경계 정리와 Source Baseline | 기존 Test 16개가 Spring 변경 전에도 재현됨 | 후속 질문과 Week 2 시작 범위가 분리되고 Clean Test 결과 확인 | In Progress — Week 1 개념 확인과 WIL 반영 완료, 주차 시작 후 새 Clean Test `NOT_RUN` |
 | 1 | Spring Boot 최소 기동 | 공식 생성 구성으로 Application Context와 내장 Server가 기동됨 | JDK·Maven·Boot Version과 실패 시 원인을 기록 | Planned |
 | 2 | HTTP Message Trace | `curl`에서 연결, Request, Status, Header와 JSON Body를 구분할 수 있음 | 한 Request의 원문과 각 부분의 의미를 설명 | Planned |
 | 3 | Ticket 생성·조회 수직 Slice | Web에서 기존 Ticket 규칙을 재사용하고 In-memory로 조회 가능 | `POST`·`GET` 정상 Test와 실제 호출 통과 | Planned |
@@ -236,7 +236,7 @@ Controller에 규칙을 둔 실패 예제는 별도 Production 구조로 장기�
 
 | 날짜 | 오전 | 오후 | 야간 | 일일 종료 조건 | 상태 |
 |---|---|---|---|---|---|
-| 8월 24일 월요일 | Week 1 다형성·Composition 재점검과 WIL 제출을 최대 한 시간으로 마감, HTTP 현재 이해 기록 | HTTP Request·Response 구조, Method·Status·Header·Content Type 학습과 예상 작성 | JDK·Maven·Spring Boot 공식 Baseline 확인, 기존 Clean Test와 최소 Context 기동 준비 | Week 1 후속과 Week 2 범위가 분리되고 HTTP 메시지 각 부분을 설명 | Planned |
+| 8월 24일 월요일 | Week 1 다형성·Composition 재점검과 WIL 제출을 최대 한 시간으로 마감, HTTP 현재 이해 기록 | HTTP Request·Response 구조, Method·Status·Header·Content Type 학습과 예상 작성 | JDK·Maven·Spring Boot 공식 Baseline 확인, 기존 Clean Test와 최소 Context 기동 준비 | Week 1 후속과 Week 2 범위가 분리되고 HTTP 메시지 각 부분을 설명 | In Progress — Week 1 개념 확인·WIL 반영 완료, 외부 제출·HTTP 현재 이해 기록·새 Baseline 확인 `NOT_RUN` |
 | 8월 25일 화요일 | REST Resource·URI·Stateless와 생성·조회 계약 학습 | `POST`·`GET` 정상·실패 Given–When–Then과 API 계약 확정 | Spring Boot 최소 Application Context와 Server 기동, 첫 `curl` Trace | Code 작성 전에 Method·Status·Header·Body 예상 계약이 기록됨 | Planned |
 | 8월 26일 수요일 | DispatcherServlet·Controller·DI·IoC와 Layer 책임 학습 | In-memory Repository 기반 Ticket 생성·조회 수직 Slice 구현 | 정상 MVC Test와 실제 `POST`·`GET` 호출, Call Flow 설명 | Controller에서 Domain 규칙과 저장 구현을 분리한 정상 흐름이 재현됨 | Planned |
 | 8월 27일 목요일 | Validation, Exception Handler와 `ProblemDetail` 학습 | 잘못된 JSON·제목과 존재하지 않는 ID의 `400`·`404` 계약 구현 | 대표 내부 실패의 `500` Test와 안전한 오류 Body Review | 정상과 세 실패 범주의 Status·Body 선택 이유를 설명 | Planned |
