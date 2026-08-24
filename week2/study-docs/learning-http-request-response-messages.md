@@ -3,7 +3,7 @@
 > 작성일: 2026-08-24
 > 주차: Week 2
 > 기준: RFC 9110 HTTP Semantics, RFC 9112 HTTP/1.1
-> 이해 상태: 학습 자료 준비 — 직접 설명·실제 Server `curl.exe` Trace `NOT_RUN`
+> 이해 상태: Message 구조·의미 직접 설명 완료 — 실제 Server `curl.exe` Trace `NOT_RUN`
 
 ## 핵심 질문
 
@@ -327,12 +327,12 @@ Body는 별도의 출력 영역에 나타날 수 있다. `-v`의 진단 출력 �
 
 ## Learning Evidence Gate
 
-- [ ] Request Line·Status Line·Header·빈 줄·Body를 자신의 말로 설명한다.
-- [ ] Method·Target·Status의 역할을 서로 구분한다.
+- [x] Request Line·Status Line·Header·빈 줄·Body를 자신의 말로 설명한다.
+- [x] Method·Target·Status의 역할을 서로 구분한다.
 - [ ] `Content-Type`, `Accept`, `Location`과 `Content-Length`를 구분한다.
-- [ ] Ticket 생성·조회와 `400`·`404`·대표 `500`의 예상 계약을 작성한다.
-- [ ] Stateless를 Server 상태 저장 금지와 구분한다.
-- [ ] HTTP/1.1 Text 예시와 Version 독립적인 HTTP Semantics를 구분한다.
+- [x] Ticket 생성·조회와 `400`·`404`·대표 `500`의 예상 계약을 작성한다.
+- [x] Stateless를 Server 상태 저장 금지와 구분한다.
+- [x] HTTP/1.1 Text 예시와 Version 독립적인 HTTP Semantics를 구분한다.
 - [ ] 실제 Server에 `curl.exe` Request를 보내고 예상·관찰·차이를 기록한다.
 - [ ] Trace의 `>`, `<`, `*` Line을 구분한다.
 - [ ] 공개 Trace에 Credential, Cookie, 개인정보, 내부 URL과 로컬 절대 경로가 없다.
@@ -344,6 +344,7 @@ Body는 별도의 출력 영역에 나타날 수 있다. `-v`의 진단 출력 �
 | RFC 9110 | Message Abstraction, Stateless, Method, Header와 Status 의미 | 공식 원문 검토 |
 | RFC 9112 | HTTP/1.1 Start Line, Header Section, 빈 줄과 Message Body 문법 | 공식 원문 검토 |
 | Ticket 예상 Request·Response | 구현 전 계약과 학습 예시 | 예상, 실행 근거 아님 |
+| 2026-08-24 단계별 설명 | HTTP Message 의미와 Spring MVC 연결 개념 | 자연어 설명 완료, 실행 근거 아님 |
 | 실제 Server `curl.exe` Trace | Wire에서 관찰한 Request·Response | `NOT_RUN` |
 | Spring MVC·MockMvc | Framework 처리 흐름과 Test | `NOT_IMPLEMENTED` |
 

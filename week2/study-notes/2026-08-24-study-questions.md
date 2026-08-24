@@ -25,7 +25,7 @@
 -> HTTP/1.1·HTTP/2·HTTP/3은 Request와 Response의 의미, 표현 방식과 전송 구조를 정의하는 HTTP Version이다. TLS 1.2·1.3은 통신 내용을 암호화하고 상대를 인증하며 전송 중 변조를 탐지하기 위한 보안 Protocol Version이다. HTTP와 TLS는 같은 종류의 Version이 아니며, HTTP/3은 QUIC 위에서 TLS 1.3의 보안 기능을 사용한다.
 
 8. 현재 가장 확실하지 않은 부분은 무엇인가?
--> HTTP Message의 기본 구조와 의미는 구분할 수 있지만, Spring MVC가 실제 Request를 `DispatcherServlet`·Controller 입력으로 변환하고 Response를 만드는 과정은 아직 확실하지 않다. HTTP/2·HTTP/3의 실제 Wire 표현도 이번 학습에서는 개념 수준으로만 확인했다. Spring MVC 처리 흐름은 수요일 학습에서 별도로 확인한다.
+-> 학습 시작 시에는 Spring MVC가 Request를 `DispatcherServlet`·Controller 입력으로 변환하고 Response를 만드는 과정이 확실하지 않았다. 단계별 질문 후에는 Client부터 Repository까지의 개념 흐름과 각 구성요소의 책임을 설명할 수 있다. 다만 실제 Spring Boot Code, Application Context, Server와 `curl.exe` Trace는 아직 실행하지 않았으므로 Framework 동작을 검증한 상태는 아니다. HTTP/2·HTTP/3의 실제 Wire 표현도 이번 학습에서는 개념 수준으로만 확인했다.
 
 ## HTTP 메시지 구조 표시
 
@@ -62,3 +62,41 @@ Content-Type: application/json
 - `Content-Type: application/json`: Response Body가 JSON 형식임을 알려준다.
 
 이 Response는 구현 전에 작성한 예상 계약이다. 실제 Server 기동과 `curl.exe` Request·Response Trace는 아직 수행하지 않았으므로 `NOT_RUN`이다.
+
+## Spring Boot·Spring MVC 연결 점검
+
+1. 현재 Lab이 `/api/tickets` 요청을 받을 수 없는 이유는 무엇인가?
+-> 현재 Project에는 HTTP 요청 처리를 위한 Spring Web Dependency와 Spring Boot를 시작할 Application 실행 진입점이 없다. Dependency는 Server를 실행할 기능을 준비하고, `SpringApplication.run(...)`은 Application Context와 내장 Web Server 시작을 요청한다. Server가 기동되어도 해당 경로를 처리할 Controller가 없으면 일반적으로 `404 Not Found`가 반환된다.
+
+2. HTTP Request는 어떤 순서로 처리되는가?
+-> `Client → Tomcat → DispatcherServlet → TicketController → TicketApplicationService → TicketRepository 구현체` 순서로 전달된다. Tomcat이 Network Request를 먼저 받고, `DispatcherServlet`이 Spring MVC Handler를 찾아 Controller에 연결한다. 처리 결과는 반대 방향으로 돌아간다.
+
+3. Component Scan은 Controller를 어떻게 발견하는가?
+-> `@SpringBootApplication`이 있는 Package부터 하위 Package를 기본 탐색 범위로 사용한다. Application Class와 Controller는 Class 상속 관계가 아니라 Package 포함 관계다. 일반적인 Controller 등록에는 `@Controller` 또는 `@RestController`가 필요하다. `@Bean`을 사용하면 객체를 수동으로 Bean 등록할 수 있지만, `@Component`만으로 MVC Controller가 되는 것은 아니다.
+
+4. Path Variable과 Query Parameter는 어떻게 받는가?
+-> `@GetMapping("/{id}")`은 요청 경로 Pattern을 선언하고 `@PathVariable`은 `{id}`를 Method 인수에 연결한다. `/api/tickets?status=OPEN`의 `status`는 Mapping 경로에 Query String을 쓰는 대신 `@RequestParam`으로 받는다.
+
+5. `400`, `404`, `500`은 어떻게 구분하는가?
+-> 필수 Parameter 누락이나 값 변환 실패는 `400 Bad Request`, Mapping이나 대상 Resource를 찾지 못한 경우는 `404 Not Found`, Controller 실행 중 처리되지 않은 내부 예외는 `500 Internal Server Error`로 구분한다. Server가 실행되지 않았다면 HTTP Status가 아니라 연결 거부나 Timeout이 발생한다.
+
+6. Controller가 Repository 구현체를 직접 호출하지 않는 이유는 무엇인가?
+-> Controller는 HTTP 입력과 응답을 다루고 Application Service에 Use Case를 위임한다. Application Service는 Domain과 Repository를 조정하고, Repository는 저장과 조회를 담당한다. `Ticket`은 자신의 상태와 상태 변경 규칙을 보호한다.
+
+7. DIP와 DI는 현재 구조에서 어떻게 다른가?
+-> `TicketApplicationService`가 `TicketRepository` Interface를 인수와 Field Type으로 사용하는 의존 방향은 DIP다. 외부에서 `InMemoryTicketRepository` 객체를 생성해 Service 생성자에 전달하는 행위는 DI이며, 생성자는 주입 지점이다. 구체 구현 Type을 생성자 인수로 사용하면서 외부에서 객체를 전달하면 DI는 적용되지만 DIP는 적용되지 않는다.
+
+8. 같은 Interface의 Bean이 여러 개라면 Spring은 어떻게 선택하는가?
+-> 호환되는 Bean이 하나면 그 객체를 주입한다. 여러 후보가 있고 선택 기준이 없으면 임의로 고르지 않고 Application Context 시작에 실패한다. 기본 구현은 `@Primary`, 특정 구현 선택은 `@Qualifier`로 표현할 수 있다.
+
+9. `ResponseEntity`와 `HttpMessageConverter`는 각각 무엇을 담당하는가?
+-> `ResponseEntity.created(location)`은 `201 Created`와 `Location` Header를 설정하고, `.body(response)`는 Body로 사용할 Java 객체를 지정한다. `URI.create(...)`는 URI 객체를 만들 뿐 Status나 Header를 설정하지 않는다. 실제 Java 객체를 JSON으로 변환하는 주체는 `HttpMessageConverter`다.
+
+## 2026-08-24 실행 근거와 검증 경계
+
+- Week 1 WIL을 블로그에 게시하고 정글 LMS에 링크를 제출했다.
+- 새 Terminal에서 Temurin JDK 25.0.4, `javac` 25.0.4와 Maven Wrapper 3.9.16을 확인했다.
+- `.\mvnw.cmd clean test` 결과 기존 Test 16개가 실패·오류·건너뜀 없이 통과했고 `BUILD SUCCESS`를 확인했다.
+- Spring Boot `4.1.1`을 이번 주 Baseline으로 선택했지만, Spring Dependency와 Application 실행 진입점은 아직 추가하지 않았다.
+- Application Context·내장 Server·Controller·MockMvc는 `NOT_IMPLEMENTED`, 실제 `curl.exe` Trace는 `NOT_RUN`이다.
+- Java Source를 변경하지 않았으며 최소 Context와 Server 기동은 8월 25일 야간 Block으로 이동한다.

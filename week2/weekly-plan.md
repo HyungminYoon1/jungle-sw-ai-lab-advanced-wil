@@ -53,12 +53,14 @@ Week 2에는 Spring 기능을 넓게 수집하지 않는다. 기존 Domain을 �
 | Build | Maven Wrapper에서 Maven 3.9.16 실행 근거 있음 | Wrapper Version과 Java Runtime 재확인 |
 | Source | 순수 Java Ticket·Policy Production Code 9개와 Test Code 3개 | 기존 16개 Clean Test 재현 후 Spring 변경 시작 |
 | Spring | Dependency·Application Context·Web Server 없음 | 공식 Stable과 Java·Maven 지원 범위 확인 후 Baseline 구성 |
-| Week 1 문서 | WIL과 후속 개념 확인 완료, 외부 제출 `NOT_RUN` | Week 2 HTTP 근거와 Week 1 완료 근거를 분리해 유지 |
+| Week 1 문서 | WIL과 후속 개념 확인, 블로그 게시·정글 LMS 링크 제출 완료 | Week 2 HTTP 근거와 Week 1 완료 근거를 분리해 유지 |
 | Blocker | 확인된 기술 Blocker 없음 | 설정이 반나절을 넘으면 API 구현을 미루고 최소 Context 기동만 검증 |
 
 2026-08-24 기준 [Spring Boot 4.1.1 공식 출시 공지](https://spring.io/blog/2026/08/20/spring-boot-4-1-1-available-now/)와 [Spring Boot 프로젝트 페이지](https://spring.io/projects/spring-boot/)에서 `4.1.1`의 정식 출시를 확인했다. [Spring Boot 공식 System Requirements](https://docs.spring.io/spring-boot/system-requirements.html)는 현재 `4.1.0` 기준으로 Java 17 이상·Java 26 이하와 Maven 3.6.3 이상을 명시하므로, 출시 Version 근거와 4.1 계열 실행 요구사항 근거를 구분한다. 이번 주 Baseline은 Spring Boot `4.1.1`, JDK 25와 기존 Maven Wrapper 3.9.16을 사용하되, 최종 호환성은 Spring Initializr의 공식 생성 결과와 실제 Clean Build로 확인한다. Preview·Snapshot Version은 선택하지 않는다.
 
 이 표의 Version과 Test 결과는 계획 작성 시점 근거다. 실제 구현 완료 여부는 주차 중 다시 실행한 결과로만 판단한다.
+
+2026-08-24 새 Terminal에서 Temurin JDK 25.0.4, `javac` 25.0.4, Maven Wrapper 3.9.16을 다시 확인했다. `.\mvnw.cmd clean test`로 기존 Test 16개가 실패·오류·건너뜀 없이 통과하고 `BUILD SUCCESS`가 발생했다. Spring Boot Dependency와 Application Context 호환성은 아직 실행하지 않았으므로 별도 상태로 유지한다.
 
 ## 우선순위와 축소 기준
 
@@ -234,7 +236,7 @@ Controller에 규칙을 둔 실패 예제는 별도 Production 구조로 장기�
 
 | 순서 | Lab | 실행 전 예상 | 완료 조건 | 상태 |
 |---:|---|---|---|---|
-| 0 | Week 1 경계 정리와 Source Baseline | 기존 Test 16개가 Spring 변경 전에도 재현됨 | 후속 질문과 Week 2 시작 범위가 분리되고 Clean Test 결과 확인 | In Progress — Week 1 개념 확인과 WIL 반영 완료, 주차 시작 후 새 Clean Test `NOT_RUN` |
+| 0 | Week 1 경계 정리와 Source Baseline | 기존 Test 16개가 Spring 변경 전에도 재현됨 | 후속 질문과 Week 2 시작 범위가 분리되고 Clean Test 결과 확인 | Completed — WIL 게시·LMS 제출, JDK 25.0.4·Maven 3.9.16과 기존 Test 16개 `BUILD SUCCESS` 확인 |
 | 1 | Spring Boot 최소 기동 | 공식 생성 구성으로 Application Context와 내장 Server가 기동됨 | JDK·Maven·Boot Version과 실패 시 원인을 기록 | Planned |
 | 2 | HTTP Message Trace | `curl`에서 연결, Request, Status, Header와 JSON Body를 구분할 수 있음 | 한 Request의 원문과 각 부분의 의미를 설명 | Planned |
 | 3 | Ticket 생성·조회 수직 Slice | Web에서 기존 Ticket 규칙을 재사용하고 In-memory로 조회 가능 | `POST`·`GET` 정상 Test와 실제 호출 통과 | Planned |
@@ -247,7 +249,7 @@ Controller에 규칙을 둔 실패 예제는 별도 Production 구조로 장기�
 
 | 날짜 | 오전 | 오후 | 야간 | 일일 종료 조건 | 상태 |
 |---|---|---|---|---|---|
-| 8월 24일 월요일 | Week 1 다형성·Composition 재점검과 WIL 제출을 최대 한 시간으로 마감, HTTP 현재 이해 기록 | HTTP Request·Response 구조, Method·Status·Header·Content Type 학습과 예상 작성 | WIL 외부 제출, JDK·Maven·Spring Boot 공식 Baseline과 기존 Clean Test를 우선 확인하고, 최소 Context 기동 준비가 남으면 화요일 기동 Block으로 한 번만 이동 | Week 1 후속과 Week 2 범위가 분리되고 HTTP 메시지 각 부분을 설명 | In Progress — Week 1 개념 확인·WIL 반영 완료, HTTP 현재 이해 초안 작성 완료·직접 설명 확인 필요, 외부 제출·새 Baseline 확인 `NOT_RUN` |
+| 8월 24일 월요일 | Week 1 다형성·Composition 재점검과 WIL 제출을 최대 한 시간으로 마감, HTTP 현재 이해 기록 | HTTP Request·Response 구조, Method·Status·Header·Content Type 학습과 예상 작성 | WIL 외부 제출, JDK·Maven·Spring Boot 공식 Baseline과 기존 Clean Test를 우선 확인하고, 최소 Context 기동 준비가 남으면 화요일 기동 Block으로 한 번만 이동 | Week 1 후속과 Week 2 범위가 분리되고 HTTP 메시지 각 부분을 설명 | Completed — WIL 게시·LMS 제출, HTTP·Spring MVC 개념 설명, JDK·Maven과 기존 Test 16개 확인. Context·Server 기동은 계획에 따라 8월 25일로 이동 |
 | 8월 25일 화요일 | 월요일에 정리한 HTTP·Stateless 설명을 반복하지 않고 REST Resource·URI와 생성·조회 계약으로 연결 | `POST`·`GET` 정상·실패 Given–When–Then과 API 계약 확정 | Spring Boot 최소 Application Context와 Server 기동, 첫 `curl` Trace | Code 작성 전에 Method·Status·Header·Body 예상 계약이 기록됨 | Planned |
 | 8월 26일 수요일 | DispatcherServlet·Controller·DI·IoC와 Layer 책임 학습 | In-memory Repository 기반 Ticket 생성·조회 수직 Slice 구현 | 정상 MVC Test와 실제 `POST`·`GET` 호출, Call Flow 설명 | Controller에서 Domain 규칙과 저장 구현을 분리한 정상 흐름이 재현됨 | Planned |
 | 8월 27일 목요일 | Validation, Exception Handler와 `ProblemDetail` 학습 | 잘못된 JSON·제목과 존재하지 않는 ID의 `400`·`404` 계약 구현 | 대표 내부 실패의 `500` Test와 안전한 오류 Body Review | 정상과 세 실패 범주의 Status·Body 선택 이유를 설명 | Planned |
@@ -274,7 +276,7 @@ Controller에 규칙을 둔 실패 예제는 별도 Production 구조로 장기�
 |---|---|---|---|
 | [주차 안내](./README.md) | Week 2 질문과 범위 Index | 주차 시작 | Ready |
 | [주간 학습 계획](./weekly-plan.md) | Baseline·일정·축소 기준 | 주차 시작 | Ready |
-| [HTTP 요청·응답 메시지 Learning Note](./study-docs/learning-http-request-response-messages.md) | Message 구조·예상 계약과 자가점검 | RFC 기반 학습 자료 준비 | Ready — 직접 설명·실제 `curl.exe` Trace `NOT_RUN` |
+| [HTTP 요청·응답 메시지 Learning Note](./study-docs/learning-http-request-response-messages.md) | Message 구조·예상 계약과 자가점검 | RFC 기반 학습 자료 준비 | In Progress — 직접 설명·예상 계약 완료, 실제 `curl.exe` Trace `NOT_RUN` |
 | Ticket HTTP Request Flow Lab Report | Request·Response Trace와 정상·실패 재현 | 실제 Trace와 Test 결과 확보 후 | Planned |
 | Week 2 WIL | 이해 변화, 실패와 다음 판단 | 토요일 실제 결과 후 | Planned |
 | 공개 Checklist | Secret·경로·주장·Link 점검 | 게시 직전 | Planned |
@@ -283,13 +285,13 @@ Learning Note와 Lab Report를 모두 강제로 만들지 않는다. 한 문서�
 
 ## Learning Evidence Gate
 
-- [ ] HTTP Request·Response의 Method·Status·Header·Body 역할을 자신의 말로 설명한다.
-- [ ] 구현 전에 Ticket 생성·조회와 대표 실패의 예상 계약을 기록했다.
+- [x] HTTP Request·Response의 Method·Status·Header·Body 역할을 자신의 말로 설명한다.
+- [x] 구현 전에 Ticket 생성·조회와 대표 실패의 예상 계약을 기록했다.
 - [ ] 하나의 실제 Request가 Web Boundary부터 Domain과 Response까지 이동하는 흐름을 추적했다.
-- [ ] Controller·Application Service·Repository·Domain의 책임과 금지 의존성을 설명한다.
+- [x] Controller·Application Service·Repository·Domain의 책임과 금지 의존성을 설명한다.
 - [ ] 정상과 `400`·`404`·대표 `500`을 필요한 수준의 Test로 검증했다.
 - [ ] MockMvc와 실제 `curl` Trace가 검증하는 범위를 구분한다.
-- [ ] 기존 16개 Unit Test를 포함한 전체 Clean Test가 통과한다.
+- [x] 기존 16개 Unit Test를 포함한 전체 Clean Test가 통과한다.
 - [ ] 예상과 실제가 달랐던 점과 원인을 기록했다.
 - [ ] AI 도움 없이 핵심 흐름의 작은 변경과 관련 Test를 수행했다.
 - [ ] CORS·Filter 등 조건부 항목의 수행·보류 이유가 있다.
@@ -308,6 +310,10 @@ Git 점검은 별도 반나절 학습으로 운영하지 않는다. 실제 변�
 ## 계획 변경 기록
 
 Baseline 이후 학습 항목을 조용히 추가하거나 삭제하지 않는다. API 범위, Layer 책임이나 조건부 실험이 바뀌면 날짜, 이유, 핵심 질문과 다음 주 영향을 이 표에 추가한다.
+
+| 날짜 | 변경 | 이유 | 영향·검증 경계 |
+|---|---|---|---|
+| 2026-08-24 | 최소 Application Context·Server 기동 준비를 8월 25일 야간 기동 Block에 통합 | 23:00까지 HTTP와 Spring MVC 개념 설명, WIL 제출과 기존 Clean Test Baseline을 완료하여 월요일 종료 조건을 충족함 | 주간 API 범위는 바뀌지 않는다. Spring Code·Context는 `NOT_IMPLEMENTED`, 실제 `curl.exe` Trace는 `NOT_RUN`으로 유지한다. |
 
 ## 공식 학습 자료 Baseline
 

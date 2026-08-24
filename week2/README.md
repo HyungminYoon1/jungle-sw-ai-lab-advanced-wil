@@ -10,12 +10,13 @@
 
 Week 1에서 Framework 없는 Ticket Domain의 규칙과 Unit Test를 확인했다. Week 2에는 그 Domain을 크게 확장하지 않고 HTTP 요청 한 건이 Web Boundary에서 Domain까지 이동하고 다시 응답으로 변환되는 흐름을 관찰한다. Spring Annotation과 Layer 수를 외우는 것보다 각 단계가 무엇을 받아 무엇으로 바꾸며, 어떤 책임을 가지면 안 되는지 설명하는 것이 목표다.
 
-## 2026-08-24 시작 상태
+## 2026-08-24 진행 결과
 
 - Week 1 배송비 Policy 후속 질문에서 선언 Type과 실제 객체, Method 호출 시점의 동적 바인딩, Composition의 보유·위임, Strategy와 DI·DIP 구분을 확인했다.
-- 복습 결과를 Week 1 WIL에 반영하고 Week 1 핵심 학습을 `Completed`로 판정했다. WIL 외부 제출은 `NOT_RUN`이다.
-- Week 2 전체 상태는 `In Progress`로 전환했지만, HTTP 현재 이해 기록과 주차 시작 후 새 Clean Test는 아직 수행하지 않았다.
-- 아래 HTTP·REST·Spring 학습 항목은 실제 설명·Test·Trace 근거가 생기기 전까지 `Planned`를 유지한다.
+- 복습 결과를 Week 1 WIL에 반영하고 블로그 게시와 정글 LMS 링크 제출까지 `Completed`로 처리했다.
+- HTTP Message 구조와 Spring MVC의 개념적 Request Flow를 단계별로 설명하고, JDK 25.0.4·Maven 3.9.16에서 기존 Test 16개의 Clean Test 통과를 재현했다.
+- Spring Dependency·Application Context·Web Server는 아직 없으며 최소 기동과 실제 `curl.exe` Trace는 8월 25일 Block에서 수행한다.
+- 설명, Test와 Trace를 구분하여 실행 근거가 없는 항목은 `NOT_IMPLEMENTED` 또는 `NOT_RUN`으로 유지한다.
 
 ## 핵심 질문
 
@@ -115,9 +116,9 @@ Spring MVC의 오류 응답은 RFC 9457 형식의 `ProblemDetail` 지원을 우�
 
 | 학습 주제 | 분류 | 현재 상태 | 계획된 근거 |
 |---|---|---|---|
-| HTTP Request·Response 의미 | 핵심 학습 | Planned | 자신의 말로 쓴 흐름과 `curl` Trace |
-| REST Resource·오류 계약 | 핵심 학습 | Planned | API 계약 표와 정상·실패 Test |
-| Spring MVC·Layer 책임 | 핵심 학습 | Planned | Request 흐름 설명, 최소 수직 Slice와 Layer Test |
+| HTTP Request·Response 의미 | 핵심 학습 | In Progress — 자연어 설명·예상 계약 완료, `curl` `NOT_RUN` | 자신의 말로 쓴 흐름과 `curl` Trace |
+| REST Resource·오류 계약 | 핵심 학습 | In Progress — 초기 예상 계약 작성, Given–When–Then·Test `NOT_RUN` | API 계약 표와 정상·실패 Test |
+| Spring MVC·Layer 책임 | 핵심 학습 | In Progress — 개념 흐름 설명, Code·Test `NOT_IMPLEMENTED` | Request 흐름 설명, 최소 수직 Slice와 Layer Test |
 | In-memory Ticket API | 선택 적용 | Planned | 생성·조회 Diff와 MVC Test |
 | Filter·Interceptor·Exception Handler | 조건부 후속 | Planned | 책임 비교와 필요한 최소 실험 |
 | CORS Simple·Preflight | 조건부 후속 | Planned | Must 완료 후 Header 관찰 |
@@ -130,7 +131,8 @@ Spring MVC의 오류 응답은 RFC 9457 형식의 `ProblemDetail` 지원을 우�
 
 - [주차 안내](./README.md)
 - [주간 학습 계획](./weekly-plan.md)
-- [HTTP 요청·응답 메시지 Learning Note](./study-docs/learning-http-request-response-messages.md) — 학습 자료 준비, 직접 설명·실제 `curl.exe` Trace `NOT_RUN`
+- [HTTP 요청·응답 메시지 Learning Note](./study-docs/learning-http-request-response-messages.md) — Message 구조·의미 직접 설명 완료, 실제 `curl.exe` Trace `NOT_RUN`
+- [8월 24일 HTTP·Spring MVC 학습 점검](./study-notes/2026-08-24-study-questions.md) — HTTP 기본 개념, Spring MVC Request Flow와 실행 경계 기록
 
 ### 실제 근거가 생긴 뒤 보완·추가
 
@@ -143,13 +145,13 @@ Spring MVC의 오류 응답은 RFC 9457 형식의 `ProblemDetail` 지원을 우�
 
 ## Learning Evidence Gate
 
-- [ ] HTTP Request·Response의 시작 Line, Header와 Body 역할을 설명한다.
+- [x] HTTP Request·Response의 시작 Line, Header와 Body 역할을 설명한다.
 - [ ] 하나의 요청을 Client부터 Domain과 Response까지 추적한다.
-- [ ] Controller·Application Service·Repository·Domain의 책임과 금지 의존성을 설명한다.
-- [ ] 구현 전에 생성·조회와 대표 실패의 예상 계약을 기록한다.
+- [x] Controller·Application Service·Repository·Domain의 책임과 금지 의존성을 설명한다.
+- [x] 구현 전에 생성·조회와 대표 실패의 예상 계약을 기록한다.
 - [ ] 정상과 `400`·`404`·대표 `500`을 필요한 수준의 Test로 검증한다.
 - [ ] MockMvc 결과와 실제 `curl` Trace가 각각 무엇을 검증하는지 구분한다.
-- [ ] 기존 16개 Unit Test를 포함한 Clean Test를 재현한다.
+- [x] 기존 16개 Unit Test를 포함한 Clean Test를 재현한다.
 - [ ] 적용·조건부 후속·비범위의 선택 이유를 기록한다.
 - [ ] AI가 보조한 부분과 직접 작성·수정·검증한 범위를 구분한다.
 - [ ] 완료·부분 완료·미수행 범위와 다음 질문을 WIL에 남긴다.
@@ -157,7 +159,7 @@ Spring MVC의 오류 응답은 RFC 9457 형식의 `ProblemDetail` 지원을 우�
 
 ## Week 1 연결
 
-- 2026-08-24 월요일 첫 학습 Block에서 Week 1 다형성·Composition 후속 개념 확인과 WIL 반영을 완료했다. 외부 제출은 실행하지 않았다.
+- 2026-08-24 월요일 첫 학습 Block에서 Week 1 다형성·Composition 후속 개념 확인과 WIL 반영을 완료하고, 블로그 게시와 정글 LMS 링크 제출까지 마쳤다.
 - `Ticket`의 제목 불변조건과 상태 전이 규칙은 Domain에 유지한다.
 - Week 1에서 구분한 DI·DIP를 Spring Container와 Constructor Injection 관찰로 연결하되, Annotation 암기로 대체하지 않는다.
 - HTTP 현재 이해 기록부터 Week 2의 별도 학습 근거로 남기며, 완료되지 않은 HTTP 항목을 Week 1 복습 결과로 대신하지 않는다.
