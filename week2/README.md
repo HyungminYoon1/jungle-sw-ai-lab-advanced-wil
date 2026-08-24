@@ -130,10 +130,11 @@ Spring MVC의 오류 응답은 RFC 9457 형식의 `ProblemDetail` 지원을 우�
 
 - [주차 안내](./README.md)
 - [주간 학습 계획](./weekly-plan.md)
+- [HTTP 요청·응답 메시지 Learning Note](./study-docs/learning-http-request-response-messages.md) — 학습 자료 준비, 직접 설명·실제 `curl.exe` Trace `NOT_RUN`
 
-### 실제 근거가 생긴 뒤 추가
+### 실제 근거가 생긴 뒤 보완·추가
 
-- HTTP·REST와 Spring 요청 흐름 Learning Note
+- 현재 HTTP 요청·응답 메시지 Learning Note의 자가진단 답변과 예상·관찰 차이
 - Ticket HTTP Request Flow Lab Report
 - Week 2 WIL
 - 공개 전 Checklist
