@@ -1,6 +1,6 @@
 # Week 1 — Java 객체지향·JUnit
 
-> 상태: In Progress
+> 상태: Completed
 > 기간: 2026-08-18 ~ 2026-08-22
 > 핵심 학습: Java 객체 책임과 JUnit
 > 운영 Baseline: Git 상태 확인·Diff Review·안전한 복구
@@ -64,6 +64,7 @@
 - [Ticket 객체와 JUnit 기초 학습 점검](./study-notes/2026-08-19-study-questions.md) — 객체 책임, 상태 전이 시나리오와 JUnit 실행 구조 점검
 - [Java Exception·Collection과 JUnit 자동 검증 학습 점검](./study-notes/2026-08-20-study-questions.md) — Exception·Collection 설명, Ticket Test Self Review와 최종 실행 근거
 - [Java 다형성·합성과 SOLID 원칙 학습 점검](./study-notes/2026-08-21-study-questions.md) — VIP Policy Diff, OCP 적용 경계와 취약 개념 설명 점검
+- [Week 1 WIL](./wil.md) — 실제 학습 결과, 실패·보완 범위와 8월 24일 후속 개념 확인
 
 ### 실제 검증 근거
 
@@ -73,12 +74,9 @@
 - Policy 비교 Commit: `6fb3365` — NORMAL·URGENT 기준선, `3eb8b29` — VIP 확장
 - 8월 20일 야간 Review: Test 이름, Exception Message와 실패 후 상태 보존을 자신의 말로 설명하고 Clean Test 재현
 - 8월 21일 Review: 조건문과 Strategy의 변경 범위, OCP·LSP·DIP와 Ticket 책임 경계를 자신의 말로 설명
+- 8월 24일 후속 Review: 배송비 Policy 사례에서 선언 Type과 실제 객체, Method 호출 시점의 동적 바인딩, Composition의 보유·위임, Strategy와 DI·DIP를 구분해 설명
 
-### 실제 근거가 생길 때 추가
-
-- Week 1 WIL
-
-Placeholder만 있는 문서는 미리 만들지 않는다.
+Week 1 WIL의 외부 제출 채널 반영은 실행하지 않았으며 상태는 `NOT_RUN`이다. 문서 완료와 외부 제출을 별도 상태로 관리한다.
 
 ## Week 1 Learning Evidence Gate
 
@@ -86,8 +84,8 @@ Placeholder만 있는 문서는 미리 만들지 않는다.
 - [x] 허용·거부 상태 전이를 객체 규칙과 JUnit으로 검증한다.
 - [x] 조건문과 Strategy·Composition 중 선택 기준을 실제 변경 요구로 설명한다.
 - [x] AI가 보조한 부분과 직접 작성·수정·검증한 부분을 구분한다.
-- [ ] 완료·부분 완료·미수행 범위를 WIL에 기록한다.
-- [ ] 공개 문서와 Source에 Secret, 개인정보와 로컬 경로가 없다.
+- [x] 완료·부분 완료·미수행 범위를 WIL에 기록한다.
+- [x] 공개 문서와 Source에 Secret, 개인정보와 로컬 경로가 없다.
 
 ### Git 운영 Baseline 점검
 
