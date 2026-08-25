@@ -5,10 +5,11 @@
 ## 기본 사용 방법
 
 1. 주차 시작 시 `week-readme.md`와 `weekly-plan.md`를 복사해 핵심 질문과 범위를 확정한다.
-2. 실습 후 `lab-report.md` 또는 `learning-note.md` 중 적절한 문서 한 개 이상을 작성한다.
-3. 변수 통제가 필요한 비교 실험에만 `experiment-report.md`를 추가한다.
-4. 주말에 실제 결과를 근거로 `wil.md`를 작성한다.
-5. 공개 전에 `public-release-checklist.md`로 Secret·개인정보·주장과 Link를 확인한다.
+2. 날짜별 질문, 자신의 답변과 진행 상태는 `study-note.md`에 기록한다.
+3. 반복해서 참고할 개념 설명은 `learning-note.md`, 직접 실행한 실습은 `lab-report.md`로 정리한다.
+4. 변수 통제가 필요한 비교 실험에만 `experiment-report.md`를 추가한다.
+5. 주말에 실제 결과를 근거로 `wil.md`를 작성한다.
+6. 공개 전에 `public-release-checklist.md`로 Secret·개인정보·주장과 Link를 확인한다.
 
 Placeholder만 채운 빈 문서는 만들지 않는다. 실제 학습 근거가 생긴 시점에 필요한 문서만 추가한다.
 
@@ -19,7 +20,8 @@ Placeholder만 채운 빈 문서는 만들지 않는다. 실제 학습 근거가
 | week-readme.md | 매주 필수 | README.md | 해당 주의 질문, 상태와 공개 산출물 Index |
 | weekly-plan.md | 매주 필수 | weekly-plan.md | 학습 범위, 실험, 일정, Evidence Gate와 변경 기록 |
 | lab-report.md | 실습 결과가 있을 때 | lab-주제.md | 질문·예상·절차·관찰·해석과 재현 방법 |
-| learning-note.md | 개념 설명이 필요할 때 | learning-주제.md | 자신의 언어로 정리한 동작 원리, 오해와 사용 경계 |
+| learning-note.md | 재사용할 개념 설명이 필요할 때 | study-docs/learning-주제.md | 동작 원리, 예, 오해와 사용 경계를 설명하는 학습 자료 |
+| study-note.md | 날짜별 학습 기록이 필요할 때 | study-notes/YYYY-MM-DD-study-questions.md | 자신의 질문·답변, 이해 상태, 실행 결과와 다음 학습 |
 | wil.md | 매주 필수 | wil.md | 계획 대비 결과, 이해 변화, 실패와 다음 질문 |
 | experiment-report.md | 비교·측정 시 선택 | experiment-주제.md | 가설, 변수·통제, 결과와 유효성 한계 |
 | decision-log.md | 중요한 선택 시 선택 | decision-NNNN-주제.md | Context, 선택지, 결정, 이유와 재검토 |
@@ -27,15 +29,18 @@ Placeholder만 채운 빈 문서는 만들지 않는다. 실제 학습 근거가
 | public-release-checklist.md | 공개 직전 | public-release-checklist.md | Secret·개인정보·정확성·근거 검토 |
 | employment-summary.md | Week 9~12 선택 | employment-summary.md | 지원·면접·Coding Test 활동과 학습 Feedback |
 
-매주 필수 본문은 Weekly Plan과 WIL이다. Lab Report와 Learning Note는 둘 다 강제하지 않으며, 주간 핵심 질문을 가장 잘 설명하는 형식을 고른다.
+매주 필수 본문은 Weekly Plan과 WIL이다. Learning Note, Study Note와 Lab Report는 모두 강제하지 않으며, 실제 학습 근거를 가장 잘 보존하는 형식을 고른다.
 
 ## 권장 주차 폴더 구조
 
     weekN/
     ├── README.md
     ├── weekly-plan.md
+    ├── study-docs/
+    │   └── learning-<topic>.md
+    ├── study-notes/
+    │   └── <YYYY-MM-DD>-study-questions.md
     ├── lab-<topic>.md
-    ├── learning-<topic>.md
     ├── experiment-<topic>.md
     ├── wil.md
     └── public-release-checklist.md
@@ -46,9 +51,16 @@ Placeholder만 채운 빈 문서는 만들지 않는다. 실제 학습 근거가
 
 ### Learning Note
 
-- 개념의 목적과 동작을 설명하는 것이 중심이다.
-- 시작할 때의 오해와 이해가 바뀐 이유를 남긴다.
+- 특정 날짜의 진도와 분리하여 개념의 목적과 동작을 설명하는 것이 중심이다.
+- 정의, 동작 흐름, 최소 예와 대표적인 오해를 공식 자료에 근거해 정리한다.
 - 언제 사용하거나 사용하지 않을지 경계를 포함한다.
+- 개인의 이해 상태, 실행 여부, AI 활용과 다음 일정은 기록하지 않는다.
+
+### Study Note
+
+- 하루 동안 다룬 질문, 자신의 답변과 이해 변화를 기록한다.
+- 실행 전 예상과 실제 관찰, 완료·진행 중·`NOT_RUN` 같은 검증 상태를 구분한다.
+- AI가 도운 범위, 직접 확인한 범위와 다음 학습을 기록한다.
 
 ### Lab Report
 
@@ -71,9 +83,11 @@ Placeholder만 채운 빈 문서는 만들지 않는다. 실제 학습 근거가
 ## 계획과 결과의 분리
 
 - Weekly Plan은 주초 Baseline이며 이후 변경은 변경 기록에 추가한다.
-- Lab Report와 Learning Note는 실제로 학습·실행한 내용만 기록한다.
+- Learning Note는 날짜와 진행 상황에 의존하지 않는 재사용 가능한 개념 자료로 유지한다.
+- Study Note는 날짜별 질문, 답변, 이해 상태와 실제 진행 결과를 기록한다.
+- Lab Report는 직접 실행한 절차, 관찰과 재현 방법을 기록한다.
 - WIL은 주말의 실제 결과를 바탕으로 작성한다.
-- 계획했던 항목을 수행하지 않았으면 삭제하지 않고 상태와 이유를 남긴다.
+- 계획했던 항목을 수행하지 않았으면 Weekly Plan 또는 Study Note에서 삭제하지 않고 상태와 이유를 남긴다.
 - 다음 주로 이동한 주제는 중요도와 선행 조건을 다시 판단한다.
 
 ## 공개 작성 기준

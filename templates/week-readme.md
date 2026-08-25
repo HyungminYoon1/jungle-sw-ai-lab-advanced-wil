@@ -4,7 +4,7 @@
 > 상태: Planned | In Progress | Completed | Partially Completed | Blocked
 > 핵심 질문: <이번 주가 답하려는 질문 한 가지>
 
-이 문서는 Week <주차>의 질문, 선택 범위, 실제 결과와 공개 산출물을 연결하는 Index다. 계획은 `weekly-plan.md`, 실행 관찰은 Lab Report·Learning Note, 한 주의 이해 변화는 `wil.md`에서 확인한다.
+이 문서는 Week <주차>의 질문, 선택 범위, 실제 결과와 공개 산출물을 연결하는 Index다. 계획은 `weekly-plan.md`, 재사용할 개념은 Learning Note, 날짜별 질문과 진행 결과는 Study Note, 재현 가능한 실행은 Lab Report, 한 주의 이해 변화는 `wil.md`에서 확인한다.
 
 ## 한눈에 보기
 
@@ -45,7 +45,8 @@
 ### 학습·실험
 
 - [Lab Report — <주제>](./lab-<topic>.md)
-- [Learning Note — <주제>](./learning-<topic>.md)
+- [Learning Note — <주제>](./study-docs/learning-<topic>.md)
+- [Study Note — <날짜와 주제>](./study-notes/<YYYY-MM-DD>-study-questions.md)
 
 실제 파일이 없으면 Placeholder Link를 남기지 않는다.
 

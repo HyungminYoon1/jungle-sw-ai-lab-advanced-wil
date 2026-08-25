@@ -28,7 +28,7 @@
 5. **해석**: 예상과 관찰의 차이, 원인과 한계를 설명한다.
 6. **선택 적용**: 도움이 될 때만 Helpdesk Lab에 최소 변경으로 적용한다.
 7. **검증**: Test, Trace, Header, Query Plan, Metric 또는 평가 Dataset으로 확인한다.
-8. **기록**: Learning Note·Lab Report와 WIL에 이해 변화와 다음 질문을 남긴다.
+8. **기록**: Learning Note에는 재사용할 개념을, Study Note에는 날짜별 이해와 진행 상태를, Lab Report에는 실행 근거를, WIL에는 주간 변화와 다음 질문을 남긴다.
 
 강의 수강, 문서 요약, Tutorial 복사와 AI 답변 저장만으로는 Cycle을 완료하지 않는다.
 
@@ -104,14 +104,17 @@ Git처럼 이미 실제 작업에 사용하는 도구는 별도 반나절 학습
 - WIL에는 AI가 한 일과 학습자가 선택·수정·검증한 일을 구분한다.
 - Secret, 개인정보, 비공개 원문과 내부 URL을 Prompt나 공개 산출물에 넣지 않는다.
 
-## 8. Learning Note와 Lab Report
+## 8. Learning Note·Study Note와 Lab Report
 
 | 문서 | 목적 | 핵심 내용 |
 |---|---|---|
-| Learning Note | 개념을 자신의 언어로 설명 | 핵심 흐름, 오해, 최소 예와 사용 경계 |
+| Learning Note | 재사용 가능한 개념 자료 제공 | 정의, 핵심 흐름, 최소 예, 대표적인 오해와 사용 경계 |
+| Study Note | 날짜별 학습 과정과 현재 상태 보존 | 질문, 자신의 답변, 이해 변화, 실행 상태, AI 활용과 다음 학습 |
 | Lab Report | 실행 가능한 실습과 관찰 보존 | 질문, 예상, 환경, 절차, 결과, 해석과 재현 |
 | Experiment Report | 변수와 비교 조건이 중요한 실험 | 가설, 통제, 측정과 유효성 한계 |
 | Decision Log | 중요한 범위·기술 선택 보존 | Context, 선택지, 결정, 이유와 재검토 |
+
+`study-docs/`의 Learning Note에는 개인의 이해 상태, `NOT_RUN`·`NOT_IMPLEMENTED` 같은 실행 상태, AI 활용과 다음 일정을 넣지 않는다. 이러한 날짜별 정보는 `study-notes/`의 Study Note에 기록한다. 실제 명령, Test, Trace와 관찰 결과를 다른 사람이 재현할 필요가 있으면 Lab Report로 분리한다.
 
 단순한 실습은 Lab Report를 사용한다. 성능·품질 비교처럼 변수 통제가 중요할 때만 Experiment Report를 추가한다.
 
@@ -158,7 +161,7 @@ Tutorial 완료 화면, AI 대화 원문, 생성 코드량, Commit 수와 Test �
 - 오후 실험 Block: 최소 재현, 실패 Case와 해석
 - 선택 적용 Block: 필요한 경우에만 Helpdesk에 작은 변경
 - Core Time: 동료에게 설명하고 반례·질문을 받음
-- 종료 전: 실행 확인, 작은 Commit과 기록 갱신
+- 종료 전: 실행 확인, 날짜별 Study Note와 Weekly Plan 갱신, 작은 Commit
 - 주말: 새 기능을 줄이고 Lab Report·WIL과 다음 질문 정리
 - 월요일: 전주 WIL 게시
 

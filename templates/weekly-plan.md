@@ -56,7 +56,7 @@ Version과 Credential 값을 기억에 의존해 기록하지 않는다. Secret 
 
 | 학습 주제 | 상태 | 질문 | 방법 | 증거 |
 |---|---|---|---|---|
-| <개념> | 핵심 학습 | <구체 질문> | <도서·공식 문서·Spike> | <Note·Test·Trace> |
+| <개념> | 핵심 학습 | <구체 질문> | <도서·공식 문서·Spike> | <Learning Note·Study Note·Test·Trace> |
 | <개념> | 선택 적용 | <구체 질문> | <최소 적용> | <Diff·Test> |
 
 상태는 `핵심 학습`, `선택 적용`, `독립 Spike`, `조건부 후속`, `선정 제외` 중 하나를 사용한다.
@@ -87,7 +87,9 @@ Version과 Credential 값을 기억에 의존해 기록하지 않는다. Secret 
 |---|---|---|---|
 | [주차 안내](./README.md) | 주차 Index | 주차 시작 | Ready |
 | [주간 학습 계획](./weekly-plan.md) | Baseline | 주차 시작 | Ready |
-| Lab Report 또는 Learning Note | 핵심 근거 | 실제 결과 확보 | Planned |
+| Learning Note | 재사용할 개념 자료 | 개념 설명이 필요할 때 | Planned |
+| Study Note | 날짜별 질문·답변과 진행 상태 | 일일 학습 기록이 필요할 때 | Planned |
+| Lab Report | 실행 절차·관찰과 재현 근거 | 직접 실행 결과가 있을 때 | Planned |
 | WIL | 이해 변화와 회고 | 주말 실제 결과 | Planned |
 
 ## Learning Evidence Gate

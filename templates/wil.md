@@ -88,6 +88,7 @@ AI 대화 원문, Secret과 민감 입력은 공개하지 않는다.
 
 ## 공개 기술 콘텐츠
 
+- 주간 근거로 참조한 Study Note:
 - 작성한 Learning Note·Lab Report:
 - 기술 블로그 후보:
 - 아직 근거가 부족한 주장:
@@ -112,4 +113,4 @@ AI 대화 원문, Secret과 민감 입력은 공개하지 않는다.
 ## 관련 자료
 
 - [주간 학습 계획](./weekly-plan.md)
-- <Lab Report·Learning Note·Source·Test Link>
+- <Learning Note·Study Note·Lab Report·Source·Test Link>
