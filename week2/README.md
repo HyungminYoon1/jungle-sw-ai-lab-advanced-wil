@@ -28,6 +28,13 @@ Week 1에서 Framework 없는 Ticket Domain의 규칙과 Unit Test를 확인했�
 - Spring Dependency·Application Context·Web Server는 아직 없으며 최소 기동과 실제 `curl.exe` Trace는 8월 25일 Block에서 수행한다.
 - 설명, Test와 Trace를 구분하여 실행 근거가 없는 항목은 `NOT_IMPLEMENTED` 또는 `NOT_RUN`으로 유지한다.
 
+## 2026-08-25 진행 결과
+
+- Resource·URI·Representation, 안전성과 멱등성을 Ticket 예시로 설명하고 생성·단건 조회의 정상·실패 Given–When–Then과 예상 계약표를 작성했다.
+- Spring Boot `4.1.1` Web MVC 구성과 Application 진입점을 추가한 뒤 기존 Unit Test 16개가 그대로 통과했다.
+- Java `25.0.4`에서 Tomcat `11.0.24`를 Port `8080`으로 기동하고 Root `GET /`의 `404 Not Found`, JSON 오류 Body를 실제 `curl.exe`로 관찰했다.
+- Root Smoke Trace는 Application Context·내장 Server의 실행 근거다. Ticket Controller·MockMvc·`/api/tickets` Trace는 아직 `NOT_IMPLEMENTED` 또는 `NOT_RUN`이다.
+
 ## 핵심 질문
 
 > 하나의 HTTP 요청이 Spring MVC의 각 Layer를 통과하는 흐름과 책임을 직접 추적할 수 있는가?
@@ -126,9 +133,9 @@ Spring MVC의 오류 응답은 RFC 9457 형식의 `ProblemDetail` 지원을 우�
 
 | 학습 주제 | 분류 | 현재 상태 | 계획된 근거 |
 |---|---|---|---|
-| HTTP Request·Response 의미 | 핵심 학습 | In Progress — 자연어 설명·예상 계약 완료, `curl` `NOT_RUN` | 자신의 말로 쓴 흐름과 `curl` Trace |
-| REST Resource·오류 계약 | 핵심 학습 | In Progress — 초기 예상 계약 작성, Given–When–Then·Test `NOT_RUN` | API 계약 표와 정상·실패 Test |
-| Spring MVC·Layer 책임 | 핵심 학습 | In Progress — 개념 흐름 설명, Code·Test `NOT_IMPLEMENTED` | Request 흐름 설명, 최소 수직 Slice와 Layer Test |
+| HTTP Request·Response 의미 | 핵심 학습 | In Progress — 자연어 설명과 Root `curl` Smoke 완료, Ticket API Trace `NOT_RUN` | 자신의 말로 쓴 흐름과 `curl` Trace |
+| REST Resource·오류 계약 | 핵심 학습 | In Progress — Given–When–Then·계약표 완료, MVC Test `NOT_IMPLEMENTED` | API 계약 표와 정상·실패 Test |
+| Spring MVC·Layer 책임 | 핵심 학습 | In Progress — 최소 Context·Server 기동 완료, Controller·Layer Test `NOT_IMPLEMENTED` | Request 흐름 설명, 최소 수직 Slice와 Layer Test |
 | In-memory Ticket API | 선택 적용 | Planned | 생성·조회 Diff와 MVC Test |
 | Filter·Interceptor·Exception Handler | 조건부 후속 | Planned | 책임 비교와 필요한 최소 실험 |
 | CORS Simple·Preflight | 조건부 후속 | Planned | Must 완료 후 Header 관찰 |
@@ -141,12 +148,12 @@ Spring MVC의 오류 응답은 RFC 9457 형식의 `ProblemDetail` 지원을 우�
 
 - [주차 안내](./README.md)
 - [주간 학습 계획](./weekly-plan.md)
-- [HTTP 요청·응답 메시지 Learning Note](./study-docs/learning-http-request-response-messages.md) — Message 구조·의미 직접 설명 완료, 실제 `curl.exe` Trace `NOT_RUN`
+- [HTTP 요청·응답 메시지 Learning Note](./study-docs/learning-http-request-response-messages.md) — Message 구조·의미, Ticket 예시와 공식 참고자료
 - [8월 24일 HTTP·Spring MVC 학습 점검](./study-notes/2026-08-24-study-questions.md) — HTTP 기본 개념, Spring MVC Request Flow와 실행 경계 기록
+- [8월 25일 REST Resource·URI와 API 계약 학습 점검](./study-notes/2026-08-25-study-questions.md) — 개념 답변·예상 계약과 Spring Boot 최소 기동·Root Smoke Trace 완료
 
 ### 실제 근거가 생긴 뒤 보완·추가
 
-- 현재 HTTP 요청·응답 메시지 Learning Note의 자가진단 답변과 예상·관찰 차이
 - Ticket HTTP Request Flow Lab Report
 - Week 2 WIL
 - 공개 전 Checklist

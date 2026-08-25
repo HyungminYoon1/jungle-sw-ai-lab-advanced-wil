@@ -237,8 +237,8 @@ Controller에 규칙을 둔 실패 예제는 별도 Production 구조로 장기�
 | 순서 | Lab | 실행 전 예상 | 완료 조건 | 상태 |
 |---:|---|---|---|---|
 | 0 | Week 1 경계 정리와 Source Baseline | 기존 Test 16개가 Spring 변경 전에도 재현됨 | 후속 질문과 Week 2 시작 범위가 분리되고 Clean Test 결과 확인 | Completed — WIL 게시·LMS 제출, JDK 25.0.4·Maven 3.9.16과 기존 Test 16개 `BUILD SUCCESS` 확인 |
-| 1 | Spring Boot 최소 기동 | 공식 생성 구성으로 Application Context와 내장 Server가 기동됨 | JDK·Maven·Boot Version과 실패 시 원인을 기록 | Planned |
-| 2 | HTTP Message Trace | `curl`에서 연결, Request, Status, Header와 JSON Body를 구분할 수 있음 | 한 Request의 원문과 각 부분의 의미를 설명 | Planned |
+| 1 | Spring Boot 최소 기동 | 공식 생성 구성으로 Application Context와 내장 Server가 기동됨 | JDK·Maven·Boot Version과 실패 시 원인을 기록 | Completed — Boot `4.1.1`, Java `25.0.4`, Tomcat `11.0.24`, Port `8080` 기동과 기존 Test 16개 통과 |
+| 2 | HTTP Message Trace | `curl`에서 연결, Request, Status, Header와 JSON Body를 구분할 수 있음 | 한 Request의 원문과 각 부분의 의미를 설명 | Completed — Root `GET /`의 연결·Request·`404`·Header·JSON Body를 관찰하고 Ticket API 미검증 경계를 기록 |
 | 3 | Ticket 생성·조회 수직 Slice | Web에서 기존 Ticket 규칙을 재사용하고 In-memory로 조회 가능 | `POST`·`GET` 정상 Test와 실제 호출 통과 | Planned |
 | 4 | 오류 응답 계약 | 잘못된 입력과 부재·내부 실패가 서로 다른 Status로 변환됨 | `400`·`404`·대표 `500` Body와 상태 검증 | Planned |
 | 5 | Layer 책임 비교 | Controller에 규칙·저장을 두면 변경과 Test 책임이 섞임 | 금지 의존성과 분리 후 Call Flow를 자신의 말로 설명 | Planned |
@@ -250,7 +250,7 @@ Controller에 규칙을 둔 실패 예제는 별도 Production 구조로 장기�
 | 날짜 | 오전 | 오후 | 야간 | 일일 종료 조건 | 상태 |
 |---|---|---|---|---|---|
 | 8월 24일 월요일 | Week 1 다형성·Composition 재점검과 WIL 제출을 최대 한 시간으로 마감, HTTP 현재 이해 기록 | HTTP Request·Response 구조, Method·Status·Header·Content Type 학습과 예상 작성 | WIL 외부 제출, JDK·Maven·Spring Boot 공식 Baseline과 기존 Clean Test를 우선 확인하고, 최소 Context 기동 준비가 남으면 화요일 기동 Block으로 한 번만 이동 | Week 1 후속과 Week 2 범위가 분리되고 HTTP 메시지 각 부분을 설명 | Completed — WIL 게시·LMS 제출, HTTP·Spring MVC 개념 설명, JDK·Maven과 기존 Test 16개 확인. Context·Server 기동은 계획에 따라 8월 25일로 이동 |
-| 8월 25일 화요일 | 월요일에 정리한 HTTP·Stateless 설명을 반복하지 않고 REST Resource·URI와 생성·조회 계약으로 연결 | `POST`·`GET` 정상·실패 Given–When–Then과 API 계약 확정 | Spring Boot 최소 Application Context와 Server 기동, 첫 `curl` Trace | Code 작성 전에 Method·Status·Header·Body 예상 계약이 기록됨 | Planned |
+| 8월 25일 화요일 | 월요일에 정리한 HTTP·Stateless 설명을 반복하지 않고 REST Resource·URI와 생성·조회 계약으로 연결 | `POST`·`GET` 정상·실패 Given–When–Then과 API 계약 확정 | Spring Boot 최소 Application Context와 Server 기동, 첫 `curl` Trace | Code 작성 전에 Method·Status·Header·Body 예상 계약이 기록됨 | Completed — 오전 개념 설명, 오후 예상 계약, 야간 Boot `4.1.1`·Tomcat 기동과 Root `404` JSON Smoke Trace 완료. Ticket API·MockMvc는 다음 Block |
 | 8월 26일 수요일 | DispatcherServlet·Controller·DI·IoC와 Layer 책임 학습 | In-memory Repository 기반 Ticket 생성·조회 수직 Slice 구현 | 정상 MVC Test와 실제 `POST`·`GET` 호출, Call Flow 설명 | Controller에서 Domain 규칙과 저장 구현을 분리한 정상 흐름이 재현됨 | Planned |
 | 8월 27일 목요일 | Validation, Exception Handler와 `ProblemDetail` 학습 | 잘못된 JSON·제목과 존재하지 않는 ID의 `400`·`404` 계약 구현 | 대표 내부 실패의 `500` Test와 안전한 오류 Body Review | 정상과 세 실패 범주의 Status·Body 선택 이유를 설명 | Planned |
 | 8월 28일 금요일 | Filter·Interceptor·Exception Handler 실행 위치 비교 | Must Gate와 전체 Test 보완, 필요할 때만 CORS Simple·Preflight 실험 | Request Trace에 Layer와 오류 흐름 표시, Learning Note·Lab Report 초안 | 조건부 항목을 수행하거나 보류한 이유와 Request 흐름이 기록됨 | Planned |
@@ -276,7 +276,8 @@ Controller에 규칙을 둔 실패 예제는 별도 Production 구조로 장기�
 |---|---|---|---|
 | [주차 안내](./README.md) | Week 2 질문과 범위 Index | 주차 시작 | Ready |
 | [주간 학습 계획](./weekly-plan.md) | Baseline·일정·축소 기준 | 주차 시작 | Ready |
-| [HTTP 요청·응답 메시지 Learning Note](./study-docs/learning-http-request-response-messages.md) | Message 구조·예상 계약과 자가점검 | RFC 기반 학습 자료 준비 | In Progress — 직접 설명·예상 계약 완료, 실제 `curl.exe` Trace `NOT_RUN` |
+| [HTTP 요청·응답 메시지 Learning Note](./study-docs/learning-http-request-response-messages.md) | Message 구조·예상 계약과 자가점검 | RFC 기반 학습 자료 준비 | Ready — 순수 개념 자료로 유지하고 실제 Trace는 날짜별 Study Note에 분리 |
+| [8월 25일 REST Resource·URI와 API 계약 학습 점검](./study-notes/2026-08-25-study-questions.md) | 개념 답변·예상 계약과 최소 기동 실행 근거 | 당일 학습과 실행 완료 | Completed — Given–When–Then·계약표, Boot 기동과 Root Smoke Trace 기록 |
 | Ticket HTTP Request Flow Lab Report | Request·Response Trace와 정상·실패 재현 | 실제 Trace와 Test 결과 확보 후 | Planned |
 | Week 2 WIL | 이해 변화, 실패와 다음 판단 | 토요일 실제 결과 후 | Planned |
 | 공개 Checklist | Secret·경로·주장·Link 점검 | 게시 직전 | Planned |
@@ -314,6 +315,7 @@ Baseline 이후 학습 항목을 조용히 추가하거나 삭제하지 않는�
 | 날짜 | 변경 | 이유 | 영향·검증 경계 |
 |---|---|---|---|
 | 2026-08-24 | 최소 Application Context·Server 기동 준비를 8월 25일 야간 기동 Block에 통합 | 23:00까지 HTTP와 Spring MVC 개념 설명, WIL 제출과 기존 Clean Test Baseline을 완료하여 월요일 종료 조건을 충족함 | 주간 API 범위는 바뀌지 않는다. Spring Code·Context는 `NOT_IMPLEMENTED`, 실제 `curl.exe` Trace는 `NOT_RUN`으로 유지한다. |
+| 2026-08-25 | Spring Boot 최소 기동과 Root Smoke Trace 완료 | 구현 전 Ticket API 계약을 작성한 뒤 Boot 구성·Application 진입점·Server 실행을 작은 단계로 검증함 | Root `404`는 Context·Server·기본 오류 응답 근거로만 사용한다. Ticket Controller·MockMvc·실제 `POST`·`GET`은 다음 Block까지 `NOT_IMPLEMENTED`·`NOT_RUN`으로 유지한다. |
 
 ## 공식 학습 자료 Baseline
 
