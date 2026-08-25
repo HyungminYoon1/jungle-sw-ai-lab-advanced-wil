@@ -1,9 +1,7 @@
 # Learning Note — HTTP 요청·응답 메시지
 
 > 작성일: 2026-08-24
-> 주차: Week 2
 > 기준: RFC 9110 HTTP Semantics, RFC 9112 HTTP/1.1
-> 이해 상태: Message 구조·의미 직접 설명 완료 — 실제 Server `curl.exe` Trace `NOT_RUN`
 
 ## 핵심 질문
 
@@ -14,17 +12,20 @@
 이 자료를 학습한 뒤 다음 내용을 자신의 말로 설명하는 것이 목표다.
 
 - HTTP Request와 Response의 Start Line, Header Section, 빈 줄과 Body를 구분한다.
+- Resource, URI와 Representation의 차이를 Ticket 사례로 설명한다.
 - Method, Request Target과 Status Code가 각각 무엇을 표현하는지 설명한다.
+- Collection·개별 Resource·Query 조건을 URI에서 구분한다.
+- `GET`과 `POST`의 안전성·멱등성 차이를 설명한다.
 - `Content-Type`, `Accept`, `Location`과 `Content-Length`의 역할을 구분한다.
 - Ticket 생성·조회에서 예상되는 정상·실패 HTTP 계약을 Code보다 먼저 작성한다.
 - HTTP의 Stateless가 “Server가 아무 상태도 저장하지 않는다”는 뜻이 아닌 이유를 설명한다.
 - 예상 메시지와 실제 `curl.exe` Trace를 구분하고, 관찰 후 차이를 기록한다.
 
-이 문서가 준비되었다는 사실만으로 위 목표를 완료한 것은 아니다. 직접 설명과 실제 Trace가 생기기 전까지 Week 2 Learning Evidence Gate는 완료 처리하지 않는다.
+뒤의 자가진단, 최소 실험과 설명 가능성 점검 질문을 이용해 각 목표를 확인할 수 있다.
 
 ## 시작 전 자가진단
 
-자료를 읽기 전에 다음 질문에 짧게 답한다. 정답을 먼저 찾기보다 현재 이해와 불확실한 부분을 남기는 것이 목적이다.
+자료를 읽기 전에 다음 질문에 짧게 답한다. 정답을 먼저 찾기보다 현재 이해와 불확실한 부분을 확인하는 것이 목적이며, 개인 답변은 날짜별 Study Note에 기록한다.
 
 1. `POST /api/tickets`에서 `POST`와 `/api/tickets`는 각각 무엇을 뜻하는가?
 2. `Content-Type`과 `Accept`는 모두 JSON을 가리킬 수 있는데 역할이 어떻게 다른가?
@@ -40,11 +41,11 @@ HTTP 메시지는 Client가 Method·Target·Field·Content로 요청 의도를 �
 
 HTTP를 학습할 때 “메시지가 무엇을 뜻하는가”와 “특정 Version이 Wire에서 어떻게 표현하는가”를 분리해야 한다.
 
-| 구분 | 담당 내용 | 이번 자료의 사용 방식 |
+| 구분 | 담당 내용 | 이 자료의 사용 방식 |
 |---|---|---|
 | HTTP Semantics | Method, Status, Field와 Content가 전달하는 의미 | 모든 HTTP Version에 공통인 설명 기준 |
 | HTTP/1.1 Message Syntax | Start Line, CRLF, Field Line, 빈 줄과 Message Body | 사람이 읽을 수 있는 원문 예시 |
-| HTTP/2·HTTP/3 | 각 Version 고유의 Frame과 전송 방식 | 이번 주 상세 구현·비교 대상에서 제외 |
+| HTTP/2·HTTP/3 | 각 Version 고유의 Frame과 전송 방식 | 상세 Framing·성능 비교는 다루지 않음 |
 
 RFC 9110은 HTTP Version마다 메시지 전송 문법이 다르더라도 의미를 보존할 수 있는 공통 Message Abstraction을 정의한다. 따라서 아래의 HTTP/1.1 Text 예시를 HTTP/2·HTTP/3도 그대로 전송한다고 일반화하지 않는다.
 
@@ -67,7 +68,7 @@ CRLF
 - Body가 항상 존재하는 것은 아니다.
 - HTTP/1.1에서 Body의 존재와 길이는 `Content-Length`, `Transfer-Encoding`, Response Status와 연결 상태 등 Message Framing 규칙에 따라 결정된다.
 
-입문 설명에서는 전송할 데이터를 흔히 Body라고 부른다. RFC 9110의 Content는 전송 Coding을 해제한 뒤의 표현 데이터이고, RFC 9112의 Message Body는 HTTP/1.1 Framing에 포함된 Octet Stream이다. 이번 학습에서는 둘의 차이를 인식하되 Transfer Coding 상세 구현은 범위에서 제외한다.
+입문 설명에서는 전송할 데이터를 흔히 Body라고 부른다. RFC 9110의 Content는 전송 Coding을 해제한 뒤의 표현 데이터이고, RFC 9112의 Message Body는 HTTP/1.1 Framing에 포함된 Octet Stream이다. 이 자료에서는 둘의 차이를 인식하되 Transfer Coding 상세 구현은 범위에서 제외한다.
 
 ## Request 구조
 
@@ -89,7 +90,7 @@ Content-Length: 28
 {"title":"로그인 오류"}
 ```
 
-이 예시는 아직 실제 Server에 전송한 Trace가 아니라 구현 전 예상 메시지다. `Content-Length: 28`은 위 JSON을 공백 없이 UTF-8로 Encoding한 정확한 Body를 기준으로 한 Octet 수다. JSON의 공백이나 값이 바뀌면 길이도 바뀌며, 실제 값은 Client가 계산하게 한다.
+이 예시는 실제 Server에 전송한 Trace가 아니라 메시지 구조를 설명하기 위한 예상 예시다. `Content-Length: 28`은 위 JSON을 공백 없이 UTF-8로 Encoding한 정확한 Body를 기준으로 한 Octet 수다. JSON의 공백이나 값이 바뀌면 길이도 바뀌며, 실제 값은 Client가 계산하게 한다.
 
 ### Request 각 부분의 역할
 
@@ -107,14 +108,63 @@ Content-Length: 28
 
 ### `GET`과 `POST`
 
-| Method | 핵심 의미 | 현재 Ticket Lab 사용 |
+| Method | 핵심 의미 | Ticket 예시 |
 |---|---|---|
 | `GET` | Target Resource의 현재 선택된 Representation 전송을 요청 | `GET /api/tickets/{id}` 단건 조회 |
 | `POST` | Target Resource가 Request Representation을 자신의 의미에 따라 처리하도록 요청 | `POST /api/tickets` Ticket 생성 |
 
 `POST`가 언제나 생성을 뜻하는 것은 아니다. RFC의 의미는 Target Resource가 전달된 Representation을 자신의 규칙에 따라 처리하도록 요청하는 것이며, 새 Resource 생성은 대표적인 사용 사례다.
 
-`GET` Request Content가 문법적으로 무조건 금지된다고 단정하지 않는다. 다만 일반적으로 정의된 의미가 없고 일부 구현이 이를 거부할 수 있으므로, 현재 Ticket 조회 계약에서는 GET Body를 사용하지 않는다.
+`GET` Request Content가 문법적으로 무조건 금지된다고 단정하지 않는다. 다만 일반적으로 정의된 의미가 없고 일부 구현이 이를 거부할 수 있으므로, 이 자료의 Ticket 조회 예시에서는 GET Body를 사용하지 않는다.
+
+## Resource·URI·Representation 구분
+
+RFC 9110은 HTTP Request의 대상을 Resource라고 부른다. Resource의 종류를 File이나 Database Row로 제한하지 않으며, HTTP는 Resource와 상호작용하기 위한 공통 Interface를 정의한다. 대부분의 Resource는 URI로 식별한다.
+
+Representation은 Resource 그 자체가 아니라 특정 시점의 Resource 상태를 통신 가능한 형식으로 표현한 정보다.
+
+| 개념 | Ticket 예시 | 역할 |
+|---|---|---|
+| Resource | ID가 7인 Ticket | Server가 관리하는 식별 가능한 대상 |
+| URI | `/api/tickets/7` | 해당 Resource를 식별하는 주소 |
+| Representation | `{"id":7,"title":"로그인 오류","status":"OPEN"}` | Ticket 상태를 JSON으로 표현해 전달하는 Content |
+
+같은 Ticket Resource도 Client의 `Accept`와 Server의 지원 범위에 따라 JSON이나 XML 등 서로 다른 Representation으로 표현될 수 있다. 표현 형식이 달라져도 같은 URI가 식별하는 Resource가 자동으로 다른 Resource가 되는 것은 아니다.
+
+### Collection·개별 Resource·Query 조건
+
+이 자료의 Ticket 예시에서는 URI를 다음과 같이 구분한다.
+
+| URI | Ticket 예시의 해석 | 자료에서의 용도 |
+|---|---|---|
+| `/api/tickets` | Ticket Collection | `POST` 생성 Target |
+| `/api/tickets/7` | ID가 7인 개별 Ticket | `GET` 단건 조회 Target |
+| `/api/tickets?status=OPEN` | `status=OPEN` 조건을 적용한 Ticket Collection | Path와 Query 역할 비교 |
+
+Path는 주로 Resource의 계층과 식별을 나타내고, Query는 같은 Path의 Target을 조건에 따라 선택하거나 변형하는 데 사용할 수 있다. Query의 용도가 Filtering으로 제한되는 것은 아니며, 이 자료에서는 `status` Filtering 사례를 사용한다.
+
+### URI와 Method가 함께 의미를 만든다
+
+HTTP는 Resource 식별과 Request 행동의 의미를 분리한다. URI가 대상을 식별하고 Method가 요청 의도를 표현한다.
+
+```http
+POST /api/tickets
+GET /api/tickets/7
+```
+
+`/api/create-ticket`이 문법적으로 잘못된 URI라는 뜻은 아니다. 다만 Ticket 예시에서는 `POST`가 처리 의도를 이미 나타내므로 `/api/tickets`로 Resource를 표현한다. `GET /api/tickets?do=delete`처럼 안전한 Method에 상태 변경 행동을 숨기는 설계는 GET의 의미와 맞지 않는다.
+
+### 안전성과 멱등성
+
+- 안전한 Method는 Client가 Server 상태 변경을 요청하지 않는 읽기 중심 의미를 가진다.
+- 멱등한 Method는 동일한 요청을 여러 번 수행해도 의도된 Server 효과가 한 번 수행한 것과 같다.
+
+| Method | 안전한가? | 멱등한가? | Ticket 사례 |
+|---|---|---|---|
+| `GET` | 예 | 예 | 같은 Ticket 조회를 반복해도 조회 자체가 Ticket 상태를 바꾸지 않음 |
+| `POST` | 아니요 | 아니요 | 같은 생성 요청을 반복하면 Ticket이 여러 개 생성될 가능성이 있으므로 한 번과 같은 효과라고 가정할 수 없음 |
+
+Server가 GET Request를 Log에 남기는 부수 효과가 있더라도 Client가 요청한 의미가 조회라면 GET의 안전성 정의와 모순되지 않는다. 반대로 POST 처리 결과가 우연히 한 번만 반영되더라도 Client는 별도 계약 없이 POST를 멱등하다고 가정해서 자동 재시도하면 안 된다.
 
 ## Response 구조
 
@@ -150,21 +200,21 @@ Content-Length: 51
 
 Client는 Reason Phrase 문자열이 아니라 세 자리 Status Code의 의미를 기준으로 처리한다. HTTP/2·HTTP/3에는 HTTP/1.1과 같은 Text Status Line이 없으므로 `Created` 문자열에 의존하지 않는다.
 
-## Ticket API의 예상 Method·Status 계약
+## Ticket API의 Method·Status 예시
 
-아래 표는 구현과 실제 검증 전의 예상 계약이다.
+아래 표는 Ticket 생성·조회 계약을 설계할 때 사용할 수 있는 예시다. 구체적인 오류 Body Field는 Application 계약에 맞게 별도로 정한다.
 
-| Request | 예상 결과 | 선택 이유 | 현재 검증 상태 |
-|---|---|---|---|
-| `POST /api/tickets` + 유효한 제목 | `201 Created`, `Location`, Ticket JSON | 새 Resource가 생성됨 | `NOT_RUN` |
-| `GET /api/tickets/1` + 존재하는 ID | `200 OK`, Ticket JSON | 현재 Representation 조회 성공 | `NOT_RUN` |
-| `POST /api/tickets` + 잘못된 JSON·공백 제목 | `400 Bad Request` | 현재 계약에서 Client Request 오류로 처리 | `NOT_RUN` |
-| `GET /api/tickets/999999` + 존재하지 않는 ID | `404 Not Found` | Target Resource의 현재 Representation을 찾지 못함 | `NOT_RUN` |
-| 통제된 내부 예외 | `500 Internal Server Error` | 예상하지 못한 Server 조건으로 요청 수행 실패 | `NOT_RUN` |
+| Request | 결과 예시 | 선택 이유 |
+|---|---|---|
+| `POST /api/tickets` + 유효한 제목 | `201 Created`, `Location`, Ticket JSON | 새 Resource가 생성됨 |
+| `GET /api/tickets/1` + 존재하는 ID | `200 OK`, Ticket JSON | 현재 Representation 조회 성공 |
+| `POST /api/tickets` + 잘못된 JSON·공백 제목 | `400 Bad Request` | Request 형식이나 입력 계약을 충족하지 못함 |
+| `GET /api/tickets/999999` + 존재하지 않는 ID | `404 Not Found` | Target Resource의 현재 Representation을 찾지 못함 |
+| 처리되지 않은 내부 실패 | `500 Internal Server Error` | 예상하지 못한 Server 조건으로 요청 수행 실패 |
 
 Status Class를 먼저 구분하면 개별 Code를 이해하기 쉽다.
 
-| 범위 | 분류 | 현재 예시 |
+| 범위 | 분류 | Ticket 예시 |
 |---:|---|---|
 | `2xx` | 요청이 성공적으로 처리됨 | `200`, `201` |
 | `4xx` | Request 또는 Client 측 조건과 관련된 실패 | `400`, `404` |
@@ -214,7 +264,7 @@ Stateless는 다음을 뜻하지 않는다.
 
 Server가 Session을 저장하더라도 Client가 각 Request에 Session 식별 Cookie를 보내면 해당 Request를 해석할 수 있다. 반대로 같은 연결에서 연속으로 들어왔다는 사실만으로 두 Request를 같은 사용자의 것으로 단정하면 안 된다.
 
-현재 Week 2에서는 인증·Session을 구현하지 않는다. Stateless의 의미만 설명하고 실제 Session 검증은 Week 4 범위로 남긴다.
+이 자료에서는 Stateless의 의미를 Session 구현 방법과 구분하는 데 집중하며, 인증·Session 구현은 다루지 않는다.
 
 ## Request·Response 핵심 흐름
 
@@ -232,16 +282,16 @@ Client
   8. Content-Type에 맞게 Response Content 처리
 ```
 
-이 단계에서는 Spring의 `@PostMapping`, Controller와 JSON 변환 Class를 외우지 않는다. 먼저 Framework 없이 Message 각 부분이 무엇을 전달하는지 설명한 뒤, 이후 Spring MVC가 어느 단계를 대신 수행하는지 연결한다.
+HTTP 메시지를 학습할 때는 Spring의 `@PostMapping`, Controller와 JSON 변환 Class를 먼저 외우지 않는다. Framework 없이 Message 각 부분이 무엇을 전달하는지 설명한 뒤, Spring MVC가 어느 단계를 대신 수행하는지 연결한다.
 
-## 예상과 실제를 구분하는 `curl.exe` 관찰 계획
+## `curl.exe`로 메시지 관찰하기
 
-현재 실제 HTTP Server와 Endpoint Trace는 검증하지 않았다. 아래 명령은 Application 기동 후 수행할 재현 절차이며 결과는 `NOT_RUN`이다.
+아래 명령은 Ticket Endpoint가 기동된 환경에서 Request·Response Line, Header와 Body를 관찰하기 위한 예시다. Port와 ID는 실제 실행 환경에 맞게 바꾼다.
 
 ### 사전 조건
 
-- Spring Application과 Ticket Endpoint가 실제로 기동되어 있다.
-- `localhost:8080`이 해당 Application의 실제 Listen 주소다.
+- Ticket Endpoint가 기동되어 있다.
+- `localhost:8080`을 사용하는 경우 실제 Listen 주소와 일치하는지 확인한다.
 - Trace에 Credential, Cookie, 내부 URL과 개인정보가 포함되지 않는다.
 
 ### Ticket 생성
@@ -278,16 +328,16 @@ Body는 별도의 출력 영역에 나타날 수 있다. `-v`의 진단 출력 �
 
 ### 관찰 기록 표
 
-실행 전 예상과 실행 후 관찰을 분리하여 작성한다.
+실습할 때는 다음 항목을 기준으로 실행 전 예상과 실행 후 관찰을 분리한다. 실제 관찰 결과는 날짜별 Study Note 또는 Lab Report에 기록한다.
 
 | 항목 | 실행 전 예상 | 실제 관찰 | 차이와 해석 |
 |---|---|---|---|
-| Request Line | `POST /api/tickets` | `NOT_RUN` | `NOT_RUN` |
-| Request `Content-Type` | `application/json` | `NOT_RUN` | `NOT_RUN` |
-| Response Status | `201 Created` | `NOT_RUN` | `NOT_RUN` |
-| Response `Location` | `/api/tickets/{id}` | `NOT_RUN` | `NOT_RUN` |
-| Response `Content-Type` | `application/json` | `NOT_RUN` | `NOT_RUN` |
-| Response Body | `id`, `title`, `status` | `NOT_RUN` | `NOT_RUN` |
+| Request Line | `POST /api/tickets` |  |  |
+| Request `Content-Type` | `application/json` |  |  |
+| Response Status | `201 Created` |  |  |
+| Response `Location` | `/api/tickets/{id}` |  |  |
+| Response `Content-Type` | `application/json` |  |  |
+| Response Body | `id`, `title`, `status` |  |  |
 
 ## 실패·반례와 자주 발생하는 오해
 
@@ -304,7 +354,7 @@ Body는 별도의 출력 영역에 나타날 수 있다. `-v`의 진단 출력 �
 
 ## 최소 학습 실험
 
-실제 Server가 준비되기 전에는 다음 종이 실험부터 수행한다.
+Server 실행 여부와 관계없이 다음 종이 실험부터 수행할 수 있다.
 
 1. Ticket 생성 Request에서 Method, Target, Header와 Body에 서로 다른 표시를 한다.
 2. 유효한 제목, 공백 제목과 잘못된 JSON의 예상 Status를 먼저 적는다.
@@ -325,49 +375,35 @@ Body는 별도의 출력 영역에 나타날 수 있다. `-v`의 진단 출력 �
 9. HTTP가 Stateless여도 Server가 Ticket과 Session을 저장할 수 있는 이유는 무엇인가?
 10. 예상 메시지와 실제 Trace가 다를 때 무엇을 먼저 확인할 것인가?
 
-## Learning Evidence Gate
+## 학습 점검 목록
 
-- [x] Request Line·Status Line·Header·빈 줄·Body를 자신의 말로 설명한다.
-- [x] Method·Target·Status의 역할을 서로 구분한다.
-- [ ] `Content-Type`, `Accept`, `Location`과 `Content-Length`를 구분한다.
-- [x] Ticket 생성·조회와 `400`·`404`·대표 `500`의 예상 계약을 작성한다.
-- [x] Stateless를 Server 상태 저장 금지와 구분한다.
-- [x] HTTP/1.1 Text 예시와 Version 독립적인 HTTP Semantics를 구분한다.
-- [ ] 실제 Server에 `curl.exe` Request를 보내고 예상·관찰·차이를 기록한다.
-- [ ] Trace의 `>`, `<`, `*` Line을 구분한다.
-- [ ] 공개 Trace에 Credential, Cookie, 개인정보, 내부 URL과 로컬 절대 경로가 없다.
+- Resource·URI·Representation을 서로 구분한다.
+- Collection·개별 Resource·Query 조건의 URI를 구분한다.
+- `GET`과 `POST`의 안전성·멱등성 차이를 설명한다.
+- Request Line·Status Line·Header·빈 줄·Body를 자신의 말로 설명한다.
+- Method·Target·Status의 역할을 서로 구분한다.
+- `Content-Type`, `Accept`, `Location`과 `Content-Length`를 구분한다.
+- Ticket 생성·조회와 `400`·`404`·대표 `500`의 계약을 설명한다.
+- Stateless를 Server 상태 저장 금지와 구분한다.
+- HTTP/1.1 Text 예시와 Version 독립적인 HTTP Semantics를 구분한다.
+- `curl.exe -v` Trace의 `>`, `<`, `*` Line을 구분한다.
 
-## 근거와 현재 검증 경계
+## 자료 범위
 
-| 근거 | 확인한 내용 | 상태 |
-|---|---|---|
-| RFC 9110 | Message Abstraction, Stateless, Method, Header와 Status 의미 | 공식 원문 검토 |
-| RFC 9112 | HTTP/1.1 Start Line, Header Section, 빈 줄과 Message Body 문법 | 공식 원문 검토 |
-| Ticket 예상 Request·Response | 구현 전 계약과 학습 예시 | 예상, 실행 근거 아님 |
-| 2026-08-24 단계별 설명 | HTTP Message 의미와 Spring MVC 연결 개념 | 자연어 설명 완료, 실행 근거 아님 |
-| 실제 Server `curl.exe` Trace | Wire에서 관찰한 Request·Response | `NOT_RUN` |
-| Spring MVC·MockMvc | Framework 처리 흐름과 Test | `NOT_IMPLEMENTED` |
+이 문서는 HTTP Message, Resource·URI·Representation, `GET`·`POST`, 주요 Header·Status와 Stateless의 기본 의미를 다룬다. Ticket Request·Response와 `curl.exe` 명령은 개념을 적용하는 예시이며 실제 Application 실행 결과가 아니다.
 
-이 문서는 HTTP 표준의 전체 기능이나 실제 Ticket API 동작을 검증하지 않는다. Cache, 인증, CORS, Proxy, TLS, HTTP/2·HTTP/3 Framing과 성능 비교는 현재 학습 범위가 아니다.
-
-## AI 활용
-
-- AI가 도운 부분: 학습 순서, Ticket 예시, 오해·자가점검 질문과 관찰표 초안 구성
-- 직접 확인한 공식 자료: RFC 9110과 RFC 9112의 Message, Method, Header, Status와 HTTP/1.1 문법
-- 아직 직접 수행하지 않은 부분: 실제 Server 기동, `curl.exe` Trace, 예상과 실제 비교
-- 완료 원칙: 자료를 읽은 사실이 아니라 직접 설명하고 실제 Message를 관찰한 범위만 학습 근거로 사용한다.
-
-## 다음 학습
-
-- 남은 질문: Ticket 생성·조회에 적절한 Resource URI, Method와 정상·실패 Status 계약은 무엇인가?
-- 조건부 후속: 실제 Server가 준비된 뒤 `curl.exe` Trace를 기록하고 Spring MVC 처리 흐름과 연결한다.
-- 다음 주제: REST Resource·URI·Stateless와 생성·조회 API 계약
+Cache, 인증, CORS, Proxy, TLS, HTTP/2·HTTP/3 Framing과 성능 비교는 다루지 않는다. 실제 Ticket Application 구현, Test·Trace 결과와 학습 일정도 이 자료의 범위가 아니다.
 
 ## 참고 자료
 
+- [RFC 9110 Section 3.1 — Resources](https://www.rfc-editor.org/rfc/rfc9110.html#section-3.1)
+- [RFC 9110 Section 3.2 — Representations](https://www.rfc-editor.org/rfc/rfc9110.html#section-3.2)
+- [RFC 9110 Section 4 — Identifiers in HTTP](https://www.rfc-editor.org/rfc/rfc9110.html#section-4)
 - [RFC 9110 Section 3.3 — Connections, Clients, and Servers](https://www.rfc-editor.org/rfc/rfc9110.html#section-3.3)
 - [RFC 9110 Section 6 — Message Abstraction](https://www.rfc-editor.org/rfc/rfc9110.html#section-6)
 - [RFC 9110 Section 8.3 — Content-Type](https://www.rfc-editor.org/rfc/rfc9110.html#section-8.3)
+- [RFC 9110 Section 9.2.1 — Safe Methods](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.1)
+- [RFC 9110 Section 9.2.2 — Idempotent Methods](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2)
 - [RFC 9110 Section 9.3.1 — GET](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.3.1)
 - [RFC 9110 Section 9.3.3 — POST](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.3.3)
 - [RFC 9110 Section 10.2.2 — Location](https://www.rfc-editor.org/rfc/rfc9110.html#section-10.2.2)

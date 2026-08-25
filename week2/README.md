@@ -6,9 +6,19 @@
 > 운영 Baseline: Git 상태 확인·Diff Review·작은 Commit과 기존 Unit Test 회귀 확인
 > 공통 실습: AI Helpdesk Learning Lab의 In-memory Ticket 생성·조회 API
 
-이 문서는 Week 2의 질문, 선택 범위와 계획된 근거를 연결하는 Index다. 상세 일정과 축소 기준은 [주간 학습 계획](./weekly-plan.md)에서 관리하고, 실제 결과가 생긴 뒤 Learning Note·Lab Report와 WIL을 추가한다.
+이 문서는 Week 2의 질문, 선택 범위와 계획된 근거를 연결하는 Index다. 상세 일정과 축소 기준은 [주간 학습 계획](./weekly-plan.md)에서 관리한다. 재사용할 개념은 Learning Note, 날짜별 질문과 진행 결과는 Study Note, 재현 가능한 실행은 Lab Report, 주간 결과는 WIL에 기록한다.
 
 Week 1에서 Framework 없는 Ticket Domain의 규칙과 Unit Test를 확인했다. Week 2에는 그 Domain을 크게 확장하지 않고 HTTP 요청 한 건이 Web Boundary에서 Domain까지 이동하고 다시 응답으로 변환되는 흐름을 관찰한다. Spring Annotation과 Layer 수를 외우는 것보다 각 단계가 무엇을 받아 무엇으로 바꾸며, 어떤 책임을 가지면 안 되는지 설명하는 것이 목표다.
+
+## 문서 역할
+
+| 위치 | 역할 | 포함하지 않는 내용 |
+|---|---|---|
+| `study-docs/` | 날짜나 개인 진도와 독립적으로 다시 읽을 수 있는 개념·예제·오해·사용 경계·공식 참고자료 | 이해 상태, 실제 수행 여부, AI 활용과 다음 일정 |
+| `study-notes/` | 날짜별 질문, 자신의 답변, 진행 상태, 예상·관찰, 검증 경계와 다음 과제 | 재사용 가능한 개념 자료의 반복 |
+| `weekly-plan.md` | 주간 범위, 일정, 완료 조건과 변경 기록 | 세부 개념 설명과 일일 답변 전문 |
+
+`study-docs`의 명령과 표는 학습 예시이며 실제 실행 결과가 아니다. 실행 여부와 `NOT_RUN`·`NOT_IMPLEMENTED` 상태는 날짜별 `study-notes`와 주간계획에서 관리한다.
 
 ## 2026-08-24 진행 결과
 

@@ -1,5 +1,10 @@
 # HTTP 학습 노트
 
+> 작성일: 2026-08-24
+> 목적: HTTP Message의 의미를 설명하고 Spring MVC Request Flow와 Layer 책임으로 연결한다.
+> 상태: Completed — HTTP·Spring MVC 개념 설명과 기존 Clean Test 완료, Spring Context·Server·`curl.exe` 실행은 8월 25일로 이동
+
+---
 
 ## 기본 개념 점검 질문
 
@@ -100,3 +105,16 @@ Content-Type: application/json
 - Spring Boot `4.1.1`을 이번 주 Baseline으로 선택했지만, Spring Dependency와 Application 실행 진입점은 아직 추가하지 않았다.
 - Application Context·내장 Server·Controller·MockMvc는 `NOT_IMPLEMENTED`, 실제 `curl.exe` Trace는 `NOT_RUN`이다.
 - Java Source를 변경하지 않았으며 최소 Context와 Server 기동은 8월 25일 야간 Block으로 이동한다.
+
+## AI 활용과 직접 확인 범위
+
+- AI가 보조한 부분: HTTP·Spring MVC 학습 순서, Ticket 예시, 오해를 확인하는 단계별 질문과 문서 정리
+- 직접 설명한 부분: HTTP Message 구조, Stateless, Request 처리 순서, Status 구분, Layer 책임, DIP·DI와 Response 변환
+- 직접 실행한 부분: JDK·Maven Version 확인과 기존 Test 16개 Clean Test
+- 아직 직접 실행하지 않은 부분: Spring Boot Context·Server, Controller·MockMvc와 `curl.exe` Trace
+
+## 다음 학습
+
+- Resource·URI·Representation을 Ticket 사례로 구분한다.
+- `POST` 생성과 `GET` 조회의 정상·실패 계약을 Given–When–Then으로 작성한다.
+- 계약을 확정한 뒤 Spring Boot 최소 Context와 Server를 기동한다.
