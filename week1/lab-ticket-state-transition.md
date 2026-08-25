@@ -17,7 +17,7 @@
 
 캡슐화를 단순히 모든 필드를 `private`으로 만드는 것으로 이해해도 되는지, 그리고 상태 전이 규칙을 Ticket과 Service 중 어디에서 지켜야 하는지 확인하기 위해 실험했다.
 
-관련 개념은 [캡슐화, 불변조건, 상태 전이 학습 노트](./learning-encapsulation-and-invariants.md)에 정리했다.
+관련 개념은 [캡슐화, 불변조건, 상태 전이 학습 노트](./study-docs/learning-encapsulation-and-invariants.md)에 정리했다.
 
 ## 범위
 

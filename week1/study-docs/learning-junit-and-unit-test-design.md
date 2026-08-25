@@ -2,24 +2,18 @@
 
 > 작성일: 2026-08-19
 > 주차: Week 1
-> 이해 상태: 핵심 구조와 Test 설계 설명 가능, 자동 Test 작성 전
 > 기준: JUnit 6.1.3, Java 25
 
 ## 핵심 질문
 
 > 객체의 규칙을 반복 가능하고 읽을 수 있는 Test로 표현하려면 JUnit의 어떤 구성 요소와 설계 원칙을 이해해야 하는가?
 
-## 시작할 때의 이해
+## 학습 목표
 
-JShell에서 Ticket의 정상 상태 전이와 잘못된 전이를 직접 호출하여 결과를 관찰했다. 이를 통해 객체가 상태 전이 규칙을 지키는지는 확인했지만, 같은 검증을 반복하려면 명령을 다시 입력하고 결과를 사람이 해석해야 했다.
-
-JUnit이 자동 Test Framework라는 점은 알고 있었지만 다음 항목은 구분하여 설명할 필요가 있었다.
-
-- Test Code를 작성하는 API와 Test를 실행하는 Engine의 차이
-- Maven의 `test` Phase와 JUnit의 관계
-- 예상값과 실제값을 Assertion으로 비교하는 방법
-- 예외 발생뿐 아니라 실패 후 객체 상태까지 검증하는 방법
-- Test가 서로의 실행 순서와 변경 가능한 상태에 의존하지 않게 하는 이유
+- Test 작성 API, Test Engine과 Maven 실행 Plugin의 역할을 구분한다.
+- Given–When–Then으로 입력, 행동과 관찰 가능한 결과를 표현한다.
+- 정상·경계·거부 Case와 실패 후 상태 보존을 Assertion으로 검증한다.
+- Test 독립성, 이름과 Fixture가 실패 원인 파악에 미치는 영향을 설명한다.
 
 ## 한 문장 설명
 
@@ -328,9 +322,9 @@ JUnit의 기본 실행 순서는 반복 가능하지만 의도적으로 쉽게 �
 - `@BeforeEach`는 중복 제거를 위한 도구지만 중요한 Given을 과도하게 숨기면 Test 이해가 어려워질 수 있다.
 - `private` Method를 직접 Test하기보다 공개 행동을 통해 그 결과를 검증한다.
 
-## 현재 학습 범위의 경계
+## 입문 예제의 적용 경계
 
-첫 Ticket Unit Test에서는 다음 기능만으로 충분하다.
+작은 Ticket Unit Test를 처음 작성할 때는 다음 기능만으로도 핵심 계약을 표현할 수 있다.
 
 - `@Test`
 - `assertEquals()`
@@ -357,6 +351,10 @@ JUnit의 기본 실행 순서는 반복 가능하지만 의도적으로 쉽게 �
 6. Given–When–Then은 JUnit 기능인가, Test 구성 방식인가?
 7. Test가 실행 순서에 의존하면 어떤 문제가 발생하는가?
 8. `@BeforeEach`를 사용하지 않는 편이 더 읽기 쉬운 경우는 언제인가?
+
+## 자료 범위
+
+이 자료는 JUnit Platform·Jupiter·Maven Surefire의 역할, Test 구조와 설계 기준을 설명한다. 개인의 시작 이해와 Given–When–Then 답변은 [8월 19일 Study Note](../study-notes/2026-08-19-study-questions.md), 자동 Test 실행과 Review 결과는 [8월 20일 Study Note](../study-notes/2026-08-20-study-questions.md)에 기록한다.
 
 ## 참고 자료
 

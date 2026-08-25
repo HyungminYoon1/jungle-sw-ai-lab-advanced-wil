@@ -109,3 +109,14 @@
 
 - Strategy 패턴: "어떤 알고리즘(방법)을 사용할 것인가"에 초점을 맞춘다. 클라이언트가 상황에 맞는 전략을 외부에서 명시적으로 선택하여 주입한다. (예: 결제 수단 선택 - NaverPayStrategy, TossPayStrategy)
 - State 패턴: "객체의 상태에 따라 행동이 어떻게 달라지는가"에 초점을 맞춘다. 상태 변화에 따라 객체의 행동이 내부에서 자연스럽게 바뀌며, 상태 스스로가 다음 상태를 결정(전이)하기도 한다.
+
+## AI 활용과 직접 확인 범위
+
+- AI가 보조한 부분: 개념 구조화, Ticket Policy 사례, 비교 기준과 Self Review 질문 초안
+- 직접 수행한 부분: 조건문·Strategy Source와 Test 작성, Maven 실행, Diff 관찰, 오류 수정과 질문 답변
+- 적용 원칙: 설명하거나 수정할 수 없는 Pattern Code는 학습 결과로 간주하지 않는다.
+
+## 다음 학습
+
+- 배송비처럼 다른 사례에서 Polymorphism과 Composition의 보유·위임 관계를 다시 설명한다.
+- 선언 Type과 실제 객체, Strategy, DI와 DIP를 서로 구분한다.

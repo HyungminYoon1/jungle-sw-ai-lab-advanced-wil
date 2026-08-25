@@ -8,6 +8,18 @@
 
 이번 주는 큰 Application을 시작하지 않고 Java 객체의 책임을 직접 관찰한다. Ticket의 상태 전이와 담당자 할당 규칙을 순수 Java로 표현하고, 정상·경계·실패 Case를 JUnit으로 설명하는 것이 목표다. Git은 별도 심화 주제가 아니라 실제 학습 변경을 안전하고 검토 가능하게 관리하는 운영 Baseline으로 적용한다.
 
+## 문서 역할
+
+| 위치 | 역할 | 포함하지 않는 내용 |
+|---|---|---|
+| `study-docs/` | 날짜나 개인 진도와 독립적으로 다시 읽을 수 있는 개념·예제·오해·사용 경계·공식 참고자료 | 이해 상태, 실제 수행 여부, AI 활용과 다음 일정 |
+| `study-notes/` | 날짜별 질문, 자신의 답변, 진행 상태, 예상·관찰, 검증 경계와 다음 과제 | 재사용 가능한 개념 자료의 반복 |
+| `lab-*.md` | 직접 실행한 절차, 관찰, Test와 재현 방법 | 일반 개념 설명의 반복과 주간 일정 |
+| `weekly-plan.md` | 주간 범위, 일정, 완료 조건과 변경 기록 | 세부 개념 설명과 일일 답변 전문 |
+| `wil.md` | 계획 대비 주간 결과, 이해 변화, 부분 완료와 다음 질문 | 날짜별 답변 전문과 실행 Log 원문 |
+
+`study-docs`의 Code와 명령은 개념을 설명하는 예시다. 날짜별 실행 여부와 `NOT_RUN` 같은 상태는 `study-notes`, 주간 상태는 Weekly Plan과 WIL, 재현 가능한 실행 근거는 Lab Report에서 관리한다.
+
 ## 핵심 질문
 
 > Framework 없이 객체가 자신의 상태와 규칙을 지키게 만들고, 그 계약을 Test로 설명할 수 있는가?
@@ -53,10 +65,10 @@
 
 - [주간 학습 계획](./weekly-plan.md)
 - [주차 안내](./README.md)
-- [Git 운영 Baseline Learning Note](./study-docs/learning-git-operational-baseline.md) — 개념 정리 완료, 자가진단 실행 전
-- [Encapsulation과 불변조건 Learning Note](./study-docs/learning-encapsulation-and-invariants.md) — 개념 정리, JShell 수동 검증과 JUnit 후속 검증
-- [Polymorphism·Composition과 SOLID Learning Note](./study-docs/learning-polymorphism-composition-and-solid.md) — 조건문·Strategy 예상과 실제 변경 범위 비교 완료
-- [Ticket 상태 전이 Lab](./study-docs/lab-ticket-state-transition.md) — 정상·거부·반례 실험과 JUnit 자동 검증 기록
+- [Git 운영 Baseline Learning Note](./study-docs/learning-git-operational-baseline.md) — 상태 모델, Diff·Commit·복구 선택 기준과 자가진단 방법
+- [Encapsulation과 불변조건 Learning Note](./study-docs/learning-encapsulation-and-invariants.md) — 캡슐화, 불변조건, 상태 전이와 객체 책임 경계
+- [Polymorphism·Composition과 SOLID Learning Note](./study-docs/learning-polymorphism-composition-and-solid.md) — 개념 관계, 조건문·Strategy 비교 기준과 적용 경계
+- [Ticket 상태 전이 Lab](./lab-ticket-state-transition.md) — 정상·거부·반례 실험과 JUnit 자동 검증 기록
 - [Maven Build와 Wrapper Learning Note](./study-docs/learning-maven-build-and-wrapper.md) — Project Model, Lifecycle, Artifact와 Gradle 비교
 - [JUnit과 Unit Test 설계 Learning Note](./study-docs/learning-junit-and-unit-test-design.md) — JUnit 구조, Assertion, Given–When–Then과 Test 독립성
 - [Java Exception과 안전한 실패 처리 Learning Note](./study-docs/learning-java-exceptions.md) — Exception 계층, Checked·Unchecked 구분, 전파와 상태 보존
@@ -64,6 +76,7 @@
 - [Ticket 객체와 JUnit 기초 학습 점검](./study-notes/2026-08-19-study-questions.md) — 객체 책임, 상태 전이 시나리오와 JUnit 실행 구조 점검
 - [Java Exception·Collection과 JUnit 자동 검증 학습 점검](./study-notes/2026-08-20-study-questions.md) — Exception·Collection 설명, Ticket Test Self Review와 최종 실행 근거
 - [Java 다형성·합성과 SOLID 원칙 학습 점검](./study-notes/2026-08-21-study-questions.md) — VIP Policy Diff, OCP 적용 경계와 취약 개념 설명 점검
+- [Week 1 종합 복습과 전이 학습 점검](./study-notes/2026-08-22-study-questions.md) — 계획 대비 결과, 다형성·합성 후속 점검과 남은 질문
 - [Week 1 WIL](./wil.md) — 실제 학습 결과, 실패·보완 범위와 8월 24일 후속 개념 확인
 
 ### 실제 검증 근거
@@ -92,7 +105,7 @@ Week 1 WIL은 2026-08-24 블로그에 게시하고 정글 LMS에 링크를 제�
 - [ ] 변경이 Working Tree와 Index 중 어디에 있는지 `status`와 두 종류의 `diff`로 확인한다.
 - [ ] Commit 전 포함 범위를 검토하고 하나의 의도로 설명되는 변경만 Staging한다.
 - [ ] `restore`, `restore --staged`와 `revert`의 대상·영향 차이를 설명한다.
-- [ ] 점검에서 공백이 발견되면 해당 항목만 보충하고 결과를 Learning Note에 갱신한다.
+- [ ] 점검에서 공백이 발견되면 해당 항목만 보충하고 결과를 Study Note 또는 Weekly Plan에 갱신한다.
 
 이 점검은 Week 1 핵심 학습 완료를 막는 별도 Gate가 아니다. Merge·Rebase 비교 실험도 기본 완료 조건에 포함하지 않는다.
 

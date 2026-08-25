@@ -274,7 +274,7 @@ Map<TicketKey, String> titles = new HashMap<>();
 
 `TicketKey`가 가변 객체라면 Map에 넣은 뒤 Key의 `equals()`·`hashCode()` 결과에 영향을 주는 값을 바꾸지 않는 것이 안전하다. 식별 Key에는 불변 값 객체를 우선 검토한다.
 
-## Ticket 상태 이력 JShell 실험
+## Ticket 상태 이력 JShell 예제
 
 다음 실험은 Collection의 참조 공유와 방어적 복사를 확인하기 위한 예제다. 현재 Ticket Source에 상태 이력을 추가했다는 의미는 아니다.
 
@@ -348,9 +348,9 @@ view
 | 가변 객체를 HashMap Key로 사용 후 변경 | 조회·삭제가 예상과 다르게 동작할 수 있다. |
 | Collection 구현체를 이유 없이 교체 | 실제 요구와 측정 없이 복잡성만 늘어난다. |
 
-## 현재 Ticket 학습 범위에서의 적용 경계
+## Ticket 예제의 적용 경계
 
-Collection 개념을 설명하기 위해 Ticket에 상태 이력 기능을 바로 추가할 필요는 없다. 현재 Source의 핵심 목적은 상태 전이와 예외 규칙을 JUnit으로 검증하는 것이다.
+Collection 개념을 설명하기 위해 Ticket에 상태 이력 기능을 바로 추가할 필요는 없다. 예제 Source의 핵심 목적이 상태 전이와 예외 규칙을 검증하는 것이라면, 별도의 요구가 없는 이력 기능은 학습 범위를 불필요하게 넓힐 수 있다.
 
 상태 이력이 실제 요구가 된다면 다음 계약을 먼저 결정한 뒤 적용한다.
 
@@ -373,7 +373,11 @@ Collection 개념을 설명하기 위해 Ticket에 상태 이력 기능을 바�
 9. 수정 불가능한 List 안의 Element가 가변이면 어떤 문제가 남는가?
 10. `UnsupportedOperationException`은 어떤 상황에서 발생하는가?
 11. Ticket 상태 이력에 `List`가 적합한 이유는 무엇인가?
-12. 현재 Ticket Source에 상태 이력을 바로 추가하지 않는 이유는 무엇인가?
+12. Ticket 예제에 상태 이력을 바로 추가하지 않아도 되는 이유는 무엇인가?
+
+## 자료 범위
+
+이 자료는 Java Collections Framework, 자료구조 선택, 가변성, Snapshot과 View의 차이를 설명한다. 개인의 답변과 학습 진행 상태는 [8월 20일 Study Note](../study-notes/2026-08-20-study-questions.md)에 기록한다.
 
 ## 참고 자료
 

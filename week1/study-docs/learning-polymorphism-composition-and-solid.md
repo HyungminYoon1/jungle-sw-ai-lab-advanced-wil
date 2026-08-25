@@ -3,7 +3,6 @@
 > 작성일: 2026-08-21
 > 주차: Week 1
 > 기준: Java SE 25
-> 이해 상태: 개념 정리, Policy 비교 실험과 취약 개념 점검 완료
 
 ## 핵심 질문
 
@@ -196,13 +195,13 @@ DIP와 Dependency Injection은 같은 말이 아니다.
 
 ## Ticket 응답 시간 Policy 변경 요구
 
-오늘 비교에 사용할 가상의 요구는 다음과 같다.
+구조 비교에 사용할 가상의 요구는 다음과 같다.
 
 - 일반 Ticket의 목표 응답 시간: 24시간
 - 긴급 Ticket의 목표 응답 시간: 4시간
 - 후속 변경: VIP Ticket의 목표 응답 시간 1시간 추가
 
-이 Policy는 실제 Helpdesk 업무 흐름에 연결된 SLA 기능이 아니라 두 구조의 변경 범위를 비교하기 위한 독립 학습 Code다. `responsetime` Package에 조건문과 Strategy 구조를 나란히 구현했으며 기존 Ticket 상태 전이와는 연결하지 않았다.
+이 Policy는 실제 Helpdesk 업무 흐름에 연결된 SLA 기능이 아니라 두 구조의 변경 범위를 비교하기 위한 독립 예제다. 기존 Ticket 상태 전이와는 별개의 변경 축으로 다룬다.
 
 ### 조건문 방식
 
@@ -261,18 +260,7 @@ VIP를 추가하면 예상되는 변경은 다음과 같다.
 | Runtime 교체 | 별도 분기 필요 | 협력 객체 교체 가능 |
 | 과도한 설계 위험 | 조건 중복과 거대한 `switch` | 불필요한 Interface와 Class 증가 |
 
-이 표를 오전의 가설로 작성한 뒤 오후에 같은 변경 요구를 두 구조에 적용해 실제 Diff와 Test로 확인했다.
-
-## 실제 비교 결과
-
-- 기준선 Commit `6fb3365`에서 NORMAL·URGENT 정책을 조건문과 Strategy로 각각 구현하고 전체 Test 14개를 통과했다.
-- `TicketPriority`에 `VIP`만 먼저 추가하자 기존 `switch` 표현식이 모든 enum 값을 처리하지 못해 Test 실행 전 컴파일에 실패했다.
-- 조건문 방식은 기존 `ConditionalResponseTimePolicy`의 `switch`에 VIP 분기를 추가해야 했다.
-- Strategy 방식은 `VipResponseTimePolicy`를 추가했으며 기존 `ResponseTimePolicy`, `ResponseTimeCalculator`, NORMAL·URGENT 구현체는 수정하지 않았다.
-- VIP 확장 Commit `3eb8b29`에서 전체 Test 16개가 실패·오류·건너뜀 없이 통과했다.
-- 이번 실습에는 Factory나 DI Container가 없으므로 Test Code가 Strategy를 생성해 Calculator에 전달했다. 실제 Application에서도 새 구현을 선택하는 조립 경계는 변경될 수 있다.
-
-현재처럼 정책이 세 개이고 계산이 단순하며 분기가 한곳뿐이라면 `switch`가 더 경제적이다. 정책이 반복적으로 추가되거나 각 정책의 계산 과정·의존성·교체 시점이 독립적으로 달라질 때 Strategy의 추상화 비용이 정당화될 수 있다. 따라서 OCP는 모든 수정을 없애는 규칙이 아니라 안정된 핵심으로 변경이 퍼지는 범위를 통제하는 원칙으로 관찰했다.
+이 표는 같은 변경 요구를 두 구조에 적용하기 전에 예상 변경 범위를 작성하고, 실제 Diff와 Test 결과를 비교하는 기준으로 사용할 수 있다.
 
 ## 선택 기준
 
@@ -293,21 +281,17 @@ VIP를 추가하면 예상되는 변경은 다음과 같다.
 
 선택의 핵심은 Pattern 이름이 아니라 다음 변경에서 어느 파일과 계약이 영향을 받는지다.
 
-## 현재 Ticket Domain의 적용 경계
+## Ticket 예제의 적용 경계
 
-이번 실습에서는 `OPEN → IN_PROGRESS → RESOLVED`를 단순화된 비즈니스 상태 전이 규칙으로 가정한다. 이는 모든 Ticket 시스템에 자연스럽게 적용되는 보편적인 불변조건이 아니다. 실제 허용 전이는 회사의 업무 절차와 제품 요구사항에 따라 달라질 수 있다.
+이 자료의 Ticket 예제에서는 `OPEN → IN_PROGRESS → RESOLVED`를 단순화된 비즈니스 상태 전이 규칙으로 가정한다. 이는 모든 Ticket 시스템에 자연스럽게 적용되는 보편적인 불변조건이 아니다. 실제 허용 전이는 회사의 업무 절차와 제품 요구사항에 따라 달라질 수 있다.
 
-현재 실습에서 `status != null`과 유효한 제목은 객체가 계속 지켜야 하는 불변조건이다. 반면 `OPEN`에서 바로 `RESOLVED`로 전이할 수 없다는 제약은 현재 비즈니스 요구로 채택한 상태 전이 규칙이다.
+Ticket 예제에서 `status != null`과 유효한 제목은 객체가 계속 지켜야 하는 불변조건이다. 반면 `OPEN`에서 바로 `RESOLVED`로 전이할 수 없다는 제약은 예제의 비즈니스 요구로 채택한 상태 전이 규칙이다.
 
-이 전이 규칙이 현재 요구사항으로 유지되는 동안에는 Ticket이 일관되게 보호해야 한다. 비즈니스 요구가 바뀌어 직접 해결이나 재오픈을 허용한다면 Source와 Test도 함께 변경해야 한다.
+이 전이 규칙이 요구사항으로 유지되는 동안에는 Ticket이 일관되게 보호해야 한다. 비즈니스 요구가 바뀌어 직접 해결이나 재오픈을 허용한다면 Source와 Test도 함께 변경해야 한다.
 
-현재 전이 가능 여부는 Ticket 하나의 상태만으로 판단할 수 있으므로 Ticket 내부에서 검증한다. 단지 Strategy를 학습하기 위해 이 검증을 Ticket 밖으로 이동하면 기존 캡슐화 원칙이 약해질 수 있다.
+예제의 전이 가능 여부는 Ticket 하나의 상태만으로 판단할 수 있으므로 Ticket 내부에서 검증한다. 단지 Strategy를 설명하기 위해 이 검증을 Ticket 밖으로 이동하면 기존 캡슐화 원칙이 약해질 수 있다.
 
 응답 시간처럼 독립적으로 달라질 수 있는 Policy는 별도 비교 대상으로 구현하되, 실제 요구 없이 Ticket의 상태 전이 책임과 결합하지 않는다.
-
-- 오전: 개념과 변경 가설 정리 완료
-- 오후: 조건문·Strategy 기준선과 VIP 확장 Diff 비교 완료
-- 야간: Abstraction·LSP·DIP와 Ticket 책임 경계 재설명 완료
 
 ## 자주 발생하는 오해
 
@@ -336,18 +320,9 @@ VIP를 추가하면 예상되는 변경은 다음과 같다.
 11. 정책이 적고 고정적일 때 조건문이 Strategy보다 나을 수 있는 이유는 무엇인가?
 12. 현재 Ticket 상태 전이 검증을 Strategy로 분리하지 않는 이유는 무엇인가?
 
-## 학습 근거와 현재 상태
+## 자료 범위
 
-- 확인한 근거: Java SE 25 Class·Interface 명세와 Java 공식 Inheritance·Polymorphism 학습 자료
-- 문서화한 내용: 개념 관계, SOLID 적용 경계, Ticket 응답 시간 Policy의 예상과 실제 변경 범위
-- 실행한 근거: 기준선 Commit `6fb3365`, VIP 확장 Commit `3eb8b29`, 최종 JUnit 16개와 `BUILD SUCCESS`
-- 완료 표현의 경계: 독립 학습 Code의 비교를 완료한 것이며 실제 Helpdesk SLA 기능이나 Strategy 구조의 보편적 우수성을 증명하지 않는다.
-
-## AI 활용
-
-- AI가 도운 부분: 개념 구조화, Ticket Policy 사례, 비교 기준, Code Review와 Self Review 질문 초안 작성
-- 학습자가 직접 수행한 부분: 조건문·Strategy Source와 Test 작성, Maven 실행, Diff 관찰, 오류 수정과 질문 답변
-- 적용 원칙: 설명하거나 수정할 수 없는 Pattern Code는 학습 결과로 간주하지 않는다.
+이 자료는 Polymorphism, Composition, Strategy와 SOLID의 개념 관계와 선택 기준을 설명한다. 조건문·Strategy 구현의 실제 Diff, Test 결과와 학습자의 판단은 [8월 21일 Study Note](../study-notes/2026-08-21-study-questions.md), 후속 전이 학습 결과는 [8월 22일 Study Note](../study-notes/2026-08-22-study-questions.md)에 기록한다.
 
 ## 참고 자료
 

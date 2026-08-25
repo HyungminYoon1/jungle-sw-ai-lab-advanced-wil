@@ -27,7 +27,7 @@ Git은 2026-08-19부터 별도 핵심 학습 Block이 아니라 전 과정의 �
 | 객체지향 | Encapsulation·Polymorphism·Composition을 변경 요구로 비교 | 비교 Lab Report와 Unit Test |
 | Test | 정상·경계·거부 규칙을 JUnit으로 표현 | 읽을 수 있는 Given-When-Then Test |
 | 설명 | AI 도움을 받은 Code도 직접 수정·설명 | 동료 질문 또는 Self Review 기록 |
-| 공개 기록 | 선택, 예상, 관찰, 실패와 다음 질문 정리 | Learning Note·Lab Report·WIL |
+| 공개 기록 | 선택, 예상, 관찰, 실패와 다음 질문 정리 | Learning Note·Study Note·Lab Report·WIL |
 
 ## 작업 시간과 휴식
 
@@ -166,17 +166,18 @@ Git 자가진단은 8월 19일 학습 시작 전 최대 30분만 사용하며 �
 |---|---|---|
 | [주차 안내](./README.md) | 주차 시작 | 작성 완료 |
 | [주간 학습 계획](./weekly-plan.md) | 주차 시작 | Baseline v3 |
-| [Git 운영 Baseline Learning Note](./study-docs/learning-git-operational-baseline.md) | 8월 19일 | 개념 정리 완료, 자가진단 실행 전 |
-| [Encapsulation과 불변조건 Learning Note](./study-docs/learning-encapsulation-and-invariants.md) | 8월 19일 | 개념 정리와 JShell 실험 기록 완료 |
-| [Ticket 상태 전이 Lab](./study-docs/lab-ticket-state-transition.md) | 8월 19~20일 | JShell 수동 실험과 JUnit 자동 Test 10개 검증 완료 |
+| [Git 운영 Baseline Learning Note](./study-docs/learning-git-operational-baseline.md) | 8월 19일 | 상태 모델, 명령 선택 기준과 자가진단 방법 정리 |
+| [Encapsulation과 불변조건 Learning Note](./study-docs/learning-encapsulation-and-invariants.md) | 8월 19일 | 캡슐화, 불변조건과 객체 책임 경계 정리 |
+| [Ticket 상태 전이 Lab](./lab-ticket-state-transition.md) | 8월 19~20일 | JShell 수동 실험과 JUnit 자동 Test 10개 검증 완료 |
 | [Maven Build와 Wrapper Learning Note](./study-docs/learning-maven-build-and-wrapper.md) | 8월 19일 | 개념 정리 완료 |
-| [JUnit과 Unit Test 설계 Learning Note](./study-docs/learning-junit-and-unit-test-design.md) | 8월 19~20일 | 개념 정리와 자동 Test 10개 실행 완료 |
+| [JUnit과 Unit Test 설계 Learning Note](./study-docs/learning-junit-and-unit-test-design.md) | 8월 19~20일 | JUnit 구성, Assertion, Given–When–Then과 Test 설계 기준 정리 |
 | [Ticket 객체와 JUnit 기초 학습 점검](./study-notes/2026-08-19-study-questions.md) | 8월 19일 | 객체 책임·Given–When–Then·JUnit 핵심 개념 답변 완료 |
 | [Java Exception과 안전한 실패 처리 Learning Note](./study-docs/learning-java-exceptions.md) | 8월 20일 | 개념 정리 완료 |
 | [Java Collection과 안전한 상태 노출 Learning Note](./study-docs/learning-java-collections.md) | 8월 20일 | 개념 정리 완료 |
 | [8월 20일 학습 점검](./study-notes/2026-08-20-study-questions.md) | 8월 20일 | Exception·Collection 답변, Ticket Test Self Review와 최종 Test 재현 완료 |
-| [Polymorphism·Composition과 SOLID Learning Note](./study-docs/learning-polymorphism-composition-and-solid.md) | 8월 21일 | 조건문·Strategy 기준선과 VIP 확장 비교, JUnit 16개 검증 완료 |
+| [Polymorphism·Composition과 SOLID Learning Note](./study-docs/learning-polymorphism-composition-and-solid.md) | 8월 21일 | 개념 관계, 조건문·Strategy 비교 기준과 적용 경계 정리 |
 | [8월 21일 학습 점검](./study-notes/2026-08-21-study-questions.md) | 8월 21일 | Policy Diff·OCP 적용 경계와 Abstraction·LSP·DIP 설명 완료 |
+| [8월 22일 종합 복습과 전이 학습 점검](./study-notes/2026-08-22-study-questions.md) | 8월 22일 | 계획 대비 결과와 다형성·합성 후속 점검 범위 기록 |
 | [Week 1 WIL](./wil.md) | 8월 22일 작성, 8월 24일 게시·제출 | 작성·후속 복습 반영·블로그 게시·정글 LMS 링크 제출 완료 |
 | 공개 Checklist | 게시 직전 | WIL 내부 Checklist 검토와 외부 제출 완료 |
 
@@ -196,7 +197,7 @@ Git 자가진단은 8월 19일 학습 시작 전 최대 30분만 사용하며 �
 - [ ] `status`, `diff`, `diff --staged`로 변경 위치와 Commit 포함 범위를 확인한다.
 - [ ] `restore`, `restore --staged`, `revert`의 대상과 영향 차이를 설명한다.
 - [x] 실제 변경을 하나의 의도로 설명되는 작은 Commit으로 남긴다.
-- [ ] 공백이 확인되면 해당 항목만 보충하고 Learning Note의 상태를 갱신한다.
+- [ ] 공백이 확인되면 해당 항목만 보충하고 Study Note 또는 Weekly Plan의 상태를 갱신한다.
 
 Git 점검과 Merge·Rebase 비교는 Week 1 핵심 Learning Evidence Gate의 통과 조건이 아니다.
 

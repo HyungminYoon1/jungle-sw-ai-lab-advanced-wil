@@ -21,7 +21,7 @@
 | 목표 | 계획 | 실제 결과 | 상태 | 근거 |
 |---|---|---|---|---|
 | 학습 우선 범위로 전환 | 제품 구현 대신 작은 공통 Lab 선택 | AgentOps Lab을 보류하고 AI Helpdesk Learning Lab으로 전환 | Completed | [학습 우선 범위 전환 Decision](../plan/decisions/0001-learning-first-scope.md) |
-| Ticket가 자신의 규칙 보호 | Encapsulation·불변조건·상태 전이 학습 | 범용 Setter 없이 생성 규칙과 허용 상태 전이를 Ticket 내부에서 검사 | Completed | [Encapsulation과 불변조건](./study-docs/learning-encapsulation-and-invariants.md), [Ticket 상태 전이 Lab](./study-docs/lab-ticket-state-transition.md) |
+| Ticket이 자신의 규칙 보호 | Encapsulation·불변조건·상태 전이 학습 | 범용 Setter 없이 생성 규칙과 허용 상태 전이를 Ticket 내부에서 검사 | Completed | [Encapsulation과 불변조건](./study-docs/learning-encapsulation-and-invariants.md), [Ticket 상태 전이 Lab](./lab-ticket-state-transition.md) |
 | JUnit으로 계약 검증 | 정상·경계·거부 Test 작성 | Ticket Test 10개와 대표 Exception Message 3개 검증 | Completed | [JUnit과 Unit Test 설계](./study-docs/learning-junit-and-unit-test-design.md), [8월 20일 학습 점검](./study-notes/2026-08-20-study-questions.md) |
 | 조건문과 Strategy 비교 | 같은 변경 요구의 Diff 관찰 | NORMAL·URGENT 기준선에 VIP를 추가하고 두 구조의 변경 범위 비교 | Completed | [Polymorphism·Composition과 SOLID](./study-docs/learning-polymorphism-composition-and-solid.md), [8월 21일 학습 점검](./study-notes/2026-08-21-study-questions.md) |
 | 새 사례에 개념 전이 | 코드를 보지 않고 흐름과 선택 설명 | 8월 24일 배송비 Policy 사례에서 선언 Type·실제 객체·동적 바인딩, Composition·Strategy와 DI·DIP를 구분해 설명 | Completed | [8월 22일 종합 복습](./study-notes/2026-08-22-study-questions.md), 이 문서의 8월 24일 후속 복습 |
@@ -85,7 +85,7 @@
 
 | 근거 | 확인한 위험·질문 | 결과 | Link |
 |---|---|---|---|
-| JShell Ticket·UnsafeTicket 실험 | `private`만으로 잘못된 상태 변경을 막을 수 있는가? | 범용 Setter의 우회와 Ticket 행동 Method의 거부를 직접 관찰 | [Ticket 상태 전이 Lab](./study-docs/lab-ticket-state-transition.md) |
+| JShell Ticket·UnsafeTicket 실험 | `private`만으로 잘못된 상태 변경을 막을 수 있는가? | 범용 Setter의 우회와 Ticket 행동 Method의 거부를 직접 관찰 | [Ticket 상태 전이 Lab](./lab-ticket-state-transition.md) |
 | Ticket Unit Test | 생성 규칙, 정상 전이와 잘못된 전이가 계약대로 동작하는가? | Test 10개 통과, 대표 Exception Message 3개와 실패 후 상태 보존 검증 | Source Commit `cdcbee0`, `944aede` |
 | Policy 비교 Test | NORMAL·URGENT·VIP 정책이 두 구조에서 같은 결과를 내는가? | 조건문 Test 3개와 Strategy Test 3개 통과 | Source Commit `6fb3365`, `3eb8b29` |
 | 2026-08-22 새 Terminal Clean Test | Toolchain과 전체 기준선을 다시 재현할 수 있는가? | JDK 25.0.4, Maven 3.9.16, Test 16개, 실패·오류·건너뜀 0, `BUILD SUCCESS` | [주차 안내의 검증 근거](./README.md#실제-검증-근거) |

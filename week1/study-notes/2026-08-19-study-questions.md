@@ -2,6 +2,18 @@
 
 > 작성일: 2026-08-19
 > 목적: Ticket 객체 책임과 상태 전이 규칙을 설명하고, 이를 JUnit Test로 옮기기 위한 기초 이해를 자신의 말로 점검
+> 상태: Completed — 객체 책임·자연어 시나리오와 JUnit 핵심 구조 설명 완료, 자동 Test 실행은 8월 20일로 이동
+
+---
+
+## 시작할 때의 이해
+
+- 캡슐화를 주로 데이터와 기능을 묶고 내부 구현을 숨기는 개념으로 이해했다.
+- `OPEN` Ticket을 바로 `RESOLVED`로 바꾸지 못하게 하는 책임을 Service에 두어야 한다고 생각했다.
+- JShell 수동 확인은 반복할 때마다 명령을 다시 입력하고 사람이 결과를 해석해야 한다는 한계가 있었다.
+- JUnit이 자동 Test Framework라는 점은 알고 있었지만 Test API·Engine·Maven 실행 Plugin과 실패 후 상태 검증은 구분하여 설명할 필요가 있었다.
+
+## 객체 책임 점검
 
 1. `status`가 `private`인 이유는 무엇인가?
 -> status를 private으로 선언하는 이유는 외부가 상태를 직접 변경하여 Ticket의 상태 전이 규칙을 우회하지 못하게 하기 위해서다. 외부에는 status()와 같이 제한된 조회 기능만 제공하고, 상태 변경은 Ticket이 허용한 행동을 통해서만 수행한다.
@@ -138,3 +150,22 @@ Jupiter는 @Test, 생명주기 애너테이션, Assertion 같은 테스트 작�
 
 3. OPEN Ticket에서 resolve()를 호출하는 테스트가 assertThrows()뿐 아니라 이후 상태를 assertEquals(OPEN, ...)로 확인해야 하는 이유는 무엇인가?
 -> assertThrows()는 예외가 발생하는지만 확인할 뿐, 예외 발생 직전이나 직후에 객체의 상태가 안전하게 유지되었는지 여부는 검증하지 못하기 때문이다.
+
+## 학습 결과와 검증 경계
+
+- 접근 제한은 캡슐화의 수단이지만 충분조건은 아니며, Ticket 하나의 상태로 판단할 수 있는 전이 규칙은 Ticket이 보호해야 한다고 이해를 수정했다.
+- Ticket 생성과 상태 전이 규칙을 Given–When–Then 자연어 Scenario 10개로 작성했다.
+- JShell에서 Ticket과 `UnsafeTicket`의 정상·거부 전이와 범용 Setter 반례를 수동으로 확인했다.
+- 8월 19일에는 JUnit 구조와 Test 설계만 설명했으며 Maven을 통한 자동 Test 실행은 `NOT_RUN`이었다. 자동 검증 결과는 [8월 20일 Study Note](./2026-08-20-study-questions.md)에 기록한다.
+- 재현 절차와 관찰 결과는 [Ticket 상태 전이 Lab](../lab-ticket-state-transition.md)에 기록한다.
+
+## AI 활용과 직접 확인 범위
+
+- AI가 보조한 부분: 개념 구분, JShell 반례와 확인 질문, Given–When–Then 기본 구조 제안
+- 직접 확인한 부분: JDK·JShell Version, Ticket과 `UnsafeTicket` 명령 실행, 자연어 Scenario와 JUnit 개념 답변 작성
+- 아직 직접 실행하지 않은 부분: JUnit Test Source 작성과 Maven 자동 Test
+
+## 다음 학습
+
+- 자연어 Scenario를 JUnit Test로 옮기고 정상·경계·거부 Case를 자동 실행한다.
+- Exception Type뿐 아니라 대표 Message와 실패 후 상태 보존을 검증한다.

@@ -2,21 +2,17 @@
 
 > 작성일: 2026-08-19
 > 주차: Week 1
-> 이해 상태: 부분 설명 가능
 
 ## 핵심 질문
 
 > 필드를 `private`으로 선언하는 것만으로 객체의 상태와 도메인 규칙을 안전하게 보호할 수 있는가?
 
-## 시작할 때의 이해
+## 학습 목표
 
-처음에는 캡슐화를 주로 데이터와 기능을 하나로 묶고 내부 구현을 숨기는 개념으로 이해했다. 또한 `OPEN` 상태의 Ticket을 바로 `RESOLVED`로 바꾸지 못하게 하는 책임은 Service에 있다고 생각했다.
-
-학습과 JShell 실험을 거치며 다음과 같이 이해를 수정했다.
-
-- 접근 제한은 캡슐화의 수단이지만 충분조건은 아니다.
-- Ticket 하나의 상태만으로 판단할 수 있는 상태 전이 규칙은 Ticket이 직접 보호해야 한다.
-- Service는 사용자 권한 확인, 객체 조회, 트랜잭션과 저장 같은 애플리케이션 흐름을 조정한다.
+- 접근 제한과 캡슐화의 차이를 설명한다.
+- 불변조건과 상태 전이 규칙을 구분한다.
+- Domain Object, Application Service와 Controller의 책임 경계를 설명한다.
+- 범용 Setter가 객체 규칙을 우회하는 과정을 반례로 설명한다.
 
 ## 한 문장 설명
 
@@ -104,24 +100,16 @@ void resolve() {
 }
 ```
 
-전체 예제와 실행 결과는 [티켓 상태 전이 실험](./lab-ticket-state-transition.md)에 기록했다.
+전체 예제의 실행 절차와 관찰 결과는 [티켓 상태 전이 실험](../lab-ticket-state-transition.md)에 기록했다.
 
 ## 실패·반례
 
 - 실패 조건: `OPEN` Ticket에 `resolve()`를 호출한다.
-- 실제 결과: `IllegalStateException`이 발생하고 상태는 `OPEN`으로 유지되었다.
+- 보호 동작: `IllegalStateException`을 발생시키고 상태를 `OPEN`으로 유지한다.
 - 반례: `UnsafeTicket.setStatus()`는 현재 상태를 검사하지 않아 `OPEN → RESOLVED` 직접 변경과 `null` 대입을 허용했다.
 - 원인: 필드의 접근 제한과 별개로 공개된 변경 인터페이스가 객체의 규칙을 보호하지 않았다.
 
 `setStatus(TicketStatus)`의 매개변수에는 임의의 문자열을 직접 전달할 수 없다. 문제는 `null`이나 현재 상태에서 허용되지 않는 다른 `TicketStatus` 값을 전달할 수 있다는 점이다.
-
-## 근거
-
-| 근거 | 확인한 내용 | 링크 |
-|---|---|---|
-| JShell 수동 실험 | 정상 상태 전이, 잘못된 전이 거부, 실패 후 상태 보존 | [실험 보고서](./lab-ticket-state-transition.md) |
-| `UnsafeTicket` 반례 | `private` 필드만으로 불변조건과 상태 전이를 보호할 수 없음 | [실험 보고서](./lab-ticket-state-transition.md#안전하지-않은-ticket-반례) |
-| JUnit 자동 검증 | 생성·정상 전이·거부 전이와 실패 후 상태 보존을 Test 10개로 확인 | [실험 보고서](./lab-ticket-state-transition.md#test와-검증) |
 
 ## 대안과 사용 경계
 
@@ -133,46 +121,28 @@ void resolve() {
 
 - 사용할 조건: 객체가 상태를 가지며 허용된 변경 순서나 값의 범위가 있을 때
 - 사용하지 않을 조건: 단순 데이터 전달처럼 행동과 불변조건이 없는 값 구조
-- 현재 Lab 적용 여부: JShell로 원리를 확인한 뒤 AI Helpdesk Learning Lab의 Ticket Source와 JUnit Test에 적용 완료
+- Ticket 예제에서의 적용: 상태 변경을 의도가 드러나는 행동 Method로 제한하고, 전이 조건을 객체 내부에서 검사한다.
 
 ## JShell과 JUnit
 
 ### JShell
 
-JShell은 Java 9부터 제공되는 Java REPL(Read-Eval-Print Loop) 도구다. 클래스나 `main` 메서드를 포함한 프로젝트를 먼저 만들지 않고도 Java 선언문, 문장과 표현식을 입력해 결과를 확인할 수 있다.
-
-이번 학습에서는 JShell 25.0.4로 Ticket의 상태 전이를 수동 검증했다. 세션에서 만든 변수와 클래스는 기본적으로 현재 세션에만 존재하며, `/exit`로 종료해도 소스 파일이나 정식 프로젝트 산출물로 자동 저장되지 않는다.
+JShell은 Java 9부터 제공되는 Java REPL(Read-Eval-Print Loop) 도구다. 클래스나 `main` 메서드를 포함한 프로젝트를 먼저 만들지 않고도 Java 선언문, 문장과 표현식을 입력해 결과를 확인할 수 있다. 세션에서 만든 변수와 클래스는 기본적으로 현재 세션에만 존재하며, `/exit`로 종료해도 소스 파일이나 정식 프로젝트 산출물로 자동 저장되지 않는다.
 
 ### JUnit
 
-JUnit은 JVM에서 반복 가능한 자동 테스트를 작성하고 실행하기 위한 테스트 프레임워크 생태계다. 단언문을 사용해 반환값, 객체 상태와 예외 발생 여부 등이 예상과 일치하는지 검증할 수 있다.
+JUnit은 JVM에서 반복 가능한 자동 테스트를 작성하고 실행하기 위한 테스트 프레임워크 생태계다. 단언문을 사용해 반환값, 객체 상태와 예외 발생 여부 등이 예상과 일치하는지 검증할 수 있다. 거부 전이에서는 Exception Type뿐 아니라 행동 후 객체 상태가 유지되는지도 별도로 확인해야 한다.
 
-2026-08-19 오전 작성 시점에는 JUnit의 목적만 개념으로 정리했으며, 프로젝트 구성과 JUnit Test 실행은 수행하지 않았다. 따라서 당시 실행 근거는 JShell 수동 실험으로 한정했다.
+## 학습 점검 질문
 
-### 2026-08-20 후속 검증
+1. 필드가 `private`인데도 `UnsafeTicket`의 상태가 잘못 변경될 수 있는 이유는 무엇인가?
+2. `setStatus()`에서 `null`만 검사해도 충분하지 않은 이유는 무엇인가?
+3. 상태 전이 검증과 사용자 권한 검증은 각각 어느 책임에 속하는가?
+4. 거부 전이 Test에서 Exception Type과 실패 후 상태를 따로 확인해야 하는 이유는 무엇인가?
 
-AI Helpdesk Learning Lab에서 같은 규칙을 JUnit Test 10개로 전환했다. `.\mvnw.cmd clean test`로 Main·Test Source를 JDK 25에서 다시 Compile했으며 `Failures: 0`, `Errors: 0`, `Skipped: 0`과 `BUILD SUCCESS`를 확인했다.
+## 자료 범위
 
-거부 전이는 `assertThrows()`로 Exception Type을 확인하고, 행동 뒤의 상태를 별도 `assertEquals()`로 검증했다. 서로 다른 대표 Exception Message 3개는 `assertThrows()`가 반환한 예외 객체의 `getMessage()`로 확인했다. 이 결과의 범위는 현재 Ticket Domain이며 동시성, 영속화와 사용자 권한을 포함하지 않는다.
-
-## 설명 가능성 점검
-
-- 필드가 `private`인데도 `UnsafeTicket`의 상태가 잘못 변경된 이유: 외부에서 호출할 수 있는 `setStatus()`가 상태 전이와 입력값을 검증하지 않고 값을 대입했기 때문이다.
-- `setStatus()`에서 `null`만 검사해도 충분하지 않은 이유: `OPEN → RESOLVED`처럼 enum에는 존재하지만 현재 상태에서는 허용되지 않는 전이를 막지 못하기 때문이다.
-- 상태 전이와 사용자 권한 검증의 담당: Ticket은 전이의 유효성을, Application Service나 Authorization Policy는 사용자의 행동 권한을 검증한다.
-- 후속 설명 가능 범위: JUnit에서 정상 전이, Exception Type·Message와 실패 후 상태 보존을 검증하는 방법
-
-## AI 활용
-
-- AI가 도운 부분: 개념 구분, 실험 코드와 확인 질문 제안, 문장과 용어의 정확성 검토
-- 직접 확인한 공식 자료·실행 결과: 로컬 JDK·JShell Version, Ticket 및 UnsafeTicket의 JShell 결과, JUnit Test 10개 실행 결과
-- 직접 판단·수정한 부분: JShell 명령 실행, Ticket Test 작성, `exception` 변수 오류 수정, 대표 Message 검증과 결과 해석
-
-## 후속 학습 결과
-
-- 완료한 질문: JUnit에서 정상 전이, 예외와 실패 후 상태 보존을 어떻게 자동 검증하는가?
-- 확인 결과: Given–When–Then 구조의 Test 10개와 대표 Exception Message 3개 검증으로 현재 Ticket 규칙을 자동화했다.
-- 다음 질문: 새로운 변경 요구에서 Polymorphism과 Composition이 조건 분기보다 변경 범위를 줄이는가?
+이 자료는 캡슐화, 객체 불변조건과 단순화한 Ticket 상태 전이 규칙의 관계를 설명한다. 개인의 이해 변화와 날짜별 실행 결과는 [8월 19일 Study Note](../study-notes/2026-08-19-study-questions.md), JUnit 후속 실행은 [8월 20일 Study Note](../study-notes/2026-08-20-study-questions.md), 재현 절차와 관찰은 [Ticket 상태 전이 Lab](../lab-ticket-state-transition.md)에 기록한다.
 
 ## 참고 자료
 
