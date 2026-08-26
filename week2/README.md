@@ -35,6 +35,15 @@ Week 1에서 Framework 없는 Ticket Domain의 규칙과 Unit Test를 확인했�
 - Java `25.0.4`에서 Tomcat `11.0.24`를 Port `8080`으로 기동하고 Root `GET /`의 `404 Not Found`, JSON 오류 Body를 실제 `curl.exe`로 관찰했다.
 - Root Smoke Trace는 Application Context·내장 Server의 실행 근거다. Ticket Controller·MockMvc·`/api/tickets` Trace는 아직 `NOT_IMPLEMENTED` 또는 `NOT_RUN`이다.
 
+## 2026-08-26 진행 결과
+
+- `TicketRepository` Port와 `InMemoryTicketRepository`를 구현하고 저장·단건 조회·순차 ID 발급을 Repository Test 3개로 확인했다.
+- `TicketApplicationService`와 `TicketResult`를 구현하고 생성·조회 Use Case와 실제 Repository 저장 여부를 Service Test 3개로 확인했다.
+- Request·Response DTO와 `TicketController`를 추가하여 정상 `POST /api/tickets`, `GET /api/tickets/{id}` 흐름을 구성했다.
+- `standaloneSetup` MockMvc Test 2개에서 `201 Created`·`Location`·JSON Body와 `200 OK` 조회 Body를 검증했다.
+- 기존 Test 16개를 포함한 전체 Test 24개가 Java 25에서 실패·오류·건너뜀 없이 통과했다.
+- 실제 Ticket API `curl.exe` Trace와 `400`·검증된 `404` 오류 Body·대표 `500` 계약은 8월 27일로 이동했다.
+
 ## 핵심 질문
 
 > 하나의 HTTP 요청이 Spring MVC의 각 Layer를 통과하는 흐름과 책임을 직접 추적할 수 있는가?
@@ -83,7 +92,7 @@ Client
 - 제목 검증 실패의 `400 Bad Request` 응답
 - 내부 구현 정보를 노출하지 않는 대표 `500 Internal Server Error` 응답 Test
 
-아래 계약은 계획이며 아직 구현되거나 검증되지 않았다.
+아래 계약 중 정상 생성·조회는 8월 26일 구현하고 MockMvc로 검증했다. 실제 Server `curl` Trace와 대표 실패 계약은 아직 구현·검증되지 않았다.
 
 | Method·Path | 정상 결과 | 대표 실패 | 비고 |
 |---|---|---|---|
@@ -133,10 +142,10 @@ Spring MVC의 오류 응답은 RFC 9457 형식의 `ProblemDetail` 지원을 우�
 
 | 학습 주제 | 분류 | 현재 상태 | 계획된 근거 |
 |---|---|---|---|
-| HTTP Request·Response 의미 | 핵심 학습 | In Progress — 자연어 설명과 Root `curl` Smoke 완료, Ticket API Trace `NOT_RUN` | 자신의 말로 쓴 흐름과 `curl` Trace |
-| REST Resource·오류 계약 | 핵심 학습 | In Progress — Given–When–Then·계약표 완료, MVC Test `NOT_IMPLEMENTED` | API 계약 표와 정상·실패 Test |
-| Spring MVC·Layer 책임 | 핵심 학습 | In Progress — 최소 Context·Server 기동 완료, Controller·Layer Test `NOT_IMPLEMENTED` | Request 흐름 설명, 최소 수직 Slice와 Layer Test |
-| In-memory Ticket API | 선택 적용 | Planned | 생성·조회 Diff와 MVC Test |
+| HTTP Request·Response 의미 | 핵심 학습 | In Progress — 자연어 설명, Root `curl` Smoke와 정상 MockMvc 완료. Ticket API `curl` Trace `NOT_RUN` | 자신의 말로 쓴 흐름과 실제 `curl` Trace |
+| REST Resource·오류 계약 | 핵심 학습 | In Progress — Given–When–Then·계약표와 정상 생성·조회 MockMvc 완료. 오류 Test 미완료 | API 계약 표와 정상·실패 Test |
+| Spring MVC·Layer 책임 | 핵심 학습 | In Progress — Context·Server 기동, Repository·Service·Controller 정상 수직 Slice와 Layer Test 완료 | Request 흐름 설명, 최소 수직 Slice와 Layer Test |
+| In-memory Ticket API | 선택 적용 | In Progress — 정상 생성·조회 구현과 MockMvc 완료. 실제 호출·오류 계약 미완료 | 생성·조회 Diff, MVC Test와 실제 호출 |
 | Filter·Interceptor·Exception Handler | 조건부 후속 | Planned | 책임 비교와 필요한 최소 실험 |
 | CORS Simple·Preflight | 조건부 후속 | Planned | Must 완료 후 Header 관찰 |
 
@@ -149,8 +158,10 @@ Spring MVC의 오류 응답은 RFC 9457 형식의 `ProblemDetail` 지원을 우�
 - [주차 안내](./README.md)
 - [주간 학습 계획](./weekly-plan.md)
 - [HTTP 요청·응답 메시지 Learning Note](./study-docs/learning-http-request-response-messages.md) — Message 구조·의미, Ticket 예시와 공식 참고자료
+- [Spring MVC 요청 흐름과 Annotation Learning Note](./study-docs/learning-spring-mvc-request-flow-and-annotations.md) — MVC 구성요소, Annotation, IoC·DI·DIP와 Layer 책임
 - [8월 24일 HTTP·Spring MVC 학습 점검](./study-notes/2026-08-24-study-questions.md) — HTTP 기본 개념, Spring MVC Request Flow와 실행 경계 기록
 - [8월 25일 REST Resource·URI와 API 계약 학습 점검](./study-notes/2026-08-25-study-questions.md) — 개념 답변·예상 계약과 Spring Boot 최소 기동·Root Smoke Trace 완료
+- [8월 26일 Spring MVC 정상 수직 Slice 구현·검증 기록](./study-notes/2026-08-26-study-questions.md) — Repository·Service·Controller 구현, MockMvc와 Clean Test 근거
 
 ### 실제 근거가 생긴 뒤 보완·추가
 
@@ -163,14 +174,14 @@ Spring MVC의 오류 응답은 RFC 9457 형식의 `ProblemDetail` 지원을 우�
 ## Learning Evidence Gate
 
 - [x] HTTP Request·Response의 시작 Line, Header와 Body 역할을 설명한다.
-- [ ] 하나의 요청을 Client부터 Domain과 Response까지 추적한다.
+- [x] 정상 MockMvc 요청을 Web Boundary부터 Domain과 Response까지 추적한다.
 - [x] Controller·Application Service·Repository·Domain의 책임과 금지 의존성을 설명한다.
 - [x] 구현 전에 생성·조회와 대표 실패의 예상 계약을 기록한다.
-- [ ] 정상과 `400`·`404`·대표 `500`을 필요한 수준의 Test로 검증한다.
-- [ ] MockMvc 결과와 실제 `curl` Trace가 각각 무엇을 검증하는지 구분한다.
-- [x] 기존 16개 Unit Test를 포함한 Clean Test를 재현한다.
-- [ ] 적용·조건부 후속·비범위의 선택 이유를 기록한다.
-- [ ] AI가 보조한 부분과 직접 작성·수정·검증한 범위를 구분한다.
+- [ ] 정상 `POST`·`GET`은 검증했으며 `400`·`404`·대표 `500` Test를 보완한다.
+- [x] MockMvc 결과와 실제 `curl` Trace가 각각 무엇을 검증하는지 구분한다.
+- [x] 기존 16개 Unit Test를 포함한 전체 24개 Clean Test를 재현한다.
+- [x] 적용·조건부 후속·비범위의 선택 이유를 기록한다.
+- [x] AI가 보조한 부분과 직접 작성·수정·검증한 범위를 구분한다.
 - [ ] 완료·부분 완료·미수행 범위와 다음 질문을 WIL에 남긴다.
 - [ ] 공개 자료에 Secret, 개인정보, 내부 URL과 로컬 절대 경로가 없다.
 
