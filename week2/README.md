@@ -44,6 +44,16 @@ Week 1에서 Framework 없는 Ticket Domain의 규칙과 Unit Test를 확인했�
 - 기존 Test 16개를 포함한 전체 Test 24개가 Java 25에서 실패·오류·건너뜀 없이 통과했다.
 - 실제 Ticket API `curl.exe` Trace와 `400`·검증된 `404` 오류 Body·대표 `500` 계약은 8월 27일로 이동했다.
 
+## 2026-08-27 진행 결과
+
+- 실제 Server에서 정상 `POST /api/tickets`의 `201 Created`·`Location`과 `GET /api/tickets/1`의 `200 OK` JSON을 확인했다.
+- `@NotBlank`·`@Valid`로 요청 DTO Validation을 연결하고 Domain 생성자 검증을 유지하여 서로 다른 입력 경계를 보호했다.
+- Service가 Repository 부재를 `TicketNotFoundException`으로 표현하고, `TicketApiExceptionHandler`가 Spring MVC 기본 예외와 Application Exception을 안전한 `ProblemDetail`로 변환하도록 구현했다.
+- MockMvc Test 7개에서 정상 `201`·`200`, 공백 제목·잘못된 JSON·ID Type 불일치 `400`, 부재 `404`와 대표 내부 실패 `500`을 검증했다.
+- 기존 Test를 포함한 전체 29개 Clean Test가 실패·오류·건너뜀 없이 통과했다.
+- 실제 `curl.exe`로 공백 제목·잘못된 JSON·ID Type 불일치의 `400`과 존재하지 않는 Ticket의 `404`, `application/problem+json` Body를 확인했다. 대표 `500`은 Production 실패 Endpoint 없이 수동 Test Double로만 검증했다.
+- 구현·실행 근거는 완료했지만 Exception 전파와 구성요소별 책임은 완전히 숙지되지 않아 8월 28일 오전 복습으로 연결한다.
+
 ## 핵심 질문
 
 > 하나의 HTTP 요청이 Spring MVC의 각 Layer를 통과하는 흐름과 책임을 직접 추적할 수 있는가?
@@ -92,7 +102,7 @@ Client
 - 제목 검증 실패의 `400 Bad Request` 응답
 - 내부 구현 정보를 노출하지 않는 대표 `500 Internal Server Error` 응답 Test
 
-아래 계약 중 정상 생성·조회는 8월 26일 구현하고 MockMvc로 검증했다. 실제 Server `curl` Trace와 대표 실패 계약은 아직 구현·검증되지 않았다.
+아래 계약은 8월 27일까지 정상·대표 실패 MockMvc와 실제 Server Trace로 검증했다. 대표 `500`만 Production 실패 경로를 만들지 않고 Test Double로 재현했다.
 
 | Method·Path | 정상 결과 | 대표 실패 | 비고 |
 |---|---|---|---|
@@ -142,11 +152,11 @@ Spring MVC의 오류 응답은 RFC 9457 형식의 `ProblemDetail` 지원을 우�
 
 | 학습 주제 | 분류 | 현재 상태 | 계획된 근거 |
 |---|---|---|---|
-| HTTP Request·Response 의미 | 핵심 학습 | In Progress — 자연어 설명, Root `curl` Smoke와 정상 MockMvc 완료. Ticket API `curl` Trace `NOT_RUN` | 자신의 말로 쓴 흐름과 실제 `curl` Trace |
-| REST Resource·오류 계약 | 핵심 학습 | In Progress — Given–When–Then·계약표와 정상 생성·조회 MockMvc 완료. 오류 Test 미완료 | API 계약 표와 정상·실패 Test |
-| Spring MVC·Layer 책임 | 핵심 학습 | In Progress — Context·Server 기동, Repository·Service·Controller 정상 수직 Slice와 Layer Test 완료 | Request 흐름 설명, 최소 수직 Slice와 Layer Test |
-| In-memory Ticket API | 선택 적용 | In Progress — 정상 생성·조회 구현과 MockMvc 완료. 실제 호출·오류 계약 미완료 | 생성·조회 Diff, MVC Test와 실제 호출 |
-| Filter·Interceptor·Exception Handler | 조건부 후속 | Planned | 책임 비교와 필요한 최소 실험 |
+| HTTP Request·Response 의미 | 핵심 학습 | In Progress — 정상·실패 실제 `curl` Trace 완료, 8월 28일 설명 복습 예정 | 자신의 말로 쓴 흐름과 실제 `curl` Trace |
+| REST Resource·오류 계약 | 핵심 학습 | In Progress — 예상 계약, 정상·실패 Test와 실제 `400`·`404` Trace 완료. 설명 재점검 예정 | API 계약 표와 정상·실패 Test |
+| Spring MVC·Layer 책임 | 핵심 학습 | In Progress — 정상 수직 Slice와 Validation·Advice 구현 완료. Exception 전파 책임 복습 예정 | Request 흐름 설명, 최소 수직 Slice와 Layer Test |
+| In-memory Ticket API | 선택 적용 | Completed — 생성·단건 조회와 선택한 대표 오류 계약 구현, 전체 29개 Test와 실제 Trace 완료 | 생성·조회 Diff, MVC Test와 실제 호출 |
+| Filter·Interceptor·Exception Handler | 조건부 후속 | Partially Completed — Exception Handler 최소 구현 완료. 실행 위치 비교는 8월 28일 복습 뒤 판단 | 책임 비교와 필요한 최소 실험 |
 | CORS Simple·Preflight | 조건부 후속 | Planned | Must 완료 후 Header 관찰 |
 
 `Completed`는 설명, 직접 재현과 Test·Trace 근거가 함께 생긴 경우에만 사용한다. Application이 실행된다는 사실만으로 HTTP·REST·Layer 학습을 완료 처리하지 않는다.
@@ -159,9 +169,11 @@ Spring MVC의 오류 응답은 RFC 9457 형식의 `ProblemDetail` 지원을 우�
 - [주간 학습 계획](./weekly-plan.md)
 - [HTTP 요청·응답 메시지 Learning Note](./study-docs/learning-http-request-response-messages.md) — Message 구조·의미, Ticket 예시와 공식 참고자료
 - [Spring MVC 요청 흐름과 Annotation Learning Note](./study-docs/learning-spring-mvc-request-flow-and-annotations.md) — MVC 구성요소, Annotation, IoC·DI·DIP와 Layer 책임
+- [Spring Validation과 HTTP 오류 응답 Learning Note](./study-docs/learning-spring-validation-and-error-responses.md) — 입력 검증 경계, Exception Handler, `ProblemDetail`과 안전한 오류 계약
 - [8월 24일 HTTP·Spring MVC 학습 점검](./study-notes/2026-08-24-study-questions.md) — HTTP 기본 개념, Spring MVC Request Flow와 실행 경계 기록
 - [8월 25일 REST Resource·URI와 API 계약 학습 점검](./study-notes/2026-08-25-study-questions.md) — 개념 답변·예상 계약과 Spring Boot 최소 기동·Root Smoke Trace 완료
 - [8월 26일 Spring MVC 정상 수직 Slice 구현·검증 기록](./study-notes/2026-08-26-study-questions.md) — Repository·Service·Controller 구현, MockMvc와 Clean Test 근거
+- [8월 27일 Spring Validation·오류 응답 학습·구현 기록](./study-notes/2026-08-27-study-questions.md) — 입력 실패 경계, `ProblemDetail`, 29개 Test와 정상·실패 실제 HTTP Trace
 
 ### 실제 근거가 생긴 뒤 보완·추가
 
@@ -177,9 +189,9 @@ Spring MVC의 오류 응답은 RFC 9457 형식의 `ProblemDetail` 지원을 우�
 - [x] 정상 MockMvc 요청을 Web Boundary부터 Domain과 Response까지 추적한다.
 - [x] Controller·Application Service·Repository·Domain의 책임과 금지 의존성을 설명한다.
 - [x] 구현 전에 생성·조회와 대표 실패의 예상 계약을 기록한다.
-- [ ] 정상 `POST`·`GET`은 검증했으며 `400`·`404`·대표 `500` Test를 보완한다.
+- [x] 정상 `POST`·`GET`과 `400`·`404`·대표 `500`을 선택한 범위의 Test로 검증한다.
 - [x] MockMvc 결과와 실제 `curl` Trace가 각각 무엇을 검증하는지 구분한다.
-- [x] 기존 16개 Unit Test를 포함한 전체 24개 Clean Test를 재현한다.
+- [x] 기존 16개 Unit Test를 포함한 전체 29개 Clean Test를 재현한다.
 - [x] 적용·조건부 후속·비범위의 선택 이유를 기록한다.
 - [x] AI가 보조한 부분과 직접 작성·수정·검증한 범위를 구분한다.
 - [ ] 완료·부분 완료·미수행 범위와 다음 질문을 WIL에 남긴다.
