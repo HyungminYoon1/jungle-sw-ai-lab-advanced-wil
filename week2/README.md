@@ -170,6 +170,7 @@ Spring MVC의 오류 응답은 RFC 9457 형식의 `ProblemDetail` 지원을 우�
 - [HTTP 요청·응답 메시지 Learning Note](./study-docs/learning-http-request-response-messages.md) — Message 구조·의미, Ticket 예시와 공식 참고자료
 - [Spring MVC 요청 흐름과 Annotation Learning Note](./study-docs/learning-spring-mvc-request-flow-and-annotations.md) — MVC 구성요소, Annotation, IoC·DI·DIP와 Layer 책임
 - [Spring Validation과 HTTP 오류 응답 Learning Note](./study-docs/learning-spring-validation-and-error-responses.md) — 입력 검증 경계, Exception Handler, `ProblemDetail`과 안전한 오류 계약
+- [Spring Filter·Interceptor·Exception Handler Learning Note](./study-docs/learning-spring-filter-interceptor-and-exception-handler.md) — 요청 생명주기상의 위치, 책임 경계와 상황별 선택 기준
 - [8월 24일 HTTP·Spring MVC 학습 점검](./study-notes/2026-08-24-study-questions.md) — HTTP 기본 개념, Spring MVC Request Flow와 실행 경계 기록
 - [8월 25일 REST Resource·URI와 API 계약 학습 점검](./study-notes/2026-08-25-study-questions.md) — 개념 답변·예상 계약과 Spring Boot 최소 기동·Root Smoke Trace 완료
 - [8월 26일 Spring MVC 정상 수직 Slice 구현·검증 기록](./study-notes/2026-08-26-study-questions.md) — Repository·Service·Controller 구현, MockMvc와 Clean Test 근거
