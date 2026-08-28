@@ -1,7 +1,8 @@
 # Week 2 — HTTP·REST·Spring 요청 흐름
 
-> 상태: In Progress
+> 상태: In Progress — 8월 29일 최소 복습 완료, 8월 30일 복구 일정 예정
 > 기간: 2026-08-24 ~ 2026-08-29
+> 복구 일정: 2026-08-30
 > 핵심 질문: 하나의 HTTP 요청이 Spring MVC의 각 Layer를 통과하는 흐름과 책임을 직접 추적할 수 있는가?
 > 운영 Baseline: Git 상태 확인·Diff Review·작은 Commit과 기존 Unit Test 회귀 확인
 > 공통 실습: AI Helpdesk Learning Lab의 In-memory Ticket 생성·조회 API
@@ -53,6 +54,23 @@ Week 1에서 Framework 없는 Ticket Domain의 규칙과 Unit Test를 확인했�
 - 기존 Test를 포함한 전체 29개 Clean Test가 실패·오류·건너뜀 없이 통과했다.
 - 실제 `curl.exe`로 공백 제목·잘못된 JSON·ID Type 불일치의 `400`과 존재하지 않는 Ticket의 `404`, `application/problem+json` Body를 확인했다. 대표 `500`은 Production 실패 Endpoint 없이 수동 Test Double로만 검증했다.
 - 구현·실행 근거는 완료했지만 Exception 전파와 구성요소별 책임은 완전히 숙지되지 않아 8월 28일 오전 복습으로 연결한다.
+
+## 2026-08-28 진행 결과
+
+- 공백 제목, 잘못된 JSON·ID Type과 존재하지 않는 Ticket의 실패 지점을 한 문제씩 다시 구분했다.
+- Repository의 `Optional.empty()`부터 Service의 `TicketNotFoundException`, `HandlerExceptionResolver`, `TicketApiExceptionHandler`와 `HttpMessageConverter`까지 `404` 흐름을 교정 후 연결했다.
+- `TicketResult`, `TicketResponse`와 `ResponseEntity<TicketResponse>`의 책임을 다시 구분했다.
+- Filter·Interceptor·Exception Handler의 위치와 선택 기준을 별도 Learning Note로 작성하고 `c25498f` Commit으로 남겼다.
+- Filter는 넓은 Application 요청 경계, Interceptor는 선택된 Handler 정보가 필요한 공통 처리에 적합하다는 질문을 확인했다.
+- Lab Code 수정, Test 재실행과 CORS 실험은 수행하지 않았다.
+
+## 2026-08-29 진행 결과
+
+- 늦어진 학습 시간을 고려해 CORS와 새 구현을 보류하고 Callback 차이와 구성요소 선택만 최소 Gate로 설정했다.
+- 성공과 실패를 포함한 Handler 실행 시간 측정의 종료 지점으로 `afterCompletion()`을 선택하고, `preHandle()` 성공과 `true` 반환이 선행 조건임을 확인했다.
+- Request ID는 Filter, 선택된 Controller Method 기반 측정은 Interceptor, Application Exception의 HTTP 변환은 Exception Handler로 구분했다.
+- 오늘 정한 최소 개념 Gate는 통과했지만 Exception 이름과 전체 전파 순서는 `Partially Completed`로 유지한다.
+- 새 Terminal의 Version·전체 29개 Clean Test 재현과 Week 2 WIL 정리는 8월 30일 복구 일정으로 이동했다.
 
 ## 핵심 질문
 
@@ -152,12 +170,12 @@ Spring MVC의 오류 응답은 RFC 9457 형식의 `ProblemDetail` 지원을 우�
 
 | 학습 주제 | 분류 | 현재 상태 | 계획된 근거 |
 |---|---|---|---|
-| HTTP Request·Response 의미 | 핵심 학습 | In Progress — 정상·실패 실제 `curl` Trace 완료, 8월 28일 설명 복습 예정 | 자신의 말로 쓴 흐름과 실제 `curl` Trace |
-| REST Resource·오류 계약 | 핵심 학습 | In Progress — 예상 계약, 정상·실패 Test와 실제 `400`·`404` Trace 완료. 설명 재점검 예정 | API 계약 표와 정상·실패 Test |
-| Spring MVC·Layer 책임 | 핵심 학습 | In Progress — 정상 수직 Slice와 Validation·Advice 구현 완료. Exception 전파 책임 복습 예정 | Request 흐름 설명, 최소 수직 Slice와 Layer Test |
+| HTTP Request·Response 의미 | 핵심 학습 | Partially Completed — 정상·실패 실제 Trace와 메시지 역할 설명 완료, 8월 30일 최종 재현 예정 | 자신의 말로 쓴 흐름과 실제 `curl` Trace |
+| REST Resource·오류 계약 | 핵심 학습 | Partially Completed — 예상 계약, 정상·실패 Test와 실제 `400`·`404` Trace 완료. WIL 완료 범위 정리 예정 | API 계약 표와 정상·실패 Test |
+| Spring MVC·Layer 책임 | 핵심 학습 | Partially Completed — 정상 수직 Slice와 오류 구현, 교정 후 Exception 흐름 설명 완료. 자료 없는 즉시 재현은 남음 | Request 흐름 설명, 최소 수직 Slice와 Layer Test |
 | In-memory Ticket API | 선택 적용 | Completed — 생성·단건 조회와 선택한 대표 오류 계약 구현, 전체 29개 Test와 실제 Trace 완료 | 생성·조회 Diff, MVC Test와 실제 호출 |
-| Filter·Interceptor·Exception Handler | 조건부 후속 | Partially Completed — Exception Handler 최소 구현 완료. 실행 위치 비교는 8월 28일 복습 뒤 판단 | 책임 비교와 필요한 최소 실험 |
-| CORS Simple·Preflight | 조건부 후속 | Planned | Must 완료 후 Header 관찰 |
+| Filter·Interceptor·Exception Handler | 조건부 후속 | Partially Completed — 비교 자료와 소크라테스식 선택 점검 완료. 필요성이 확인되지 않아 Filter·Interceptor 구현은 보류 | 책임 비교와 필요한 최소 실험 |
+| CORS Simple·Preflight | 조건부 후속 | Deferred — 일정 축소 순서에 따라 Week 2 필수 범위에서 제외 | Must 완료 후 Header 관찰 |
 
 `Completed`는 설명, 직접 재현과 Test·Trace 근거가 함께 생긴 경우에만 사용한다. Application이 실행된다는 사실만으로 HTTP·REST·Layer 학습을 완료 처리하지 않는다.
 
@@ -175,6 +193,8 @@ Spring MVC의 오류 응답은 RFC 9457 형식의 `ProblemDetail` 지원을 우�
 - [8월 25일 REST Resource·URI와 API 계약 학습 점검](./study-notes/2026-08-25-study-questions.md) — 개념 답변·예상 계약과 Spring Boot 최소 기동·Root Smoke Trace 완료
 - [8월 26일 Spring MVC 정상 수직 Slice 구현·검증 기록](./study-notes/2026-08-26-study-questions.md) — Repository·Service·Controller 구현, MockMvc와 Clean Test 근거
 - [8월 27일 Spring Validation·오류 응답 학습·구현 기록](./study-notes/2026-08-27-study-questions.md) — 입력 실패 경계, `ProblemDetail`, 29개 Test와 정상·실패 실제 HTTP Trace
+- [8월 28일 Exception 흐름 복습과 공통 요청 처리 경계 학습 기록](./study-notes/2026-08-28-study-questions.md) — 오류 경계 교정, 응답 객체 역할과 Filter·Interceptor 비교 시작
+- [8월 29일 Filter·Interceptor·Exception Handler 최소 복습 기록](./study-notes/2026-08-29-study-questions.md) — Callback 차이, 선택 Gate와 8월 30일 복구 일정
 
 ### 실제 근거가 생긴 뒤 보완·추가
 

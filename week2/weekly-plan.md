@@ -1,8 +1,9 @@
 # Week 2 학습 계획 — HTTP·REST·Spring 요청 흐름
 
 > 작성일: 2026-08-23
-> 상태: In Progress — 8월 27일 구현·실행 반영, 8월 28일 복습 예정
+> 상태: In Progress — 8월 29일 최소 복습 반영, 8월 30일 복구 일정 예정
 > 기간: 2026-08-24 ~ 2026-08-29
+> 복구 일정: 2026-08-30
 > 핵심 질문: 하나의 HTTP 요청이 Spring MVC의 각 Layer를 통과하는 흐름과 책임을 직접 추적할 수 있는가?
 > 운영 Baseline: Git 상태 확인·Diff Review·작은 Commit과 기존 Unit Test 회귀 확인
 
@@ -241,9 +242,9 @@ Controller에 규칙을 둔 실패 예제는 별도 Production 구조로 장기�
 | 2 | HTTP Message Trace | `curl`에서 연결, Request, Status, Header와 JSON Body를 구분할 수 있음 | 한 Request의 원문과 각 부분의 의미를 설명 | Completed — Root `GET /`의 연결·Request·`404`·Header·JSON Body를 관찰하고 Ticket API 미검증 경계를 기록 |
 | 3 | Ticket 생성·조회 수직 Slice | Web에서 기존 Ticket 규칙을 재사용하고 In-memory로 조회 가능 | `POST`·`GET` 정상 Test와 실제 호출 통과 | Completed — Repository·Service·Controller, 정상 MockMvc와 실제 `201`·`200` Trace 완료 |
 | 4 | 오류 응답 계약 | 잘못된 입력과 부재·내부 실패가 서로 다른 Status로 변환됨 | `400`·`404`·대표 `500` Body와 상태 검증 | Completed — 공백·잘못된 JSON·ID Type `400`, 부재 `404`, 수동 Test Double `500`과 안전한 `ProblemDetail` 검증 |
-| 5 | Layer 책임 비교 | Controller에 규칙·저장을 두면 변경과 Test 책임이 섞임 | 금지 의존성과 분리 후 Call Flow를 자신의 말로 설명 | Partially Completed — 구현과 질문 점검 완료, Exception 전파·Handler 역할은 8월 28일 오전 재설명 |
-| 6 | CORS Simple·Preflight | 명시적 허용 전후 응답 Header가 달라짐 | Must 완료 시에만 Origin·OPTIONS 결과 기록 | Conditional |
-| 7 | Clean 재현과 Week Review | 새 Terminal에서도 전체 Test와 Trace를 재현 가능 | 결과·미완료 범위가 Learning Note·WIL 초안에 반영됨 | In Progress — 전체 29개 Clean Test와 정상·실패 Trace 완료, 복습·WIL 초안은 남음 |
+| 5 | Layer 책임 비교 | Controller에 규칙·저장을 두면 변경과 Test 책임이 섞임 | 금지 의존성과 분리 후 Call Flow를 자신의 말로 설명 | Partially Completed — 교정 후 Exception 흐름과 Filter·Interceptor·Exception Handler 선택을 설명함. 자료 없는 즉시 재현은 8월 30일 재점검 |
+| 6 | CORS Simple·Preflight | 명시적 허용 전후 응답 Header가 달라짐 | Must 완료 시에만 Origin·OPTIONS 결과 기록 | Deferred — 일정 축소 순서에 따라 Week 2 필수 범위에서 제외 |
+| 7 | Clean 재현과 Week Review | 새 Terminal에서도 전체 Test와 Trace를 재현 가능 | 결과·미완료 범위가 Learning Note·WIL 초안에 반영됨 | In Progress — 기존 29개 Clean Test와 실제 Trace 근거는 확보됨. 새 Terminal 재현과 WIL 정리는 8월 30일로 이동 |
 
 ## 일정
 
@@ -253,8 +254,9 @@ Controller에 규칙을 둔 실패 예제는 별도 Production 구조로 장기�
 | 8월 25일 화요일 | 월요일에 정리한 HTTP·Stateless 설명을 반복하지 않고 REST Resource·URI와 생성·조회 계약으로 연결 | `POST`·`GET` 정상·실패 Given–When–Then과 API 계약 확정 | Spring Boot 최소 Application Context와 Server 기동, 첫 `curl` Trace | Code 작성 전에 Method·Status·Header·Body 예상 계약이 기록됨 | Completed — 오전 개념 설명, 오후 예상 계약, 야간 Boot `4.1.1`·Tomcat 기동과 Root `404` JSON Smoke Trace 완료. Ticket API·MockMvc는 다음 Block |
 | 8월 26일 수요일 | DispatcherServlet·Controller·DI·IoC와 Layer 책임 학습 | In-memory Repository 기반 Ticket 생성·조회 수직 Slice 구현 | 정상 MVC Test와 실제 `POST`·`GET` 호출, Call Flow 설명 | Controller에서 Domain 규칙과 저장 구현을 분리한 정상 흐름이 재현됨 | Partially Completed — Repository·Service·Controller와 정상 MockMvc Test 2개, 전체 24개 Clean Test 완료. 실제 Ticket API 호출은 8월 27일로 이동 |
 | 8월 27일 목요일 | 이월된 실제 `POST`·`GET` `curl` Trace를 먼저 확인한 뒤 Validation, Exception Handler와 `ProblemDetail` 학습 | 잘못된 JSON·제목과 존재하지 않는 ID의 `400`·`404` 계약 구현 | 대표 내부 실패의 `500` Test와 안전한 오류 Body Review | 정상 실제 호출과 세 실패 범주의 Status·Body 선택 이유를 설명 | Partially Completed — 정상·실패 실제 Trace, 오류 구현과 전체 29개 Test 완료. Exception 전파·구성요소 책임 숙지는 8월 28일 오전 복습으로 연결 |
-| 8월 28일 금요일 | 8월 27일 Exception 흐름을 자료 없이 재구성하고 한 문제씩 역할을 재점검한 뒤 Filter·Interceptor·Exception Handler 실행 위치 비교 | 복습 Gate와 전체 Test 보완, 필요할 때만 CORS Simple·Preflight 실험 | Request Trace에 Layer와 오류 흐름 표시, Learning Note·WIL 초안 | Exception 발생·전파·Handler 선택·응답 변환을 설명하고 조건부 항목의 수행·보류 이유를 기록 | Planned |
-| 8월 29일 토요일 | 새 Terminal에서 Version·Clean Test·Application 기동 재현 | 실제 `curl` Trace와 정상·실패 계약 최종 확인, 불필요한 Code 제거 | 설명 가능성 점검, Week 2 WIL 초안과 다음 질문 정리 | Gate 결과와 완료·부분 완료·미수행 범위가 근거와 함께 기록됨 | Planned |
+| 8월 28일 금요일 | 8월 27일 Exception 흐름을 자료 없이 재구성하고 한 문제씩 역할을 재점검한 뒤 Filter·Interceptor·Exception Handler 실행 위치 비교 | 복습 Gate와 전체 Test 보완, 필요할 때만 CORS Simple·Preflight 실험 | Request Trace에 Layer와 오류 흐름 표시, Learning Note·WIL 초안 | Exception 발생·전파·Handler 선택·응답 변환을 설명하고 조건부 항목의 수행·보류 이유를 기록 | Partially Completed — 대표 실패 흐름과 응답 객체 역할을 교정 후 연결하고 비교 Learning Note를 작성함. 이름의 즉시 재현, Test와 CORS는 미수행 |
+| 8월 29일 토요일 | 새 Terminal에서 Version·Clean Test·Application 기동 재현 | 실제 `curl` Trace와 정상·실패 계약 최종 확인, 불필요한 Code 제거 | 설명 가능성 점검, Week 2 WIL 초안과 다음 질문 정리 | Gate 결과와 완료·부분 완료·미수행 범위가 근거와 함께 기록됨 | Partially Completed — 늦은 시작으로 Callback과 세 구성요소 선택 Gate만 완료. 구현·Version·Test·Trace·WIL은 8월 30일로 이동 |
+| 8월 30일 일요일 — 복구 | 자료 없이 구성요소 선택과 Exception 흐름을 짧게 재점검 | 새 Terminal에서 Version·전체 29개 Clean Test 재현, 필요한 경우에만 핵심 HTTP Trace 확인 | 8월 28~30일 Study Note와 Week 2 WIL에 완료·부분 완료·미수행 범위 반영 | 설명과 실행 근거의 경계를 유지하고 Week 2 결과·후속 질문을 제출 전 초안으로 정리 | Planned |
 
 ## 위험과 대응
 
@@ -279,11 +281,14 @@ Controller에 규칙을 둔 실패 예제는 별도 Production 구조로 장기�
 | [HTTP 요청·응답 메시지 Learning Note](./study-docs/learning-http-request-response-messages.md) | Message 구조·예상 계약과 자가점검 | RFC 기반 학습 자료 준비 | Ready — 순수 개념 자료로 유지하고 실제 Trace는 날짜별 Study Note에 분리 |
 | [Spring MVC 요청 흐름과 Annotation Learning Note](./study-docs/learning-spring-mvc-request-flow-and-annotations.md) | MVC 구성요소·Annotation·IoC·DI·DIP와 Layer 책임 설명 | 8월 26일 개념 학습 자료 준비 | Ready — 개인 진도와 실행 결과는 날짜별 Study Note에 분리 |
 | [Spring Validation과 HTTP 오류 응답 Learning Note](./study-docs/learning-spring-validation-and-error-responses.md) | Validation 경계·Exception Handler·`ProblemDetail`과 오류 Test 설명 | 8월 27일 오류 계약 학습 자료 준비 | Ready — 개념·예시만 포함하고 실제 구현·실행 결과는 날짜별 Study Note에 분리 |
+| [Spring Filter·Interceptor·Exception Handler Learning Note](./study-docs/learning-spring-filter-interceptor-and-exception-handler.md) | Servlet·MVC·오류 처리 경계와 선택 기준 설명 | 8월 28일 비교 자료 준비 | Ready — 개념·예시만 포함하며 Production 구현을 의미하지 않음 |
 | [8월 25일 REST Resource·URI와 API 계약 학습 점검](./study-notes/2026-08-25-study-questions.md) | 개념 답변·예상 계약과 최소 기동 실행 근거 | 당일 학습과 실행 완료 | Completed — Given–When–Then·계약표, Boot 기동과 Root Smoke Trace 기록 |
 | [8월 26일 Spring MVC 정상 수직 Slice 구현·검증 기록](./study-notes/2026-08-26-study-questions.md) | Repository·Service·Controller 구현, MockMvc와 Clean Test 근거 | 정상 수직 Slice 구현·검증 | Partially Completed — 정상 MockMvc 2개와 전체 Test 24개 통과, 실제 Ticket API 호출은 `NOT_RUN` |
 | [8월 27일 Spring Validation·오류 응답 학습·구현 기록](./study-notes/2026-08-27-study-questions.md) | 입력 실패 경계, 오류 구현, Test와 실제 HTTP Trace | 당일 구현·실행 결과 확보 | Partially Completed — 구현·29개 Test·실제 Trace 완료, Exception 흐름 복습은 8월 28일 예정 |
+| [8월 28일 Exception 흐름 복습과 공통 요청 처리 경계 학습 기록](./study-notes/2026-08-28-study-questions.md) | 소크라테스식 오류 흐름 복습과 비교 자료 작성 | 당일 답변과 교정 내용 확보 | Partially Completed — 대표 흐름은 연결했으나 이름의 즉시 재현과 Test는 남음 |
+| [8월 29일 Filter·Interceptor·Exception Handler 최소 복습 기록](./study-notes/2026-08-29-study-questions.md) | Callback 차이, 세 구성요소 선택과 일정 축소 기록 | 늦은 시간 최소 Gate 완료 | Partially Completed — 최소 개념 Gate 완료, 실행 재현과 WIL은 8월 30일 예정 |
 | Ticket HTTP Request Flow Lab Report | Request·Response Trace와 정상·실패 재현 | 실제 Trace와 Test 결과 확보 후 | 별도 생성 보류 — 8월 27일 Study Note가 같은 근거를 포함하므로 중복 문서를 만들지 않음 |
-| Week 2 WIL | 이해 변화, 실패와 다음 판단 | 토요일 실제 결과 후 | Planned |
+| Week 2 WIL | 이해 변화, 실패와 다음 판단 | 최종 복구 일정의 실제 결과 후 | Planned — 8월 30일 초안 작성 예정 |
 | 공개 Checklist | Secret·경로·주장·Link 점검 | 게시 직전 | Planned |
 
 Learning Note와 Lab Report를 모두 강제로 만들지 않는다. 한 문서가 핵심 질문, 실행 절차, 관찰과 설명을 충분히 담으면 그 문서를 우선하고 중복 문서는 생략한다.
@@ -299,7 +304,7 @@ Learning Note와 Lab Report를 모두 강제로 만들지 않는다. 한 문서�
 - [x] 기존 16개 Unit Test를 포함한 전체 29개 Clean Test가 통과한다.
 - [x] 예상과 실제가 달랐던 점과 원인을 기록했다.
 - [ ] AI 도움 없이 핵심 흐름의 작은 변경과 관련 Test를 수행했다.
-- [ ] CORS·Filter 등 조건부 항목의 수행·보류 이유가 있다.
+- [x] CORS·Filter 등 조건부 항목의 수행·보류 이유가 있다.
 - [ ] 완료·부분 완료·미수행 범위와 다음 질문을 WIL에 남겼다.
 - [ ] 공개 자료에 Secret, 개인정보, 내부 URL과 로컬 절대 경로가 없다.
 
@@ -322,6 +327,7 @@ Baseline 이후 학습 항목을 조용히 추가하거나 삭제하지 않는�
 | 2026-08-25 | Spring Boot 최소 기동과 Root Smoke Trace 완료 | 구현 전 Ticket API 계약을 작성한 뒤 Boot 구성·Application 진입점·Server 실행을 작은 단계로 검증함 | Root `404`는 Context·Server·기본 오류 응답 근거로만 사용한다. Ticket Controller·MockMvc·실제 `POST`·`GET`은 다음 Block까지 `NOT_IMPLEMENTED`·`NOT_RUN`으로 유지한다. |
 | 2026-08-26 | 정상 수직 Slice의 실제 Ticket API `curl` Trace를 8월 27일 첫 Block으로 이동 | Repository·Service·Controller를 단계적으로 구현하고 정상 MockMvc 2개와 전체 24개 Clean Test까지 완료한 시점이 자정을 넘김 | 구현·MockMvc는 `RUN`, 실제 Network·Tomcat을 통과하는 Ticket API 호출은 `NOT_RUN`으로 구분한다. 8월 27일 오류 계약 학습 전에 정상 `POST`·`GET`을 실제 호출한다. |
 | 2026-08-27 | 오류 응답 구현 뒤 8월 28일 오전에 Exception 흐름 복습 Gate 추가 | Validation·Advice·`ProblemDetail`, 전체 29개 Test와 실제 `400`·`404` Trace는 완료했지만 Exception 전파와 구성요소별 책임은 자료 없이 바로 설명하기 어려움 | 금요일 오전 첫 Block에서 공백 제목·부재 흐름을 다시 설명한다. 복습 Gate 뒤에만 Filter·Interceptor 비교로 진행하며 CORS는 시간이 남을 때만 수행한다. 대표 `500`은 Production Endpoint 없이 Test Double 검증으로 유지한다. |
+| 2026-08-29 | 새 Terminal 재현과 Week 2 WIL 정리를 8월 30일 복구 일정으로 이동 | 8월 28일 Exception 복습이 길어졌고 8월 29일 시작 시각도 늦어, 새 구현보다 최소 개념 Gate와 정확한 미수행 경계 기록을 우선함 | CORS와 Filter·Interceptor 구현은 보류한다. 8월 30일에 짧은 복습, Version·29개 Clean Test 재현과 WIL 초안을 순서대로 수행한다. 기존 Test·Trace를 오늘 다시 실행한 것처럼 표현하지 않는다. |
 
 ## 공식 학습 자료 Baseline
 
