@@ -359,6 +359,8 @@ Client가 요청을 수정하면 해결할 수 있는 입력 문제에 사용한
 
 Domain과 Application 계층은 HTTP `404`를 직접 알 필요가 없다. Web Boundary가 부재 의미를 HTTP Status로 변환한다.
 
+단건·선택적 단건·목록 조회에서 결과 없음의 의미와 Exception, `Optional`, Result Type 선택 기준은 [Service 결과와 실패 표현 설계](./learning-service-result-and-failure-design.md)에서 별도로 다룬다.
+
 ### `500 Internal Server Error`
 
 Client 요청을 수정해서 해결할 수 없는 예상하지 못한 Server 내부 실패에 사용한다.

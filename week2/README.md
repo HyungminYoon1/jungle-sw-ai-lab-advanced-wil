@@ -1,8 +1,8 @@
 # Week 2 — HTTP·REST·Spring 요청 흐름
 
-> 상태: In Progress — 8월 29일 최소 복습 완료, 8월 30일 복구 일정 예정
+> 상태: Completed — 선택한 Week 2 구현·Test·Trace와 WIL 초안 완료, Exception 흐름 회상은 후속 복습
 > 기간: 2026-08-24 ~ 2026-08-29
-> 복구 일정: 2026-08-30
+> 8월 29일 야간 세션 종료: 2026-08-30 01시대
 > 핵심 질문: 하나의 HTTP 요청이 Spring MVC의 각 Layer를 통과하는 흐름과 책임을 직접 추적할 수 있는가?
 > 운영 Baseline: Git 상태 확인·Diff Review·작은 Commit과 기존 Unit Test 회귀 확인
 > 공통 실습: AI Helpdesk Learning Lab의 In-memory Ticket 생성·조회 API
@@ -66,11 +66,23 @@ Week 1에서 Framework 없는 Ticket Domain의 규칙과 Unit Test를 확인했�
 
 ## 2026-08-29 진행 결과
 
-- 늦어진 학습 시간을 고려해 CORS와 새 구현을 보류하고 Callback 차이와 구성요소 선택만 최소 Gate로 설정했다.
+- 늦어진 학습 시간을 고려해 CORS는 보류하고 Callback 차이와 구성요소 선택을 먼저 확인했다.
 - 성공과 실패를 포함한 Handler 실행 시간 측정의 종료 지점으로 `afterCompletion()`을 선택하고, `preHandle()` 성공과 `true` 반환이 선행 조건임을 확인했다.
 - Request ID는 Filter, 선택된 Controller Method 기반 측정은 Interceptor, Application Exception의 HTTP 변환은 Exception Handler로 구분했다.
 - 오늘 정한 최소 개념 Gate는 통과했지만 Exception 이름과 전체 전파 순서는 `Partially Completed`로 유지한다.
-- 새 Terminal의 Version·전체 29개 Clean Test 재현과 Week 2 WIL 정리는 8월 30일 복구 일정으로 이동했다.
+- 단건 부재와 목록 0건, Repository 실패를 서로 다른 결과로 구분하고 Service의 결과·실패 표현 방식을 별도 Learning Note로 정리했다.
+- `RequestIdFilter`, `HandlerTimingInterceptor`와 `WebConfiguration`을 최소 범위로 구현했다.
+- 단위 Test는 각 객체의 동작만 검증하고 Spring 등록은 증명하지 못한다는 점을 구분했다. 전체 Context 통합 Test로 404 응답의 Request ID Header와 Interceptor 완료 로그를 별도로 확인했다.
+- Spring Boot 4 MVC Test 지원을 위해 Test Dependency를 `spring-boot-starter-webmvc-test`로 교체하고 `test-compile`과 대상 Test를 통과했다.
+- Temurin JDK·`javac` 25.0.4, Maven 3.9.16을 확인하고 전체 Clean Test 33개가 실패·오류·건너뜀 없이 통과했다.
+- 실제 Server와 `curl.exe` Trace는 다시 실행하지 않았다. 이 구현·검증은 자정 이후까지 이어졌지만 8월 29일에 시작한 같은 학습 세션으로 기록한다.
+
+## 2026-08-30 진행 결과
+
+- 완료·부분 완료·미수행 범위와 후속 복습 질문을 Week 2 WIL 공개 전 초안에 반영했다.
+- 12주 계획, Week 3 Roadmap과 Database 공지 범위를 대조하여 Week 3 주차 안내와 학습 계획을 작성했다.
+- 8월 31일 월요일 첫 학습 Block에 Week 2 Exception 흐름과 Filter·Interceptor 선택 기준 복습 Gate를 반영했다.
+- PostgreSQL 설치·SQL 실험과 Java Source 변경은 Week 3 시작 전까지 수행하지 않는다.
 
 ## 핵심 질문
 
@@ -170,11 +182,11 @@ Spring MVC의 오류 응답은 RFC 9457 형식의 `ProblemDetail` 지원을 우�
 
 | 학습 주제 | 분류 | 현재 상태 | 계획된 근거 |
 |---|---|---|---|
-| HTTP Request·Response 의미 | 핵심 학습 | Partially Completed — 정상·실패 실제 Trace와 메시지 역할 설명 완료, 8월 30일 최종 재현 예정 | 자신의 말로 쓴 흐름과 실제 `curl` Trace |
-| REST Resource·오류 계약 | 핵심 학습 | Partially Completed — 예상 계약, 정상·실패 Test와 실제 `400`·`404` Trace 완료. WIL 완료 범위 정리 예정 | API 계약 표와 정상·실패 Test |
-| Spring MVC·Layer 책임 | 핵심 학습 | Partially Completed — 정상 수직 Slice와 오류 구현, 교정 후 Exception 흐름 설명 완료. 자료 없는 즉시 재현은 남음 | Request 흐름 설명, 최소 수직 Slice와 Layer Test |
-| In-memory Ticket API | 선택 적용 | Completed — 생성·단건 조회와 선택한 대표 오류 계약 구현, 전체 29개 Test와 실제 Trace 완료 | 생성·조회 Diff, MVC Test와 실제 호출 |
-| Filter·Interceptor·Exception Handler | 조건부 후속 | Partially Completed — 비교 자료와 소크라테스식 선택 점검 완료. 필요성이 확인되지 않아 Filter·Interceptor 구현은 보류 | 책임 비교와 필요한 최소 실험 |
+| HTTP Request·Response 의미 | 핵심 학습 | Completed — 메시지 역할을 설명하고 정상·실패 실제 Trace로 확인 | 자신의 말로 쓴 흐름과 실제 `curl` Trace |
+| REST Resource·오류 계약 | 핵심 학습 | Completed — 예상 계약, 정상·실패 Test와 실제 `400`·`404` Trace를 WIL에 정리 | API 계약 표와 정상·실패 Test |
+| Spring MVC·Layer 책임 | 핵심 학습 | Partially Completed — 정상 수직 Slice·오류 구현과 요청 흐름 설명 완료. Exception 구성요소 이름의 즉시 회상은 후속 복습 | Request 흐름 설명, 최소 수직 Slice와 Layer Test |
+| In-memory Ticket API | 선택 적용 | Completed — 생성·단건 조회와 대표 오류 계약 구현, 전체 33개 Test와 실제 Trace 완료 | 생성·조회 Diff, MVC Test와 실제 호출 |
+| Filter·Interceptor·Exception Handler | 조건부 후속 | Completed — 선택 기준 설명, 최소 구현·단위 Test와 전체 Context 등록 검증 완료 | 책임 비교와 Web 공통 처리 Test 4개 |
 | CORS Simple·Preflight | 조건부 후속 | Deferred — 일정 축소 순서에 따라 Week 2 필수 범위에서 제외 | Must 완료 후 Header 관찰 |
 
 `Completed`는 설명, 직접 재현과 Test·Trace 근거가 함께 생긴 경우에만 사용한다. Application이 실행된다는 사실만으로 HTTP·REST·Layer 학습을 완료 처리하지 않는다.
@@ -188,21 +200,21 @@ Spring MVC의 오류 응답은 RFC 9457 형식의 `ProblemDetail` 지원을 우�
 - [HTTP 요청·응답 메시지 Learning Note](./study-docs/learning-http-request-response-messages.md) — Message 구조·의미, Ticket 예시와 공식 참고자료
 - [Spring MVC 요청 흐름과 Annotation Learning Note](./study-docs/learning-spring-mvc-request-flow-and-annotations.md) — MVC 구성요소, Annotation, IoC·DI·DIP와 Layer 책임
 - [Spring Validation과 HTTP 오류 응답 Learning Note](./study-docs/learning-spring-validation-and-error-responses.md) — 입력 검증 경계, Exception Handler, `ProblemDetail`과 안전한 오류 계약
+- [Service 결과와 실패 표현 설계 Learning Note](./study-docs/learning-service-result-and-failure-design.md) — Exception·`Optional`·Result Type과 단건·목록 조회의 부재 의미 비교
 - [Spring Filter·Interceptor·Exception Handler Learning Note](./study-docs/learning-spring-filter-interceptor-and-exception-handler.md) — 요청 생명주기상의 위치, 책임 경계와 상황별 선택 기준
 - [8월 24일 HTTP·Spring MVC 학습 점검](./study-notes/2026-08-24-study-questions.md) — HTTP 기본 개념, Spring MVC Request Flow와 실행 경계 기록
 - [8월 25일 REST Resource·URI와 API 계약 학습 점검](./study-notes/2026-08-25-study-questions.md) — 개념 답변·예상 계약과 Spring Boot 최소 기동·Root Smoke Trace 완료
 - [8월 26일 Spring MVC 정상 수직 Slice 구현·검증 기록](./study-notes/2026-08-26-study-questions.md) — Repository·Service·Controller 구현, MockMvc와 Clean Test 근거
 - [8월 27일 Spring Validation·오류 응답 학습·구현 기록](./study-notes/2026-08-27-study-questions.md) — 입력 실패 경계, `ProblemDetail`, 29개 Test와 정상·실패 실제 HTTP Trace
 - [8월 28일 Exception 흐름 복습과 공통 요청 처리 경계 학습 기록](./study-notes/2026-08-28-study-questions.md) — 오류 경계 교정, 응답 객체 역할과 Filter·Interceptor 비교 시작
-- [8월 29일 Filter·Interceptor·Exception Handler 최소 복습 기록](./study-notes/2026-08-29-study-questions.md) — Callback 차이, 선택 Gate와 8월 30일 복구 일정
+- [8월 29일 공통 요청 처리와 예외 기반 조회 학습·구현 기록](./study-notes/2026-08-29-study-questions.md) — Callback·결과 설계, 최소 구현과 전체 33개 Clean Test 근거
+- [8월 30일 Week 2 WIL·Week 3 계획 작성 기록](./study-notes/2026-08-30-study-questions.md) — 날짜 기록 기준, WIL 초안과 월요일 복습 Gate
 
-### 실제 근거가 생긴 뒤 보완·추가
+### 후속 후보
 
 - Ticket HTTP Request Flow Lab Report
-- Week 2 WIL
+- Week 2 WIL 게시 링크 — `local/blog/wil`의 공개 전 초안을 검토·게시한 뒤 추가
 - 공개 전 Checklist
-
-실제 파일이 생기기 전에는 Placeholder Link를 만들지 않는다.
 
 ## Learning Evidence Gate
 
@@ -212,10 +224,10 @@ Spring MVC의 오류 응답은 RFC 9457 형식의 `ProblemDetail` 지원을 우�
 - [x] 구현 전에 생성·조회와 대표 실패의 예상 계약을 기록한다.
 - [x] 정상 `POST`·`GET`과 `400`·`404`·대표 `500`을 선택한 범위의 Test로 검증한다.
 - [x] MockMvc 결과와 실제 `curl` Trace가 각각 무엇을 검증하는지 구분한다.
-- [x] 기존 16개 Unit Test를 포함한 전체 29개 Clean Test를 재현한다.
+- [x] 기존 16개 Unit Test를 포함한 전체 33개 Clean Test를 재현한다.
 - [x] 적용·조건부 후속·비범위의 선택 이유를 기록한다.
 - [x] AI가 보조한 부분과 직접 작성·수정·검증한 범위를 구분한다.
-- [ ] 완료·부분 완료·미수행 범위와 다음 질문을 WIL에 남긴다.
+- [x] 완료·부분 완료·미수행 범위와 다음 질문을 WIL에 남긴다.
 - [ ] 공개 자료에 Secret, 개인정보, 내부 URL과 로컬 절대 경로가 없다.
 
 ## Week 1 연결
