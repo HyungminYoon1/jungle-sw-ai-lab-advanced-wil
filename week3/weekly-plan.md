@@ -1,0 +1,178 @@
+# Week 3 학습 계획 — PostgreSQL·Transaction·Lock·Index
+
+> 작성일: 2026-08-30
+> 상태: Baseline
+> 기간: 2026-08-31 ~ 2026-09-05
+> 핵심 질문: Database의 Transaction과 실행 계획이 Ticket의 일관성과 조회 성능에 어떤 영향을 주는가?
+> 운영 Baseline: Git 상태 확인·Diff Review·작은 Commit과 기존 33개 Test 회귀 확인
+
+## 계획 배경
+
+Week 2에는 In-memory Repository를 이용한 Ticket 생성·조회 API와 대표 오류 계약을 구현했다. Filter·Interceptor·Exception Handler의 선택 기준은 설명하고 Test로 확인했지만 Exception 처리 Class·Method 이름을 자료 없이 즉시 재구성하는 데 시간이 걸렸다. 따라서 월요일 첫 Block에서 해당 흐름을 짧게 복습한 뒤 Week 3의 Database 학습으로 전환한다.
+
+Database 공지는 정규화, RDB·NoSQL, Index, N+1, Connection Pool, Transaction·Isolation, Lock·Deadlock, Replication과 Query 최적화를 모두 제시한다. 한 주에 모든 항목을 구현하면 설정과 Framework 연결이 학습을 압도할 가능성이 높다. 이번 주에는 데이터 무결성, 동시성, 실행 계획이라는 하나의 흐름을 SQL로 깊게 확인하고, JPA·Testcontainers 적용은 그 결과를 설명할 수 있을 때만 최소 범위로 진행한다.
+
+## 목표
+
+| 구분 | 목표 | 완료 근거 |
+|---|---|---|
+| 복습 | Week 2 오류 흐름과 Filter·Interceptor 책임을 자료 없이 설명 | 세 흐름 설명과 대상 Test 범위 구분 |
+| 개념 | Schema·Transaction·Lock·Index의 목적과 Trade-off 설명 | Learning Note 또는 Study Note |
+| 실험 | 실패·동시 수정·Index 전후 실행 계획 재현 | SQL Trace, Transaction 결과와 `EXPLAIN ANALYZE` |
+| 선택 적용 | 기존 Repository Port 뒤에 PostgreSQL Adapter를 필요한 범위만 연결 | 작은 Diff와 실제 PostgreSQL Integration Test |
+| 공개 기록 | 완료·부분 완료·비범위와 다음 질문 정리 | 핵심 Lab Report와 Week 3 WIL |
+
+## Baseline
+
+| 항목 | 현재 상태 | 이번 주 확인 |
+|---|---|---|
+| 선행 이해 | HTTP 요청·Layer 흐름과 In-memory Repository 구현 | 월요일 Exception·공통 처리 복습 Gate |
+| Java·Build | Temurin JDK 25.0.4, Maven 3.9.16, Spring Boot 4.1.1 | 새 Terminal에서 Version과 기존 33개 Clean Test 확인 |
+| Source | `TicketRepository` Port와 `InMemoryTicketRepository`, 생성·단건 조회 API | Port·Domain 책임을 유지하고 Adapter만 필요한 범위로 추가 |
+| PostgreSQL 환경 | Version·설치·Container·접속 상태 `NOT_CHECKED` | 공식 지원 Version, 로컬 실행 방식과 접속 가능 여부 확인 |
+| 영속 의존성 | Driver·JPA·Migration·Testcontainers `NOT_IMPLEMENTED` | SQL 실험 뒤 필요한 Artifact를 공식 문서와 실제 Classpath로 확인 |
+| Blocker | Docker Desktop·PostgreSQL Service 상태 확인 전 | 설치·Container 준비가 반나절을 넘으면 SQL Client 기반 독립 환경으로 축소 |
+
+Credential은 존재 여부와 연결 성공만 확인하고 값을 Terminal·문서·Commit에 출력하지 않는다. PostgreSQL Version과 실행 환경은 기억으로 기록하지 않고 8월 31일 실제 명령 결과로 확정한다.
+
+## 시간 배분
+
+| 활동 | 계획 비율 | 종료 조건 |
+|---|---:|---|
+| 개념·공식 자료 | 25% | Schema·Transaction·Lock·Index의 역할을 흐름으로 설명 |
+| 최소 재현 실험 | 40% | 예상·조건·관찰·해석과 실패 결과가 있음 |
+| Helpdesk 선택 적용 | 20% | 기존 Port를 유지한 최소 Adapter와 Integration Test |
+| 설명·Review·WIL | 15% | Query Plan·한계와 다음 질문 기록 |
+
+월요일 Week 2 복습은 첫 학습 Block 하나로 제한한다. 복습이 길어지면 Database 시간을 줄이지 않고 남은 이름 암기를 후속 질문으로 이동한다.
+
+## 학습 범위
+
+### 포함
+
+- 정규화, Key·관계와 Constraint
+- ACID, Commit·Rollback과 Transaction 경계
+- PostgreSQL Isolation Level과 MVCC의 관찰 가능한 결과
+- Lost Update, Row Lock 대기와 간단한 Deadlock
+- 단일·복합 Index와 선택도
+- `EXPLAIN (ANALYZE, BUFFERS)`의 Plan Node·실제 Row·비용 해석
+- PostgreSQL Migration·Repository Adapter와 실제 Database Integration Test의 최소 적용
+
+### 포함하지 않음
+
+- Replication, Sharding, High Availability와 Backup 운영
+- RDB·NoSQL 두 Service 구현
+- Production 규모 부하·성능 수치 주장
+- Cache, Queue와 Search Engine
+- 모든 Domain의 JPA Mapping과 전체 CRUD
+- Week 4 인증·인가 선행 구현
+
+### 조건부 후속·선정 제외
+
+- JPA N+1은 실제 연관 Mapping과 SQL Log가 생긴 경우에만 재현한다.
+- Connection Pool은 실제 PostgreSQL 연결 뒤 대기·고갈을 측정할 질문과 도구가 준비된 경우만 수행한다.
+- 낙관적·비관적 Lock을 모두 구현하지 않는다. Lost Update 뒤 한 전략을 먼저 적용하고 시간이 남을 때 비교한다.
+- 반정규화는 정규화 Schema의 Query Plan에서 실제 비용이 확인되기 전에는 적용하지 않는다.
+
+## 학습 계획
+
+| 학습 주제 | 상태 | 질문 | 방법 | 증거 |
+|---|---|---|---|---|
+| Week 2 오류·공통 처리 | 조건부 후속 | 실패를 누가 발견·해석·HTTP로 변환하는가? | 자료 없는 흐름 설명과 대상 Test Review | 8월 31일 Study Note |
+| 정규화·Constraint | 핵심 학습 | 중복과 잘못된 상태를 Schema가 어떻게 막는가? | 비정규 Ticket 장부와 정규화 Schema 비교 | DDL·실패 SQL과 이상 현상 설명 |
+| Transaction·ACID | 핵심 학습 | 여러 변경 중 하나가 실패하면 어떤 상태가 남는가? | `BEGIN`·오류·`ROLLBACK`, 정상 `COMMIT` 비교 | 전후 Row와 Transaction Trace |
+| Isolation·Lock | 핵심 학습 | 두 Session이 같은 Ticket을 수정하면 무엇이 보이는가? | Lost Update, Lock 대기와 Deadlock 최소 재현 | Session A·B 실행 순서와 결과 |
+| Index·실행 계획 | 핵심 학습 | 같은 Query에서 Planner 선택이 왜 달라지는가? | 고정 Dataset, Index 전후 `EXPLAIN ANALYZE` | Query Plan과 비용·Row 해석 |
+| PostgreSQL Adapter | 선택 적용 | 기존 Domain·Port를 유지하면서 어떻게 영속화하는가? | Migration과 Adapter·Integration Test | 작은 Diff와 실제 PostgreSQL Test |
+| JPA N+1 | 조건부 후속 | 연관 조회에서 Query가 실제로 반복되는가? | 관계 Mapping이 생긴 경우 SQL Log 비교 | Query 수와 개선 전후 결과 |
+| Connection Pool | 조건부 후속 | 연결 대기가 실제 병목인가? | 선행 환경·측정 질문이 생길 때만 실험 | Pool Metric 또는 대기 결과 |
+
+## Lab 계획
+
+| 순서 | Lab | 실행 전 예상 | 완료 조건 | 상태 |
+|---:|---|---|---|---|
+| 0 | Week 2 복습·Source Baseline | 기존 33개 Test와 Layer 경계가 유지됨 | 세 오류 흐름 설명, Version·Clean Test 확인 | Planned |
+| 1 | 비정규 Ticket 장부와 정규화 | 중복과 갱신 이상이 분리 Schema·Constraint에서 줄어듦 | 동일 변경의 정규화 전후 결과와 Trade-off 설명 | Planned |
+| 2 | Transaction 원자성 | 중간 실패 후 `ROLLBACK`하면 일부 변경만 남지 않음 | 정상 Commit·의도적 실패 결과 비교 | Planned |
+| 3 | 두 Session 동시 수정 | 격리·Lock 전략에 따라 대기·충돌·최종 값이 달라짐 | 실행 순서와 Lost Update 또는 Lock 결과 재현 | Planned |
+| 4 | Index와 Query Plan | 데이터 분포와 조건에 따라 Seq Scan·Index Scan 선택이 달라짐 | 고정 Dataset에서 Index 전후 Plan 해석 | Planned |
+| 5 | PostgreSQL Repository Adapter | 기존 Port를 유지하면 Web·Service 계약 변경을 줄일 수 있음 | 실제 PostgreSQL 저장·조회 Integration Test 통과 | Planned |
+| 6 | N+1·Pool 조건부 Spike | 선행 Mapping·부하가 없으면 실험 의미가 부족함 | 선행 조건 충족 시에만 별도 예상·관찰 기록 | Deferred |
+
+## 일정
+
+| 날짜 | 학습·예상 | 실험·관찰 | 선택 적용·기록 | 일일 종료 조건 | 상태 |
+|---|---|---|---|---|---|
+| 8월 31일 월요일 | Week 2 오류 흐름·Filter·Interceptor 복습, Week 2 WIL 최종 검토 | 필요시 대상 Test, Java·Maven·PostgreSQL 실행 환경 확인 | Week 2 WIL 게시 후 Week 3 질문과 현재 이해 기록 | 복습 세 흐름 설명, Database 환경의 확인·미확인 상태 구분 | Planned |
+| 9월 1일 화요일 | 관계·Key·1~3NF와 Constraint 학습 | 비정규 Ticket 장부의 중복·삽입·갱신·삭제 이상과 정규화 전후 비교 | Ticket 중심 DDL 초안과 선택 근거 기록 | 잘못된 Row가 Application이 아니라 DB Constraint에서도 거부됨 | Planned |
+| 9월 2일 수요일 | ACID와 Transaction 경계, Commit·Rollback 예상 | 여러 Row 변경 중 의도적 실패와 Rollback 재현 | Migration 또는 Transaction Integration Test 범위 판단 | 일부 변경만 남지 않는 이유와 검증 결과 설명 | Planned |
+| 9월 3일 목요일 | Isolation·MVCC·Lock과 Deadlock 조건 학습 | 두 Session에서 Lost Update·Lock 대기, 간단한 Deadlock 순서 관찰 | 한 Lock 전략의 적용 전후 결과 기록 | 동시성 문제와 선택한 해결 방식의 비용 설명 | Planned |
+| 9월 4일 금요일 | B-Tree·선택도·복합 Index와 Planner 학습 | 고정 Dataset의 Index 전후 `EXPLAIN (ANALYZE, BUFFERS)` 비교 | Query Plan Lab Report 작성 | Seq Scan·Index Scan 선택 이유와 쓰기 비용 설명 | Planned |
+| 9월 5일 토요일 | 주간 핵심 질문 복습 | PostgreSQL Adapter·실제 DB Integration Test 또는 미완료 SQL 실험 보완 | Diff Review, Week 3 WIL과 다음 질문 정리 | 핵심 세 축의 근거 확보, 적용·보류 범위가 WIL에 기록됨 | Planned |
+
+토요일에는 핵심 SQL 실험이 끝난 경우에만 JPA N+1 또는 Connection Pool 중 하나를 추가 검토한다. 두 항목을 모두 시작하지 않는다.
+
+## 위험과 대응
+
+| 위험 | 조기 신호 | 대응 | 상태 |
+|---|---|---|---|
+| Week 2 복습이 월요일을 잠식 | 첫 Block 뒤에도 같은 이름 암기에 머묾 | 흐름 설명 결과와 남은 이름을 Note에 남기고 Database 시작 | Open |
+| Database 설정이 학습을 압도 | 설치·Docker·Dependency 해결이 반나절을 넘김 | 실제 PostgreSQL 한 방식만 선택하고 Adapter를 뒤로 이동 | Open |
+| 공지 주제를 모두 구현 | N+1·Pool·Replication까지 동시에 시작 | 핵심 세 축 외 항목을 조건부·비범위로 되돌림 | Open |
+| 성능 수치 과장 | Dataset·Cache·반복 조건 없이 시간만 비교 | Query Plan·Row·Buffers를 기록하고 수치는 해당 환경으로 제한 | Open |
+| 동시성 실험 비결정성 | Session 순서·격리 수준이 기록되지 않음 | A·B 단계, Transaction 경계와 최종 Row를 고정해 기록 | Open |
+| 기존 Architecture 훼손 | Controller의 SQL 접근, Repository Port 우회 | Adapter를 Port 뒤에 두고 Domain·Service 계약 Review | Open |
+| 기록 과다 | 문서 작성이 SQL 실험보다 길어짐 | 핵심 Learning Note 또는 Lab Report 한 개와 WIL만 유지 | Open |
+
+## 계획된 산출물
+
+| 산출물 | 목적 | 생성 조건 | 상태 |
+|---|---|---|---|
+| [주차 안내](./README.md) | Week 3 질문과 범위 Index | 주차 시작 | Ready |
+| [주간 학습 계획](./weekly-plan.md) | Baseline·일정·축소 기준 | 주차 시작 | Ready |
+| Database 핵심 Learning Note | Schema·Transaction·Lock·Index 개념 재사용 | 개념 설명 자료가 필요할 때 | Planned |
+| 8월 31일 Study Note | Week 2 복습과 Database 시작 상태 | 월요일 학습 진행 | Planned |
+| Transaction·Lock Lab Report | 두 Session과 실패 재현 | SQL 실행 결과 확보 | Planned |
+| Index·Query Plan Lab Report | Index 전후 실행 계획 비교 | 고정 Dataset 결과 확보 | Planned |
+| Week 3 WIL | 이해 변화와 다음 판단 | 토요일 실제 결과 | Planned |
+
+실제 파일이 생기기 전에는 Placeholder Link를 만들지 않는다. Learning Note와 Lab Report를 모두 강제로 만들지 않고, 한 문서가 질문·절차·관찰을 충분히 담으면 중복 문서는 생략한다.
+
+## Learning Evidence Gate
+
+- [ ] 월요일 Week 2 복습 세 흐름을 자료 없이 설명한다.
+- [ ] 핵심 질문에 답하는 Schema·Transaction·Query Plan 설명이 있다.
+- [ ] SQL 실행 전에 예상 결과와 실패 조건을 기록했다.
+- [ ] Constraint 실패와 Transaction Rollback을 직접 재현했다.
+- [ ] 두 Session의 동시 수정·Lock 결과를 재현했다.
+- [ ] 고정 Dataset의 Index 전후 Query Plan이 있다.
+- [ ] 기존 33개 Test 회귀가 유지된다.
+- [ ] AI 도움 없이 SQL 또는 작은 Adapter 변경과 관련 Test를 수행했다.
+- [ ] JPA·N+1·Pool·비범위 선택 이유가 기록됐다.
+- [ ] 완료·부분 완료·미수행 범위를 Week 3 WIL에 남겼다.
+- [ ] Secret, 개인정보, 내부 URL과 로컬 절대 경로가 공개 자료에 없다.
+
+## 계획 변경 기록
+
+Baseline 이후 핵심 SQL 실험, PostgreSQL 적용 범위나 일정이 바뀌면 이유와 검증 경계를 기록한다.
+
+| 날짜 | 변경 전 | 변경 후 | 이유 | 핵심 질문·다음 주 영향 | 근거 |
+|---|---|---|---|---|---|
+| 2026-08-30 | 8월 31일부터 곧바로 Week 3 Database 학습 시작 | 월요일 첫 Block에 Week 2 Exception·공통 처리 복습 Gate 추가 | Week 2 구현은 완료했지만 Exception 처리 이름과 흐름의 즉시 회상이 충분하지 않았음 | 한 Block 뒤 Database로 전환하여 Week 3 학습량은 유지 | [8월 30일 계획 기록](../week2/study-notes/2026-08-30-study-questions.md) |
+
+## 공식 학습 자료 Baseline
+
+- [PostgreSQL — SQL Language](https://www.postgresql.org/docs/current/sql.html)
+- [PostgreSQL — Constraints](https://www.postgresql.org/docs/current/ddl-constraints.html)
+- [PostgreSQL — Transactions](https://www.postgresql.org/docs/current/tutorial-transactions.html)
+- [PostgreSQL — Transaction Isolation](https://www.postgresql.org/docs/current/transaction-iso.html)
+- [PostgreSQL — Explicit Locking](https://www.postgresql.org/docs/current/explicit-locking.html)
+- [PostgreSQL — Indexes](https://www.postgresql.org/docs/current/indexes.html)
+- [PostgreSQL — Using EXPLAIN](https://www.postgresql.org/docs/current/using-explain.html)
+- [Spring Boot — Testcontainers](https://docs.spring.io/spring-boot/reference/testing/testcontainers.html)
+
+## 관련 기준
+
+- [심화과정 12주 학습 계획](../plan/advanced-track-12-week-plan.md)
+- [주차별 Roadmap](../plan/weekly-roadmap.md)
+- [학습 및 기술 콘텐츠 계획](../plan/learning-and-content-plan.md)

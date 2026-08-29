@@ -3,7 +3,7 @@
 > 상태: Active
 > 시작일: 2026-08-18
 > 전체 기간: 기술 심화 8주 + 취업 심화 4주
-> 현재 단계: Week 1·2 완료 — Week 3 PostgreSQL 학습 시작 전
+> 현재 단계: Week 1·2 완료·Week 3 계획 완료 — PostgreSQL 학습 시작 전
 
 이 저장소는 SW AI Lab 심화과정에서 선택한 기술을 학습하고, 이해가 바뀐 과정과 재현 가능한 근거를 주차별로 기록한다. 목표는 큰 제품을 기간 안에 완성하는 것이 아니라 AI/AX·Java Backend 직무에 필요한 개념을 직접 설명하고, 작은 실험과 Test로 검증하며, 필요한 범위만 서비스에 적용할 수 있는 역량을 만드는 것이다.
 
@@ -51,7 +51,7 @@
 |---:|---|---|---|
 | 1 | Java 객체지향·JUnit (Git 운영 Baseline) | Completed | [Week 1](./week1/README.md) |
 | 2 | HTTP·REST·Spring MVC·Layered Architecture | Completed | [Week 2](./week2/README.md) |
-| 3 | PostgreSQL·Transaction·Lock·Index | Not Started | 주차 시작 시 추가 |
+| 3 | PostgreSQL·Transaction·Lock·Index | Planned | [Week 3](./week3/README.md) |
 | 4 | 인증·인가·Session·Web Security | Not Started | 주차 시작 시 추가 |
 | 5 | Browser JavaScript·Frontend·E2E·품질 | Not Started | 주차 시작 시 추가 |
 | 6 | LLM Structured Output·평가·Guardrail | Not Started | 주차 시작 시 추가 |
@@ -93,6 +93,7 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
     ├── week1/       # Java 객체지향·JUnit 계획, WIL과 학습 근거
     │   └── study-docs/  # 개념별 Learning Note와 운영 Baseline 점검 기록
     ├── week2/       # HTTP·REST·Spring 요청 흐름 계획과 이후 학습 근거
+    ├── week3/       # PostgreSQL·Transaction·Lock·Index 계획과 이후 학습 근거
     └── weekN/       # 해당 주차에 실제 산출물이 생길 때 추가
 
 실습 Source는 별도 `ai-helpdesk-learning-lab` 저장소에서 관리한다. 이 WIL 저장소에는 주차별 계획, 실험 결과, Learning Note, WIL과 공개 가능한 근거를 남긴다.
