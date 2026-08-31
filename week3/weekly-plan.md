@@ -1,7 +1,7 @@
 # Week 3 학습 계획 — PostgreSQL·Transaction·Lock·Index
 
 > 작성일: 2026-08-30
-> 상태: Baseline
+> 상태: In Progress
 > 기간: 2026-08-31 ~ 2026-09-05
 > 핵심 질문: Database의 Transaction과 실행 계획이 Ticket의 일관성과 조회 성능에 어떤 영향을 주는가?
 > 운영 Baseline: Git 상태 확인·Diff Review·작은 Commit과 기존 33개 Test 회귀 확인
@@ -29,11 +29,11 @@ Database 공지는 정규화, RDB·NoSQL, Index, N+1, Connection Pool, Transacti
 | 선행 이해 | HTTP 요청·Layer 흐름과 In-memory Repository 구현 | 월요일 Exception·공통 처리 복습 Gate |
 | Java·Build | Temurin JDK 25.0.4, Maven 3.9.16, Spring Boot 4.1.1 | 새 Terminal에서 Version과 기존 33개 Clean Test 확인 |
 | Source | `TicketRepository` Port와 `InMemoryTicketRepository`, 생성·단건 조회 API | Port·Domain 책임을 유지하고 Adapter만 필요한 범위로 추가 |
-| PostgreSQL 환경 | Version·설치·Container·접속 상태 `NOT_CHECKED` | 공식 지원 Version, 로컬 실행 방식과 접속 가능 여부 확인 |
+| PostgreSQL 환경 | PostgreSQL 17.7·Windows Service·접속 대기·기본 Database 인증 접속 `VERIFIED` | 학습용 Database를 분리하고 연결 대상 확인 |
 | 영속 의존성 | Driver·JPA·Migration·Testcontainers `NOT_IMPLEMENTED` | SQL 실험 뒤 필요한 Artifact를 공식 문서와 실제 Classpath로 확인 |
-| Blocker | Docker Desktop·PostgreSQL Service 상태 확인 전 | 설치·Container 준비가 반나절을 넘으면 SQL Client 기반 독립 환경으로 축소 |
+| Blocker | `ai_helpdesk_learning_lab` Database가 아직 존재하지 않음 | 학습용 Database 생성 전 대상 이름과 현재 접속 Database를 확인 |
 
-Credential은 존재 여부와 연결 성공만 확인하고 값을 Terminal·문서·Commit에 출력하지 않는다. PostgreSQL Version과 실행 환경은 기억으로 기록하지 않고 8월 31일 실제 명령 결과로 확정한다.
+Credential은 존재 여부와 연결 성공만 확인하고 값을 Terminal·문서·Commit에 출력하지 않는다. PostgreSQL Version과 실행 환경은 8월 31일 실제 명령 결과로 확정했으며, 9월 1일 Catalog 조회로 학습용 Database가 아직 없음을 확인했다.
 
 ## 시간 배분
 
@@ -91,8 +91,8 @@ Credential은 존재 여부와 연결 성공만 확인하고 값을 Terminal·�
 
 | 순서 | Lab | 실행 전 예상 | 완료 조건 | 상태 |
 |---:|---|---|---|---|
-| 0 | Week 2 복습·Source Baseline | 기존 33개 Test와 Layer 경계가 유지됨 | 세 오류 흐름 설명, Version·Clean Test 확인 | Planned |
-| 1 | 비정규 Ticket 장부와 정규화 | 중복과 갱신 이상이 분리 Schema·Constraint에서 줄어듦 | 동일 변경의 정규화 전후 결과와 Trade-off 설명 | Planned |
+| 0 | Week 2 복습·Source Baseline | 기존 33개 Test와 Layer 경계가 유지됨 | 세 오류 흐름 설명, Version·Clean Test 확인 | Completed |
+| 1 | 비정규 Ticket 장부와 정규화 | 중복과 갱신 이상이 분리 Schema·Constraint에서 줄어듦 | 동일 변경의 정규화 전후 결과와 Trade-off 설명 | In Progress |
 | 2 | Transaction 원자성 | 중간 실패 후 `ROLLBACK`하면 일부 변경만 남지 않음 | 정상 Commit·의도적 실패 결과 비교 | Planned |
 | 3 | 두 Session 동시 수정 | 격리·Lock 전략에 따라 대기·충돌·최종 값이 달라짐 | 실행 순서와 Lost Update 또는 Lock 결과 재현 | Planned |
 | 4 | Index와 Query Plan | 데이터 분포와 조건에 따라 Seq Scan·Index Scan 선택이 달라짐 | 고정 Dataset에서 Index 전후 Plan 해석 | Planned |
@@ -103,8 +103,8 @@ Credential은 존재 여부와 연결 성공만 확인하고 값을 Terminal·�
 
 | 날짜 | 학습·예상 | 실험·관찰 | 선택 적용·기록 | 일일 종료 조건 | 상태 |
 |---|---|---|---|---|---|
-| 8월 31일 월요일 | Week 2 오류 흐름·Filter·Interceptor 복습, Week 2 WIL 최종 검토 | 필요시 대상 Test, Java·Maven·PostgreSQL 실행 환경 확인 | Week 2 WIL 게시 후 Week 3 질문과 현재 이해 기록 | 복습 세 흐름 설명, Database 환경의 확인·미확인 상태 구분 | Planned |
-| 9월 1일 화요일 | 관계·Key·1~3NF와 Constraint 학습 | 비정규 Ticket 장부의 중복·삽입·갱신·삭제 이상과 정규화 전후 비교 | Ticket 중심 DDL 초안과 선택 근거 기록 | 잘못된 Row가 Application이 아니라 DB Constraint에서도 거부됨 | Planned |
+| 8월 31일 월요일 | Week 2 오류 흐름·Filter·Interceptor 복습, Week 2 WIL 최종 검토 | Java·Maven·전체 33개 Clean Test, PostgreSQL 17.7 환경·인증 접속 확인 | Week 2 WIL 게시 확인과 Week 3 기준선·Constraint 선행 학습 기록 | 복습 세 흐름 설명, Database 환경의 확인·미확인 상태 구분 | Completed |
+| 9월 1일 화요일 | 관계·Key·1~3NF와 Constraint 학습 | 학습용 Database 존재 여부 확인 후 비정규 Ticket 장부와 정규화 전후 비교 | Ticket 중심 DDL 초안과 선택 근거 기록 | 잘못된 Row가 Application이 아니라 DB Constraint에서도 거부됨 | In Progress |
 | 9월 2일 수요일 | ACID와 Transaction 경계, Commit·Rollback 예상 | 여러 Row 변경 중 의도적 실패와 Rollback 재현 | Migration 또는 Transaction Integration Test 범위 판단 | 일부 변경만 남지 않는 이유와 검증 결과 설명 | Planned |
 | 9월 3일 목요일 | Isolation·MVCC·Lock과 Deadlock 조건 학습 | 두 Session에서 Lost Update·Lock 대기, 간단한 Deadlock 순서 관찰 | 한 Lock 전략의 적용 전후 결과 기록 | 동시성 문제와 선택한 해결 방식의 비용 설명 | Planned |
 | 9월 4일 금요일 | B-Tree·선택도·복합 Index와 Planner 학습 | 고정 Dataset의 Index 전후 `EXPLAIN (ANALYZE, BUFFERS)` 비교 | Query Plan Lab Report 작성 | Seq Scan·Index Scan 선택 이유와 쓰기 비용 설명 | Planned |
@@ -130,8 +130,9 @@ Credential은 존재 여부와 연결 성공만 확인하고 값을 Terminal·�
 |---|---|---|---|
 | [주차 안내](./README.md) | Week 3 질문과 범위 Index | 주차 시작 | Ready |
 | [주간 학습 계획](./weekly-plan.md) | Baseline·일정·축소 기준 | 주차 시작 | Ready |
-| Database 핵심 Learning Note | Schema·Transaction·Lock·Index 개념 재사용 | 개념 설명 자료가 필요할 때 | Planned |
-| 8월 31일 Study Note | Week 2 복습과 Database 시작 상태 | 월요일 학습 진행 | Planned |
+| [PostgreSQL SQL 기초 Learning Note](./study-docs/learning-postgresql-sql-basics.md) | SQL·Table·Constraint·CRUD·Transaction 기초 개념 재사용 | SQL 개념 설명 자료가 필요할 때 | Ready |
+| [8월 31일 Study Note](./study-notes/2026-08-31-study-questions.md) | Week 2 복습과 Database 시작 상태 | 월요일 학습 진행 | Completed |
+| [9월 1일 Study Note](./study-notes/2026-09-01-study-questions.md) | 학습용 Database 확인과 Constraint 실험 진행 | 화요일 학습 진행 | In Progress |
 | Transaction·Lock Lab Report | 두 Session과 실패 재현 | SQL 실행 결과 확보 | Planned |
 | Index·Query Plan Lab Report | Index 전후 실행 계획 비교 | 고정 Dataset 결과 확보 | Planned |
 | Week 3 WIL | 이해 변화와 다음 판단 | 토요일 실제 결과 | Planned |
@@ -140,13 +141,13 @@ Credential은 존재 여부와 연결 성공만 확인하고 값을 Terminal·�
 
 ## Learning Evidence Gate
 
-- [ ] 월요일 Week 2 복습 세 흐름을 자료 없이 설명한다.
+- [x] 월요일 Week 2 복습 세 흐름을 설명하고 교정 결과를 기록했다.
 - [ ] 핵심 질문에 답하는 Schema·Transaction·Query Plan 설명이 있다.
 - [ ] SQL 실행 전에 예상 결과와 실패 조건을 기록했다.
 - [ ] Constraint 실패와 Transaction Rollback을 직접 재현했다.
 - [ ] 두 Session의 동시 수정·Lock 결과를 재현했다.
 - [ ] 고정 Dataset의 Index 전후 Query Plan이 있다.
-- [ ] 기존 33개 Test 회귀가 유지된다.
+- [x] 기존 33개 Clean Test 회귀가 유지된다.
 - [ ] AI 도움 없이 SQL 또는 작은 Adapter 변경과 관련 Test를 수행했다.
 - [ ] JPA·N+1·Pool·비범위 선택 이유가 기록됐다.
 - [ ] 완료·부분 완료·미수행 범위를 Week 3 WIL에 남겼다.
@@ -159,6 +160,8 @@ Baseline 이후 핵심 SQL 실험, PostgreSQL 적용 범위나 일정이 바뀌�
 | 날짜 | 변경 전 | 변경 후 | 이유 | 핵심 질문·다음 주 영향 | 근거 |
 |---|---|---|---|---|---|
 | 2026-08-30 | 8월 31일부터 곧바로 Week 3 Database 학습 시작 | 월요일 첫 Block에 Week 2 Exception·공통 처리 복습 Gate 추가 | Week 2 구현은 완료했지만 Exception 처리 이름과 흐름의 즉시 회상이 충분하지 않았음 | 한 Block 뒤 Database로 전환하여 Week 3 학습량은 유지 | [8월 30일 계획 기록](../week2/study-notes/2026-08-30-study-questions.md) |
+| 2026-08-31 | PostgreSQL 환경 전체 `NOT_CHECKED` | PostgreSQL 17.7·Service·접속 대기·기본 Database 인증 접속 확인 | 기억이 아니라 실제 Version·Service·`pg_isready`·`psql` 결과로 기준선 확정 | 학습용 Database·Schema와 Application 연동은 별도 근거가 생길 때까지 미완료 유지 | [8월 31일 기록](./study-notes/2026-08-31-study-questions.md) |
+| 2026-09-01 | 학습용 Database 존재 여부 `NOT_CHECKED` | Catalog 조회 결과 `ai_helpdesk_learning_lab` 0건, `NOT_CREATED` | 연결 성공과 학습 대상 Database 존재 여부를 분리해 확인 | Database를 생성한 뒤 현재 연결 대상을 다시 확인 | [9월 1일 기록](./study-notes/2026-09-01-study-questions.md) |
 
 ## 공식 학습 자료 Baseline
 

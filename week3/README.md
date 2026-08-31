@@ -1,7 +1,7 @@
 # Week 3 — PostgreSQL·Transaction·Lock·Index
 
 > 기간: 2026-08-31 ~ 2026-09-05
-> 상태: Planned
+> 상태: In Progress
 > 핵심 질문: Database의 Transaction과 실행 계획이 Ticket의 일관성과 조회 성능에 어떤 영향을 주는가?
 > 공통 실습: AI Helpdesk Learning Lab의 Ticket 저장·조회와 독립 SQL Spike
 
@@ -81,17 +81,18 @@ Index와 Query Plan
 - Spring Boot: 4.1.1
 - Source: Controller·Application Service·Repository Port·In-memory Adapter·Ticket Domain
 - 자동 검증: 전체 Test 33개 통과 근거
-- Database: PostgreSQL Version·설치·Container·접속 상태 모두 `NOT_CHECKED`
+- Database: PostgreSQL 17.7, Windows Service 실행, `localhost:5432` 접속 대기와 기본 `postgres` Database 인증 접속 `VERIFIED`
+- 학습용 Database: `ai_helpdesk_learning_lab` 존재 여부 조회 결과 0건 — `NOT_CREATED`
 - 영속화: Driver·JPA·Migration·Testcontainers 모두 `NOT_IMPLEMENTED`
 
-기억이나 이전 PC 설정을 근거로 PostgreSQL이 준비됐다고 판단하지 않는다. 8월 31일에 실제 Version과 실행 방식을 확인하되 Credential 값은 출력하거나 문서에 기록하지 않는다.
+Version·Service·접속 상태와 인증 접속은 실제 명령으로 확인했다. Credential 값은 출력하거나 문서에 기록하지 않는다. 학습용 Database·Schema와 SQL 실험은 환경 확인과 별개로 아직 완료되지 않았다.
 
 ## 상태
 
 | 학습 주제 | 계획 상태 | 실제 상태 | 계획된 근거 |
 |---|---|---|---|
-| Week 2 오류·공통 처리 복습 | 조건부 후속 | Planned | 자료 없는 설명과 대상 Test |
-| Schema·정규화·Constraint | 핵심 학습 | Planned | 정규화 전후 Schema·이상 현상과 실패 SQL |
+| Week 2 오류·공통 처리 복습 | 조건부 후속 | Completed | 8월 31일 질문·교정 기록과 전체 33개 Clean Test |
+| Schema·정규화·Constraint | 핵심 학습 | In Progress | Constraint 개념 학습 완료, 실제 DDL·실패 SQL `NOT_RUN` |
 | Transaction·Isolation·Lock | 핵심 학습 | Planned | Commit·Rollback, 두 Session 동시성 Trace |
 | Index·실행 계획 | 핵심 학습 | Planned | 고정 Dataset의 Index 전후 Query Plan |
 | PostgreSQL Repository Adapter | 선택 적용 | Planned | 기존 Port를 유지한 작은 Diff와 Integration Test |
@@ -115,14 +116,19 @@ Index와 Query Plan
 
 - [PostgreSQL SQL 기초 문법](./study-docs/learning-postgresql-sql-basics.md) — SQL 기본 구성, Table·Constraint, CRUD·조회, Transaction과 `psql` Meta-command
 
+## 날짜별 학습 기록
+
+- [2026-08-31 — Week 2 복습·WIL 제출과 Week 3 시작 기준선](./study-notes/2026-08-31-study-questions.md)
+- [2026-09-01 — PostgreSQL 학습용 Database 시작 확인](./study-notes/2026-09-01-study-questions.md)
+
 ## Learning Evidence Gate
 
-- [ ] Week 2 복습 세 흐름을 자료 없이 설명한다.
+- [x] Week 2 복습 세 흐름을 설명하고 교정 결과를 Study Note에 기록한다.
 - [ ] 정규화 전후의 중복·갱신 이상과 Constraint 역할을 설명하고 재현한다.
 - [ ] Transaction 중간 실패에서 Commit·Rollback 결과를 직접 확인한다.
 - [ ] 두 Session에서 동시 수정과 Lock 대기 또는 충돌을 재현한다.
 - [ ] 같은 Query의 Index 전후 `EXPLAIN ANALYZE`를 비교한다.
-- [ ] 기존 33개 Test의 회귀를 유지한다.
+- [x] 기존 33개 Clean Test의 회귀를 유지한다.
 - [ ] PostgreSQL 적용·보류 범위와 이유를 기록한다.
 - [ ] 완료·부분 완료·미수행 범위를 Week 3 WIL에 남긴다.
 - [ ] 공개 자료에 Secret, 개인정보, 내부 URL과 로컬 절대 경로가 없다.
