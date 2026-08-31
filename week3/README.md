@@ -111,6 +111,10 @@ Index와 Query Plan
 
 실제 파일이 생기기 전에는 Placeholder Link를 만들지 않는다.
 
+## 학습 자료
+
+- [PostgreSQL SQL 기초 문법](./study-docs/learning-postgresql-sql-basics.md) — SQL 기본 구성, Table·Constraint, CRUD·조회, Transaction과 `psql` Meta-command
+
 ## Learning Evidence Gate
 
 - [ ] Week 2 복습 세 흐름을 자료 없이 설명한다.
