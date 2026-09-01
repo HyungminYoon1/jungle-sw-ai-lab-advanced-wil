@@ -82,17 +82,18 @@ Index와 Query Plan
 - Source: Controller·Application Service·Repository Port·In-memory Adapter·Ticket Domain
 - 자동 검증: 전체 Test 33개 통과 근거
 - Database: PostgreSQL 17.7, Windows Service 실행, `localhost:5432` 접속 대기와 기본 `postgres` Database 인증 접속 `VERIFIED`
-- 학습용 Database: `ai_helpdesk_learning_lab` 존재 여부 조회 결과 0건 — `NOT_CREATED`
+- 학습용 Database: `ai_helpdesk_learning_lab` 생성·인증 접속과 현재 연결 대상 `VERIFIED`
+- 학습 Schema: `public.tickets`, `public.ticket_status_history` DDL·Constraint·Foreign Key와 대표 성공·실패 SQL `USER_VERIFIED`
 - 영속화: Driver·JPA·Migration·Testcontainers 모두 `NOT_IMPLEMENTED`
 
-Version·Service·접속 상태와 인증 접속은 실제 명령으로 확인했다. Credential 값은 출력하거나 문서에 기록하지 않는다. 학습용 Database·Schema와 SQL 실험은 환경 확인과 별개로 아직 완료되지 않았다.
+Version·Service·접속 상태와 인증 접속은 실제 명령으로 확인했다. Credential 값은 출력하거나 문서에 기록하지 않는다. SQL Spike의 Table·Constraint는 사용자가 `psql`에서 재현했지만 Spring Application 영속화와 Transaction·동시성 실험은 아직 완료되지 않았다.
 
 ## 상태
 
 | 학습 주제 | 계획 상태 | 실제 상태 | 계획된 근거 |
 |---|---|---|---|
 | Week 2 오류·공통 처리 복습 | 조건부 후속 | Completed | 8월 31일 질문·교정 기록과 전체 33개 Clean Test |
-| Schema·정규화·Constraint | 핵심 학습 | In Progress | Constraint 개념 학습 완료, 실제 DDL·실패 SQL `NOT_RUN` |
+| Schema·정규화·Constraint | 핵심 학습 | Partially Completed | 1~3NF 설명, 정규화 Table·Constraint 실패 SQL 완료; 비정규 Table 실제 비교 `NOT_RUN` |
 | Transaction·Isolation·Lock | 핵심 학습 | Planned | Commit·Rollback, 두 Session 동시성 Trace |
 | Index·실행 계획 | 핵심 학습 | Planned | 고정 Dataset의 Index 전후 Query Plan |
 | PostgreSQL Repository Adapter | 선택 적용 | Planned | 기존 Port를 유지한 작은 Diff와 Integration Test |
@@ -119,12 +120,14 @@ Version·Service·접속 상태와 인증 접속은 실제 명령으로 확인�
 ## 날짜별 학습 기록
 
 - [2026-08-31 — Week 2 복습·WIL 제출과 Week 3 시작 기준선](./study-notes/2026-08-31-study-questions.md)
-- [2026-09-01 — PostgreSQL 학습용 Database 시작 확인](./study-notes/2026-09-01-study-questions.md)
+- [2026-09-01 — PostgreSQL Schema·Constraint와 정규화 실습](./study-notes/2026-09-01-study-questions.md)
 
 ## Learning Evidence Gate
 
 - [x] Week 2 복습 세 흐름을 설명하고 교정 결과를 Study Note에 기록한다.
-- [ ] 정규화 전후의 중복·갱신 이상과 Constraint 역할을 설명하고 재현한다.
+- [x] 비정규 구조의 중복·갱신 이상과 1~3NF 분리 이유를 설명한다.
+- [x] `tickets`·`ticket_status_history` DDL과 Constraint·Foreign Key 실패를 재현한다.
+- [ ] 비정규 Table을 실제로 만들고 같은 변경의 정규화 전후 결과를 비교한다.
 - [ ] Transaction 중간 실패에서 Commit·Rollback 결과를 직접 확인한다.
 - [ ] 두 Session에서 동시 수정과 Lock 대기 또는 충돌을 재현한다.
 - [ ] 같은 Query의 Index 전후 `EXPLAIN ANALYZE`를 비교한다.
