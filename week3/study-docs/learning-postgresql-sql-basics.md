@@ -129,6 +129,7 @@ CREATE TABLE tickets (
     title TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'OPEN',
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT tickets_title_not_blank
         CHECK (btrim(title) <> ''),
@@ -175,6 +176,33 @@ Database를 PostgreSQL에서 MariaDB 같은 다른 제품으로 바꾸려면 보
 | `CONSTRAINT 이름` | Constraint에 명시적인 이름을 부여 |
 
 `DEFAULT`는 입력을 거부하는 Constraint가 아니다. 값을 생략했을 때 채울 값을 정의할 뿐이다.
+
+`updated_at`의 `DEFAULT CURRENT_TIMESTAMP`도 Row가 생성될 때의 기본값만 제공한다. 다른 Column을 `UPDATE`한다고 `updated_at`이 자동으로 바뀌지는 않는다. Application이나 실행 SQL이 `updated_at = CURRENT_TIMESTAMP`를 명시하거나 별도의 Database Trigger 정책이 있어야 한다.
+
+### Identity와 Sequence 번호의 공백
+
+PostgreSQL의 Identity Column은 내부 Sequence에서 값을 발급받는다. `INSERT`에서 Identity Column을 생략하면 새 값이 먼저 발급된 뒤 다른 Constraint가 검사될 수 있다.
+
+```text
+이력 ID 1 발급
+→ Foreign Key 위반으로 INSERT 실패
+→ Row는 저장되지 않지만 Sequence 값 1은 반환되지 않음
+
+다음 INSERT
+→ 이력 ID 2 발급
+```
+
+Sequence는 여러 Session에서 서로 다른 값을 안전하게 발급하기 위한 도구이며, 저장된 Row 수나 빈틈없는 일련번호를 보장하지 않는다. 따라서 Primary Key의 숫자 사이에 공백이 있어도 데이터 유실로 해석하면 안 된다.
+
+서로 다른 Table의 Identity도 각각 독립적이다.
+
+```text
+ticket_status_history.id = 2
+→ 이력 Row 자체의 식별자
+
+ticket_status_history.ticket_id = 1
+→ 이력이 참조하는 tickets.id
+```
 
 ### Table 변경과 제거
 
@@ -479,21 +507,48 @@ Ticket의 상태 변경 이력을 별도 Table로 분리하면 한 Ticket과 여
 ```sql
 CREATE TABLE ticket_status_history (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    ticket_id BIGINT NOT NULL REFERENCES tickets(id),
+    ticket_id BIGINT NOT NULL,
     from_status TEXT,
     to_status TEXT NOT NULL,
-    changed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    changed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_ticket_status_history_ticket
+        FOREIGN KEY (ticket_id)
+        REFERENCES tickets(id),
+
+    CONSTRAINT ticket_status_history_from_status_allowed
+        CHECK (
+            from_status IS NULL
+            OR from_status IN (
+                'OPEN',
+                'IN_PROGRESS',
+                'RESOLVED'
+            )
+        ),
+
+    CONSTRAINT ticket_status_history_to_status_allowed
+        CHECK (to_status IN (
+            'OPEN',
+            'IN_PROGRESS',
+            'RESOLVED'
+        ))
 );
 ```
 
 `FOREIGN KEY` 역할을 하는 `REFERENCES tickets(id)`는 존재하지 않는 Ticket ID의 이력 Row가 저장되지 않도록 참조 무결성을 보호한다.
 
+`from_status`가 `NULL`이면 이전 상태가 없는 생성 사건을 `NULL → OPEN`으로 표현할 수 있다. 일반 상태 변경은 `OPEN → IN_PROGRESS`처럼 두 상태를 모두 기록한다. 위 Row 단위 `CHECK`는 `NULL`이 최초 이력에서만 사용됐는지까지는 확인하지 못하므로, 생성 이력의 횟수와 상태 전이 순서는 Domain·Application 규칙 또는 별도 Database 정책이 보호해야 한다.
+
+`tickets.status`는 현재 상태이고 `ticket_status_history`는 변화 이력이다. 두 값의 일관성을 유지하려면 현재 상태 수정과 이력 추가를 같은 Transaction으로 처리해야 한다.
+
 두 Table의 관련 Row를 함께 조회할 때 `JOIN`을 사용한다.
 
 ```sql
 SELECT
-    t.id,
+    t.id AS ticket_id,
     t.title,
+    t.status AS current_status,
+    h.id AS history_id,
     h.from_status,
     h.to_status,
     h.changed_at
@@ -501,7 +556,7 @@ FROM tickets AS t
 INNER JOIN ticket_status_history AS h
     ON h.ticket_id = t.id
 WHERE t.id = 7
-ORDER BY h.changed_at;
+ORDER BY h.changed_at, h.id;
 ```
 
 - `AS t`, `AS h`: 긴 Table 이름에 Alias 부여
@@ -518,7 +573,8 @@ Ticket 상태와 상태 변경 이력을 항상 함께 바꿔야 한다고 가�
 BEGIN;
 
 UPDATE tickets
-SET status = 'IN_PROGRESS'
+SET status = 'IN_PROGRESS',
+    updated_at = CURRENT_TIMESTAMP
 WHERE id = 7;
 
 INSERT INTO ticket_status_history (
@@ -696,6 +752,8 @@ VALUES (
 
 - [PostgreSQL 17 — Lexical Structure](https://www.postgresql.org/docs/17/sql-syntax-lexical.html)
 - [PostgreSQL 17 — Constraints](https://www.postgresql.org/docs/17/ddl-constraints.html)
+- [PostgreSQL 17 — Identity Columns](https://www.postgresql.org/docs/17/ddl-identity-columns.html)
+- [PostgreSQL 17 — Sequence Manipulation Functions](https://www.postgresql.org/docs/17/functions-sequence.html)
 - [PostgreSQL 17 — Data Manipulation](https://www.postgresql.org/docs/17/dml.html)
 - [PostgreSQL 17 — Inserting Data](https://www.postgresql.org/docs/17/dml-insert.html)
 - [PostgreSQL 17 — Updating Data](https://www.postgresql.org/docs/17/dml-update.html)
