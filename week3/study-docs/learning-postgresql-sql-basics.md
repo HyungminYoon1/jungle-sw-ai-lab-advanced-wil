@@ -605,6 +605,8 @@ PostgreSQL에서는 `BEGIN`을 직접 쓰지 않은 개별 SQL 문장도 각각 
 
 Transaction을 사용한다는 사실만으로 모든 업무 규칙, 동시성 문제나 중복 요청이 자동으로 해결되는 것은 아니다. 원자성, Isolation과 Lock은 뒤의 실험에서 각각 구분한다.
 
+암묵적 Transaction, `psql`의 자동 Commit, 실패한 Transaction 상태와 Atomicity의 구체적인 경계는 [PostgreSQL Transaction과 Atomicity](./learning-postgresql-transactions-and-atomicity.md)에서 이어서 다룬다.
+
 ## `psql`과 SQL의 차이
 
 `psql`은 PostgreSQL Server에 연결하여 SQL을 입력하고 결과를 확인하는 Terminal Client다. SQL은 Server가 해석하지만, Backslash(`\`)로 시작하는 Meta-command는 `psql` Client가 처리한다.
