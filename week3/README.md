@@ -81,13 +81,14 @@ Index와 Query Plan
 - Spring Boot: 4.1.1
 - Source: Controller·Application Service·Repository Port·In-memory Adapter·Ticket Domain
 - 자동 검증: 전체 Test 33개 통과 근거
-- Database: PostgreSQL 17.7, Windows Service 실행, `localhost:5432` 접속 대기와 기본 `postgres` Database 인증 접속 `VERIFIED`
+- Database: PostgreSQL Server 17.11·`psql` Client 17.7, Windows Service와 `ai_helpdesk_learning_lab` 인증 접속 `VERIFIED`
 - 학습용 Database: `ai_helpdesk_learning_lab` 생성·인증 접속과 현재 연결 대상 `VERIFIED`
 - 학습 Schema: `public.tickets`, `public.ticket_status_history` DDL·Constraint·Foreign Key와 대표 성공·실패 SQL `USER_VERIFIED`
 - Transaction SQL Spike: Ticket·최초 이력 정상 Commit과 의도적 이력 실패 뒤 전체 Rollback `USER_VERIFIED`
+- 동시성 SQL Spike: 두 Session의 MVCC 가시성·Lock 대기·Lost Update·낙관적 Lock·Deadlock과 동일 Lock 순서 `USER_VERIFIED`
 - 영속화: Driver·JPA·Migration·Testcontainers 모두 `NOT_IMPLEMENTED`
 
-Version·Service·접속 상태와 인증 접속은 실제 명령으로 확인했다. Credential 값은 출력하거나 문서에 기록하지 않는다. SQL Spike의 Table·Constraint와 Transaction 원자성은 사용자가 `psql`에서 재현했지만 Spring Application 영속화와 두 Session 동시성 실험은 아직 완료되지 않았다.
+Version·Service·접속 상태와 인증 접속은 실제 명령으로 확인했다. Credential 값은 출력하거나 문서에 기록하지 않는다. SQL Spike의 Table·Constraint, Transaction 원자성과 두 Session 동시성은 사용자가 `psql`에서 재현했다. Spring Application 영속화는 아직 구현하거나 검증하지 않았다.
 
 ## 상태
 
@@ -95,7 +96,7 @@ Version·Service·접속 상태와 인증 접속은 실제 명령으로 확인�
 |---|---|---|---|
 | Week 2 오류·공통 처리 복습 | 조건부 후속 | Completed | 8월 31일 질문·교정 기록과 전체 33개 Clean Test |
 | Schema·정규화·Constraint | 핵심 학습 | Partially Completed | 1~3NF 설명, 정규화 Table·Constraint 실패 SQL 완료; 비정규 Table 실제 비교 `NOT_RUN` |
-| Transaction·Isolation·Lock | 핵심 학습 | Partially Completed | 정상 Commit·의도적 실패 Rollback 완료; 두 Session Isolation·Lock `NOT_RUN` |
+| Transaction·Isolation·Lock | 핵심 학습 | Completed | 정상 Commit·실패 Rollback, 두 Session MVCC·Lock·Lost Update·Deadlock 재현 |
 | Index·실행 계획 | 핵심 학습 | Planned | 고정 Dataset의 Index 전후 Query Plan |
 | PostgreSQL Repository Adapter | 선택 적용 | Planned | 기존 Port를 유지한 작은 Diff와 Integration Test |
 | JPA N+1 | 조건부 후속 | Deferred | 실제 관계 Mapping과 Query 수가 생길 때 재검토 |
@@ -109,7 +110,7 @@ Version·Service·접속 상태와 인증 접속은 실제 명령으로 확인�
 |---|---|
 | `study-docs/` | 날짜와 개인 진도에서 독립적인 Database 개념 자료 |
 | `study-notes/` | 날짜별 질문·답변, 예상·관찰과 진행 상태 |
-| Lab Report | 재현 가능한 SQL, 환경·결과와 Query Plan |
+| `lab-reports/` | 재현 가능한 SQL, 환경·결과와 Query Plan |
 | `weekly-plan.md` | 주간 범위, 일정·축소 기준과 변경 기록 |
 
 실제 파일이 생기기 전에는 Placeholder Link를 만들지 않는다.
@@ -125,6 +126,11 @@ Version·Service·접속 상태와 인증 접속은 실제 명령으로 확인�
 - [2026-08-31 — Week 2 복습·WIL 제출과 Week 3 시작 기준선](./study-notes/2026-08-31-study-questions.md)
 - [2026-09-01 — PostgreSQL Schema·Constraint와 정규화 실습](./study-notes/2026-09-01-study-questions.md)
 - [2026-09-02 — PostgreSQL Transaction과 Atomicity 실습](./study-notes/2026-09-02-study-questions.md)
+- [2026-09-03 — PostgreSQL Isolation·MVCC·Lock 실습](./study-notes/2026-09-03-study-questions.md)
+
+## Lab Report
+
+- [PostgreSQL 두 Session의 가시성·Lock·동시 갱신](./lab-reports/2026-09-03-postgresql-isolation-and-lock-lab.md) — MVCC, Lock 대기, Lost Update, 낙관적 Lock과 Deadlock 재현
 
 ## Learning Evidence Gate
 
@@ -133,7 +139,7 @@ Version·Service·접속 상태와 인증 접속은 실제 명령으로 확인�
 - [x] `tickets`·`ticket_status_history` DDL과 Constraint·Foreign Key 실패를 재현한다.
 - [ ] 비정규 Table을 실제로 만들고 같은 변경의 정규화 전후 결과를 비교한다.
 - [x] Transaction 중간 실패에서 Commit·Rollback 결과를 직접 확인한다.
-- [ ] 두 Session에서 동시 수정과 Lock 대기 또는 충돌을 재현한다.
+- [x] 두 Session에서 동시 수정과 Lock 대기 또는 충돌을 재현한다.
 - [ ] 같은 Query의 Index 전후 `EXPLAIN ANALYZE`를 비교한다.
 - [x] 기존 33개 Clean Test의 회귀를 유지한다.
 - [ ] PostgreSQL 적용·보류 범위와 이유를 기록한다.
