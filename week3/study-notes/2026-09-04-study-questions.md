@@ -161,7 +161,7 @@ Index는 Table과 별도의 저장 공간을 차지한다. Ticket을 `INSERT`하
 
 ## 다음 학습
 
-1. 9월 5일에 Schema·Transaction·Lock·Index의 핵심 질문을 짧게 복습한다.
+1. 9월 6일에 Schema·Transaction·Lock·Index의 핵심 질문을 짧게 복습한다.
 2. PostgreSQL Repository Adapter와 실제 Database Integration Test를 선택 적용할지 결정한다.
 3. Adapter를 진행한다면 기존 `TicketRepository` Port와 Domain 규칙을 유지한다.
 4. JPA N+1과 Connection Pool은 실제 관계 Mapping·연결 측정 조건이 생기지 않으면 `Deferred`로 유지한다.

@@ -1,6 +1,6 @@
 # Week 3 — PostgreSQL·Transaction·Lock·Index
 
-> 기간: 2026-08-31 ~ 2026-09-05
+> 기간: 2026-08-31 ~ 2026-09-06
 > 상태: In Progress
 > 핵심 질문: Database의 Transaction과 실행 계획이 Ticket의 일관성과 조회 성능에 어떤 영향을 주는가?
 > 공통 실습: AI Helpdesk Learning Lab의 Ticket 저장·조회와 독립 SQL Spike

@@ -2,7 +2,7 @@
 
 > 작성일: 2026-08-30
 > 상태: In Progress
-> 기간: 2026-08-31 ~ 2026-09-05
+> 기간: 2026-08-31 ~ 2026-09-06
 > 핵심 질문: Database의 Transaction과 실행 계획이 Ticket의 일관성과 조회 성능에 어떤 영향을 주는가?
 > 운영 Baseline: Git 상태 확인·Diff Review·작은 Commit과 기존 33개 Test 회귀 확인
 
@@ -110,9 +110,10 @@ Credential은 존재 여부와 연결 성공만 확인하고 값을 Terminal·�
 | 9월 2일 수요일 | ACID와 Transaction 경계, Commit·Rollback 예상 | 여러 Row 변경 중 의도적 실패와 Rollback 재현 | SQL 원자성 근거를 먼저 확정하고 Spring Transaction Integration Test는 선택 적용으로 유지 | 일부 변경만 남지 않는 이유와 검증 결과 설명 | Completed |
 | 9월 3일 목요일 | Isolation·MVCC·Lock과 Deadlock 조건 학습 | 두 Session에서 Lost Update·Lock 대기·낙관적 충돌과 Deadlock 재현 | Study Note와 Isolation·Lock Lab Report 작성 | 동시성 문제와 각 해결 방식의 비용 설명 | Completed |
 | 9월 4일 금요일 | B-Tree·선택도·복합 Index와 Planner 학습 | 고정 Dataset의 Index 전후 `EXPLAIN (ANALYZE, BUFFERS)` 비교 | [Study Note](./study-notes/2026-09-04-study-questions.md)와 [Query Plan Lab Report](./lab-reports/2026-09-04-postgresql-index-and-query-plan-lab.md) 작성 | Seq Scan·Index Scan 선택 이유와 쓰기 비용 설명 | Completed |
-| 9월 5일 토요일 | 주간 핵심 질문 복습 | PostgreSQL Adapter·실제 DB Integration Test 또는 미완료 SQL 실험 보완 | Diff Review, Week 3 WIL과 다음 질문 정리 | 핵심 세 축의 근거 확보, 적용·보류 범위가 WIL에 기록됨 | Planned |
+| 9월 5일 토요일 | 개인 일정으로 학습 미실시 | 실행 없음 | 남은 학습·적용·기록 과업을 9월 6일로 이월 | 기존 완료 근거를 유지하고 별도 일일 학습 기록을 만들지 않음 | Deferred — 9월 6일 이월 |
+| 9월 6일 일요일 | 주간 핵심 질문 복습 | PostgreSQL Adapter·실제 DB Integration Test 또는 미완료 SQL 실험 보완 | Diff Review, Week 3 WIL과 다음 질문 정리 | 핵심 세 축의 근거 확보, 적용·보류 범위가 WIL에 기록됨 | Planned |
 
-토요일에는 핵심 SQL 실험이 끝난 경우에만 JPA N+1 또는 Connection Pool 중 하나를 추가 검토한다. 두 항목을 모두 시작하지 않는다.
+9월 6일에는 핵심 SQL 실험이 끝난 경우에만 JPA N+1 또는 Connection Pool 중 하나를 추가 검토한다. 두 항목을 모두 시작하지 않는다.
 
 ## 위험과 대응
 
@@ -143,7 +144,7 @@ Credential은 존재 여부와 연결 성공만 확인하고 값을 Terminal·�
 | [9월 4일 Study Note](./study-notes/2026-09-04-study-questions.md) | Index·Planner 개념 교정과 일일 완료 판단 | 금요일 학습 진행 | Completed |
 | [Isolation·Lock Lab Report](./lab-reports/2026-09-03-postgresql-isolation-and-lock-lab.md) | 두 Session 동시성·대기와 실패 재현 | SQL 실행 결과 확보 | Completed |
 | [Index·Query Plan Lab Report](./lab-reports/2026-09-04-postgresql-index-and-query-plan-lab.md) | Index 전후 실행 계획 비교 | 고정 Dataset 결과 확보 | Completed |
-| Week 3 WIL | 이해 변화와 다음 판단 | 토요일 실제 결과 | Planned |
+| Week 3 WIL | 이해 변화와 다음 판단 | 9월 6일 실제 결과 | Planned |
 
 실제 파일이 생기기 전에는 Placeholder Link를 만들지 않는다. Learning Note와 Lab Report를 모두 강제로 만들지 않고, 한 문서가 질문·절차·관찰을 충분히 담으면 중복 문서는 생략한다.
 
@@ -173,6 +174,7 @@ Baseline 이후 핵심 SQL 실험, PostgreSQL 적용 범위나 일정이 바뀌�
 | 2026-09-01 | 학습용 Database 존재 여부 `NOT_CHECKED` | 0건 확인 후 `ai_helpdesk_learning_lab` 생성·접속, 두 Table과 Constraint SQL 재현 | 연결 성공·Database 존재·Schema와 실패 결과를 각각 구분해 확인 | 정규화 개념과 Constraint는 확보했으며 비정규 Table 실제 비교·Transaction은 후속 범위 | [9월 1일 기록](./study-notes/2026-09-01-study-questions.md) |
 | 2026-09-02 | Transaction·Lock 실행 근거를 하나의 별도 Lab Report로 기록 | Transaction 개념은 Learning Note, 실제 Commit·Rollback Trace는 Study Note에 기록하고 후속 Lab Report는 Isolation·Lock에 집중 | 같은 SQL 결과를 여러 문서에 중복하지 않고 개념·날짜별 실행·두 Session Trace의 역할을 분리 | Transaction 원자성은 완료하고 9월 3일 두 Session Isolation·Lock으로 진행 | [9월 2일 기록](./study-notes/2026-09-02-study-questions.md) |
 | 2026-09-03 | Lost Update를 두 Session의 동일 절대값 저장 결과만으로 비교 | 같은 계산 방식의 순차 대조와 동시 stale-read를 분리하고, 원자적 증가·Version 충돌·역순과 동일 순서 Lock까지 재현 | 고정값 저장만으로는 순차 실행과 동시 갱신 유실을 구분할 수 없다는 한계를 학습 중 발견 | Isolation·Lock 범위를 완료하고 Index·실행 계획 학습으로 전환 | [9월 3일 기록](./study-notes/2026-09-03-study-questions.md), [Lab Report](./lab-reports/2026-09-03-postgresql-isolation-and-lock-lab.md) |
+| 2026-09-05 | 주간 복습·선택 적용·Week 3 기록을 토요일에 수행 | 해당 과업 전체를 9월 6일로 이월 | 개인 일정으로 학습 시간을 확보하지 못했으며 미실시 내용을 완료로 기록하지 않음 | Week 3 종료일을 하루 연장하되 Week 4 범위는 선행하지 않음 | 주간 일정 변경 |
 
 ## 공식 학습 자료 Baseline
 
