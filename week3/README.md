@@ -120,6 +120,7 @@ Version·Service·접속 상태와 인증 접속은 실제 명령으로 확인�
 - [PostgreSQL SQL 기초 문법](./study-docs/learning-postgresql-sql-basics.md) — SQL 기본 구성, Table·Constraint, CRUD·조회, Transaction과 `psql` Meta-command
 - [PostgreSQL Transaction과 Atomicity](./study-docs/learning-postgresql-transactions-and-atomicity.md) — 암묵적 Transaction, 자동 Commit, 실패 상태, Atomicity·Sequence와 Rollback 경계
 - [PostgreSQL Isolation·MVCC·Lock](./study-docs/learning-postgresql-isolation-mvcc-and-locks.md) — 동시 Transaction의 가시성, Snapshot, Row Lock·Lost Update·Deadlock과 Lock 전략 비교
+- [PostgreSQL Index와 EXPLAIN ANALYZE](./study-docs/learning-postgresql-indexes-and-explain-analyze.md) — B-Tree, 선택 비율, Planner 통계와 Index 전후 실행 계획 해석
 
 ## 날짜별 학습 기록
 

@@ -134,6 +134,7 @@ Credential은 존재 여부와 연결 성공만 확인하고 값을 Terminal·�
 | [PostgreSQL SQL 기초 Learning Note](./study-docs/learning-postgresql-sql-basics.md) | SQL·Table·Constraint·CRUD·Transaction 기초 개념 재사용 | SQL 개념 설명 자료가 필요할 때 | Ready |
 | [PostgreSQL Transaction과 Atomicity Learning Note](./study-docs/learning-postgresql-transactions-and-atomicity.md) | 자동 Commit·실패 상태·Atomicity와 Rollback 경계 재사용 | Transaction 개념을 SQL 기초에서 분리해 설명할 때 | Ready |
 | [PostgreSQL Isolation·MVCC·Lock Learning Note](./study-docs/learning-postgresql-isolation-mvcc-and-locks.md) | 동시 Transaction의 가시성·Snapshot·Lock 충돌과 해결 비용 재사용 | Isolation·MVCC·Lock 개념을 Transaction Atomicity에서 분리해 설명할 때 | Ready |
+| [PostgreSQL Index와 EXPLAIN ANALYZE Learning Note](./study-docs/learning-postgresql-indexes-and-explain-analyze.md) | B-Tree·선택 비율·Planner 통계와 실행 계획 해석 재사용 | Index 실험 전 예상과 관찰 기준이 필요할 때 | Ready |
 | [8월 31일 Study Note](./study-notes/2026-08-31-study-questions.md) | Week 2 복습과 Database 시작 상태 | 월요일 학습 진행 | Completed |
 | [9월 1일 Study Note](./study-notes/2026-09-01-study-questions.md) | 학습용 Database, Schema·Constraint와 정규화 실험 기록 | 화요일 학습 진행 | Completed |
 | [9월 2일 Study Note](./study-notes/2026-09-02-study-questions.md) | 정상 Commit과 의도적 실패·Rollback 실행 기록 | 수요일 학습 진행 | Completed |
