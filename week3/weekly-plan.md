@@ -31,6 +31,7 @@ Database 공지는 정규화, RDB·NoSQL, Index, N+1, Connection Pool, Transacti
 | Source | `TicketRepository` Port와 `InMemoryTicketRepository`, 생성·단건 조회 API | Port·Domain 책임을 유지하고 Adapter만 필요한 범위로 추가 |
 | PostgreSQL 환경 | PostgreSQL Server 17.11·`psql` Client 17.7, Service와 `ai_helpdesk_learning_lab` 인증 접속 `VERIFIED` | SQL Spike 결과를 날짜별 Note에 유지 |
 | Transaction·동시성 SQL | 정상 Commit·실패 Rollback과 두 Session MVCC·Lock·Lost Update·Deadlock `USER_VERIFIED` | Index·실행 계획 학습으로 전환 |
+| Index·실행 계획 SQL | 고정 100,000건 Dataset의 단일·복합 Index, 정렬·`LIMIT`과 Buffer 비교 `USER_VERIFIED` | Query Plan Lab Report로 결과·한계 유지 |
 | 영속 의존성 | Driver·JPA·Migration·Testcontainers `NOT_IMPLEMENTED` | SQL 실험 뒤 필요한 Artifact를 공식 문서와 실제 Classpath로 확인 |
 | Blocker | 핵심 SQL Spike의 즉시 Blocker 없음 | Application 연동은 Driver·Migration·Test 환경 선택 전 시작하지 않음 |
 
@@ -96,7 +97,7 @@ Credential은 존재 여부와 연결 성공만 확인하고 값을 Terminal·�
 | 1 | 비정규 Ticket 장부와 정규화 | 중복과 갱신 이상이 분리 Schema·Constraint에서 줄어듦 | 동일 변경의 정규화 전후 결과와 Trade-off 설명 | Partially Completed |
 | 2 | Transaction 원자성 | 중간 실패 후 `ROLLBACK`하면 일부 변경만 남지 않음 | 정상 Commit·의도적 실패 결과 비교 | Completed |
 | 3 | 두 Session 동시 수정 | 격리·Lock 전략에 따라 대기·충돌·최종 값이 달라짐 | 실행 순서와 Lost Update 또는 Lock 결과 재현 | Completed |
-| 4 | Index와 Query Plan | 데이터 분포와 조건에 따라 Seq Scan·Index Scan 선택이 달라짐 | 고정 Dataset에서 Index 전후 Plan 해석 | Planned |
+| 4 | Index와 Query Plan | 데이터 분포와 조건에 따라 Seq Scan·Index Scan 선택이 달라짐 | [고정 Dataset에서 Index 전후 Plan 해석](./lab-reports/2026-09-04-postgresql-index-and-query-plan-lab.md) | Completed |
 | 5 | PostgreSQL Repository Adapter | 기존 Port를 유지하면 Web·Service 계약 변경을 줄일 수 있음 | 실제 PostgreSQL 저장·조회 Integration Test 통과 | Planned |
 | 6 | N+1·Pool 조건부 Spike | 선행 Mapping·부하가 없으면 실험 의미가 부족함 | 선행 조건 충족 시에만 별도 예상·관찰 기록 | Deferred |
 
@@ -108,7 +109,7 @@ Credential은 존재 여부와 연결 성공만 확인하고 값을 Terminal·�
 | 9월 1일 화요일 | 관계·Key·1~3NF와 Constraint 학습 | 학습용 Database 생성, 정규화 Table·Constraint·Foreign Key·JOIN 재현 | DDL 선택과 사용자 실행 결과 기록 | 잘못된 Row가 Application이 아니라 DB Constraint에서도 거부됨 | Completed |
 | 9월 2일 수요일 | ACID와 Transaction 경계, Commit·Rollback 예상 | 여러 Row 변경 중 의도적 실패와 Rollback 재현 | SQL 원자성 근거를 먼저 확정하고 Spring Transaction Integration Test는 선택 적용으로 유지 | 일부 변경만 남지 않는 이유와 검증 결과 설명 | Completed |
 | 9월 3일 목요일 | Isolation·MVCC·Lock과 Deadlock 조건 학습 | 두 Session에서 Lost Update·Lock 대기·낙관적 충돌과 Deadlock 재현 | Study Note와 Isolation·Lock Lab Report 작성 | 동시성 문제와 각 해결 방식의 비용 설명 | Completed |
-| 9월 4일 금요일 | B-Tree·선택도·복합 Index와 Planner 학습 | 고정 Dataset의 Index 전후 `EXPLAIN (ANALYZE, BUFFERS)` 비교 | Query Plan Lab Report 작성 | Seq Scan·Index Scan 선택 이유와 쓰기 비용 설명 | Planned |
+| 9월 4일 금요일 | B-Tree·선택도·복합 Index와 Planner 학습 | 고정 Dataset의 Index 전후 `EXPLAIN (ANALYZE, BUFFERS)` 비교 | [Study Note](./study-notes/2026-09-04-study-questions.md)와 [Query Plan Lab Report](./lab-reports/2026-09-04-postgresql-index-and-query-plan-lab.md) 작성 | Seq Scan·Index Scan 선택 이유와 쓰기 비용 설명 | Completed |
 | 9월 5일 토요일 | 주간 핵심 질문 복습 | PostgreSQL Adapter·실제 DB Integration Test 또는 미완료 SQL 실험 보완 | Diff Review, Week 3 WIL과 다음 질문 정리 | 핵심 세 축의 근거 확보, 적용·보류 범위가 WIL에 기록됨 | Planned |
 
 토요일에는 핵심 SQL 실험이 끝난 경우에만 JPA N+1 또는 Connection Pool 중 하나를 추가 검토한다. 두 항목을 모두 시작하지 않는다.
@@ -139,8 +140,9 @@ Credential은 존재 여부와 연결 성공만 확인하고 값을 Terminal·�
 | [9월 1일 Study Note](./study-notes/2026-09-01-study-questions.md) | 학습용 Database, Schema·Constraint와 정규화 실험 기록 | 화요일 학습 진행 | Completed |
 | [9월 2일 Study Note](./study-notes/2026-09-02-study-questions.md) | 정상 Commit과 의도적 실패·Rollback 실행 기록 | 수요일 학습 진행 | Completed |
 | [9월 3일 Study Note](./study-notes/2026-09-03-study-questions.md) | Isolation·MVCC·Lock 개념 교정과 완료 판단 | 목요일 학습 진행 | Completed |
+| [9월 4일 Study Note](./study-notes/2026-09-04-study-questions.md) | Index·Planner 개념 교정과 일일 완료 판단 | 금요일 학습 진행 | Completed |
 | [Isolation·Lock Lab Report](./lab-reports/2026-09-03-postgresql-isolation-and-lock-lab.md) | 두 Session 동시성·대기와 실패 재현 | SQL 실행 결과 확보 | Completed |
-| Index·Query Plan Lab Report | Index 전후 실행 계획 비교 | 고정 Dataset 결과 확보 | Planned |
+| [Index·Query Plan Lab Report](./lab-reports/2026-09-04-postgresql-index-and-query-plan-lab.md) | Index 전후 실행 계획 비교 | 고정 Dataset 결과 확보 | Completed |
 | Week 3 WIL | 이해 변화와 다음 판단 | 토요일 실제 결과 | Planned |
 
 실제 파일이 생기기 전에는 Placeholder Link를 만들지 않는다. Learning Note와 Lab Report를 모두 강제로 만들지 않고, 한 문서가 질문·절차·관찰을 충분히 담으면 중복 문서는 생략한다.
@@ -148,12 +150,12 @@ Credential은 존재 여부와 연결 성공만 확인하고 값을 Terminal·�
 ## Learning Evidence Gate
 
 - [x] 월요일 Week 2 복습 세 흐름을 설명하고 교정 결과를 기록했다.
-- [ ] 핵심 질문에 답하는 Schema·Transaction·Query Plan 설명이 있다.
+- [x] 핵심 질문에 답하는 Schema·Transaction·Query Plan 설명이 있다.
 - [x] SQL 실행 전에 예상 결과와 실패 조건을 기록했다.
 - [x] Constraint·Foreign Key 실패를 직접 재현했다.
 - [x] Transaction Rollback을 직접 재현했다.
 - [x] 두 Session의 동시 수정·Lock 결과를 재현했다.
-- [ ] 고정 Dataset의 Index 전후 Query Plan이 있다.
+- [x] 고정 Dataset의 Index 전후 Query Plan이 있다.
 - [x] 기존 33개 Clean Test 회귀가 유지된다.
 - [ ] AI 도움 없이 SQL 또는 작은 Adapter 변경과 관련 Test를 수행했다.
 - [ ] JPA·N+1·Pool·비범위 선택 이유가 기록됐다.

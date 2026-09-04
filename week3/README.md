@@ -86,6 +86,7 @@ Index와 Query Plan
 - 학습 Schema: `public.tickets`, `public.ticket_status_history` DDL·Constraint·Foreign Key와 대표 성공·실패 SQL `USER_VERIFIED`
 - Transaction SQL Spike: Ticket·최초 이력 정상 Commit과 의도적 이력 실패 뒤 전체 Rollback `USER_VERIFIED`
 - 동시성 SQL Spike: 두 Session의 MVCC 가시성·Lock 대기·Lost Update·낙관적 Lock·Deadlock과 동일 Lock 순서 `USER_VERIFIED`
+- Index SQL Spike: 고정 100,000건 Dataset의 단일·복합 Index 전후 Scan·정렬·Buffer 비교 `USER_VERIFIED`
 - 영속화: Driver·JPA·Migration·Testcontainers 모두 `NOT_IMPLEMENTED`
 
 Version·Service·접속 상태와 인증 접속은 실제 명령으로 확인했다. Credential 값은 출력하거나 문서에 기록하지 않는다. SQL Spike의 Table·Constraint, Transaction 원자성과 두 Session 동시성은 사용자가 `psql`에서 재현했다. Spring Application 영속화는 아직 구현하거나 검증하지 않았다.
@@ -97,7 +98,7 @@ Version·Service·접속 상태와 인증 접속은 실제 명령으로 확인�
 | Week 2 오류·공통 처리 복습 | 조건부 후속 | Completed | 8월 31일 질문·교정 기록과 전체 33개 Clean Test |
 | Schema·정규화·Constraint | 핵심 학습 | Partially Completed | 1~3NF 설명, 정규화 Table·Constraint 실패 SQL 완료; 비정규 Table 실제 비교 `NOT_RUN` |
 | Transaction·Isolation·Lock | 핵심 학습 | Completed | 정상 Commit·실패 Rollback, 두 Session MVCC·Lock·Lost Update·Deadlock 재현 |
-| Index·실행 계획 | 핵심 학습 | Planned | 고정 Dataset의 Index 전후 Query Plan |
+| Index·실행 계획 | 핵심 학습 | Completed | [고정 Dataset의 Index·Query Plan 비교](./lab-reports/2026-09-04-postgresql-index-and-query-plan-lab.md) |
 | PostgreSQL Repository Adapter | 선택 적용 | Planned | 기존 Port를 유지한 작은 Diff와 Integration Test |
 | JPA N+1 | 조건부 후속 | Deferred | 실제 관계 Mapping과 Query 수가 생길 때 재검토 |
 | Connection Pool 부하 | 조건부 후속 | Deferred | 실제 연결과 측정 환경이 생길 때 재검토 |
@@ -128,10 +129,12 @@ Version·Service·접속 상태와 인증 접속은 실제 명령으로 확인�
 - [2026-09-01 — PostgreSQL Schema·Constraint와 정규화 실습](./study-notes/2026-09-01-study-questions.md)
 - [2026-09-02 — PostgreSQL Transaction과 Atomicity 실습](./study-notes/2026-09-02-study-questions.md)
 - [2026-09-03 — PostgreSQL Isolation·MVCC·Lock 실습](./study-notes/2026-09-03-study-questions.md)
+- [2026-09-04 — PostgreSQL Index·EXPLAIN ANALYZE 실습](./study-notes/2026-09-04-study-questions.md)
 
 ## Lab Report
 
 - [PostgreSQL 두 Session의 가시성·Lock·동시 갱신](./lab-reports/2026-09-03-postgresql-isolation-and-lock-lab.md) — MVCC, Lock 대기, Lost Update, 낙관적 Lock과 Deadlock 재현
+- [PostgreSQL Index와 Query Plan 비교](./lab-reports/2026-09-04-postgresql-index-and-query-plan-lab.md) — 불균등 Dataset의 단일·복합 Index, 정렬·`LIMIT`과 Buffer 비교
 
 ## Learning Evidence Gate
 
@@ -141,7 +144,7 @@ Version·Service·접속 상태와 인증 접속은 실제 명령으로 확인�
 - [ ] 비정규 Table을 실제로 만들고 같은 변경의 정규화 전후 결과를 비교한다.
 - [x] Transaction 중간 실패에서 Commit·Rollback 결과를 직접 확인한다.
 - [x] 두 Session에서 동시 수정과 Lock 대기 또는 충돌을 재현한다.
-- [ ] 같은 Query의 Index 전후 `EXPLAIN ANALYZE`를 비교한다.
+- [x] 같은 Query의 Index 전후 `EXPLAIN ANALYZE`를 비교한다.
 - [x] 기존 33개 Clean Test의 회귀를 유지한다.
 - [ ] PostgreSQL 적용·보류 범위와 이유를 기록한다.
 - [ ] 완료·부분 완료·미수행 범위를 Week 3 WIL에 남긴다.
