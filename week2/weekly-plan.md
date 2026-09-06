@@ -290,7 +290,7 @@ Controller에 규칙을 둔 실패 예제는 별도 Production 구조로 장기�
 | [8월 29일 공통 요청 처리와 예외 기반 조회 학습·구현 기록](./study-notes/2026-08-29-study-questions.md) | Callback·결과 설계, 최소 구현과 검증 기록 | 야간 학습 세션 완료 | Completed — 자정 이후까지 같은 세션으로 이어 단위·통합 Test 4개와 전체 33개 Clean Test 통과, 실제 HTTP Trace는 재실행하지 않음 |
 | [8월 30일 Week 2 WIL·Week 3 계획 작성 기록](./study-notes/2026-08-30-study-questions.md) | 날짜 기록 기준, WIL과 다음 주 계획 보존 | 후속 문서 작업 완료 | Completed — WIL 초안과 Week 3 월요일 복습 Gate·Database 범위 작성 |
 | Ticket HTTP Request Flow Lab Report | Request·Response Trace와 정상·실패 재현 | 실제 Trace와 Test 결과 확보 후 | 별도 생성 보류 — 8월 27일 Study Note가 같은 근거를 포함하므로 중복 문서를 만들지 않음 |
-| Week 2 WIL | 이해 변화, 실패와 다음 판단 | 최종 검증 결과 확보 후 | Draft Ready — `local/blog/wil`에 공개 전 초안을 작성했으며 게시 후 공개 Link 추가 필요 |
+| [Week 2 WIL](./wil.md) | 이해 변화, 실패와 다음 판단 | 최종 검증 결과 확보 후 | Completed — 2026-08-31 게시 완료, 2026-09-07 저장소 표준 위치에 복원 |
 | 공개 Checklist | Secret·경로·주장·Link 점검 | 게시 직전 | Planned |
 
 Learning Note와 Lab Report를 모두 강제로 만들지 않는다. 한 문서가 핵심 질문, 실행 절차, 관찰과 설명을 충분히 담으면 그 문서를 우선하고 중복 문서는 생략한다.
@@ -308,7 +308,7 @@ Learning Note와 Lab Report를 모두 강제로 만들지 않는다. 한 문서�
 - [ ] AI 도움 없이 핵심 흐름의 작은 변경과 관련 Test를 수행했다.
 - [x] CORS·Filter 등 조건부 항목의 수행·보류 이유가 있다.
 - [x] 완료·부분 완료·미수행 범위와 다음 질문을 WIL에 남겼다.
-- [ ] 공개 자료에 Secret, 개인정보, 내부 URL과 로컬 절대 경로가 없다.
+- [x] 공개 자료에 Secret, 개인정보, 내부 URL과 로컬 절대 경로가 없다.
 
 ### Git 운영 Baseline 점검
 
@@ -331,6 +331,7 @@ Baseline 이후 학습 항목을 조용히 추가하거나 삭제하지 않는�
 | 2026-08-27 | 오류 응답 구현 뒤 8월 28일 오전에 Exception 흐름 복습 Gate 추가 | Validation·Advice·`ProblemDetail`, 전체 29개 Test와 실제 `400`·`404` Trace는 완료했지만 Exception 전파와 구성요소별 책임은 자료 없이 바로 설명하기 어려움 | 금요일 오전 첫 Block에서 공백 제목·부재 흐름을 다시 설명한다. 복습 Gate 뒤에만 Filter·Interceptor 비교로 진행하며 CORS는 시간이 남을 때만 수행한다. 대표 `500`은 Production Endpoint 없이 Test Double 검증으로 유지한다. |
 | 2026-08-29 | 새 Terminal 재현과 Week 2 WIL 정리를 8월 30일 복구 일정으로 이동 | 8월 28일 Exception 복습이 길어졌고 8월 29일 시작 시각도 늦어, 새 구현보다 최소 개념 Gate와 정확한 미수행 경계 기록을 우선함 | CORS와 Filter·Interceptor 구현은 보류한다. 8월 30일에 짧은 복습, Version·29개 Clean Test 재현과 WIL 초안을 순서대로 수행한다. 기존 Test·Trace를 오늘 다시 실행한 것처럼 표현하지 않는다. |
 | 2026-08-30 | 자정 이후 완료한 구현·검증을 8월 29일 야간 학습 세션에 통합하고, 8월 30일 기록은 WIL·Week 3 계획으로 분리 | 중단 없이 이어진 하나의 학습 흐름을 달력 날짜만으로 나누면 개념·구현·검증의 연결이 약해짐 | 실제 완료 시각이 8월 30일 01시대였다는 사실은 8월 29일 Study Note에 남긴다. 8월 30일에는 새 Java 작업 없이 WIL 초안과 Week 3 계획만 기록한다. |
+| 2026-09-07 | 게시용으로 남아 있던 Week 2 WIL을 `week2/wil.md`에 복원 | 주차별 필수 WIL 규칙과 달리 Week 2의 저장소 표준 위치만 누락되어 있었음 | 당시 학습 결과를 새로 해석하지 않고 Week 2 README·주간 계획·Study Note·게시본의 기존 근거만 재구성한다. |
 
 ## 공식 학습 자료 Baseline
 
@@ -351,3 +352,4 @@ HTTP 의미와 REST 계약은 관련 RFC 원문을 기준으로 확인하고, Fr
 - [학습 및 기술 콘텐츠 계획](../plan/learning-and-content-plan.md)
 - [Week 1 주차 안내](../week1/README.md)
 - [Week 1 WIL 초안](../week1/wil.md)
+- [Week 2 WIL](./wil.md)

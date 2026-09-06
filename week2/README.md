@@ -1,6 +1,6 @@
 # Week 2 — HTTP·REST·Spring 요청 흐름
 
-> 상태: Completed — 선택한 Week 2 구현·Test·Trace와 WIL 초안 완료, Exception 흐름 회상은 후속 복습
+> 상태: Completed — 선택한 Week 2 구현·Test·Trace와 WIL 작성·게시 완료, Exception 흐름 회상은 후속 복습
 > 기간: 2026-08-24 ~ 2026-08-29
 > 8월 29일 야간 세션 종료: 2026-08-30 01시대
 > 핵심 질문: 하나의 HTTP 요청이 Spring MVC의 각 Layer를 통과하는 흐름과 책임을 직접 추적할 수 있는가?
@@ -18,6 +18,7 @@ Week 1에서 Framework 없는 Ticket Domain의 규칙과 Unit Test를 확인했�
 | `study-docs/` | 날짜나 개인 진도와 독립적으로 다시 읽을 수 있는 개념·예제·오해·사용 경계·공식 참고자료 | 이해 상태, 실제 수행 여부, AI 활용과 다음 일정 |
 | `study-notes/` | 날짜별 질문, 자신의 답변, 진행 상태, 예상·관찰, 검증 경계와 다음 과제 | 재사용 가능한 개념 자료의 반복 |
 | `weekly-plan.md` | 주간 범위, 일정, 완료 조건과 변경 기록 | 세부 개념 설명과 일일 답변 전문 |
+| `wil.md` | 계획 대비 결과, 이해 변화, 실패·부분 완료와 다음 질문 | 날짜별 답변 전문과 실행 Log 반복 |
 
 `study-docs`의 명령과 표는 학습 예시이며 실제 실행 결과가 아니다. 실행 여부와 `NOT_RUN`·`NOT_IMPLEMENTED` 상태는 날짜별 `study-notes`와 주간계획에서 관리한다.
 
@@ -79,7 +80,7 @@ Week 1에서 Framework 없는 Ticket Domain의 규칙과 Unit Test를 확인했�
 
 ## 2026-08-30 진행 결과
 
-- 완료·부분 완료·미수행 범위와 후속 복습 질문을 Week 2 WIL 공개 전 초안에 반영했다.
+- 완료·부분 완료·미수행 범위와 후속 복습 질문을 Week 2 WIL에 반영했다.
 - 12주 계획, Week 3 Roadmap과 Database 공지 범위를 대조하여 Week 3 주차 안내와 학습 계획을 작성했다.
 - 8월 31일 월요일 첫 학습 Block에 Week 2 Exception 흐름과 Filter·Interceptor 선택 기준 복습 Gate를 반영했다.
 - PostgreSQL 설치·SQL 실험과 Java Source 변경은 Week 3 시작 전까지 수행하지 않는다.
@@ -197,6 +198,7 @@ Spring MVC의 오류 응답은 RFC 9457 형식의 `ProblemDetail` 지원을 우�
 
 - [주차 안내](./README.md)
 - [주간 학습 계획](./weekly-plan.md)
+- [Week 2 WIL](./wil.md) — 계획 대비 결과, 이해 변화, 실패·부분 완료와 다음 질문
 - [HTTP 요청·응답 메시지 Learning Note](./study-docs/learning-http-request-response-messages.md) — Message 구조·의미, Ticket 예시와 공식 참고자료
 - [Spring MVC 요청 흐름과 Annotation Learning Note](./study-docs/learning-spring-mvc-request-flow-and-annotations.md) — MVC 구성요소, Annotation, IoC·DI·DIP와 Layer 책임
 - [Spring Validation과 HTTP 오류 응답 Learning Note](./study-docs/learning-spring-validation-and-error-responses.md) — 입력 검증 경계, Exception Handler, `ProblemDetail`과 안전한 오류 계약
@@ -213,7 +215,7 @@ Spring MVC의 오류 응답은 RFC 9457 형식의 `ProblemDetail` 지원을 우�
 ### 후속 후보
 
 - Ticket HTTP Request Flow Lab Report
-- Week 2 WIL 게시 링크 — `local/blog/wil`의 공개 전 초안을 검토·게시한 뒤 추가
+- Week 2 WIL 외부 게시 URL — 확인 가능한 공개 URL을 확보하면 문서 상태에 추가
 - 공개 전 Checklist
 
 ## Learning Evidence Gate
@@ -228,7 +230,7 @@ Spring MVC의 오류 응답은 RFC 9457 형식의 `ProblemDetail` 지원을 우�
 - [x] 적용·조건부 후속·비범위의 선택 이유를 기록한다.
 - [x] AI가 보조한 부분과 직접 작성·수정·검증한 범위를 구분한다.
 - [x] 완료·부분 완료·미수행 범위와 다음 질문을 WIL에 남긴다.
-- [ ] 공개 자료에 Secret, 개인정보, 내부 URL과 로컬 절대 경로가 없다.
+- [x] 공개 자료에 Secret, 개인정보, 내부 URL과 로컬 절대 경로가 없다.
 
 ## Week 1 연결
 
