@@ -111,9 +111,95 @@ Credential은 존재 여부와 연결 성공만 확인하고 값을 Terminal·�
 | 9월 3일 목요일 | Isolation·MVCC·Lock과 Deadlock 조건 학습 | 두 Session에서 Lost Update·Lock 대기·낙관적 충돌과 Deadlock 재현 | Study Note와 Isolation·Lock Lab Report 작성 | 동시성 문제와 각 해결 방식의 비용 설명 | Completed |
 | 9월 4일 금요일 | B-Tree·선택도·복합 Index와 Planner 학습 | 고정 Dataset의 Index 전후 `EXPLAIN (ANALYZE, BUFFERS)` 비교 | [Study Note](./study-notes/2026-09-04-study-questions.md)와 [Query Plan Lab Report](./lab-reports/2026-09-04-postgresql-index-and-query-plan-lab.md) 작성 | Seq Scan·Index Scan 선택 이유와 쓰기 비용 설명 | Completed |
 | 9월 5일 토요일 | 개인 일정으로 학습 미실시 | 실행 없음 | 남은 학습·적용·기록 과업을 9월 6일로 이월 | 기존 완료 근거를 유지하고 별도 일일 학습 기록을 만들지 않음 | Deferred — 9월 6일 이월 |
-| 9월 6일 일요일 | 주간 핵심 질문 복습 | PostgreSQL Adapter·실제 DB Integration Test 또는 미완료 SQL 실험 보완 | Diff Review, Week 3 WIL과 다음 질문 정리 | 핵심 세 축의 근거 확보, 적용·보류 범위가 WIL에 기록됨 | Planned |
+| 9월 6일 일요일 | 네 가지 핵심 질문을 자료 없이 답한 뒤 근거로 교정 | 임시 Table의 정규화 전후 갱신 이상 비교, Gate 통과 시 PostgreSQL Adapter·실제 DB Integration Test | 9월 6일 Study Note, Diff Review, Week 3 WIL과 다음 질문 정리 | 미완료 핵심 근거를 보완하고 Adapter 수행·보류 이유와 완료·부분 완료 범위를 기록 | Planned — 아래 실행 계획으로 구체화 |
 
-9월 6일에는 핵심 SQL 실험이 끝난 경우에만 JPA N+1 또는 Connection Pool 중 하나를 추가 검토한다. 두 항목을 모두 시작하지 않는다.
+## 9월 6일 일요일 실행 계획
+
+### 시작 기준선과 우선순위
+
+2026년 9월 6일 계획 구체화 시점에 `ai-helpdesk-learning-lab` Working Tree는 깨끗했고 `mvnw.cmd test`에서 기존 Test 33개가 실패·오류·건너뜀 없이 다시 통과했다. 로컬 PostgreSQL Service는 실행 중이고 `localhost:5432`가 연결을 받고 있다. Docker CLI는 설치되어 있지만 Docker Daemon에는 연결되지 않았으므로 Testcontainers 경로는 Daemon을 실제로 확인한 뒤에만 진행한다.
+
+일요일 학습은 시작 시각을 `T+00:00`으로 두는 상대 시간표다. 기본 경로는 휴식 30분을 포함해 4시간 55분이며, 날짜를 넘기더라도 중단 없이 이어진 학습은 하나의 9월 6일 학습 Session으로 기록하고 실제 종료 시각을 별도로 남긴다.
+
+| 우선순위 | 반드시 남길 결과 | 범위 |
+|---|---|---|
+| P0 | 자료 없는 핵심 질문 답변, 비정규·정규 구조의 실제 비교, Week 3 완료·부분 완료·보류 판단과 WIL 초안 | 일요일 종료에 필수 |
+| P1 | 기존 Port 뒤의 최소 PostgreSQL Adapter와 실제 PostgreSQL Integration Test | 아래 두 Gate를 모두 통과할 때만 수행 |
+| 오늘 시작하지 않음 | JPA N+1, Connection Pool, Application 기본 Repository 교체, Week 4 인증·인가 | 후속 조건이 생길 때 재검토 |
+
+### 시간대별 실행 순서
+
+| 경과 시간 | Block | 수행 내용 | 종료 조건·산출물 |
+|---|---|---|---|
+| `T+00:00 ~ 00:15` | 시작 상태 고정 | 두 저장소의 `git status`를 확인하고 학습 시작 시각·현재 이해·예상을 먼저 적는다. Credential 값은 명령·문서에 넣지 않는다. | 기존 변경과 오늘 변경 범위가 구분되고 네 질문의 첫 답변을 AI·자료보다 먼저 시작함 |
+| `T+00:15 ~ 00:55` | 핵심 질문 복습 | 아래 네 질문에 각각 3~5문장으로 답한 뒤 기존 Study Note·Lab Report와 대조해 다른 표현을 교정한다. | 네 답변과 근거 Link가 있고, Review Gate 판정이 기록됨 |
+| `T+00:55 ~ 01:35` | 정규화 보완 Spike | 영구 업무 Table을 건드리지 않는 임시 비정규·정규 Table을 만들고, 같은 Ticket 제목 변경이 한 Row 누락으로 불일치하는 결과와 부모 Row 한 번 변경 후 JOIN 결과를 비교한다. | 실행 전 예상, 변경 전·후 `SELECT`, 갱신 이상과 분리 비용 해석이 있음 |
+| `T+01:35 ~ 01:50` | 휴식 | 화면과 Database Session에서 벗어나 휴식한다. | 15분 뒤 다음 Gate로 복귀 |
+| `T+01:50 ~ 02:05` | Adapter Gate | Review·정규화 결과, 남은 시간과 Docker Daemon을 확인한다. Daemon 시작·확인은 최대 10분만 사용한다. | 구현 경로 A 또는 축소 경로 B를 한 문장 이유와 함께 선택 |
+| `T+02:05 ~ 03:35` | 경로 A: 최소 Adapter | 학습자가 먼저 예상·Test를 작성하고 PostgreSQL Adapter·Migration을 최소 범위로 구현한다. 대상 Test 후 전체 회귀 Test를 실행한다. | 실제 PostgreSQL 저장·재조회와 부재 조회 Test, 작은 Diff, 전체 Test 결과가 있음 |
+| `T+02:05 ~ 02:50` | 경로 B: 적용 보류 | Gate 실패 원인을 교정하거나 정규화 해석을 보완하고, Adapter를 `Deferred`로 둔 이유와 재개 조건을 기록한다. H2나 Mock으로 실제 PostgreSQL 근거를 대체하지 않는다. | 보류 이유·재개 조건과 P0 근거가 있고 미완료를 완료로 표시하지 않음 |
+| `T+03:35 ~ 03:50` | 휴식 | 구현 경로 A를 수행했을 때 두 번째 휴식을 갖는다. 경로 B에서는 이 Block을 생략하고 기록으로 이동할 수 있다. | 기록 전에 집중력 회복 |
+| `T+03:50 ~ 04:35`<br>경로 B `T+02:50 ~ 03:35` | Study Note·WIL | 실제 수행 결과만 9월 6일 Study Note에 기록하고, WIL에는 시작 이해·예상·교정·근거·AI 역할·적용 판단·미완료 범위·다음 질문을 정리한다. | 실행 결과와 계획을 섞지 않은 Study Note와 Week 3 WIL 공개 전 초안 |
+| `T+04:35 ~ 04:55`<br>경로 B `T+03:35 ~ 03:55` | 최종 Review | Source 변경 시 대상 Test와 전체 Test 결과를 다시 확인하고, 두 저장소의 상태·Diff·문서 Link·공개 경계를 검토한다. | `git diff --check`, 실제 Test 결과, Secret·개인정보·로컬 절대 경로 없음, 작은 Commit 후보가 구분됨 |
+
+### 핵심 질문과 Review Gate
+
+자료를 열기 전에 다음 질문에 먼저 답한다.
+
+1. `CHECK`와 `NOT NULL`을 왜 함께 사용하며, Database의 현재 값 Constraint와 `Ticket` Domain의 상태 전이 규칙은 무엇이 다른가?
+2. Ticket 상태 변경 뒤 이력 `INSERT`가 실패할 때 `ROLLBACK` 후 어떤 Row와 Identity 값이 남을 수 있으며, 그 이유는 무엇인가?
+3. MVCC의 일반 `SELECT`, `FOR UPDATE` 대기, stale-read Lost Update와 Version 조건의 `UPDATE 0`은 각각 무엇을 보여 주는가?
+4. 같은 `status` Index가 `RESOLVED` 약 1%에는 선택되고 `OPEN` 약 99%에는 선택되지 않은 이유와, 복합 Index·`LIMIT`이 `Sort`와 읽은 Row 수를 바꾼 이유는 무엇인가?
+
+다음 조건을 모두 만족하면 Review Gate를 통과한다.
+
+- 네 질문 중 최소 세 개를 원인과 결과가 이어지도록 설명한다.
+- 각 답변을 기존 Study Note 또는 Lab Report의 실제 SQL·Query Plan 근거 한 개 이상과 연결한다.
+- 틀린 답은 지우지 않고 최초 답변, 교정 내용과 이유를 남긴다.
+
+세 개 미만이면 관련 Learning Note와 실행 결과만 30분 동안 다시 확인하고 Adapter를 시작하지 않는다. 그날 보완하지 못한 질문은 Week 4에 자동 누적하지 않고 중요도와 재검토 조건을 WIL에 적는다.
+
+### 정규화 보완 Spike 완료 조건
+
+- 임시 비정규 이력 Table에는 같은 `ticket_id`의 두 이력 Row와 반복된 `title`을 둔다.
+- 제목을 한 Row에서만 변경했을 때 같은 Ticket에 서로 다른 제목이 남을 것으로 예상하고 실제 결과를 확인한다.
+- 임시 정규 구조에서는 Ticket 부모 Row의 제목을 한 번만 변경하고, 두 이력 Row와 JOIN했을 때 같은 최신 제목이 조회되는지 확인한다.
+- 정규화가 중복·갱신 이상을 줄이는 대신 JOIN과 관계 관리 비용을 만든다는 Trade-off를 설명한다.
+- 개념 설명만 반복하지 않고 실제 SQL 출력이 있어야 기존 `Partially Completed` 상태를 다시 판정할 수 있다.
+
+임시 Table을 사용해 기존 `tickets`, `ticket_status_history`와 Index 실험 Fixture를 변경하거나 삭제하지 않는다.
+
+### Adapter Gate와 최소 구현 경계
+
+다음 네 조건을 모두 만족할 때만 경로 A를 선택한다.
+
+1. Review Gate를 통과했다.
+2. 정규화 보완 Spike의 예상·실행·해석이 끝났다.
+3. `docker version`에서 Docker Server 연결이 실제로 확인되어 Testcontainers를 실행할 수 있다.
+4. 구현과 검증에 연속 90분 이상을 사용할 수 있다.
+
+경로 A의 구현 범위는 다음으로 제한한다.
+
+- Spring JDBC, PostgreSQL Driver, PostgreSQL용 Migration과 Testcontainers에 필요한 의존성만 추가하고 Version은 Project의 Spring Boot Dependency Management를 우선한다.
+- 이미 검증한 PostgreSQL `tickets` Schema·Constraint를 Migration으로 옮기고 새로운 업무 Column을 추가하지 않는다.
+- `PostgresTicketRepository`가 기존 `TicketRepository`의 `save`·`findById`만 구현하게 한다.
+- 기본 Application의 `InMemoryTicketRepository`는 교체하지 않고, Integration Test 설정에서만 PostgreSQL Adapter를 명시적으로 선택한다.
+- 저장 뒤 새 Repository Instance로 다시 조회되는 Case, 존재하지 않는 ID가 빈 결과인 Case와 저장된 상태 복원 Case를 실제 PostgreSQL로 검증한다.
+- 저장 상태 복원에 Domain API가 필요하면 실패 Test를 먼저 만들고 범용 Setter나 Reflection 대신 가장 작은 명시적 복원 경계를 추가한다.
+- 대상 Integration Test가 통과한 뒤 기존 전체 Test를 실행하며, Controller·Service 계약은 변경하지 않는다.
+- 경로 A의 실제 결과에 맞춰 Lab README와 Week 3 문서의 구현·Test 상태를 갱신하되, 실행하지 않은 Runtime 전환이나 Test를 완료로 표시하지 않는다.
+
+Dependency·Docker 문제 해결이 30분을 넘거나 상태 복원 설계가 설명되지 않으면 구현을 중단하고 경로 B로 전환한다. Testcontainers를 실행하지 못한 Test를 `Passed`로 기록하거나 Local PostgreSQL·H2·Mock 결과를 같은 근거로 표현하지 않는다.
+
+### 시간이 부족할 때의 90분 마감 경로
+
+남은 시간이 두 시간 미만이면 처음부터 Adapter를 제외하고 다음 순서만 수행한다.
+
+1. 30분: 네 핵심 질문에 짧게 답하고 가장 약한 한 질문을 근거로 교정한다.
+2. 30분: 임시 Table의 정규화 전후 갱신 이상을 재현하고 결과를 저장한다.
+3. 30분: 완료·부분 완료·보류 상태, Adapter 재개 조건과 Week 3 WIL 핵심 문단을 기록한다.
+
+이 경로에서도 Week 3의 핵심 SQL 근거와 주간 판단을 먼저 마감한다. Adapter, JPA N+1, Connection Pool과 Week 4 구현은 시작하지 않는다.
 
 ## 위험과 대응
 
@@ -175,6 +261,7 @@ Baseline 이후 핵심 SQL 실험, PostgreSQL 적용 범위나 일정이 바뀌�
 | 2026-09-02 | Transaction·Lock 실행 근거를 하나의 별도 Lab Report로 기록 | Transaction 개념은 Learning Note, 실제 Commit·Rollback Trace는 Study Note에 기록하고 후속 Lab Report는 Isolation·Lock에 집중 | 같은 SQL 결과를 여러 문서에 중복하지 않고 개념·날짜별 실행·두 Session Trace의 역할을 분리 | Transaction 원자성은 완료하고 9월 3일 두 Session Isolation·Lock으로 진행 | [9월 2일 기록](./study-notes/2026-09-02-study-questions.md) |
 | 2026-09-03 | Lost Update를 두 Session의 동일 절대값 저장 결과만으로 비교 | 같은 계산 방식의 순차 대조와 동시 stale-read를 분리하고, 원자적 증가·Version 충돌·역순과 동일 순서 Lock까지 재현 | 고정값 저장만으로는 순차 실행과 동시 갱신 유실을 구분할 수 없다는 한계를 학습 중 발견 | Isolation·Lock 범위를 완료하고 Index·실행 계획 학습으로 전환 | [9월 3일 기록](./study-notes/2026-09-03-study-questions.md), [Lab Report](./lab-reports/2026-09-03-postgresql-isolation-and-lock-lab.md) |
 | 2026-09-05 | 주간 복습·선택 적용·Week 3 기록을 토요일에 수행 | 해당 과업 전체를 9월 6일로 이월 | 개인 일정으로 학습 시간을 확보하지 못했으며 미실시 내용을 완료로 기록하지 않음 | Week 3 종료일을 하루 연장하되 Week 4 범위는 선행하지 않음 | 주간 일정 변경 |
+| 2026-09-06 | 일요일에 핵심 복습, Adapter 또는 미완료 SQL 보완과 WIL을 수행 | 네 질문 Review Gate → 임시 Table 정규화 Spike → 환경·시간 Gate → Adapter 또는 축소 경로 → WIL의 상대 시간표로 구체화 | 남은 핵심 근거와 선택 적용을 같은 우선순위로 두면 설정 문제가 주간 마감을 방해할 수 있고, 계획 시점에 Docker Daemon이 실행되지 않았음 | 핵심 학습 근거와 정직한 Week 3 마감을 P0로 두며 Adapter·N+1·Pool을 Week 4에 자동 누적하지 않음 | 9월 6일 시작 환경 확인과 일요일 실행 계획 |
 
 ## 공식 학습 자료 Baseline
 
