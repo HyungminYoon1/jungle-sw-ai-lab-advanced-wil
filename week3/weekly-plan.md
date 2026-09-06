@@ -1,7 +1,7 @@
 # Week 3 학습 계획 — PostgreSQL·Transaction·Lock·Index
 
 > 작성일: 2026-08-30
-> 상태: In Progress
+> 상태: Completed
 > 기간: 2026-08-31 ~ 2026-09-06
 > 핵심 질문: Database의 Transaction과 실행 계획이 Ticket의 일관성과 조회 성능에 어떤 영향을 주는가?
 > 운영 Baseline: Git 상태 확인·Diff Review·작은 Commit과 기존 33개 Test 회귀 확인
@@ -94,11 +94,11 @@ Credential은 존재 여부와 연결 성공만 확인하고 값을 Terminal·�
 | 순서 | Lab | 실행 전 예상 | 완료 조건 | 상태 |
 |---:|---|---|---|---|
 | 0 | Week 2 복습·Source Baseline | 기존 33개 Test와 Layer 경계가 유지됨 | 세 오류 흐름 설명, Version·Clean Test 확인 | Completed |
-| 1 | 비정규 Ticket 장부와 정규화 | 중복과 갱신 이상이 분리 Schema·Constraint에서 줄어듦 | 동일 변경의 정규화 전후 결과와 Trade-off 설명 | Partially Completed |
+| 1 | 비정규 Ticket 장부와 정규화 | 중복과 갱신 이상이 분리 Schema·Constraint에서 줄어듦 | 동일 변경의 정규화 전후 결과와 Trade-off 설명 | Completed |
 | 2 | Transaction 원자성 | 중간 실패 후 `ROLLBACK`하면 일부 변경만 남지 않음 | 정상 Commit·의도적 실패 결과 비교 | Completed |
 | 3 | 두 Session 동시 수정 | 격리·Lock 전략에 따라 대기·충돌·최종 값이 달라짐 | 실행 순서와 Lost Update 또는 Lock 결과 재현 | Completed |
 | 4 | Index와 Query Plan | 데이터 분포와 조건에 따라 Seq Scan·Index Scan 선택이 달라짐 | [고정 Dataset에서 Index 전후 Plan 해석](./lab-reports/2026-09-04-postgresql-index-and-query-plan-lab.md) | Completed |
-| 5 | PostgreSQL Repository Adapter | 기존 Port를 유지하면 Web·Service 계약 변경을 줄일 수 있음 | 실제 PostgreSQL 저장·조회 Integration Test 통과 | Planned |
+| 5 | PostgreSQL Repository Adapter | 기존 Port를 유지하면 Web·Service 계약 변경을 줄일 수 있음 | 실제 PostgreSQL 저장·조회 Integration Test 통과 | Deferred — 실행 Gate 미충족 |
 | 6 | N+1·Pool 조건부 Spike | 선행 Mapping·부하가 없으면 실험 의미가 부족함 | 선행 조건 충족 시에만 별도 예상·관찰 기록 | Deferred |
 
 ## 일정
@@ -111,7 +111,7 @@ Credential은 존재 여부와 연결 성공만 확인하고 값을 Terminal·�
 | 9월 3일 목요일 | Isolation·MVCC·Lock과 Deadlock 조건 학습 | 두 Session에서 Lost Update·Lock 대기·낙관적 충돌과 Deadlock 재현 | Study Note와 Isolation·Lock Lab Report 작성 | 동시성 문제와 각 해결 방식의 비용 설명 | Completed |
 | 9월 4일 금요일 | B-Tree·선택도·복합 Index와 Planner 학습 | 고정 Dataset의 Index 전후 `EXPLAIN (ANALYZE, BUFFERS)` 비교 | [Study Note](./study-notes/2026-09-04-study-questions.md)와 [Query Plan Lab Report](./lab-reports/2026-09-04-postgresql-index-and-query-plan-lab.md) 작성 | Seq Scan·Index Scan 선택 이유와 쓰기 비용 설명 | Completed |
 | 9월 5일 토요일 | 개인 일정으로 학습 미실시 | 실행 없음 | 남은 학습·적용·기록 과업을 9월 6일로 이월 | 기존 완료 근거를 유지하고 별도 일일 학습 기록을 만들지 않음 | Deferred — 9월 6일 이월 |
-| 9월 6일 일요일 | 네 가지 핵심 질문을 자료 없이 답한 뒤 근거로 교정 | 임시 Table의 정규화 전후 갱신 이상 비교, Gate 통과 시 PostgreSQL Adapter·실제 DB Integration Test | 9월 6일 Study Note, Diff Review, Week 3 WIL과 다음 질문 정리 | 미완료 핵심 근거를 보완하고 Adapter 수행·보류 이유와 완료·부분 완료 범위를 기록 | Planned — 아래 실행 계획으로 구체화 |
+| 9월 6일 일요일 | 네 가지 핵심 질문을 자료 없이 답한 뒤 근거로 교정 | 임시 Table의 정규화 전후 갱신 이상 비교, Gate 통과 시 PostgreSQL Adapter·실제 DB Integration Test | 9월 6일 Study Note, Diff Review, Week 3 WIL과 다음 질문 정리 | 미완료 핵심 근거를 보완하고 Adapter 수행·보류 이유와 완료·부분 완료 범위를 기록 | Completed — 90분 축소 경로, Adapter Deferred |
 
 ## 9월 6일 일요일 실행 계획
 
@@ -230,7 +230,7 @@ Dependency·Docker 문제 해결이 30분을 넘거나 상태 복원 설계가 �
 | [9월 4일 Study Note](./study-notes/2026-09-04-study-questions.md) | Index·Planner 개념 교정과 일일 완료 판단 | 금요일 학습 진행 | Completed |
 | [Isolation·Lock Lab Report](./lab-reports/2026-09-03-postgresql-isolation-and-lock-lab.md) | 두 Session 동시성·대기와 실패 재현 | SQL 실행 결과 확보 | Completed |
 | [Index·Query Plan Lab Report](./lab-reports/2026-09-04-postgresql-index-and-query-plan-lab.md) | Index 전후 실행 계획 비교 | 고정 Dataset 결과 확보 | Completed |
-| Week 3 WIL | 이해 변화와 다음 판단 | 9월 6일 실제 결과 | Planned |
+| [Week 3 WIL](./wil.md) | 이해 변화와 다음 판단 | 9월 6일 실제 결과 | Ready — 공개 전 초안 |
 
 실제 파일이 생기기 전에는 Placeholder Link를 만들지 않는다. Learning Note와 Lab Report를 모두 강제로 만들지 않고, 한 문서가 질문·절차·관찰을 충분히 담으면 중복 문서는 생략한다.
 
@@ -245,9 +245,9 @@ Dependency·Docker 문제 해결이 30분을 넘거나 상태 복원 설계가 �
 - [x] 고정 Dataset의 Index 전후 Query Plan이 있다.
 - [x] 기존 33개 Clean Test 회귀가 유지된다.
 - [ ] AI 도움 없이 SQL 또는 작은 Adapter 변경과 관련 Test를 수행했다.
-- [ ] JPA·N+1·Pool·비범위 선택 이유가 기록됐다.
-- [ ] 완료·부분 완료·미수행 범위를 Week 3 WIL에 남겼다.
-- [ ] Secret, 개인정보, 내부 URL과 로컬 절대 경로가 공개 자료에 없다.
+- [x] JPA·N+1·Pool·비범위 선택 이유가 기록됐다.
+- [x] 완료·부분 완료·미수행 범위를 Week 3 WIL에 남겼다.
+- [x] Secret, 개인정보, 내부 URL과 로컬 절대 경로가 공개 자료에 없다.
 
 ## 계획 변경 기록
 
@@ -262,6 +262,7 @@ Baseline 이후 핵심 SQL 실험, PostgreSQL 적용 범위나 일정이 바뀌�
 | 2026-09-03 | Lost Update를 두 Session의 동일 절대값 저장 결과만으로 비교 | 같은 계산 방식의 순차 대조와 동시 stale-read를 분리하고, 원자적 증가·Version 충돌·역순과 동일 순서 Lock까지 재현 | 고정값 저장만으로는 순차 실행과 동시 갱신 유실을 구분할 수 없다는 한계를 학습 중 발견 | Isolation·Lock 범위를 완료하고 Index·실행 계획 학습으로 전환 | [9월 3일 기록](./study-notes/2026-09-03-study-questions.md), [Lab Report](./lab-reports/2026-09-03-postgresql-isolation-and-lock-lab.md) |
 | 2026-09-05 | 주간 복습·선택 적용·Week 3 기록을 토요일에 수행 | 해당 과업 전체를 9월 6일로 이월 | 개인 일정으로 학습 시간을 확보하지 못했으며 미실시 내용을 완료로 기록하지 않음 | Week 3 종료일을 하루 연장하되 Week 4 범위는 선행하지 않음 | 주간 일정 변경 |
 | 2026-09-06 | 일요일에 핵심 복습, Adapter 또는 미완료 SQL 보완과 WIL을 수행 | 네 질문 Review Gate → 임시 Table 정규화 Spike → 환경·시간 Gate → Adapter 또는 축소 경로 → WIL의 상대 시간표로 구체화 | 남은 핵심 근거와 선택 적용을 같은 우선순위로 두면 설정 문제가 주간 마감을 방해할 수 있고, 계획 시점에 Docker Daemon이 실행되지 않았음 | 핵심 학습 근거와 정직한 Week 3 마감을 P0로 두며 Adapter·N+1·Pool을 Week 4에 자동 누적하지 않음 | 9월 6일 시작 환경 확인과 일요일 실행 계획 |
+| 2026-09-07 | 9월 6일 Session의 Review·정규화·마감 결과 미확정 | Review Gate 통과, 임시 Table 정규화 비교·Rollback과 Week 3 WIL 완료; Adapter는 `Deferred` | 23:59에 시작한 하나의 Session이 자정을 넘겼고 90분 축소 경로와 실행 Gate를 적용함 | Week 3 핵심 SQL 학습은 완료하되 Adapter·N+1·Pool은 조건 없이 Week 4로 이월하지 않음 | [9월 6일 마감 기록](./study-notes/2026-09-06-study-questions.md), [Week 3 WIL](./wil.md) |
 
 ## 공식 학습 자료 Baseline
 

@@ -1,7 +1,7 @@
 # Week 3 — PostgreSQL·Transaction·Lock·Index
 
 > 기간: 2026-08-31 ~ 2026-09-06
-> 상태: In Progress
+> 상태: Completed
 > 핵심 질문: Database의 Transaction과 실행 계획이 Ticket의 일관성과 조회 성능에 어떤 영향을 주는가?
 > 공통 실습: AI Helpdesk Learning Lab의 Ticket 저장·조회와 독립 SQL Spike
 
@@ -25,8 +25,8 @@ Week 2에는 In-memory Repository 기반 Ticket 생성·조회 API와 HTTP 오�
 
 - 시작할 때의 이해: Ticket은 현재 Process Memory에만 저장되며 Database Transaction·Lock·Index는 아직 Code나 실제 PostgreSQL로 검증하지 않았다.
 - 가장 중요한 실험: 두 Session의 동시 수정과 고정 Dataset의 Index 전후 `EXPLAIN ANALYZE` 비교
-- 선택 적용: 기존 Repository Port를 유지한 PostgreSQL Adapter와 실제 PostgreSQL Integration Test
-- 남은 질문: JPA Persistence Context·N+1과 Connection Pool을 핵심 SQL 실험 뒤 이번 주에 다룰 시간이 있는가?
+- 선택 적용 판단: 기존 Repository Port를 유지한 PostgreSQL Adapter와 실제 PostgreSQL Integration Test는 실행 Gate 미충족으로 `Deferred`
+- 다음 질문: 인증된 사용자와 권한 있는 사용자를 어떤 경계에서 구분하고 실패를 안전한 HTTP 응답으로 표현하는가?
 
 ## 선택 범위
 
@@ -84,6 +84,7 @@ Index와 Query Plan
 - Database: PostgreSQL Server 17.11·`psql` Client 17.7, Windows Service와 `ai_helpdesk_learning_lab` 인증 접속 `VERIFIED`
 - 학습용 Database: `ai_helpdesk_learning_lab` 생성·인증 접속과 현재 연결 대상 `VERIFIED`
 - 학습 Schema: `public.tickets`, `public.ticket_status_history` DDL·Constraint·Foreign Key와 대표 성공·실패 SQL `USER_VERIFIED`
+- 정규화 보완 Spike: 임시 비정규·정규 Table의 제목 변경과 `JOIN`, 최종 `ROLLBACK` `USER_VERIFIED`
 - Transaction SQL Spike: Ticket·최초 이력 정상 Commit과 의도적 이력 실패 뒤 전체 Rollback `USER_VERIFIED`
 - 동시성 SQL Spike: 두 Session의 MVCC 가시성·Lock 대기·Lost Update·낙관적 Lock·Deadlock과 동일 Lock 순서 `USER_VERIFIED`
 - Index SQL Spike: 고정 100,000건 Dataset의 단일·복합 Index 전후 Scan·정렬·Buffer 비교 `USER_VERIFIED`
@@ -96,10 +97,10 @@ Version·Service·접속 상태와 인증 접속은 실제 명령으로 확인�
 | 학습 주제 | 계획 상태 | 실제 상태 | 계획된 근거 |
 |---|---|---|---|
 | Week 2 오류·공통 처리 복습 | 조건부 후속 | Completed | 8월 31일 질문·교정 기록과 전체 33개 Clean Test |
-| Schema·정규화·Constraint | 핵심 학습 | Partially Completed | 1~3NF 설명, 정규화 Table·Constraint 실패 SQL 완료; 비정규 Table 실제 비교 `NOT_RUN` |
+| Schema·정규화·Constraint | 핵심 학습 | Completed | 1~3NF 설명, Constraint 실패 SQL과 비정규·정규 갱신 결과 비교 |
 | Transaction·Isolation·Lock | 핵심 학습 | Completed | 정상 Commit·실패 Rollback, 두 Session MVCC·Lock·Lost Update·Deadlock 재현 |
 | Index·실행 계획 | 핵심 학습 | Completed | [고정 Dataset의 Index·Query Plan 비교](./lab-reports/2026-09-04-postgresql-index-and-query-plan-lab.md) |
-| PostgreSQL Repository Adapter | 선택 적용 | Planned | 기존 Port를 유지한 작은 Diff와 Integration Test |
+| PostgreSQL Repository Adapter | 선택 적용 | Deferred | 일요일 축소 경로의 Docker·연속 구현 시간 Gate 미충족; 재개 조건 기록 |
 | JPA N+1 | 조건부 후속 | Deferred | 실제 관계 Mapping과 Query 수가 생길 때 재검토 |
 | Connection Pool 부하 | 조건부 후속 | Deferred | 실제 연결과 측정 환경이 생길 때 재검토 |
 
@@ -130,25 +131,30 @@ Version·Service·접속 상태와 인증 접속은 실제 명령으로 확인�
 - [2026-09-02 — PostgreSQL Transaction과 Atomicity 실습](./study-notes/2026-09-02-study-questions.md)
 - [2026-09-03 — PostgreSQL Isolation·MVCC·Lock 실습](./study-notes/2026-09-03-study-questions.md)
 - [2026-09-04 — PostgreSQL Index·EXPLAIN ANALYZE 실습](./study-notes/2026-09-04-study-questions.md)
+- [2026-09-06 — Week 3 핵심 복습·정규화 보완과 주간 마감](./study-notes/2026-09-06-study-questions.md)
 
 ## Lab Report
 
 - [PostgreSQL 두 Session의 가시성·Lock·동시 갱신](./lab-reports/2026-09-03-postgresql-isolation-and-lock-lab.md) — MVCC, Lock 대기, Lost Update, 낙관적 Lock과 Deadlock 재현
 - [PostgreSQL Index와 Query Plan 비교](./lab-reports/2026-09-04-postgresql-index-and-query-plan-lab.md) — 불균등 Dataset의 단일·복합 Index, 정렬·`LIMIT`과 Buffer 비교
 
+## WIL
+
+- [Week 3 WIL — 값의 유효성에서 일관된 변경과 비용 기반 조회까지](./wil.md) — 핵심 이해 변화, 실제 SQL·Query Plan 근거와 선택 적용 보류 판단
+
 ## Learning Evidence Gate
 
 - [x] Week 2 복습 세 흐름을 설명하고 교정 결과를 Study Note에 기록한다.
 - [x] 비정규 구조의 중복·갱신 이상과 1~3NF 분리 이유를 설명한다.
 - [x] `tickets`·`ticket_status_history` DDL과 Constraint·Foreign Key 실패를 재현한다.
-- [ ] 비정규 Table을 실제로 만들고 같은 변경의 정규화 전후 결과를 비교한다.
+- [x] 비정규 Table을 실제로 만들고 같은 변경의 정규화 전후 결과를 비교한다.
 - [x] Transaction 중간 실패에서 Commit·Rollback 결과를 직접 확인한다.
 - [x] 두 Session에서 동시 수정과 Lock 대기 또는 충돌을 재현한다.
 - [x] 같은 Query의 Index 전후 `EXPLAIN ANALYZE`를 비교한다.
 - [x] 기존 33개 Clean Test의 회귀를 유지한다.
-- [ ] PostgreSQL 적용·보류 범위와 이유를 기록한다.
-- [ ] 완료·부분 완료·미수행 범위를 Week 3 WIL에 남긴다.
-- [ ] 공개 자료에 Secret, 개인정보, 내부 URL과 로컬 절대 경로가 없다.
+- [x] PostgreSQL 적용·보류 범위와 이유를 기록한다.
+- [x] 완료·부분 완료·미수행 범위를 Week 3 WIL에 남긴다.
+- [x] 공개 자료에 Secret, 개인정보, 내부 URL과 로컬 절대 경로가 없다.
 
 ## 공식 자료 Baseline
 
