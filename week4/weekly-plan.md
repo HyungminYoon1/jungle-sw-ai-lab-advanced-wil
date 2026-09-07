@@ -1,7 +1,7 @@
 # Week 4 학습 계획 — 인증·인가·Session·CSRF
 
 > 기간: 2026-09-07 ~ 2026-09-13
-> 상태: Planned
+> 상태: In Progress — 9월 7일 학습 완료, 9월 11일 Security Baseline 구현 대기
 > 사용 가능일: 월요일·금요일·토요일만
 > 목표 시간: 하루 약 5시간, 총 15시간
 > Hard Limit: 하루 6시간을 넘기지 않고 남는 항목은 Cut Line에 따라 이월
@@ -21,9 +21,9 @@
 | 현재 Web API | `POST /api/tickets`, `GET /api/tickets/{id}` |
 | 현재 저장소 | `InMemoryTicketRepository`; PostgreSQL Adapter 없음 |
 | 현재 Security | Spring Security 의존성·사용자·인증 설정 없음 |
-| 기존 Test | Week 3 WIL 기준 33개 통과; Week 4 구현 전에 반드시 다시 실행 |
+| Week 4 구현 전 Test | 2026-09-07 19:23 KST `mvnw.cmd test`, 33개 통과·실패 0·오류 0·건너뜀 0 |
 
-이 표의 33개는 과거 실행 근거다. 월요일 Baseline 실행이 성공하기 전에는 현재 회귀 Test 통과로 다시 주장하지 않는다.
+이 결과는 Security 추가 전 현재 In-memory Application 회귀 기준선이다. 인증·인가·Session·CSRF 또는 PostgreSQL Adapter 동작 근거로 사용하지 않는다.
 
 ## 3일 Scope 결정과 근거
 
@@ -98,6 +98,8 @@
 - Password·Role·Session·CSRF Test 이름과 Given-When-Then 작성
 
 **중단 조건:** 기존 Test가 실패하면 Security 구현을 시작하지 않고 Baseline 실패 원인을 먼저 분리한다.
+
+**월요일 결과:** Completed — 개념 설명 Gate, Security 추가 전 33개 Test Baseline과 Red Test 계약을 완료했다. Spring Security Production Code와 Security Integration Test는 아직 수행하지 않았다.
 
 ## 화요일~목요일 — 학습 Block 없음
 
@@ -215,3 +217,8 @@
 - 2026-09-07: XSS·CORS는 Week 5 후보, SQL Injection은 Database Adapter 이후, HTTPS는 Week 8로 분리하고 나머지 보안 주제를 자동 누적하지 않기로 했다.
 - 2026-09-07: GitHub Project에 Week 4 Draft Issue 5개를 등록하고 준비 작업은 `Done`, 첫 구현 항목은 `Ready`, 나머지는 `Backlog`로 설정했다.
 - 2026-09-07: 별도 ADR을 유지하지 않고 검토한 대안, 선택 이유와 재검토 조건을 이 주간 계획에 통합했다.
+- 2026-09-07: Security 추가 전 Maven 전체 Test 33개를 다시 통과하고, 인증·인가와 Password·Session·CSRF Learning Note 및 구현 전 Test 계약을 작성했다. 사용자의 최초 설명과 Security 구현·Integration Test는 아직 완료하지 않았다.
+- 2026-09-07: 최초 설명에서 인증·인가의 목적과 Policy에 따른 Status 차이는 확인했다. Session ID와 Server-side 인증 정보, 정상 Cookie를 이용하는 CSRF, 복호화 없는 Password Hash 검증은 교정 후 재설명 대상으로 남겼다.
+- 2026-09-07: 재설명에서 CSRF 공격 조건과 Token 검증은 확인했다. Session 상태의 마지막 연결은 보정했고, Password Hash의 저장된 Salt 재사용과 JWT 전달 위치에 따른 CSRF 차이는 추가 학습 대상으로 남겼다.
+- 2026-09-07: 2차 재설명에서 저장된 Salt를 사용하는 단방향 Password 검증과 JWT의 Cookie·Bearer Header 전달 차이를 확인했다. Session ID로 `HttpSession`·`SecurityContext`를 복원하는 흐름만 최종 확인 대상으로 남겼다.
+- 2026-09-07: 최종 재설명에서 Session ID로 `HttpSession`·`SecurityContext`를 찾고 요청 Thread의 `SecurityContextHolder`에 인증을 복원하는 흐름을 확인해 월요일 개념 Gate를 완료했다.

@@ -1,7 +1,7 @@
 # Week 4 — 인증·인가·Session·CSRF
 
 > 기간: 2026-09-07 ~ 2026-09-13
-> 상태: Planned — 월·금·토 3일 축소 일정
+> 상태: In Progress — 9월 7일 학습 완료, 9월 11일 Security Baseline 구현 대기
 > 학습 가능일: 9월 7일 월요일, 9월 11일 금요일, 9월 12일 토요일
 > 공통 실습: AI Helpdesk Learning Lab
 
@@ -37,8 +37,8 @@
 ## 이번 주 산출물
 
 - `weekly-plan.md`: 3일 Block, Must·Should·Cut Line과 이월 규칙
-- `study-docs/authentication-authorization.md`: 인증·인가·`401`·`403` 설명과 Role Matrix
-- `study-docs/password-session-csrf.md`: Hash·Session·Cookie·CSRF 예상과 관찰
+- [Authentication·Authorization Learning Note](./study-docs/authentication-authorization.md): 인증·인가·`401`·`403` 설명과 Role Matrix
+- [Password·Session·CSRF Learning Note](./study-docs/password-session-csrf.md): Hash·Session·Cookie·CSRF의 역할과 Test 경계
 - `study-docs/security-test-evidence.md`: Test 실행, HTTP Trace와 Secret 점검 근거
 - `wil.md`: 이해 변화, 실패 원인, 범위와 다음 질문
 
@@ -46,7 +46,7 @@
 
 ## 완료 기준
 
-- [ ] 인증과 인가, `401`과 `403`을 이번 API Case로 설명한다.
+- [x] 인증과 인가, `401`과 `403`을 이번 API Case로 설명한다.
 - [ ] 동일 Password를 두 번 Encode한 결과와 `matches` 결과를 Secret 노출 없이 검증한다.
 - [ ] Form Login으로 Session이 생성되고 후속 Request가 Cookie로 인증되는 흐름을 Test한다.
 - [ ] 익명·`USER`·`AGENT`의 권한 Matrix를 자동화 Test로 확인한다.
@@ -65,5 +65,6 @@
 
 ## 관련 문서
 
+- [2026-09-07 학습 질문과 구현 전 Test 계약](./study-notes/2026-09-07-study-questions.md)
 - [Week 4 상세 학습 계획](./weekly-plan.md)
 - [12주 주차별 Roadmap](../plan/weekly-roadmap.md)
