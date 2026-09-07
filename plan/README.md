@@ -11,6 +11,8 @@
 3. [학습 및 기술 콘텐츠 계획](./learning-and-content-plan.md): 학습 방법, AI 활용, WIL과 공개 증거
 4. 각 `weekN`의 Weekly Plan: 해당 주에 확정한 일정과 변경 기록
 
+공지 Source와 실제 학습 근거의 상세 대조표는 Git에서 제외되는 로컬 검토 자료로 관리한다. 공개 계획에는 승인된 범위 결정과 필요한 요약만 남기며, `Planned`는 완료 근거로 계산하지 않는다.
+
 ## 범위 결정
 
 - [학습 우선 범위 전환 Decision](./decisions/0001-learning-first-scope.md)
