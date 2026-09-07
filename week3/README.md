@@ -1,7 +1,7 @@
 # Week 3 — PostgreSQL·Transaction·Lock·Index
 
 > 기간: 2026-08-31 ~ 2026-09-06
-> 상태: Completed
+> 상태: Completed — 핵심 SQL 학습·WIL 작성·블로그 게시·포럼 등록 완료, PostgreSQL Adapter는 Deferred
 > 핵심 질문: Database의 Transaction과 실행 계획이 Ticket의 일관성과 조회 성능에 어떤 영향을 주는가?
 > 공통 실습: AI Helpdesk Learning Lab의 Ticket 저장·조회와 독립 SQL Spike
 
@@ -140,7 +140,7 @@ Version·Service·접속 상태와 인증 접속은 실제 명령으로 확인�
 
 ## WIL
 
-- [Week 3 WIL — 값의 유효성에서 일관된 변경과 비용 기반 조회까지](./wil.md) — 핵심 이해 변화, 실제 SQL·Query Plan 근거와 선택 적용 보류 판단
+- [Week 3 WIL — 값의 유효성에서 일관된 변경과 비용 기반 조회까지](./wil.md) — 핵심 이해 변화, 실제 SQL·Query Plan 근거와 선택 적용 보류 판단; 2026-09-07 블로그 게시·포럼 등록 완료
 
 ## Learning Evidence Gate
 
@@ -154,6 +154,7 @@ Version·Service·접속 상태와 인증 접속은 실제 명령으로 확인�
 - [x] 기존 33개 Clean Test의 회귀를 유지한다.
 - [x] PostgreSQL 적용·보류 범위와 이유를 기록한다.
 - [x] 완료·부분 완료·미수행 범위를 Week 3 WIL에 남긴다.
+- [x] Week 3 WIL을 블로그에 게시하고 포럼에 등록한다. (2026-09-07 사용자 확인)
 - [x] 공개 자료에 Secret, 개인정보, 내부 URL과 로컬 절대 경로가 없다.
 
 ## 공식 자료 Baseline

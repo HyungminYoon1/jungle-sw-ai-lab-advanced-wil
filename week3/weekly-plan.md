@@ -230,7 +230,7 @@ Dependency·Docker 문제 해결이 30분을 넘거나 상태 복원 설계가 �
 | [9월 4일 Study Note](./study-notes/2026-09-04-study-questions.md) | Index·Planner 개념 교정과 일일 완료 판단 | 금요일 학습 진행 | Completed |
 | [Isolation·Lock Lab Report](./lab-reports/2026-09-03-postgresql-isolation-and-lock-lab.md) | 두 Session 동시성·대기와 실패 재현 | SQL 실행 결과 확보 | Completed |
 | [Index·Query Plan Lab Report](./lab-reports/2026-09-04-postgresql-index-and-query-plan-lab.md) | Index 전후 실행 계획 비교 | 고정 Dataset 결과 확보 | Completed |
-| [Week 3 WIL](./wil.md) | 이해 변화와 다음 판단 | 9월 6일 실제 결과 | Ready — 공개 전 초안 |
+| [Week 3 WIL](./wil.md) | 이해 변화와 다음 판단 | 9월 6일 실제 결과 | Completed — 2026-09-07 블로그 게시·포럼 등록 완료 |
 
 실제 파일이 생기기 전에는 Placeholder Link를 만들지 않는다. Learning Note와 Lab Report를 모두 강제로 만들지 않고, 한 문서가 질문·절차·관찰을 충분히 담으면 중복 문서는 생략한다.
 
@@ -247,6 +247,7 @@ Dependency·Docker 문제 해결이 30분을 넘거나 상태 복원 설계가 �
 - [ ] AI 도움 없이 SQL 또는 작은 Adapter 변경과 관련 Test를 수행했다.
 - [x] JPA·N+1·Pool·비범위 선택 이유가 기록됐다.
 - [x] 완료·부분 완료·미수행 범위를 Week 3 WIL에 남겼다.
+- [x] Week 3 WIL을 블로그에 게시하고 포럼에 등록했다. (2026-09-07 사용자 확인)
 - [x] Secret, 개인정보, 내부 URL과 로컬 절대 경로가 공개 자료에 없다.
 
 ## 계획 변경 기록
@@ -263,6 +264,7 @@ Baseline 이후 핵심 SQL 실험, PostgreSQL 적용 범위나 일정이 바뀌�
 | 2026-09-05 | 주간 복습·선택 적용·Week 3 기록을 토요일에 수행 | 해당 과업 전체를 9월 6일로 이월 | 개인 일정으로 학습 시간을 확보하지 못했으며 미실시 내용을 완료로 기록하지 않음 | Week 3 종료일을 하루 연장하되 Week 4 범위는 선행하지 않음 | 주간 일정 변경 |
 | 2026-09-06 | 일요일에 핵심 복습, Adapter 또는 미완료 SQL 보완과 WIL을 수행 | 네 질문 Review Gate → 임시 Table 정규화 Spike → 환경·시간 Gate → Adapter 또는 축소 경로 → WIL의 상대 시간표로 구체화 | 남은 핵심 근거와 선택 적용을 같은 우선순위로 두면 설정 문제가 주간 마감을 방해할 수 있고, 계획 시점에 Docker Daemon이 실행되지 않았음 | 핵심 학습 근거와 정직한 Week 3 마감을 P0로 두며 Adapter·N+1·Pool을 Week 4에 자동 누적하지 않음 | 9월 6일 시작 환경 확인과 일요일 실행 계획 |
 | 2026-09-07 | 9월 6일 Session의 Review·정규화·마감 결과 미확정 | Review Gate 통과, 임시 Table 정규화 비교·Rollback과 Week 3 WIL 완료; Adapter는 `Deferred` | 23:59에 시작한 하나의 Session이 자정을 넘겼고 90분 축소 경로와 실행 Gate를 적용함 | Week 3 핵심 SQL 학습은 완료하되 Adapter·N+1·Pool은 조건 없이 Week 4로 이월하지 않음 | [9월 6일 마감 기록](./study-notes/2026-09-06-study-questions.md), [Week 3 WIL](./wil.md) |
+| 2026-09-07 | Week 3 WIL `Ready — 공개 전 초안` | 블로그 게시·포럼 등록 완료로 `Completed` | 사용자가 외부 게시와 포럼 등록 완료를 확인함 | Week 3 공개 기록 절차를 마감하되 PostgreSQL Adapter의 `Deferred` 상태는 유지 | 사용자 확인 |
 
 ## 공식 학습 자료 Baseline
 

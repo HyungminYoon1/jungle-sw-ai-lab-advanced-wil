@@ -2,7 +2,7 @@
 
 > 기간: 2026-08-31 ~ 2026-09-06
 > 상태: Completed
-> 문서 상태: 공개 전 초안
+> 문서 상태: 2026-09-07 블로그 게시·포럼 등록 완료 — 사용자 확인
 > 핵심 질문: Database의 Transaction과 실행 계획이 Ticket의 일관성과 조회 성능에 어떤 영향을 주는가?
 
 ## 이번 주 요약
@@ -132,7 +132,7 @@ AI가 제시한 SQL이나 설명은 사용자가 실행 결과를 확인하고 �
 - 날짜별 Study Note: 8월 31일 복습부터 9월 6일 주간 마감까지
 - 재사용 Learning Note: SQL 기초, Transaction·Atomicity, Isolation·MVCC·Lock, Index·실행 계획
 - Lab Report: 두 Session 동시성, 고정 Dataset의 Index·Query Plan 비교
-- 기술 블로그 후보: `UPDATE 0`을 낙관적 충돌로 해석하는 Application 책임, 선택도와 정렬이 Index 선택을 바꾸는 이유
+- 게시 기술 블로그: 「PostgreSQL 동시성과 인덱스」 — Constraint·Transaction·동시성·Index 실험과 PostgreSQL Adapter 보류 범위를 정리해 2026-09-07 게시·포럼 등록 완료
 - 아직 근거가 부족한 주장: Production 성능 향상 비율, Spring Transaction·JPA Lock의 실제 동작, Connection Pool 병목
 
 ## 회고
