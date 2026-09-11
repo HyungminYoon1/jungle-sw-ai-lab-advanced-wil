@@ -1,7 +1,7 @@
 # Week 4 — 인증·인가·Session·CSRF
 
 > 기간: 2026-09-07 ~ 2026-09-13
-> 상태: In Progress — 9월 7일 학습 완료, 9월 11일 Security Baseline 구현 대기
+> 상태: In Progress — 9월 11일 연장 Session의 Default `302` 실험까지 완료, 명시적 계약 구현은 9월 12일로 이월
 > 학습 가능일: 9월 7일 월요일, 9월 11일 금요일, 9월 12일 토요일
 > 공통 실습: AI Helpdesk Learning Lab
 
@@ -14,6 +14,17 @@
 원래 Roadmap의 Week 4에는 인증·인가와 여러 Web 취약점이 함께 포함되어 있다. 이번 주는 3일만 사용할 수 있고 현재 Lab에는 Spring Security, 사용자 모델과 Database Adapter가 없다. 따라서 기존 Ticket 생성·조회 API에 최소 Role Matrix를 적용하는 Session 인증 수직 흐름만 필수 범위로 선택한다.
 
 공지 키워드 전체 검토에서 공개 가능한 범위 결정과 이월 근거는 [상세 학습 계획](./weekly-plan.md)에 함께 기록한다. 상세 Source Audit은 공개 Repository에 포함하지 않는다.
+
+## 권장 학습 순서
+
+처음부터 Spring Security Class 이름을 모두 외우지 않는다. 사용자에게 보이는 한 번의 Login과 후속 Request를 먼저 이해한 뒤 Framework 구성요소와 Test로 내려간다.
+
+1. [Form Login과 Session 인증 과정](./study-docs/session-authentication-flow.md)의 `먼저 읽는 5분 이야기`로 회원가입·Login·후속 Request의 전체 순서를 잡는다.
+2. [Password·Session·CSRF](./study-docs/password-session-csrf.md)의 초심자용 Password 예시로 `encode`와 `matches`를 구분한다.
+3. [Authentication·Authorization](./study-docs/authentication-authorization.md)에서 `401`·`403`·`200`이 갈리는 이유를 확인한다.
+4. 다시 Session 인증 과정으로 돌아가 `AuthenticationManager`, `SecurityContextRepository`와 Filter의 실제 책임을 읽는다.
+5. [9월 11일 회상 Gate](./study-notes/2026-09-11-study-questions.md)에서 순서 암기와 구성요소의 역할 이해를 나누어 점검한다.
+6. [9월 12일 학습 계획](./study-notes/2026-09-12-study-questions.md)에 따라 명시적 Security 계약과 Test를 작은 Green 단계로 구현한다.
 
 ## 선택한 학습 범위
 
@@ -37,9 +48,10 @@
 ## 이번 주 산출물
 
 - `weekly-plan.md`: 3일 Block, Must·Should·Cut Line과 이월 규칙
-- [Authentication·Authorization Learning Note](./study-docs/authentication-authorization.md): 인증·인가·`401`·`403` 설명과 Role Matrix
+- [Authentication·Authorization Learning Note](./study-docs/authentication-authorization.md): 인증·인가·`401`·`403`, Role Matrix와 MockMvc Test 경계
 - [Password·Session·CSRF Learning Note](./study-docs/password-session-csrf.md): Hash·Session·Cookie·CSRF의 역할과 Test 경계
-- `study-docs/security-test-evidence.md`: Test 실행, HTTP Trace와 Secret 점검 근거
+- [Form Login·Session 인증 과정 Learning Note](./study-docs/session-authentication-flow.md): 최초 Login, 인증 상태 저장과 후속 Request 복원 과정
+- [Security Test 실행 근거](./study-docs/security-test-evidence.md): 의존성 단독 실험, Test 경계·Default `302`와 Secret 점검 근거
 - `wil.md`: 이해 변화, 실패 원인, 범위와 다음 질문
 
 산출물 파일은 실제 학습과 검증이 시작될 때 추가한다. 빈 증거 문서를 미리 만들어 완료처럼 보이게 하지 않는다.
@@ -66,5 +78,9 @@
 ## 관련 문서
 
 - [2026-09-07 학습 질문과 구현 전 Test 계약](./study-notes/2026-09-07-study-questions.md)
+- [2026-09-11 회상 Gate와 Security Baseline 준비](./study-notes/2026-09-11-study-questions.md)
+- [2026-09-12 Security Baseline·권한·CSRF 학습 계획](./study-notes/2026-09-12-study-questions.md)
+- [Form Login과 Session 인증 과정](./study-docs/session-authentication-flow.md)
+- [Spring Security Default Auto-Configuration 실험 근거](./study-docs/security-test-evidence.md)
 - [Week 4 상세 학습 계획](./weekly-plan.md)
 - [12주 주차별 Roadmap](../plan/weekly-roadmap.md)

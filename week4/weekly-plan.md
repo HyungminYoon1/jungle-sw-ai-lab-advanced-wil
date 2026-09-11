@@ -1,7 +1,7 @@
 # Week 4 학습 계획 — 인증·인가·Session·CSRF
 
 > 기간: 2026-09-07 ~ 2026-09-13
-> 상태: In Progress — 9월 7일 학습 완료, 9월 11일 Security Baseline 구현 대기
+> 상태: In Progress — 9월 11일 연장 Session의 Default Security 실험까지 완료, 남은 구현은 9월 12일로 이월
 > 사용 가능일: 월요일·금요일·토요일만
 > 목표 시간: 하루 약 5시간, 총 15시간
 > Hard Limit: 하루 6시간을 넘기지 않고 남는 항목은 Cut Line에 따라 이월
@@ -10,9 +10,9 @@
 
 > Spring Security의 인증 Filter, Session과 Server-side 권한 검사는 어떤 순서로 Request를 거절하거나 Application으로 전달하며, CSRF는 이 흐름에서 무엇을 보호하는가?
 
-## 시작 Baseline
+## Baseline과 실행 근거
 
-계획 작성 시점의 Source와 실행 근거를 구분한다.
+계획 작성 시점의 Source와 이후 실행 근거를 시각·변경 단계별로 구분한다.
 
 | 항목 | 확인 상태 |
 |---|---|
@@ -20,10 +20,13 @@
 | AI Helpdesk Lab | `main`, HEAD `cc34275`, 계획 작성 시 Working Tree Clean |
 | 현재 Web API | `POST /api/tickets`, `GET /api/tickets/{id}` |
 | 현재 저장소 | `InMemoryTicketRepository`; PostgreSQL Adapter 없음 |
-| 현재 Security | Spring Security 의존성·사용자·인증 설정 없음 |
+| 계획 작성 시 Security | Spring Security 의존성·사용자·인증 설정 없음 |
 | Week 4 구현 전 Test | 2026-09-07 19:23 KST `mvnw.cmd test`, 33개 통과·실패 0·오류 0·건너뜀 0 |
+| 금요일 변경 전 Test 재확인 | 2026-09-11 23:40 KST `mvnw.cmd test`, 33개 통과·실패 0·오류 0·건너뜀 0 |
+| 9월 11일 연장 Session — 의존성 실험 직전 | 실제 실행 2026-09-12 00:41 KST `mvnw.cmd test`, 33개 통과·실패 0·오류 0·건너뜀 0 |
+| 9월 11일 연장 Session — Security Starter 단독 실험 | 실제 실행 2026-09-12 00:42 KST `mvnw.cmd test`, 33개 중 31개 통과·2개 실패; 실제 Context Test가 `404` 대신 `/login` Redirect `302` 반환 |
 
-이 결과는 Security 추가 전 현재 In-memory Application 회귀 기준선이다. 인증·인가·Session·CSRF 또는 PostgreSQL Adapter 동작 근거로 사용하지 않는다.
+Starter 추가 전의 세 실행은 기존 In-memory Application 회귀 기준선이다. Starter 추가 후의 실패는 Default Auto-Configuration 영향 근거일 뿐, 인증·인가·Session·CSRF 계약이나 PostgreSQL Adapter 동작 근거로 사용하지 않는다.
 
 ## 3일 Scope 결정과 근거
 
@@ -122,6 +125,8 @@
 
 **검증:** 같은 원문을 두 번 Encode한 값은 서로 달라도 둘 다 `matches`를 통과하고 잘못된 원문은 실패한다.
 
+**9월 11일 결과:** Partially Completed — 자정을 넘긴 연장 Session에서 Security Starter만 추가해 Spring Security 7.1.1 해석과 Default `/login` Redirect를 관찰했다. 사용자 정의 `SecurityFilterChain`, Password·사용자·Role과 Security Test 지원 의존성은 9월 12일로 이월한다.
+
 ### Block 3 — Login·Session Integration Test (약 2시간)
 
 - Login 성공·실패 Test
@@ -130,23 +135,29 @@
 
 **중단 조건:** Redirect·`401` 계약이 섞이면 예외 Handler를 넓게 바꾸지 않고 API Entry Point와 Login 흐름을 분리해 원인을 기록한다.
 
-## 토요일 — 인가·CSRF·회귀·WIL
+**9월 11일 결과:** `NOT_RUN` — Login 성공·실패와 Session 재사용 구현은 9월 12일 첫 Must 범위로 이월한다.
 
-### Block 1 — Role 우회 실패와 `401`·`403` (약 1시간 30분)
+## 토요일 — 9월 11일 이월·인가·CSRF·회귀·WIL
 
-- `USER`의 Ticket 생성 성공
-- `USER`의 Ticket 조회 직접 호출 `403`
+금요일의 미완료 구현을 숨기지 않고 토요일 범위 앞에 배치한다. 전체 후보 작업은 기존 합계로는 하루 6시간을 넘으므로, [9월 12일 학습 계획](./study-notes/2026-09-12-study-questions.md)의 Cut Line을 적용한다.
+
+### Block 1 — Security 계약·Password 이월분 (최대 2시간)
+
+- Security Test 지원 의존성
+- 익명 보호 API `401`과 Form Login Redirect 분리
+- `PasswordEncoder`와 학습용 `USER`·`AGENT`
+- 기존 Context Test의 책임 조정과 첫 Green
+
+### Block 2 — Login·Session·Role Matrix (최대 2시간)
+
+- Login 성공·실패와 후속 Request의 Session 재사용
+- `USER`의 Ticket 생성 성공과 조회 `403`
 - `AGENT`의 Ticket 조회 성공
 - 화면 버튼 숨김과 Server-side Role 검사의 차이 설명
 
-### Block 2 — CSRF 실패·정상 비교 (약 1시간 30분)
+### Block 3 — CSRF·회귀·보안 점검·WIL (최대 2시간)
 
-- 인증된 `POST /api/tickets`를 CSRF Token 없이 보내 `403` 확인
-- 유효 Token을 포함해 요청이 Controller·Application까지 진행하는지 확인
-- CSRF를 전역 비활성화하지 않고 Test 지원 API로 Token을 구성
-
-### Block 3 — 회귀·보안 점검·WIL (약 2시간)
-
+- 인증된 `POST`의 CSRF Token 없음·유효 비교
 - 전체 Test 실행, Test 수와 실패·성공 기록
 - Source·설정·Test Output·Log에서 원문 Password와 Secret 노출 여부 점검
 - 가능하면 Login 전후 Cookie Header 또는 Session ID를 한 번 관찰
@@ -222,3 +233,13 @@
 - 2026-09-07: 재설명에서 CSRF 공격 조건과 Token 검증은 확인했다. Session 상태의 마지막 연결은 보정했고, Password Hash의 저장된 Salt 재사용과 JWT 전달 위치에 따른 CSRF 차이는 추가 학습 대상으로 남겼다.
 - 2026-09-07: 2차 재설명에서 저장된 Salt를 사용하는 단방향 Password 검증과 JWT의 Cookie·Bearer Header 전달 차이를 확인했다. Session ID로 `HttpSession`·`SecurityContext`를 복원하는 흐름만 최종 확인 대상으로 남겼다.
 - 2026-09-07: 최종 재설명에서 Session ID로 `HttpSession`·`SecurityContext`를 찾고 요청 Thread의 `SecurityContextHolder`에 인증을 복원하는 흐름을 확인해 월요일 개념 Gate를 완료했다.
+- 2026-09-11: 금요일 회상 Gate에서 HTTP Status, Session 인증 복원, Password `matches`와 CSRF Test 격리에 보완이 필요함을 확인했다. 답변과 교정 내용을 별도 학습 기록에 남기고, 사용자가 다시 설명할 때까지 Security Baseline 구현을 보류했다.
+- 2026-09-11: 기존 교육자료의 인증 과정 설명이 요약 수준임을 확인해, 최초 Form Login의 Password 검증·Session 저장과 후속 Request의 `SecurityContextHolder` 복원을 구성요소별로 설명하는 Learning Note를 추가했다.
+- 2026-09-11: 1차 재설명에서 Session 인증 복원 순서는 확인했다. Role과 소유권의 구분, 복호화 없는 Password 검증의 직접 원인, CSRF `403`과 인증 `401`의 Test 격리는 다음 Gate로 남겼다.
+- 2026-09-11: 2차 재설명에서 Role 기반 인가와 저장된 Salt·Parameter를 사용하는 Password 검증을 확인했다. Session 구성요소의 역할·수명과 실패 조건을 하나씩 분리하는 CSRF·인증 Test 설명은 다음 Gate로 남겼다.
+- 2026-09-11: 최종 재설명에서 Browser Cookie, Server Session과 Request Thread Context의 역할·수명 및 `GET`으로 CSRF 변수를 제거하는 Test 격리를 확인해 구현 전 회상 Gate를 완료했다. Security 구현과 Integration Test는 아직 수행하지 않았다.
+- 2026-09-11: Security 구현 전 `standaloneSetup`과 전체 Spring Context Test의 차이를 점검했다. 검색한 설명의 기술적 방향은 확인했지만 실제 Test 결과 차이를 자신의 말로 연결하는 단계는 남겼다.
+- 2026-09-11: 정식 Learning Note에는 MockMvc 구성에 따른 Security Test 경계가 없음을 확인했다. 별도 문서를 늘리지 않고 Authentication·Authorization 자료에 Standalone·Spring Context Test의 책임과 증명 한계를 보완했다.
+- 2026-09-11: 사용자가 Standalone Controller Test와 Security Filter Chain Test의 결과가 서로 다른 Layer의 계약임을 재설명해 Test 경계 Gate를 완료했다. Security 변경 전 전체 33개 Test도 다시 통과했으며, 이는 Security 동작이 아닌 In-memory Application 회귀 기준선이다.
+- 2026-09-11 연장 Session: 실제 시각 2026-09-12 00:41~00:42 KST에 Security Starter 단독 실험을 수행해 Spring Security 7.1.1 해석을 확인했다. Standalone Controller Test 7개는 통과했지만 실제 Context Test 2개는 기존 `404` 대신 `/login` Redirect `302`를 받아 실패했다.
+- 2026-09-11 마감 정리: 위 실험과 `SavedRequest`·인증된 `SecurityContext` 구분까지를 11일 학습으로 귀속했다. 명시적 `401`·`403`, Password·Login·Session·Role·CSRF와 Green 회귀는 9월 12일 계획으로 옮겼다.

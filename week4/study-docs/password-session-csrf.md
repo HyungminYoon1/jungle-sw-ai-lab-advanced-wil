@@ -21,16 +21,58 @@ PasswordEncoder는 원문을 복호화하지 않고 검증 가능한 형태로 �
 
 `PasswordEncoder`는 Password를 단방향으로 변환하고, 로그인 입력 원문과 저장된 Encoding이 대응하는지 `matches`로 검사한다. 암호화처럼 저장 값을 복호화해 원문을 얻는 용도가 아니다.
 
-실습에서는 무작위 Salt를 사용하는 적응형 단방향 함수 구현을 선택한다. 같은 원문을 두 번 Encode했을 때 결과가 달라도 두 결과에 대한 `matches`가 모두 성공할 수 있다. 다만 이것은 모든 `PasswordEncoder` 구현의 보장이 아니라 선택한 Salt 기반 구현의 성질이므로, 금요일에 실제 구현과 해석된 Dependency Version을 확인한다.
+실습에서는 무작위 Salt를 사용하는 적응형 단방향 함수 구현을 선택한다. 같은 원문을 두 번 Encode했을 때 결과가 달라도 두 결과에 대한 `matches`가 모두 성공할 수 있다. 다만 이것은 모든 `PasswordEncoder` 구현의 보장이 아니라 선택한 Salt 기반 구현의 성질이다. 9월 11일 연장 Session의 Dependency Tree에서 Spring Security 7.1.1 해석은 확인했지만, 실제 Encoder 선택과 동작 Test는 9월 12일로 이월해 아직 `NOT_IMPLEMENTED`·`NOT_RUN`이다.
 
 ```text
 회원·Fixture 준비: raw password → encode → encoded password 저장
 Login: 입력 raw password + 저장 encoded password → matches → 성공 또는 실패
 ```
 
+### 수식 전에 알아둘 다섯 단어
+
+| 용어 | 이 문서에서의 뜻 |
+|---|---|
+| `rawPassword` | 회원가입이나 Login에서 사용자가 입력한 원문 Password |
+| `candidate` | Login 때 입력한 “맞는지 확인할 Password 후보” |
+| Salt | Password를 처음 저장할 때 만드는 사용자별 무작위 값; 비밀 열쇠가 아니라 같은 Password의 결과를 서로 다르게 만드는 값 |
+| Digest | Password·Salt·계산 설정을 단방향 함수에 넣어 얻은 계산 결과 |
+| Parameter | BCrypt Cost처럼 계산을 얼마나 어렵게 할지 정하는 Encoder 설정 |
+
+`encoded`는 단순한 Digest와 항상 같은 뜻이 아니다. 선택한 Encoder가 정한 형식에 따라 Digest와 Salt, Algorithm 식별 정보나 Parameter 일부를 함께 표현할 수 있는 저장값이다. 어떤 정보가 문자열 안에 직접 들어가고 어떤 정보가 Encoder 설정에서 제공되는지는 구현마다 다르다.
+
+### 설명용 가상 계산
+
+아래 값은 실제 Password나 실제 암호 알고리즘 결과가 아니라 원리를 보여 주기 위한 가상 예시다.
+
+```text
+가짜 Password = study-password
+
+첫 번째 encode
+  새 Salt A 생성
+  계산(study-password, Salt A, Cost 10) → Digest 111
+  encodedA = [Algorithm][Cost 10][Salt A][Digest 111]
+
+두 번째 encode
+  새 Salt B 생성
+  계산(study-password, Salt B, Cost 10) → Digest 222
+  encodedB = [Algorithm][Cost 10][Salt B][Digest 222]
+```
+
+원문은 같아도 Salt가 다르므로 `encodedA`와 `encodedB`가 달라진다. Login에서 `matches(study-password, encodedA)`를 실행하면 새 Salt를 만들지 않고 `encodedA`에 사용된 Salt A와 같은 계산 설정을 사용한다.
+
+```text
+계산(study-password, Salt A, Cost 10) → Digest 111
+저장된 Digest 111과 비교                    → true
+
+계산(wrong-password, Salt A, Cost 10) → 다른 Digest
+저장된 Digest 111과 비교                   → false
+```
+
+Server는 저장된 Digest에서 원문을 꺼내지 않는다. 사용자가 방금 제출한 후보가 있으므로, 그 후보로 같은 조건의 계산을 재현해 결과가 같은지만 확인하면 된다. 지문에서 손가락을 복원하지 않고 새로 찍은 지문과 저장된 지문을 비교하는 것과 비슷하다.
+
 ### `matches`는 왜 복호화 없이 동작하는가
 
-단방향이라는 말은 저장 결과에서 원문을 되찾기 어렵다는 뜻이지, 같은 입력으로 계산을 다시 수행할 수 없다는 뜻이 아니다. Salt 기반 함수는 같은 원문·Salt·Algorithm Parameter를 다시 넣으면 같은 결과를 만든다.
+단방향이라는 말은 저장 결과에서 원문을 되찾기 어렵다는 뜻이지, 같은 입력으로 계산을 다시 수행할 수 없다는 뜻이 아니다. Salt 기반 함수는 같은 원문·Salt·Algorithm Parameter를 다시 넣으면 같은 결과를 만든다. 아래 식은 BCrypt처럼 Salt와 주요 검증 정보를 저장 형식에 포함하는 구현을 단순화한 개념 모델이다.
 
 ```text
 첫 번째 Encode
@@ -44,13 +86,14 @@ Login: 입력 raw password + 저장 encoded password → matches → 성공 또�
   encodedB = algorithm + parameters + saltB + digestB
 ```
 
-`encodedA`와 `encodedB`에는 원문 Password가 아니라 검증에 필요한 Algorithm 식별자·Parameter·Salt와 계산 결과가 들어 있다. Salt는 Password가 아니므로 숨겨야 하는 값이 아니다.
+`encodedA`와 `encodedB`에는 원문 Password가 아니라 검증에 필요한 정보와 계산 결과가 들어 있다. BCrypt를 예로 들면 Version·Cost·Salt와 Digest가 저장 문자열에 표현된다. Spring의 `DelegatingPasswordEncoder`는 `{id}`로 실제 Encoder를 선택한다. 다른 구현은 일부 Parameter를 구성된 Encoder에서 가져올 수 있으므로, 모든 `PasswordEncoder`가 완전히 같은 문자열 구조라고 일반화하지 않는다. Salt는 Password가 아니므로 숨겨야 하는 값이 아니다.
 
 ```text
 matches(candidate, encodedA)
-  1. encodedA에서 algorithm·parameters·saltA·digestA를 읽는다.
-  2. candidateDigest = KDF(candidate, saltA, parameters)를 계산한다.
-  3. candidateDigest와 digestA를 안전하게 비교한다.
+  1. encodedA의 식별 정보로 사용할 Encoder를 정한다.
+  2. encodedA와 Encoder 설정에서 saltA·parameters·digestA를 얻는다.
+  3. candidateDigest = KDF(candidate, saltA, parameters)를 계산한다.
+  4. candidateDigest와 digestA를 안전하게 비교한다.
 ```
 
 두 Encoding을 서로 비교하는 것이 아니다. `matches(rawPassword, encodedA)`와 `matches(rawPassword, encodedB)`를 독립적으로 실행한다. 올바른 원문 후보를 넣으면 첫 번째 결과는 `saltA`, 두 번째 결과는 `saltB`로 각각 다시 계산되므로 둘 다 Match한다. 틀린 후보는 같은 Salt를 사용해도 다른 Digest가 나오므로 Match하지 않는다. 새로운 Salt를 만드는 시점은 `encode`이고, 기존 결과를 확인하는 `matches`는 그 결과에 저장된 Salt를 다시 사용한다.
@@ -65,6 +108,8 @@ matches(candidate, encodedA)
 | Browser Cookie | Server Session을 식별하는 값 | 사용자 Role 전체와 원문 Password |
 
 인증 성공 뒤 `SecurityContext`를 `HttpSession`과 연결하면 다음 요청에서 Browser가 Session Cookie를 보내고, Spring Security가 Server의 인증 정보를 다시 불러온다. 따라서 후속 요청은 Password를 다시 전송하지 않아도 된다.
+
+Login Filter가 Password를 검증해 `SecurityContext`를 만들고, Repository가 이를 Session에 저장한 뒤 다음 Request의 `SecurityContextHolder`에 복원하는 전체 과정은 [Form Login과 Session 인증 과정](./session-authentication-flow.md)에서 구성요소별로 설명한다.
 
 Cookie가 존재한다는 사실만으로 로그인 성공을 증명할 수는 없다. CSRF Token 저장, Request Cache 등 다른 이유로 Session이 생길 수 있기 때문이다. 검증 근거는 같은 Session으로 보호 API를 호출했을 때 인증 정보와 권한이 실제로 복원되는지다.
 
