@@ -1,7 +1,7 @@
 # Week 4 학습 계획 — 인증·인가·Session·CSRF
 
 > 기간: 2026-09-07 ~ 2026-09-13
-> 상태: In Progress — 9월 11일 연장 Session의 Default Security 실험까지 완료, 남은 구현은 9월 12일로 이월
+> 상태: In Progress — 9월 12일 익명 API `401`과 34개 회귀 통과, Password·Login·Session·Role·CSRF 진행 전
 > 사용 가능일: 월요일·금요일·토요일만
 > 목표 시간: 하루 약 5시간, 총 15시간
 > Hard Limit: 하루 6시간을 넘기지 않고 남는 항목은 Cut Line에 따라 이월
@@ -25,8 +25,9 @@
 | 금요일 변경 전 Test 재확인 | 2026-09-11 23:40 KST `mvnw.cmd test`, 33개 통과·실패 0·오류 0·건너뜀 0 |
 | 9월 11일 연장 Session — 의존성 실험 직전 | 실제 실행 2026-09-12 00:41 KST `mvnw.cmd test`, 33개 통과·실패 0·오류 0·건너뜀 0 |
 | 9월 11일 연장 Session — Security Starter 단독 실험 | 실제 실행 2026-09-12 00:42 KST `mvnw.cmd test`, 33개 중 31개 통과·2개 실패; 실제 Context Test가 `404` 대신 `/login` Redirect `302` 반환 |
+| 9월 12일 — 익명 API `401` 최소 Green | 실제 실행 2026-09-12 14:26~14:29 KST, 전체 34개 통과·실패 0·오류 0·건너뜀 0; 익명 API는 `401`이고 Controller 미진입 |
 
-Starter 추가 전의 세 실행은 기존 In-memory Application 회귀 기준선이다. Starter 추가 후의 실패는 Default Auto-Configuration 영향 근거일 뿐, 인증·인가·Session·CSRF 계약이나 PostgreSQL Adapter 동작 근거로 사용하지 않는다.
+Starter 추가 전의 세 실행은 기존 In-memory Application 회귀 기준선이다. Starter 추가 후의 실패는 Default Auto-Configuration 영향 근거다. 9월 12일 실행은 익명 API `401`과 기존 Web Infrastructure 회귀 근거지만, Password·Login·Session·Role·CSRF나 PostgreSQL Adapter 동작 근거로 사용하지 않는다.
 
 ## 3일 Scope 결정과 근거
 
@@ -148,6 +149,8 @@ Starter 추가 전의 세 실행은 기존 In-memory Application 회귀 기준�
 - `PasswordEncoder`와 학습용 `USER`·`AGENT`
 - 기존 Context Test의 책임 조정과 첫 Green
 
+**9월 12일 현재 결과:** Partially Completed — Security Test 지원 의존성, 익명 API `401`과 Form Login Redirect의 응답 경계, 기존 Context Test 책임 조정과 첫 Green을 완료했다. `PasswordEncoder`와 실제 학습용 `USER`·`AGENT` 구성은 아직 `NOT_IMPLEMENTED`·`NOT_RUN`이다.
+
 ### Block 2 — Login·Session·Role Matrix (최대 2시간)
 
 - Login 성공·실패와 후속 Request의 Session 재사용
@@ -243,3 +246,4 @@ Starter 추가 전의 세 실행은 기존 In-memory Application 회귀 기준�
 - 2026-09-11: 사용자가 Standalone Controller Test와 Security Filter Chain Test의 결과가 서로 다른 Layer의 계약임을 재설명해 Test 경계 Gate를 완료했다. Security 변경 전 전체 33개 Test도 다시 통과했으며, 이는 Security 동작이 아닌 In-memory Application 회귀 기준선이다.
 - 2026-09-11 연장 Session: 실제 시각 2026-09-12 00:41~00:42 KST에 Security Starter 단독 실험을 수행해 Spring Security 7.1.1 해석을 확인했다. Standalone Controller Test 7개는 통과했지만 실제 Context Test 2개는 기존 `404` 대신 `/login` Redirect `302`를 받아 실패했다.
 - 2026-09-11 마감 정리: 위 실험과 `SavedRequest`·인증된 `SecurityContext` 구분까지를 11일 학습으로 귀속했다. 명시적 `401`·`403`, Password·Login·Session·Role·CSRF와 Green 회귀는 9월 12일 계획으로 옮겼다.
+- 2026-09-12: 실제 Filter Chain을 사용하는 익명 API Test를 Red-Green으로 진행했다. `Accept` 조건 차이로 발생한 첫 통과는 근거에서 제외하고 기존 조건과 같은 `application/problem+json`에서 Default `302`를 다시 재현한 뒤, API `401` Entry Point를 적용했다. Request별 인증 Test Double로 기존 Web Infrastructure Test의 책임을 복원했으며 전체 34개 Test가 통과했다. Password·Login·Session·Role·CSRF는 아직 완료하지 않았다.

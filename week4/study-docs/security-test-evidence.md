@@ -1,13 +1,14 @@
-# Lab Evidence — Spring Security Default Auto-Configuration
+# Lab Evidence — Spring Security Default Auto-Configuration과 익명 API `401`
 
 > 학습 귀속일: 2026-09-11 — 자정을 넘긴 연장 Session
 > 실제 실행 시각: 2026-09-12 00:41~00:42 KST
-> 상태: 9월 11일 의존성 단독 실험 완료, 명시적 보안 계약은 9월 12일로 이월
+> 상태: 9월 11일 의존성 단독 실험과 9월 12일 익명 API `401` 최소 Baseline 완료
 > 공개 원칙: 생성된 개발용 Credential 값은 기록하지 않는다.
 
 ## 실험 질문
 
-> Spring Security 의존성만 추가했을 때 기존 Standalone Controller Test와 실제 Spring Context Test는 각각 어떻게 달라지며, 그 결과가 이번 Lab의 `401`·`403` 계약을 증명하는가?
+1. Spring Security 의존성만 추가했을 때 기존 Standalone Controller Test와 실제 Spring Context Test는 각각 어떻게 달라지는가?
+2. 익명 API Request를 Login Page로 Redirect하지 않고 `401`로 끝내면서도 기존 Web Infrastructure Test의 책임을 어떻게 보존할 것인가?
 
 ## 실험 경계
 
@@ -123,14 +124,72 @@ Default 동작은 익명 API Request에 `401`을 반환하지 않고 Form Login�
 
 Default Auto-Configuration은 실행 중 개발용 Credential을 생성해 Log에 안내했다. 값은 Console 공유 단계에서 가렸고 이 문서에도 복사하지 않았다. 이 Credential을 Application 설정이나 학습용 사용자로 재사용하지 않는다.
 
-## 9월 12일로 이월한 단계
+## 9월 12일 익명 API `401` Red-Green
 
-1. Security Test 지원 의존성을 추가한다.
-2. 실제 Filter Chain을 통과하는 익명 `GET`의 기대 결과를 `401`로 먼저 고정한다.
-3. 명시적인 API 인증 진입점과 Form Login 경계를 구성해 `302`와 `401`을 의도에 따라 분리한다.
-4. 기존 Web Infrastructure Test가 무엇을 검증해야 하는지 Security 적용 이후 경계에 맞게 조정한다.
-5. Password·Session·Role·CSRF는 각각 실패와 성공을 한 쌍으로 추가한다.
+> 실제 실행 시각: 2026-09-12 14:26~14:29 KST
 
-현재 실패 2개는 원인이 확인된 의존성 단독 실험 결과다. 다음 Green 단계가 끝나기 전에는 전체 회귀 Test 완료로 표시하지 않는다.
+### 비교 조건 수정
+
+새 `SecurityIntegrationTest`는 실제 Application Context와 Security Filter Chain을 사용하고 다음 계약을 요구했다.
+
+- 익명 `GET /api/tickets/999`
+- 응답 `401`
+- `Location` Header 없음
+- Handler가 `null`, 즉 Controller 미진입
+
+첫 실행에서는 새 Test만 `Accept: application/json`을 사용해 Default Security 상태에서도 `401`로 통과했다. 기존 `302` 실험의 `Accept: application/problem+json`과 조건이 달랐으므로 이 결과를 사용자 정의 정책의 Green 근거로 인정하지 않았다.
+
+`Accept`를 기존 실험과 같은 `application/problem+json`으로 맞춘 뒤 다시 실행하자 기대 `401`, 실제 `302`로 실패했다. `Location: /login`, Handler `null`, Saved Request 저장도 함께 관찰했다.
+
+| Red 실행 | 결과 |
+|---|---:|
+| Test | 1개 |
+| 실패 | 1개 |
+| 실제 Status | `302` |
+| Redirect | `/login` |
+| Controller | 미진입 |
+
+이 비교는 `Accept`가 달랐던 첫 통과를 폐기하고 한 번에 응답 정책 하나만 바꾸기 위한 통제다. Default Security가 모든 JSON 계열 Media Type에 항상 같은 응답을 준다고 일반화하지 않는다.
+
+### 최소 Green 구성
+
+`SecurityConfiguration`에 다음 범위만 추가했다.
+
+- `/api/**` Request는 인증 필요
+- 익명 API 인증 실패는 `HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)`로 `401`
+- 다른 Request는 현재 단계에서 허용
+- 후속 Session Login 실험을 위해 Default Form Login 유지
+
+Role별 규칙과 사용자·Password는 이 단계에 넣지 않았다. 변경 뒤 새 Security Test 1개는 실패·오류·건너뜀 없이 통과했다.
+
+### 기존 Test 책임 복원
+
+첫 전체 실행에서는 새 Security Test가 통과했지만 기존 `WebInfrastructureIntegrationTest` 2개가 기대 `404`, 실제 `401`로 실패했다. 이는 익명 Request가 Controller와 Handler Interceptor 전에 차단된 결과다.
+
+Test Scope에 `spring-security-test`를 추가했고 실제 해석 Version 7.1.1을 확인했다. Web Infrastructure Test의 각 Request에는 `AGENT` Role의 Test Double을 명시적으로 결합했다. 이 Test Double은 Password Login이나 Session 복원을 거치지 않으며, 기존 Test가 Request ID Filter와 Handler Timing Interceptor를 검증하기 위한 인증 선행 조건일 뿐이다.
+
+수정 후 관련 Test 3개와 전체 Test를 각각 실행했다.
+
+| 최종 실행 | 결과 |
+|---|---:|
+| 전체 Test | 34개 |
+| 실패 | 0개 |
+| 오류 | 0개 |
+| 건너뜀 | 0개 |
+| Build | `BUILD SUCCESS` |
+
+## 현재 증명 범위
+
+| 항목 | 상태 |
+|---|---|
+| 실제 Filter Chain의 익명 API `401` | `IMPLEMENTED`·`RUN`·`PASS` |
+| 익명 Request의 Redirect 없음 | `RUN`·`PASS` |
+| 익명 Request의 Controller 미진입 | `RUN`·`PASS` |
+| 인증 Test Double을 사용한 기존 Web Infrastructure 회귀 | `RUN`·`PASS` |
+| Password Encoding과 `matches` | `NOT_IMPLEMENTED`·`NOT_RUN` |
+| 실제 학습용 `USER`·`AGENT`와 Form Login | `NOT_IMPLEMENTED`·`NOT_RUN` |
+| Login 성공 뒤 Session 재사용 | `NOT_IMPLEMENTED`·`NOT_RUN` |
+| `USER` 조회 `403`·`AGENT` 조회 성공 | `NOT_IMPLEMENTED`·`NOT_RUN` |
+| 인증된 `POST`의 CSRF Token 비교 | `NOT_IMPLEMENTED`·`NOT_RUN` |
 
 상세 시간 제한과 Cut Line은 [2026-09-12 학습 계획](../study-notes/2026-09-12-study-questions.md)에 기록한다.

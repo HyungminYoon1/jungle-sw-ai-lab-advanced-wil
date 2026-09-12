@@ -1,7 +1,7 @@
 # Week 4 — 인증·인가·Session·CSRF
 
 > 기간: 2026-09-07 ~ 2026-09-13
-> 상태: In Progress — 9월 11일 연장 Session의 Default `302` 실험까지 완료, 명시적 계약 구현은 9월 12일로 이월
+> 상태: In Progress — 익명 API `401` 최소 Baseline 완료, Password·Login·Session·Role·CSRF 진행 전
 > 학습 가능일: 9월 7일 월요일, 9월 11일 금요일, 9월 12일 토요일
 > 공통 실습: AI Helpdesk Learning Lab
 
@@ -11,7 +11,7 @@
 
 ## 이번 주 Context
 
-원래 Roadmap의 Week 4에는 인증·인가와 여러 Web 취약점이 함께 포함되어 있다. 이번 주는 3일만 사용할 수 있고 현재 Lab에는 Spring Security, 사용자 모델과 Database Adapter가 없다. 따라서 기존 Ticket 생성·조회 API에 최소 Role Matrix를 적용하는 Session 인증 수직 흐름만 필수 범위로 선택한다.
+원래 Roadmap의 Week 4에는 인증·인가와 여러 Web 취약점이 함께 포함되어 있다. 이번 주는 3일만 사용할 수 있고 범위 결정 당시 Lab에는 Spring Security, 사용자 모델과 Database Adapter가 없었다. 따라서 기존 Ticket 생성·조회 API에 최소 Role Matrix를 적용하는 Session 인증 수직 흐름만 필수 범위로 선택했다. 현재는 Security Starter와 익명 API `401` 최소 구성까지만 적용됐고 사용자 모델과 Database Adapter는 없다.
 
 공지 키워드 전체 검토에서 공개 가능한 범위 결정과 이월 근거는 [상세 학습 계획](./weekly-plan.md)에 함께 기록한다. 상세 Source Audit은 공개 Repository에 포함하지 않는다.
 
@@ -51,14 +51,15 @@
 - [Authentication·Authorization Learning Note](./study-docs/authentication-authorization.md): 인증·인가·`401`·`403`, Role Matrix와 MockMvc Test 경계
 - [Password·Session·CSRF Learning Note](./study-docs/password-session-csrf.md): Hash·Session·Cookie·CSRF의 역할과 Test 경계
 - [Form Login·Session 인증 과정 Learning Note](./study-docs/session-authentication-flow.md): 최초 Login, 인증 상태 저장과 후속 Request 복원 과정
-- [Security Test 실행 근거](./study-docs/security-test-evidence.md): 의존성 단독 실험, Test 경계·Default `302`와 Secret 점검 근거
+- [Security Test 실행 근거](./study-docs/security-test-evidence.md): 의존성 단독 실험, Default `302`, 익명 API `401` Red-Green과 Test 경계 근거
 - `wil.md`: 이해 변화, 실패 원인, 범위와 다음 질문
 
-산출물 파일은 실제 학습과 검증이 시작될 때 추가한다. 빈 증거 문서를 미리 만들어 완료처럼 보이게 하지 않는다.
+산출물은 실제 학습과 실행 결과가 생긴 범위만 기록하며, 미수행 항목은 `NOT_IMPLEMENTED`·`NOT_RUN`으로 남긴다.
 
 ## 완료 기준
 
 - [x] 인증과 인가, `401`과 `403`을 이번 API Case로 설명한다.
+- [x] 실제 Filter Chain에서 익명 API Request의 `401`, Redirect 없음과 Controller 미진입을 검증한다.
 - [ ] 동일 Password를 두 번 Encode한 결과와 `matches` 결과를 Secret 노출 없이 검증한다.
 - [ ] Form Login으로 Session이 생성되고 후속 Request가 Cookie로 인증되는 흐름을 Test한다.
 - [ ] 익명·`USER`·`AGENT`의 권한 Matrix를 자동화 Test로 확인한다.
@@ -81,6 +82,6 @@
 - [2026-09-11 회상 Gate와 Security Baseline 준비](./study-notes/2026-09-11-study-questions.md)
 - [2026-09-12 Security Baseline·권한·CSRF 학습 계획](./study-notes/2026-09-12-study-questions.md)
 - [Form Login과 Session 인증 과정](./study-docs/session-authentication-flow.md)
-- [Spring Security Default Auto-Configuration 실험 근거](./study-docs/security-test-evidence.md)
+- [Spring Security Default와 익명 API `401` 실험 근거](./study-docs/security-test-evidence.md)
 - [Week 4 상세 학습 계획](./weekly-plan.md)
 - [12주 주차별 Roadmap](../plan/weekly-roadmap.md)

@@ -1,7 +1,7 @@
 # 2026-09-12 — Security Baseline 완성과 권한·CSRF
 
 > 날짜: 2026-09-12
-> 상태: Ready — 9월 11일 미완료 구현 과업 이월
+> 상태: In Progress — 문답 1~4와 Block 1 익명 API `401` 통과
 > 시작 구현 상태: Security Starter만 추가, 명시적 보안 계약 `NOT_IMPLEMENTED`
 > 시작 Test 상태: 33개 중 31개 통과·2개 실패, 오류 0·건너뜀 0
 > Hard Limit: 최대 6시간
@@ -118,3 +118,121 @@ CSRF는 Week 4의 선택 범위이지만, 앞선 Must를 이해하지 못한 상
 5. 인증된 `POST`의 CSRF 실패를 검증할 때 어떤 조건을 동일하게 유지해야 하는가?
 
 3번은 9월 11일 연장 Session에서 사용자가 자신의 말로 설명해 통과했다. 나머지는 각 구현 Block 직전에 설명하고 Test 결과와 함께 판정한다.
+
+## 문답 1 — 익명 보호 `GET`
+
+조건:
+
+- Session Cookie 없는 익명 요청
+- `GET /api/tickets/999`
+- Security Starter만 있고 사용자 정의 `SecurityFilterChain`은 없음
+- Controller까지 진행한다면 존재하지 않는 Ticket이므로 기존 결과는 `404`
+
+최초 답변에서는 `GET`을 CSRF 실패로 분류했고, 인증이 없으면 Authorization도 수행되지 않는다고 보았다. 또한 `SavedRequest`를 새로운 사용자이기 때문에 생성하는 것으로 설명했으며 Controller 진입 여부를 적지 않았다.
+
+교정 후 사용자가 설명한 최종 흐름:
+
+> Cookie 없음
+> → Session에서 복원되는 인증 정보 없음
+> → `GET`은 CSRF 검증 대상이 아님
+> → 보호된 주소가 요구하는 인증 조건을 만족하지 못해 접근 거부
+> → Login 성공 후 원래 Request로 돌아갈 수 있도록 `SavedRequest` 저장
+> → 현재 Default 응답은 `302 Location: /login`, 이번 API 목표는 `401`
+> → Security Filter 단계에서 끝나므로 Controller는 실행되지 않음
+
+판정: `PASS_AFTER_CORRECTION`
+
+- CSRF 검증 대상과 인증·인가 실패를 분리했다.
+- 익명 요청에도 Authorization 결정이 수행되며 그 결과가 접근 거부임을 설명했다.
+- `SavedRequest`와 인증 상태를 구분하고, Default `302`와 목표 API `401`을 구분했다.
+- 실제 실험의 `Handler = null`을 Controller 미진입과 연결했다.
+
+이 판정은 개념 설명 근거다. 명시적 `401` Security Test와 Production 구성은 아직 `NOT_IMPLEMENTED`·`NOT_RUN`이다.
+
+## 문답 2 — Login과 Session 인증 복원
+
+최초 답변에서는 Login의 인증 입력을 Session ID로 보았고, Browser가 `SecurityContext`를 Cookie에 담아 보내는 것으로 설명했다. 또한 `SecurityContextHolder`를 `HttpSession`에 지속해서 저장되는 객체 구조에 포함했다.
+
+교정 후 사용자가 설명한 최종 구분:
+
+> Login `POST`의 인증 입력은 사용자명, 원문 Password 후보, CSRF 적용 시 CSRF Token이다.
+> Server의 지속 저장 관계는 `HttpSession → SecurityContext → Authentication`이다.
+> 후속 요청의 복원 흐름은 `JSESSIONID → HttpSession → SecurityContext → SecurityContextHolder`이다.
+
+판정: `PASS_AFTER_CORRECTION`
+
+- Browser는 `SecurityContext`가 아니라 Session ID가 담긴 Cookie를 보관하고 전송한다.
+- 인증 성공 결과는 인증된 `Authentication`이며, `SecurityContext`가 이를 보관한다.
+- `SecurityContextHolder`는 `HttpSession`의 하위 저장 객체가 아니라 현재 요청을 처리하는 실행 흐름에서 복원된 `SecurityContext`를 제공한다.
+- 유효한 Session의 후속 요청은 Password를 다시 검증하지 않고 이전 인증 결과를 복원한다.
+
+이 판정은 사용자의 재설명에 대한 개념 근거다. Login 성공·실패 Test와 Session 재사용 Test는 아직 `NOT_RUN`이다.
+
+## 문답 3 — Role 인가와 `401`·`403`·`200`
+
+조건:
+
+- 존재하는 Ticket에 대한 `GET`
+- CSRF 검증 대상이 아님
+- Endpoint는 `AGENT` Role만 허용
+- Controller에 도달해 조회에 성공하면 `200`
+
+최초 답변에서는 익명 사용자의 Authorization 결정을 `Null`, `USER`의 결정을 `Unauthorized`라고 표현했고, 근거 없이 `AGENT`가 `USER` Role도 함께 가진다고 가정했다. Status와 Controller 진입 여부는 올바르게 구분했다.
+
+교정 후 사용자가 설명한 최종 흐름:
+
+> 익명은 유효한 Login `Authentication`이 없고 Authorization은 `DENY`이므로 `401`이며 Controller에 진입하지 않는다.
+> `ROLE_USER`는 인증되었지만 `AGENT` 조건에 대한 Authorization이 `DENY`이므로 `403`이며 Controller에 진입하지 않는다.
+> `ROLE_AGENT`는 인증되었고 `AGENT` 조건에 대한 Authorization이 `GRANT`이므로 Controller에 진입하며, 존재하는 Ticket 조회 결과는 `200`이다.
+
+판정: `PASS_AFTER_CORRECTION`
+
+- Authorization의 일차 결정은 `GRANT` 또는 `DENY`다.
+- 같은 `DENY`라도 유효한 Login 인증이 없으면 이번 API 계약의 `401`, 인증되었지만 권한이 부족하면 `403`으로 구분한다.
+- 별도 Role 계층이나 복수 Role 부여 근거가 없으므로 `ROLE_AGENT`에 `ROLE_USER`까지 있다고 가정하지 않는다.
+- `200`은 Authorization 자체의 결과가 아니라 `GRANT` 이후 Controller가 존재하는 Ticket을 정상 조회한 결과다.
+
+이 판정은 사용자의 재설명에 대한 개념 근거다. 익명 `401`, `USER` 조회 `403`, `AGENT` 조회 성공 Security Test는 아직 `NOT_RUN`이다.
+
+## 문답 4 — `302`와 `401`의 공통 차단 지점
+
+`AuthenticationEntryPoint`라는 용어를 설명하기 전에 구현 결과 예측을 요구해 질문을 이해하기 어렵게 만들었다. 먼저 Default Web 방식과 목표 API 방식의 차이를 다음처럼 분리했다.
+
+```text
+익명 보호 Request
+→ Security에서 차단
+→ Default Web 방식: 302 Location: /login
+→ 이번 API 방식: 401
+→ 두 방식 모두 Controller 미진입
+```
+
+설명 후 사용자가 답한 내용:
+
+> 응답이 `302`이든 `401`이든 접근이 거부된 요청은 Controller에 진입하지 못한다.
+
+판정: `PASS`
+
+이번 조건에서는 유효한 Login 인증이 없기 때문에 Security 단계에서 끝난다. `302`와 `401`은 Controller 진입 여부가 아니라 인증되지 않은 Client에게 인증 필요를 표현하는 방식의 차이다.
+
+## Block 1 실행 — 익명 API `401`
+
+> 실제 실행 시각: 2026-09-12 14:26~14:29 KST
+
+### Red 조건 통제
+
+새 실제 Context Test는 익명 `GET /api/tickets/999`에 `401`, `Location` 없음, Handler `null`을 요구했다. 첫 실행은 `Accept: application/json`을 사용해 Default Security 상태에서도 통과했지만, 기존 `302` 실험의 `Accept: application/problem+json`과 조건이 달라 유효한 Red-Green 비교로 인정하지 않았다.
+
+`Accept`를 기존 조건과 같게 수정한 뒤에는 기대 `401`, 실제 `302 Location: /login`으로 Test 1개가 실패했고 Handler가 `null`임을 다시 확인했다.
+
+### Green과 회귀
+
+- `/api/**`는 인증이 필요하도록 최소 `SecurityFilterChain` 구성
+- 익명 API 인증 실패에 `HttpStatusEntryPoint`의 `401` 적용
+- Role별 규칙과 실제 사용자는 아직 추가하지 않음
+- `spring-security-test` 7.1.1 확인
+- 기존 Web Infrastructure Test에는 Request별 `AGENT` Test Double을 사용해 Controller·Interceptor 도달 조건만 제공
+- 최종 전체 Test 34개 통과, 실패·오류·건너뜀 0
+
+판정: `BLOCK_1_PASS`
+
+이 실행으로 증명한 것은 실제 Filter Chain의 익명 API `401`, Redirect 없음, Controller 미진입과 기존 회귀다. PasswordEncoder·실제 Login·Session 재사용·Role Matrix·CSRF는 여전히 `NOT_IMPLEMENTED`·`NOT_RUN`이다.
