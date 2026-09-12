@@ -1,7 +1,7 @@
 # Week 4 — 인증·인가·Session·CSRF
 
 > 기간: 2026-09-07 ~ 2026-09-13
-> 상태: In Progress — 익명 API `401` 최소 Baseline 완료, Password·Login·Session·Role·CSRF 진행 전
+> 상태: In Progress — 9월 12일 핵심 Test 완료·학습 종료, 보안 점검·WIL은 9월 13일 또는 14일로 이월
 > 학습 가능일: 9월 7일 월요일, 9월 11일 금요일, 9월 12일 토요일
 > 공통 실습: AI Helpdesk Learning Lab
 
@@ -11,7 +11,7 @@
 
 ## 이번 주 Context
 
-원래 Roadmap의 Week 4에는 인증·인가와 여러 Web 취약점이 함께 포함되어 있다. 이번 주는 3일만 사용할 수 있고 범위 결정 당시 Lab에는 Spring Security, 사용자 모델과 Database Adapter가 없었다. 따라서 기존 Ticket 생성·조회 API에 최소 Role Matrix를 적용하는 Session 인증 수직 흐름만 필수 범위로 선택했다. 현재는 Security Starter와 익명 API `401` 최소 구성까지만 적용됐고 사용자 모델과 Database Adapter는 없다.
+원래 Roadmap의 Week 4에는 인증·인가와 여러 Web 취약점이 함께 포함되어 있다. 이번 주는 3일만 사용할 수 있고 범위 결정 당시 Lab에는 Spring Security, 사용자 모델과 Database Adapter가 없었다. 따라서 기존 Ticket 생성·조회 API에 최소 Role Matrix를 적용하는 Session 인증 수직 흐름만 필수 범위로 선택했다. 현재는 Security Starter, 익명 API `401`, BCrypt, Test 전용 USER·AGENT의 Form Login·Session 복원, Role Matrix와 CSRF Token 누락·유효 비교까지 42개 Test로 검증했고 Runtime 사용자 모델과 Database Adapter는 없다.
 
 공지 키워드 전체 검토에서 공개 가능한 범위 결정과 이월 근거는 [상세 학습 계획](./weekly-plan.md)에 함께 기록한다. 상세 Source Audit은 공개 Repository에 포함하지 않는다.
 
@@ -22,9 +22,10 @@
 1. [Form Login과 Session 인증 과정](./study-docs/session-authentication-flow.md)의 `먼저 읽는 5분 이야기`로 회원가입·Login·후속 Request의 전체 순서를 잡는다.
 2. [Password·Session·CSRF](./study-docs/password-session-csrf.md)의 초심자용 Password 예시로 `encode`와 `matches`를 구분한다.
 3. [Authentication·Authorization](./study-docs/authentication-authorization.md)에서 `401`·`403`·`200`이 갈리는 이유를 확인한다.
-4. 다시 Session 인증 과정으로 돌아가 `AuthenticationManager`, `SecurityContextRepository`와 Filter의 실제 책임을 읽는다.
-5. [9월 11일 회상 Gate](./study-notes/2026-09-11-study-questions.md)에서 순서 암기와 구성요소의 역할 이해를 나누어 점검한다.
-6. [9월 12일 학습 계획](./study-notes/2026-09-12-study-questions.md)에 따라 명시적 Security 계약과 Test를 작은 Green 단계로 구현한다.
+4. [Spring Test Annotation과 Test Boundary](./study-docs/spring-test-annotations-and-boundaries.md)에서 Test가 실제 Context·Filter를 포함하는지 판별한다.
+5. 다시 Session 인증 과정으로 돌아가 `AuthenticationManager`, `SecurityContextRepository`와 Filter의 실제 책임을 읽는다.
+6. [9월 11일 회상 Gate](./study-notes/2026-09-11-study-questions.md)에서 순서 암기와 구성요소의 역할 이해를 나누어 점검한다.
+7. [9월 12일 학습 계획](./study-notes/2026-09-12-study-questions.md)에 따라 명시적 Security 계약과 Test를 작은 Green 단계로 구현한다.
 
 ## 선택한 학습 범위
 
@@ -51,20 +52,30 @@
 - [Authentication·Authorization Learning Note](./study-docs/authentication-authorization.md): 인증·인가·`401`·`403`, Role Matrix와 MockMvc Test 경계
 - [Password·Session·CSRF Learning Note](./study-docs/password-session-csrf.md): Hash·Session·Cookie·CSRF의 역할과 Test 경계
 - [Form Login·Session 인증 과정 Learning Note](./study-docs/session-authentication-flow.md): 최초 Login, 인증 상태 저장과 후속 Request 복원 과정
-- [Security Test 실행 근거](./study-docs/security-test-evidence.md): 의존성 단독 실험, Default `302`, 익명 API `401` Red-Green과 Test 경계 근거
+- [Spring Test Annotation과 Test Boundary](./study-docs/spring-test-annotations-and-boundaries.md): JUnit·Spring Boot·Security Test Annotation이 준비하거나 우회하는 범위
+- [Spring Security Baseline Lab Report](./lab-reports/2026-09-12-spring-security-baseline-lab.md): 의존성 단독 실험, Default `302`, 익명 API `401`, BCrypt, Form Login·Session, Role Matrix와 CSRF 비교 근거
 - `wil.md`: 이해 변화, 실패 원인, 범위와 다음 질문
 
 산출물은 실제 학습과 실행 결과가 생긴 범위만 기록하며, 미수행 항목은 `NOT_IMPLEMENTED`·`NOT_RUN`으로 남긴다.
+
+## 문서 역할
+
+| 위치 | 역할 |
+|---|---|
+| `study-docs/` | 날짜와 개인 진도에서 독립적인 Security 개념 자료 |
+| `study-notes/` | 날짜별 질문·답변, 이해 점검과 진행 상태 |
+| `lab-reports/` | 재현 가능한 Test 조건·명령·결과와 증명 범위 |
+| `weekly-plan.md` | 주간 범위, 일정·축소 기준과 변경 기록 |
 
 ## 완료 기준
 
 - [x] 인증과 인가, `401`과 `403`을 이번 API Case로 설명한다.
 - [x] 실제 Filter Chain에서 익명 API Request의 `401`, Redirect 없음과 Controller 미진입을 검증한다.
-- [ ] 동일 Password를 두 번 Encode한 결과와 `matches` 결과를 Secret 노출 없이 검증한다.
-- [ ] Form Login으로 Session이 생성되고 후속 Request가 Cookie로 인증되는 흐름을 Test한다.
-- [ ] 익명·`USER`·`AGENT`의 권한 Matrix를 자동화 Test로 확인한다.
-- [ ] 인증된 안전하지 않은 Request가 CSRF Token 없이 실패하고 유효 Token에서 통과하는지 비교한다.
-- [ ] 기존 Test 전체 회귀 결과를 남긴다.
+- [x] 동일 Password를 두 번 Encode한 결과와 `matches` 결과를 Secret 노출 없이 검증한다.
+- [x] Test 전용 AGENT의 Form Login 결과를 같은 Mock Session의 후속 Request에 사용해 인증 상태 복원을 Test한다.
+- [x] 익명·`USER`·`AGENT`의 권한 Matrix를 자동화 Test로 확인한다.
+- [x] 인증된 안전하지 않은 Request가 CSRF Token 없이 실패하고 유효 Token에서 통과하는지 비교한다.
+- [x] 기존 Test 전체 회귀 결과를 남긴다.
 - [ ] 실행하지 않은 XSS·SQL Injection·Rate Limit·HTTPS를 완료로 표시하지 않는다.
 - [ ] Week 4 WIL에 실패, 한계와 Week 5 이월 결정을 기록한다.
 
@@ -82,6 +93,7 @@
 - [2026-09-11 회상 Gate와 Security Baseline 준비](./study-notes/2026-09-11-study-questions.md)
 - [2026-09-12 Security Baseline·권한·CSRF 학습 계획](./study-notes/2026-09-12-study-questions.md)
 - [Form Login과 Session 인증 과정](./study-docs/session-authentication-flow.md)
-- [Spring Security Default와 익명 API `401` 실험 근거](./study-docs/security-test-evidence.md)
+- [Spring Test Annotation과 Test Boundary](./study-docs/spring-test-annotations-and-boundaries.md)
+- [Spring Security Baseline Lab Report](./lab-reports/2026-09-12-spring-security-baseline-lab.md)
 - [Week 4 상세 학습 계획](./weekly-plan.md)
 - [12주 주차별 Roadmap](../plan/weekly-roadmap.md)

@@ -279,7 +279,7 @@ CSRF는 Browser가 Session Cookie 같은 Credential을 자동 첨부하는 점�
 - 어떤 Endpoint가 공개·보호 대상인지, 어떤 Role이 허용되는지, 인증 실패와 인가 실패가 정확히 구분되는지를 실제 Filter Chain을 통과하는 Test로 검증해야 구현 근거가 된다.
 - 따라서 의존성 추가 직후의 결과는 자동 설정을 관찰한 근거이고, 명시적인 Security 설정과 Role Matrix Test가 통과한 결과가 이번 Lab의 계약 근거다.
 
-실제 후속 실험에서도 이 구분을 확인했다. Starter만 추가하자 Standalone Controller Test 7개는 통과했지만 실제 Context Test 2개는 기존 `404` 대신 `/login` Redirect `302`를 반환해 실패했다. 상세 명령과 결과는 [Security Test 실행 근거](../study-docs/security-test-evidence.md)에 기록한다.
+실제 후속 실험에서도 이 구분을 확인했다. Starter만 추가하자 Standalone Controller Test 7개는 통과했지만 실제 Context Test 2개는 기존 `404` 대신 `/login` Redirect `302`를 반환해 실패했다. 상세 명령과 결과는 [Spring Security Baseline Lab Report](../lab-reports/2026-09-12-spring-security-baseline-lab.md)에 기록한다.
 
 ## 9월 11일 연장 Gate — SavedRequest와 인증 상태
 

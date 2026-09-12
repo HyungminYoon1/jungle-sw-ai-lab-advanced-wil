@@ -1,7 +1,7 @@
 # Week 4 학습 계획 — 인증·인가·Session·CSRF
 
 > 기간: 2026-09-07 ~ 2026-09-13
-> 상태: In Progress — 9월 12일 익명 API `401`과 34개 회귀 통과, Password·Login·Session·Role·CSRF 진행 전
+> 상태: In Progress — 9월 12일 핵심 Test와 42개 회귀 통과, 보안 점검·WIL은 9월 13일 또는 14일로 이월
 > 사용 가능일: 월요일·금요일·토요일만
 > 목표 시간: 하루 약 5시간, 총 15시간
 > Hard Limit: 하루 6시간을 넘기지 않고 남는 항목은 Cut Line에 따라 이월
@@ -26,8 +26,12 @@
 | 9월 11일 연장 Session — 의존성 실험 직전 | 실제 실행 2026-09-12 00:41 KST `mvnw.cmd test`, 33개 통과·실패 0·오류 0·건너뜀 0 |
 | 9월 11일 연장 Session — Security Starter 단독 실험 | 실제 실행 2026-09-12 00:42 KST `mvnw.cmd test`, 33개 중 31개 통과·2개 실패; 실제 Context Test가 `404` 대신 `/login` Redirect `302` 반환 |
 | 9월 12일 — 익명 API `401` 최소 Green | 실제 실행 2026-09-12 14:26~14:29 KST, 전체 34개 통과·실패 0·오류 0·건너뜀 0; 익명 API는 `401`이고 Controller 미진입 |
+| 9월 12일 — BCrypt Password 최소 Green | 실제 실행 2026-09-12 15:37~15:38 KST, 전체 35개 통과·실패 0·오류 0·건너뜀 0; 두 Encoding의 차이와 `matches` 성공·실패 확인 |
+| 9월 12일 — Form Login·Session 최소 Green | 최종 회귀 실행 2026-09-12 18:01 KST, 전체 38개 통과·실패 0·오류 0·건너뜀 0; Test 전용 AGENT Login 성공·실패와 같은 Mock Session의 후속 Request 인증 복원 확인 |
+| 9월 12일 — Role Matrix 최소 Green | 최종 Clean 회귀 실행 2026-09-12 19:01 KST, 전체 41개 통과·실패 0·오류 0·건너뜀 0; Test 전용 USER 생성 `201`·조회 `403`, AGENT 조회 `200` 확인 |
+| 9월 12일 — CSRF 누락·유효 비교 | 최종 Clean 회귀 실행 2026-09-12 23:42 KST, 전체 42개 통과·실패 0·오류 0·건너뜀 0; 같은 USER Session·POST·Body에서 Token 없음 `403`, 유효 Token `201` 확인 |
 
-Starter 추가 전의 세 실행은 기존 In-memory Application 회귀 기준선이다. Starter 추가 후의 실패는 Default Auto-Configuration 영향 근거다. 9월 12일 실행은 익명 API `401`과 기존 Web Infrastructure 회귀 근거지만, Password·Login·Session·Role·CSRF나 PostgreSQL Adapter 동작 근거로 사용하지 않는다.
+Starter 추가 전의 세 실행은 기존 In-memory Application 회귀 기준선이다. Starter 추가 후의 실패는 Default Auto-Configuration 영향 근거다. 9월 12일 실행은 익명 API `401`, BCrypt Password, Test 전용 Form Login·Session·Role Matrix·CSRF 비교와 기존 Web Infrastructure 회귀 근거지만, Runtime 사용자 구성, 실제 Browser Cookie·CSRF Network Trace나 PostgreSQL Adapter 동작 근거로 사용하지 않는다.
 
 ## 3일 Scope 결정과 근거
 
@@ -149,7 +153,7 @@ Starter 추가 전의 세 실행은 기존 In-memory Application 회귀 기준�
 - `PasswordEncoder`와 학습용 `USER`·`AGENT`
 - 기존 Context Test의 책임 조정과 첫 Green
 
-**9월 12일 현재 결과:** Partially Completed — Security Test 지원 의존성, 익명 API `401`과 Form Login Redirect의 응답 경계, 기존 Context Test 책임 조정과 첫 Green을 완료했다. `PasswordEncoder`와 실제 학습용 `USER`·`AGENT` 구성은 아직 `NOT_IMPLEMENTED`·`NOT_RUN`이다.
+**9월 12일 현재 결과:** Partially Completed — Security Test 지원 의존성, 익명 API `401`과 Form Login Redirect의 응답 경계, BCrypt Password 검증, 기존 Context Test 책임 조정과 Green을 완료했다. Test 전용 AGENT Fixture는 다음 Block에서 구성했으며 Runtime 사용자 구성은 아직 `NOT_IMPLEMENTED`·`NOT_RUN`이다.
 
 ### Block 2 — Login·Session·Role Matrix (최대 2시간)
 
@@ -157,6 +161,8 @@ Starter 추가 전의 세 실행은 기존 In-memory Application 회귀 기준�
 - `USER`의 Ticket 생성 성공과 조회 `403`
 - `AGENT`의 Ticket 조회 성공
 - 화면 버튼 숨김과 Server-side Role 검사의 차이 설명
+
+**9월 12일 현재 결과:** Completed — Test 전용 USER·AGENT의 Form Login과 동일 Mock Session 인증 복원을 사용했다. Ticket 생성은 USER·AGENT, 단건 조회는 AGENT만 허용하도록 구성하고 USER 생성 `201`·조회 `403`·Controller 미진입, AGENT의 존재하는 Ticket 조회 `200`을 확인했다. 최종 전체 41개 Test가 통과했다. Test의 유효 CSRF Token은 Role 검사와 CSRF 실패를 분리하기 위한 조건이며, Token 누락·유효 비교는 다음 Block에 남아 있다.
 
 ### Block 3 — CSRF·회귀·보안 점검·WIL (최대 2시간)
 
@@ -166,6 +172,8 @@ Starter 추가 전의 세 실행은 기존 In-memory Application 회귀 기준�
 - 가능하면 Login 전후 Cookie Header 또는 Session ID를 한 번 관찰
 - Learning Note와 WIL 작성
 - 미완료 항목을 아래 이월 Gate로 분류
+
+**9월 12일 종료 결과:** Partially Completed — 같은 USER Login Session과 동일한 POST 조건에서 CSRF Token 없음은 `403`·Controller 미진입, 유효 Token은 `201`·Controller 진입으로 비교했다. Spring Security의 기존 기본 CSRF 방어를 Test로 확인했으며 Production 설정은 변경하지 않았다. 전체 42개 Clean Test가 통과했다. 23:47 KST에 학습을 종료했으며 Source·설정·Test Output·Log 노출 점검, 통합 회상과 WIL 정리는 9월 13일 일요일 또는 9월 14일 월요일로 이월한다. 실제 Cookie 관찰은 계속 Should 범위다.
 
 ## 검증 Matrix
 
@@ -247,3 +255,8 @@ Starter 추가 전의 세 실행은 기존 In-memory Application 회귀 기준�
 - 2026-09-11 연장 Session: 실제 시각 2026-09-12 00:41~00:42 KST에 Security Starter 단독 실험을 수행해 Spring Security 7.1.1 해석을 확인했다. Standalone Controller Test 7개는 통과했지만 실제 Context Test 2개는 기존 `404` 대신 `/login` Redirect `302`를 받아 실패했다.
 - 2026-09-11 마감 정리: 위 실험과 `SavedRequest`·인증된 `SecurityContext` 구분까지를 11일 학습으로 귀속했다. 명시적 `401`·`403`, Password·Login·Session·Role·CSRF와 Green 회귀는 9월 12일 계획으로 옮겼다.
 - 2026-09-12: 실제 Filter Chain을 사용하는 익명 API Test를 Red-Green으로 진행했다. `Accept` 조건 차이로 발생한 첫 통과는 근거에서 제외하고 기존 조건과 같은 `application/problem+json`에서 Default `302`를 다시 재현한 뒤, API `401` Entry Point를 적용했다. Request별 인증 Test Double로 기존 Web Infrastructure Test의 책임을 복원했으며 전체 34개 Test가 통과했다. Password·Login·Session·Role·CSRF는 아직 완료하지 않았다.
+- 2026-09-12: 외부 AI 답변은 참고 자료로만 검토하고 사용자가 복호화 없는 Password 검증을 자신의 말로 다시 설명한 뒤 BCrypt Red-Green을 진행했다. Bean 부재 오류를 재현하고 `BCryptPasswordEncoder`를 구성했으며, 값 자체를 출력하지 않고 서로 다른 두 Encoding과 `matches` 성공·실패를 확인했다. 전체 35개 Test가 통과했고 Login·Session·Role·CSRF는 미수행이다.
+- 2026-09-12: Spring Test Annotation 설명이 여러 자료에 흩어져 있음을 확인해 Context·MockMvc·Security Test Double의 증명 범위를 별도 Learning Note로 정리했다. 사용자가 Login 실패 조건과 Session·인가 결과를 구분한 뒤 Form Login·Session Red-Green을 수행했다. 빈 Test 사용자 저장소에서는 인증 Assertion이 실패했고, Test 전용 AGENT를 BCrypt Encoding과 함께 등록한 뒤 Login 성공·잘못된 Password 실패·동일 Mock Session의 후속 인증 복원이 통과했다. 최종 전체 38개 Test가 통과했으며 Role Matrix·CSRF와 실제 Browser Cookie는 미수행이다.
+- 2026-09-12: Role Matrix 예상 문제는 사용자가 질문의 의도를 요청해 완성 예시로 설명했으며 독립 회상 통과로 기록하지 않았다. 현재 `.authenticated()`에서 USER 조회가 Controller까지 도달해 기대 `403` 대신 실제 `404`가 된 Red를 재현하고, 생성은 USER·AGENT, 단건 조회는 AGENT만 허용했다. USER 생성 `201`·조회 `403`·Controller 미진입과 AGENT 조회 `200`, 전체 41개 Clean Test를 확인했다. CSRF Token 누락·유효 비교는 미수행이다.
+- 2026-09-12: 사용자가 Role 부족에 따른 `403`을 재설명했고, CSRF 비교에서는 처음에 GET·POST 차이로 답한 뒤 두 요청 모두 같은 POST이고 유일한 차이가 Token 유무임을 교정했다. Token 없는 USER 생성은 `403`·Controller 미진입, 유효 Token 조건은 기존 `201`·Controller 진입으로 통과했다. 이는 Spring Security 기본 CSRF 방어의 특성 확인이며 Production Code 변경은 없었다. 전체 42개 Clean Test가 통과했다.
+- 2026-09-12 23:47 KST: 사용자의 종료 결정에 따라 추가 구현을 중단했다. 핵심 Security Test는 완료했지만 통합 회상, 전체 Secret·Log 노출 점검과 Week 4 WIL은 완료로 표시하지 않고 9월 13일 또는 14일로 이월했다. 실제 Cookie 관찰은 Should로 유지한다.

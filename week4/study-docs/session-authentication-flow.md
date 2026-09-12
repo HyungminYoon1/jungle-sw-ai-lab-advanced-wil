@@ -323,7 +323,7 @@ Session Test의 핵심은 Session 내부 구현 필드 하나만 검사하는 �
 
 두 Filter가 항상 함께 순서대로 실행된다고 외우지 않는다. 실제로 어떤 Filter와 저장 방식이 사용되는지는 Spring Security Version과 설정에 따라 확인해야 한다. 기본 Form Login과 달리 인증을 직접 구현하는 경우에는 성공한 `SecurityContext`를 `SecurityContextRepository`에 명시적으로 저장할 책임을 빠뜨리지 않아야 한다.
 
-Lab의 Dependency Tree에서 Spring Security 7.1.1 해석을 확인했고, Starter 단독 상태의 실제 Context Test에서 Default `/login` Redirect를 관찰했다. 이것은 Default Filter Chain이 적용된 근거지만 아래에서 설명한 명시적 Login·Session 저장 흐름을 구현·검증한 근거는 아니다. 세부 실행 결과는 [Security Test 실행 근거](./security-test-evidence.md)에 분리해 기록한다.
+Lab의 Dependency Tree에서 Spring Security 7.1.1 해석을 확인했고, Starter 단독 상태의 실제 Context Test에서 Default `/login` Redirect를 관찰했다. 이것은 Default Filter Chain이 적용된 근거지만 아래에서 설명한 명시적 Login·Session 저장 흐름을 구현·검증한 근거는 아니다. 세부 실행 결과는 [Spring Security Baseline Lab Report](../lab-reports/2026-09-12-spring-security-baseline-lab.md)에 분리해 기록한다.
 
 ## 학습 점검 질문
 

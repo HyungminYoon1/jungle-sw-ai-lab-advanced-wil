@@ -1,7 +1,7 @@
 # 2026-09-12 — Security Baseline 완성과 권한·CSRF
 
 > 날짜: 2026-09-12
-> 상태: In Progress — 문답 1~4와 Block 1 익명 API `401` 통과
+> 상태: Session Closed — 핵심 Test 통과, 보안 점검·통합 회상·WIL은 9월 13일 또는 14일로 이월
 > 시작 구현 상태: Security Starter만 추가, 명시적 보안 계약 `NOT_IMPLEMENTED`
 > 시작 Test 상태: 33개 중 31개 통과·2개 실패, 오류 0·건너뜀 0
 > Hard Limit: 최대 6시간
@@ -24,7 +24,7 @@ Test 명령의 실제 실행 시각은 2026-09-12 00:41~00:42 KST였으며 이�
 | 기존 Standalone Controller Test | 7개 통과 |
 | 실제 Context Test | 2개 실패 — 기대 `404`, 실제 `/login` Redirect `302` |
 
-현재 Red는 원인을 모르는 회귀가 아니다. Default Security가 실제 Context Request를 Controller 전에 막는다는 사실을 관찰하기 위해 설정과 기존 기대값을 바꾸지 않은 결과다. 상세 근거는 [Security Test 실행 근거](../study-docs/security-test-evidence.md)에 기록되어 있다.
+현재 Red는 원인을 모르는 회귀가 아니다. Default Security가 실제 Context Request를 Controller 전에 막는다는 사실을 관찰하기 위해 설정과 기존 기대값을 바꾸지 않은 결과다. 상세 근거는 [Spring Security Baseline Lab Report](../lab-reports/2026-09-12-spring-security-baseline-lab.md)에 기록되어 있다.
 
 ## 오늘의 핵심 질문
 
@@ -236,3 +236,228 @@ CSRF는 Week 4의 선택 범위이지만, 앞선 Must를 이해하지 못한 상
 판정: `BLOCK_1_PASS`
 
 이 실행으로 증명한 것은 실제 Filter Chain의 익명 API `401`, Redirect 없음, Controller 미진입과 기존 회귀다. PasswordEncoder·실제 Login·Session 재사용·Role Matrix·CSRF는 여전히 `NOT_IMPLEMENTED`·`NOT_RUN`이다.
+
+## 문답 5 — 복호화 없는 Password 검증
+
+사용자는 먼저 외부 AI에서 얻은 답변임을 밝혔다. 기술적으로 검토한 뒤 그 문장을 사용자의 이해로 판정하지 않고, `BCryptPasswordEncoder`를 전제로 자료를 보지 않고 다시 설명하도록 했다.
+
+사용자가 자신의 말로 설명한 내용:
+
+> 사용자 Password 후보와 DB에 저장된 Encoding의 Salt를 이용해 단방향 Encoding을 다시 수행하고, 그 결과가 저장된 Encoding과 맞는지 비교하므로 원문을 복호화하지 않아도 된다.
+
+판정: `PASS`
+
+- “암호화”가 아니라 복호화를 전제하지 않는 단방향 Password Hashing으로 구분했다.
+- 이번 BCrypt 조건에서는 Salt와 비용 Parameter가 저장된 Encoding에 포함된다.
+- 외부 AI 문장의 반복이 아니라 입력 후보·저장된 값·재계산·비교를 자신의 설명으로 연결했다.
+
+## Block 2-A 실행 — BCrypt PasswordEncoder
+
+> 실제 실행 시각: 2026-09-12 15:37~15:38 KST
+
+### Red
+
+실제 Application Context에서 `PasswordEncoder`를 주입받아 검증하는 Test를 먼저 추가했다. Production Bean이 없었으므로 Test 본문 실행 전에 `NoSuchBeanDefinitionException`이 발생했다.
+
+- Test 1개
+- 실패 0개, 오류 1개
+- 원인: `PasswordEncoder` Bean 없음
+
+### Green과 회귀
+
+- `SecurityConfiguration`에 `BCryptPasswordEncoder` Bean 추가
+- 실행 중 임의로 생성한 같은 후보의 두 Encoding이 서로 다름을 Boolean으로 검증
+- 같은 후보는 두 Encoding에 모두 Match
+- 잘못된 후보는 Match 실패
+- 원문 후보와 Encoding 문자열은 Output·Log·문서에 출력하지 않음
+- Target Test 1개 통과
+- 전체 Test 35개 통과, 실패·오류·건너뜀 0
+
+판정: `BLOCK_2A_PASS`
+
+이 실행은 BCrypt의 Encoding과 `matches` 근거다. 실제 학습용 사용자, Form Login 성공·실패, Session 재사용, Role Matrix와 CSRF는 아직 `NOT_IMPLEMENTED`·`NOT_RUN`이다.
+
+## 문답 6 — Login Test와 Session 재사용 Test의 차이
+
+처음에는 상세 Code 설명을 읽고도 두 Test의 증명 범위가 잘 기억되지 않았다. 이를 호텔의 체크인과 열쇠 재사용에 비유해 다음 두 문장으로 축소했다.
+
+```text
+Login Test = 인증 결과 생성·저장
+Session 재사용 Test = 저장된 인증 결과를 다음 Request에서 복원
+```
+
+후속 조건에 대한 사용자 답변:
+
+- Login 뒤 Session을 전달하지 않은 보호 Request는 `401`이며 Controller에 진입하지 않는다.
+- `USER` Session 복원은 성공했지만 조회에 `AGENT` Role이 필요하면 Authorization은 `DENY`, 응답은 `403`, Controller에는 진입하지 않는다.
+- 처음에는 `Handler`가 `null`인 Assertion을 Session 복원 근거로 선택했으나, 이는 Controller 미진입 근거임을 교정했다.
+- Session 인증 복원의 직접 근거는 `authenticated().withRoles(...)`, `403`은 해당 조건에서의 인가 거부 결과로 구분했다.
+
+판정: `PASS_AFTER_CORRECTION`
+
+## 문답 7 — Test 전용 사용자와 Login Red 예측
+
+`UserDetailsService`가 Session ID를 반환한다고 처음 답했으나, 다음처럼 역할을 교정했다.
+
+```text
+UserDetailsService → Username으로 저장된 Password Encoding과 Authority 조회
+PasswordEncoder → Login Password 후보와 저장된 Encoding 비교
+Authentication → 성공한 인증 결과
+Session → 성공한 Authentication을 다음 Request까지 유지
+```
+
+Test 전용 AGENT를 등록하기 전 Form Login의 결과를 사용자가 다음과 같이 예측했다.
+
+- `Authentication` 생성 실패
+- `authenticated()` 검사 실패
+- 기본 실패 Handler의 `302` Redirect
+- Session 존재만으로 Login 성공을 증명할 수 없음
+
+판정: `PASS_AFTER_CORRECTION`
+
+## Block 3 실행 — Form Login과 Session 복원
+
+> 최종 회귀 실행 시각: 2026-09-12 18:01 KST
+
+### Red
+
+- 실제 Context와 Filter Chain을 사용하는 `SessionAuthenticationIntegrationTest` 추가
+- Test 전용 빈 `InMemoryUserDetailsManager` 구성
+- 등록되지 않은 AGENT의 Login 성공을 요구
+- 대상 Test 1개 실행, 실패 1개·오류 0개
+- 실패 지점: 인증된 `Authentication`이 있어야 한다는 Assertion
+
+### Green·반례·Session 재사용
+
+- 실행 중 임의 Password 후보를 만들고 Production `PasswordEncoder`로 Encoding해 Test 전용 AGENT 등록
+- Credential 값은 Output·Log·문서에 출력하지 않음
+- 등록된 AGENT Form Login 성공과 `ROLE_AGENT` 확인
+- 잘못된 Password 후보는 인증되지 않고 `/login?error`로 Redirect됨을 확인
+- Login 결과의 `MockHttpSession`을 후속 보호 `GET`에 재사용
+- 후속 Request에는 Username·Password나 별도 인증 Test Double을 넣지 않음
+- 후속 Request에서 AGENT Authentication이 복원되고 `TicketController#findById`까지 도달한 뒤 Ticket 부재로 `404`
+- 대상 Test 3개 통과
+- 전체 Test 38개 통과, 실패·오류·건너뜀 0
+
+판정: `BLOCK_3_PASS`
+
+이 결과는 Test 전용 AGENT를 사용한 Form Login과 Mock Session 인증 복원 근거다. Production Runtime 사용자, 실제 Browser Cookie 전송, `USER`·`AGENT` Role Matrix와 CSRF는 아직 `NOT_IMPLEMENTED`·`NOT_RUN`이다.
+
+## 문답 8 — 현재 인증 규칙과 목표 Role 규칙
+
+현재 `.requestMatchers("/api/**").authenticated()`에서 USER Session으로 단건 조회할 때의 인증 복원·인가·Status·Controller 진입을 예측하도록 요청했다. 사용자는 어떤 내용을 채워야 하는지 물었고, 다음 완성 예시를 제공한 뒤 구현 진행을 승인했다.
+
+```text
+USER Authentication 복원 성공
+→ 현재 authenticated() 조건은 충족하므로 Authorization GRANT
+→ Controller 진입
+→ Ticket 999가 없으므로 404
+
+목표 규칙
+→ 단건 조회에는 AGENT 필요
+→ USER Authorization DENY
+→ Controller 미진입
+→ 403
+```
+
+판정: `EXPLAINED_NOT_RECALLED`
+
+완성된 답을 읽고 구현을 승인한 것은 독립 설명 근거가 아니다. Role Matrix 구현 뒤 같은 흐름을 자료 없이 다시 설명하는 Gate를 남긴다.
+
+## Block 4 실행 — Role Matrix
+
+> 최종 Clean 회귀 실행 시각: 2026-09-12 19:01 KST
+
+### Red
+
+- Test 전용 USER로 Form Login하고 같은 Mock Session으로 단건 조회
+- 기대: `403`, Controller 미진입
+- 현재 실제 결과: `404`
+- 대상 Test 1개, 실패 1개·오류 0개
+
+실패 원인은 현재 `/api/**` 규칙이 Role을 구분하지 않고 인증 여부만 확인해 USER도 Controller까지 통과시킨 것이다.
+
+### Green
+
+- `POST /api/tickets`: `USER` 또는 `AGENT`
+- `GET /api/tickets/{id}`: `AGENT`
+- 나머지 `/api/**`: 인증된 사용자
+- USER 생성: 유효 CSRF Token 조건에서 `201`, Controller 진입
+- USER 조회: Authentication 복원, Authorization `DENY`, `403`, Controller 미진입
+- AGENT의 존재하는 Ticket 조회: `200`, Controller 진입
+- Login·Session·Role 대상 Test 6개 통과
+- 전체 Clean Test 41개 통과, 실패·오류·건너뜀 0
+
+판정: `BLOCK_4_IMPLEMENTATION_PASS`
+
+유효 CSRF Token은 USER 생성의 Role 검사를 CSRF 실패와 분리하기 위한 조건이다. Token 누락·유효 비교를 하지 않았으므로 CSRF는 여전히 `NOT_RUN`이다. Production Runtime 사용자, 실제 Browser Cookie와 PostgreSQL Adapter도 이번 근거에 포함되지 않는다.
+
+당시 다음 설명 Gate: `ROLE_MATRIX_RECALL_PENDING`
+
+## 문답 9 — Role Matrix 재설명
+
+사용자는 처음에 Filter·Interceptor 계층이 Controller보다 먼저 동작한다는 실행 순서를 설명했다. 이는 Controller 미진입은 설명하지만 `403`의 직접 원인까지 설명하지는 못했다. 후속 답변에서 “요청한 Resource에 필요한 Role이 없기 때문”이라고 보완했다.
+
+이번 Lab의 구체적인 연결은 다음과 같다.
+
+```text
+USER Authentication 복원 성공
+→ 단건 조회가 요구하는 AGENT Role 없음
+→ Authorization DENY
+→ 403
+→ Controller 미진입
+```
+
+판정: `ROLE_MATRIX_RECALL_PASS_AFTER_CORRECTION`
+
+이번 Lab의 권한 검사는 Spring MVC HandlerInterceptor가 아니라 Spring Security Filter Chain에서 수행된다. NestJS Guard는 실행 위치를 이해하기 위한 비교 대상일 수 있지만, 이번 `403`의 실제 근거는 Spring Security의 Filter Chain과 Authorization 규칙이다.
+
+## 문답 10 — CSRF 비교의 통제 변수
+
+사용자는 Token 없는 POST는 `403`·Controller 미진입, 유효 Token 요청은 통과한다고 예측했다. 첫 설명과 첫 교정에서는 두 요청의 차이를 GET·POST라고 답했지만, 두 요청 모두 동일한 POST임을 확인한 뒤 유일한 차이를 `CSRF Token의 유무`라고 설명했다.
+
+판정: `CSRF_COMPARISON_PASS_AFTER_CORRECTION`
+
+## Block 5 실행 — CSRF 누락·유효 조건
+
+> 최종 Clean 회귀 실행 시각: 2026-09-12 23:42 KST
+
+이번 단계는 Production CSRF 설정을 새로 구현한 Red-Green이 아니다. Spring Security가 기본으로 활성화한 CSRF 방어를 Characterization Test로 확인했다.
+
+- 같은 Test 전용 USER와 Login Session 사용
+- 같은 `POST /api/tickets` 사용
+- 같은 유효 JSON Body 사용
+- USER의 Ticket 생성 Role은 허용된 상태
+- Token 없는 요청: Authentication 복원 확인, `403`, Controller 미진입
+- 유효 Token 요청: `201`, `TicketController#create` 진입
+- CSRF 대상 Test 1개 통과
+- Login·Session·Role·CSRF 대상 Test 7개 통과
+- 전체 Clean Test 42개 통과, 실패·오류·건너뜀 0
+
+판정: `BLOCK_5_CSRF_COMPARISON_PASS`
+
+`csrf()`는 MockMvc Request에 유효 Token을 구성한다. 실제 Browser가 Token을 받아 전송한 근거가 아니며, Cookie 속성이나 Cross-site Network 동작도 검증하지 않았다. Production Runtime 사용자와 PostgreSQL Adapter 역시 이번 근거에 포함되지 않는다.
+
+## 9월 12일 종료 판단
+
+> 종료 시각: 2026-09-12 23:47 KST
+
+사용자 요청에 따라 오늘 학습을 여기서 종료한다.
+
+완료한 범위:
+
+- 익명 API `401`
+- BCrypt Password 검증
+- Form Login 성공·실패와 Mock Session 인증 복원
+- USER·AGENT Role Matrix
+- CSRF Token 누락·유효 조건 비교
+- 전체 Clean Test 42개 통과
+
+완료로 표시하지 않는 범위:
+
+- 전체 흐름의 최종 통합 회상
+- Source·설정·Test Output·Log의 Secret·Password 노출 점검
+- Week 4 WIL과 Week 5 이월 판단
+- 실제 Browser Cookie·Session ID 관찰
+
+앞의 세 항목은 9월 13일 일요일 또는 9월 14일 월요일에 이어서 진행한다. 실제 Browser 관찰은 Should 범위이므로 시간이 부족하면 `NOT_RUN`으로 남긴다. Week 4 전체 상태는 계속 `In Progress`다.

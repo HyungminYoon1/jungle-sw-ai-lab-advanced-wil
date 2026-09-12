@@ -121,6 +121,8 @@ Mock Request
 
 `@SpringBootTest`와 `@AutoConfigureMockMvc`를 사용하는 Test는 Application Context를 시작하고 그 Context의 Web 구성을 이용한다. Filter 자동 추가를 끄지 않았다면 Spring Security Dependency와 `SecurityFilterChain` Bean을 추가한 뒤 Security Filter도 Request 처리에 참여한다.
 
+각 Annotation이 준비하는 Context·MockMvc·인증 Test Double의 범위는 [Spring Test Annotation과 Test Boundary](./spring-test-annotations-and-boundaries.md)에서 구분한다.
+
 현재 `WebInfrastructureIntegrationTest`가 이 범주다. Security 도입 전에는 익명으로 없는 Ticket을 조회해 Controller까지 진입한 `404`와 Handler Timing Log를 확인한다. Security 도입 뒤 같은 익명 Request는 Controller 전에 `401`로 끝나는 것이 새로운 계약이므로, 기존 Infrastructure 목적을 계속 확인하려면 권한 있는 인증 조건을 명시해야 한다.
 
 ### 왜 두 Test 결과가 동시에 맞을 수 있는가
