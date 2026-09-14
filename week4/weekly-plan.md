@@ -232,6 +232,18 @@ Starter 추가 전의 세 실행은 기존 In-memory Application 회귀 기준�
 
 첫 Issue는 Coverage Review, Scope Decision과 계획 문서가 검증되어 `Done`으로 두었다. 구현을 아직 시작하지 않은 항목은 완료 처리하지 않았고, 금요일 첫 항목만 `Ready`로 두었다.
 
+### 2026-09-14 Project 마감 상태
+
+| Draft Issue | 최종 상태 |
+|---|---|
+| `3일 Scope Review와 인증·인가 계약 확정` | `Done` |
+| `PasswordEncoder·Session 로그인 Baseline 구현` | `Done` |
+| `Role Matrix와 401·403 권한 Test` | `Done` |
+| `CSRF·Cookie 경계와 Secret 노출 검증` | `Done` |
+| `전체 회귀 Test·WIL과 Week 5 이월 판단` | `Done` |
+
+각 본문은 실제 수행 근거와 완료 Check로 갱신했다. CSRF 항목의 실제 Browser `Set-Cookie`·`Cookie` Trace는 선택적 Should였으므로 미체크된 `NOT_RUN`으로 남겼고, 이를 완료 근거에 포함하지 않았다.
+
 ## 공식 참고 자료
 
 - [Spring Security — Password Storage](https://docs.spring.io/spring-security/reference/features/authentication/password-storage.html)
@@ -273,3 +285,4 @@ Starter 추가 전의 세 실행은 기존 In-memory Application 회귀 기준�
 - 2026-09-14: 일반 `clean test` 42개가 통과한 뒤에도 Surefire Report 두 곳에 자동 생성 기본 Password 안내가 남은 것을 발견했다. 값은 확인·기록하지 않았으며, 임시 Option 대조 뒤 Runtime 기본 사용자 자동 구성을 Source에서 제외했다. 일반 명령 재실행 결과 42개 통과와 Console·Report 안내 0건을 확인했다.
 - 2026-09-14: 추적 Source·설정·공개 Markdown과 Test Report를 Pattern 기반으로 점검하고 Week 4 WIL 공개 전 초안을 작성했다. Must 완료에 따라 Week 4를 `Completed`로 마감하고 실제 Browser Cookie Trace는 `NOT_RUN`으로 남겼다.
 - 2026-09-14: 사용자가 Week 4 블로그 게시와 포럼 등록 완료를 확인했다. 외부 URL과 등록 화면은 제공되지 않아 독립 확인 상태로 확대하지 않았다.
+- 2026-09-14: GitHub Project의 Week 4 Draft Issue 5개 본문을 실제 수행·미수행 경계에 맞게 갱신하고 모두 `Done`으로 정리했다. 실제 Browser Cookie Trace의 `NOT_RUN`은 유지했다.
