@@ -1,0 +1,247 @@
+# Week 5 학습 계획 — Browser JavaScript·Frontend 상태·Test 품질
+
+> 작성일: 2026-09-14
+> 상태: Baseline — 학습 시작 전
+> 기간: 2026-09-14 ~ 2026-09-20
+> 권장 학습량: 총 16~18시간, 하루 최대 6시간
+> 핵심 질문: Browser의 비동기 실행과 Rendering을 이해하면서 최소 사용자 흐름을 신뢰할 수 있게 검증할 수 있는가?
+
+## 계획 배경
+
+Week 4에는 Session 인증, Password 검증, Role 기반 인가와 CSRF 경계를 실제 Spring Security Filter Chain Test로 확인했다. 최종 Java Test 42개가 통과했고 WIL 블로그 게시와 포럼 등록까지 완료했다.
+
+현재 AI Helpdesk Lab에는 Ticket 생성과 단건 조회 API가 있지만 Browser UI, 정적 Resource, Frontend Package Manifest와 Browser E2E Test는 없다. Runtime 사용자는 구현하지 않았고 `USER`·`AGENT`는 Security Integration Test 안에서만 제공한다. 따라서 실제 Browser에서 보호 API의 성공 흐름을 검증하려면 Test 전용 인증과 데이터 준비 방식을 먼저 결정해야 한다.
+
+이번 주는 React 같은 Framework를 도입하기 전에 JavaScript 실행 순서, DOM Event, Rendering과 비동기 UI 상태를 작은 실험으로 확인한다. 그 뒤 기존 단건 조회 API에 연결 가능한 최소 화면을 만든다. 실제 Browser E2E는 Security를 비활성화하거나 Credential을 Source에 넣지 않고도 재현 가능한 조건이 준비될 때만 진행한다.
+
+## Week 4 지연 회상 Gate
+
+Week 5 구현을 시작하기 전에 자료 없이 다음 세 문장을 완성한다.
+
+1. Browser가 후속 Request에서 보내는 것은 ______이고 Server가 복원하는 것은 ______이다.
+2. 인증된 `USER`의 조회 `403`은 ______ 실패이고, 같은 USER의 Token 없는 생성 `403`은 ______ 실패다.
+3. 전체 Test가 Green이어도 별도 Log 점검이 필요한 이유는 ______이다.
+
+세 답을 설명하지 못하면 Security 구현을 다시 늘리지 않고 Week 4의 객체 흐름과 두 `403`만 30분 이내로 복습한다. 지연 회상 결과는 첫 Study Note에 `PASS`, `PASS_AFTER_CORRECTION` 또는 `REVIEW_REQUIRED`로 기록한다.
+
+## 목표
+
+| 구분 | 목표 | 완료 근거 |
+|---|---|---|
+| 개념 | Call Stack, Task·Microtask, Promise·Async/Await와 Rendering 기회를 연결해 설명한다. | 실행 순서 예상·관찰 표와 자신의 설명 |
+| 실험 | Event Loop 순서, Fetch 성공·HTTP 오류·Network 오류와 동적 DOM Event를 분리해 재현한다. | 독립 Spike와 실패 Case |
+| 선택 적용 | Ticket ID 입력부터 Loading·Success·Not Found·Forbidden·Network Error를 구분하는 최소 화면을 만든다. | 작은 HTML·CSS·JavaScript Diff와 Test |
+| Test 품질 | Unit·DOM Integration·Browser E2E가 각각 무엇을 증명하는지 구분한다. | Test 책임 표와 대표 실패 Test |
+| 공개 기록 | 실제 수행 범위, E2E Gate 결과와 미수행 경계를 Week 5 WIL에 남긴다. | WIL과 재현 가능한 근거 Link |
+
+## Baseline
+
+| 항목 | 현재 확인 상태 | 이번 주 판단 기준 |
+|---|---|---|
+| WIL Repository | `main`, 계획 직전 HEAD `d84dffa`, Working Tree Clean | Week 5 계획·기록만 공개 |
+| AI Helpdesk Lab | `main`, HEAD `f305708`, Working Tree Clean | UI와 Test 변경을 WIL 문서 Commit과 분리 |
+| Java 회귀 | 2026-09-14 15:06 KST 일반 `clean test`, 42개 통과·실패 0·오류 0·건너뜀 0 | Frontend 변경 뒤 같은 42개 계약 유지 |
+| Backend | Spring Boot 4.1.1, Java 25, In-memory Ticket Repository | 새 목록 API나 Database Adapter를 만들지 않음 |
+| API | `POST /api/tickets`, `GET /api/tickets/{id}` | 단건 조회를 최소 Browser 흐름으로 선택 |
+| Security | Session·Role·CSRF Test 완료, Runtime 사용자 없음 | Browser 성공 E2E 전 Test 전용 인증 Gate 필요 |
+| JavaScript Runtime | Node.js 22.23.2, npm 11.12.0 확인 | Version을 기억이 아니라 실행 결과로 기록 |
+| Browser | Chrome·Edge 설치 확인 | 실제 선택 Browser와 Version은 E2E 실행 시 기록 |
+| Frontend 구성 | 정적 Resource·`package.json`·Browser Test Runner 없음 | 필요한 최소 구성만 선택하고 설치 전 이유 기록 |
+
+위 Baseline은 계획 시점 확인이다. 실제 학습 시작 전 두 저장소 상태와 Runtime Version을 다시 확인하며, 이후 변경이나 설치를 미리 완료한 것으로 취급하지 않는다.
+
+## 핵심 범위 결정
+
+### 선택한 최소 사용자 흐름
+
+이번 주 UI의 중심은 다음 한 흐름이다.
+
+```text
+Ticket ID 입력
+        ↓
+조회 버튼 또는 Submit Event
+        ↓
+Loading 표시
+        ↓
+GET /api/tickets/{id}
+        ↓
+Success | 401 | 403 | 404 | Network Error
+        ↓
+서로 구분되는 화면 상태
+```
+
+목록 Endpoint를 새로 만들지 않고 기존 단건 조회 계약을 사용한다. 먼저 주입 가능한 API 경계나 Fake Response로 각 UI 상태를 재현하고, 실제 Server 연결은 Browser E2E Gate를 통과한 뒤 추가한다. Fake Response만 사용한 Test를 실제 Backend E2E라고 부르지 않는다.
+
+### Must — Week 5 완료에 필요
+
+- Week 4 지연 회상 Gate와 시작 Baseline 확인
+- 동기 Code, Promise·`queueMicrotask`, Timer의 실행 순서 예상과 실제 비교
+- `async`·`await`가 Promise 위에 만드는 제어 흐름과 오류 전달 설명
+- `fetch`의 HTTP 오류와 Network 오류를 서로 다른 조건으로 처리
+- Loading·Success·Empty 또는 Not Found·Forbidden·Error 상태 전이 정의
+- Event Bubbling의 `target`·`currentTarget`과 Event Delegation 비교
+- DOM·CSSOM·Render Tree·Layout·Paint의 기본 순서 설명
+- 최소 Ticket 단건 조회 화면과 의미 있는 JavaScript Test
+- 실제 Browser E2E 1개 또는 Gate 실패를 포함한 `Partially Completed` 판정
+- Java 42개 회귀, Frontend Test 결과와 Week 5 WIL
+
+### Should — Must가 예상보다 빨리 끝날 때
+
+- `requestAnimationFrame`과 Performance Marker로 DOM 변경 뒤 Rendering 기회 관찰
+- 빠르게 연속 조회했을 때 늦은 Response가 최신 화면을 덮는 Race 재현
+- `AbortController`로 이전 조회 취소 비교
+- 실제 Browser Network Panel에서 Request·Response와 Timing 한 번 기록
+
+### 이번 주에 포함하지 않음
+
+- React, Vue, SSR, Redux·Zustand와 Bundler 최적화
+- Ticket 목록·검색·수정·삭제 Backend 기능 추가
+- Design System, 복잡한 Animation과 반응형 화면 완성
+- PostgreSQL Adapter·Migration·Testcontainers
+- 모든 API 경로의 Browser E2E
+- Coverage 비율을 목표 수치로 올리기 위한 Test 추가
+- XSS·CORS 전체 보안 실험을 UI 구현과 동시에 확장
+
+### 조건부 후속
+
+- 사용자 입력을 HTML로 Rendering하는 경계가 생기면 `textContent`와 위험한 HTML 삽입 차이를 최소 XSS 질문으로 다룬다.
+- Frontend와 Backend가 다른 Origin에서 실행될 때만 CORS를 실제 Request Header로 재검토한다.
+- Ticket 생성 UI와 CSRF Token 전달은 단건 조회 흐름과 E2E 인증 Gate가 안정된 뒤 판단한다.
+
+## 시간 배분
+
+| 활동 | 계획 시간 | 종료 조건 |
+|---|---:|---|
+| 개념·공식 자료 | 4시간 | Event Loop·Promise·Rendering 흐름을 그림 없이도 설명 |
+| 독립 Spike | 5시간 | 예상, 실제 출력과 차이 원인 기록 |
+| 최소 UI·Test | 5시간 | 상태별 화면과 대표 실패 Test |
+| Review·회귀·WIL | 3~4시간 | 증명 범위와 `NOT_RUN` 경계 기록 |
+
+일일 미완료를 다음 날에 모두 더해 하루 6시간을 넘기지 않는다. 시간이 부족하면 UI 장식, Race·취소 실험, 실제 Network Trace 순으로 자른다. Event Loop 예상·관찰, UI 상태 구분과 Test 책임은 자르지 않는다.
+
+## 학습 계획
+
+| 학습 주제 | 상태 | 핵심 질문 | 방법 | 증거 |
+|---|---|---|---|---|
+| Event Loop | 핵심 학습 | 동기 Code, Microtask와 Timer는 왜 그 순서로 실행되는가? | 실행 전 순서 작성 후 Node와 Browser Console 비교 | 예상·실제 표 |
+| Promise·Async/Await | 핵심 학습 | `await` 전후 Code와 Rejection은 어느 흐름으로 이동하는가? | 같은 동작을 Promise Chain과 `async` Function으로 비교 | 설명·실패 Spike |
+| Fetch | 핵심 학습 | HTTP `404`와 Network 실패는 왜 같은 방식으로 잡히지 않는가? | `response.ok` 검사 유무와 Reject Case 비교 | Test·관찰 Log |
+| UI 상태 | 선택 적용 | 비동기 Request 전후 화면 상태를 어떻게 빠짐없이 표현하는가? | 상태 표를 먼저 만들고 Rendering Function 작성 | State Matrix·Unit Test |
+| DOM Event | 핵심 학습 | 부모 Listener 하나가 동적으로 추가된 자식 Event를 어떻게 처리하는가? | 개별 Listener와 Delegation 비교 | Bubbling Spike |
+| Rendering | 독립 Spike | DOM 변경은 언제 Style·Layout·Paint로 이어지는가? | 공식 자료와 DevTools 최소 관찰 | Learning Note 또는 Study Note |
+| Test 책임 | 핵심 학습 | Pure Unit, DOM Integration과 실제 Browser E2E의 실패 의미는 무엇인가? | 같은 기능을 서로 다른 Boundary에서 비교 | Test 책임 표 |
+| Browser E2E | 조건부 후속 | 실제 Session·Role을 유지한 단건 조회 성공을 재현할 수 있는가? | 아래 E2E Gate 통과 뒤 Browser 1종에서 실행 | 실제 Browser 결과 또는 `NOT_RUN` |
+
+## Lab 계획
+
+| 순서 | Lab | 실행 전 예상 | 완료 조건 | 상태 |
+|---:|---|---|---|---|
+| 1 | Task·Microtask·Timer 순서 Spike | 동기 Code 후 Microtask Queue가 비워지고 다음 Task가 실행된다. | 중첩 Microtask까지 예상과 실제를 설명 | Planned |
+| 2 | Promise·`async` 오류 Spike | HTTP 응답과 Network 오류는 다른 분기로 들어간다. | `response.ok` 누락 실패를 재현 | Planned |
+| 3 | UI State Model | Boolean `loading` 하나로는 여러 결과를 표현하기 어렵다. | 상태와 허용 전이를 표와 Test로 표현 | Planned |
+| 4 | Event Delegation | 부모 Listener는 Bubbling된 Event의 Target을 검사할 수 있다. | 동적 자식에서도 동작하고 잘못된 Target은 무시 | Planned |
+| 5 | Ticket 단건 조회 UI | Request 중·성공·각 실패가 다른 화면으로 보인다. | 최소 HTML·CSS·JavaScript와 Test | Planned |
+| 6 | Browser E2E Gate | Runtime 인증과 Test Data가 없으면 성공 흐름을 증명할 수 없다. | 아래 다섯 조건 판정 | Planned |
+| 7 | 전체 회귀·WIL | Frontend 변경이 기존 Java 계약을 깨지 않는다. | Java 42개와 선택한 JS·Browser Test 결과 기록 | Planned |
+
+## 실제 Browser E2E Gate
+
+다음 조건을 모두 만족해야 실제 Browser E2E를 시작한다.
+
+1. Browser Test Runner와 설치 Version을 명시하고, 의존성 추가 이유를 설명한다.
+2. Local Server를 Test가 재현 가능하게 시작·종료하며 이미 떠 있는 임의 Process에 의존하지 않는다.
+3. Test 전용 사용자와 데이터 준비가 Production Runtime 구성과 분리된다.
+4. Credential 값을 Source·Console·Report에 출력하지 않고 Security·CSRF를 전역 비활성화하지 않는다.
+5. Fake Route가 아니라 실제 Spring Server 응답을 받은 Test만 Backend E2E라고 기록한다.
+
+Gate를 통과하면 Browser 한 종류에서 `AGENT Login → 존재하는 Ticket 단건 조회 → 제목·상태 표시` 한 경로만 자동화한다. Test Data 준비를 위해 새 제품 기능을 만들거나 Security를 약화해야 한다면 E2E는 `NOT_RUN`으로 남기고 Week 5를 `Partially Completed`로 판정한다.
+
+Playwright는 후보일 뿐 아직 선택·설치하지 않았다. Node 내장 Test Runner로 Pure Logic을 먼저 검증하고, 실제 DOM·Network가 필요한 순간에만 Browser Runner 추가 비용을 판단한다.
+
+## Test 책임 분리
+
+| Test | 빠르게 확인할 것 | 증명하지 않는 것 |
+|---|---|---|
+| Pure JavaScript Unit | 상태 전이, HTTP Status Mapping, Rendering Input | 실제 DOM Event·Browser Rendering·Network |
+| Browser DOM Integration | Event Bubbling, 실제 Element 변화, Loading·Error 표시 | 실제 Spring Security와 Backend 상태 |
+| Browser E2E | 실제 Browser·Server·Session·HTTP를 잇는 대표 흐름 | 모든 경로, 성능과 Production 배포 |
+| 기존 Java Test | Domain·Controller·Security Filter 계약 회귀 | Browser UI 동작 |
+
+같은 Assertion을 모든 Layer에 복사하지 않는다. 하위 Test에서 충분한 상태 조합을 확인하고, Browser E2E는 사용자가 보는 대표 경로 한 개에 집중한다.
+
+## 권장 일정
+
+| 날짜 | 학습·예상 | 실험·적용 | 종료 조건 | 상태 |
+|---|---|---|---|---|
+| 9월 14일 월요일 | Week 4 마감 확인, Week 5 범위·Baseline | 저장소·Runtime·Browser 준비 상태 확인 | 계획과 미준비 조건이 문서화됨 | Planned |
+| 9월 15일 화요일 | Week 4 지연 회상, Call Stack·Task·Microtask | 회상 Gate와 Event Loop 순서 Spike | 회상 판정과 중첩 Case의 예상·실제 설명 | Planned |
+| 9월 16일 수요일 | Promise·Async/Await·Fetch | HTTP 오류·Network 오류, UI State Model | 상태·오류 Matrix와 Test 초안 | Planned |
+| 9월 17일 목요일 | Event Bubbling·Delegation, Rendering | 동적 DOM Event와 최소 Rendering 관찰 | `target`·`currentTarget` 설명 | Planned |
+| 9월 18일 금요일 | Test Boundary Review | Ticket 단건 조회 최소 UI와 Pure Unit Test | Loading·Success·실패 상태 구분 | Planned |
+| 9월 19일 토요일 | E2E Gate Review | 통과 시 실제 Browser 한 경로, 실패 시 원인 기록 | `RUN·PASS` 또는 정확한 `NOT_RUN` | Planned |
+| 9월 20일 일요일 | 전체 회상과 Test Pyramid | Java·JS 회귀, WIL 작성 | 완료·부분 완료·이월 판정 | Planned |
+
+가용일이 달라지면 날짜별 Block을 순서대로 이동하되, 하루 6시간을 넘겨 숨겨서 누적하지 않는다. 실제 수행일과 계획일이 다르면 Study Note에 둘 다 기록한다.
+
+## 위험과 대응
+
+| 위험 | 조기 신호 | 대응 | 상태 |
+|---|---|---|---|
+| Frontend Toolchain 확대 | 첫 화면 전에 Package·Config가 계속 늘어남 | Vanilla JavaScript와 Node 내장 Test부터 시작 | Open |
+| Backend 기능 확대 | 목록·검색·사용자 저장소 구현이 UI보다 먼저 커짐 | 기존 단건 조회만 사용하고 E2E Gate로 분리 | Open |
+| Security 우회 | E2E를 위해 CSRF·인가를 끄려 함 | 실행 중단 후 Test 전용 인증 경계 재설계 | Open |
+| Mock를 E2E로 오인 | Browser가 실제 Server에 Request하지 않음 | Fake DOM Test와 Backend E2E 명칭 분리 | Open |
+| 비동기 Race | 이전 Response가 최신 화면을 덮음 | Should Spike로 재현하고 필요할 때 취소·요청 ID 적용 | Open |
+| UI 장식 과다 | CSS 작업이 핵심 실험보다 길어짐 | 상태 구분에 필요한 최소 Style만 유지 | Open |
+| Coverage 목표화 | 의미 없는 Line 실행 Test가 증가 | 대표 실패와 Boundary 설명을 완료 기준으로 사용 | Open |
+
+## 계획된 산출물
+
+| 산출물 | 목적 | 생성 조건 | 상태 |
+|---|---|---|---|
+| `week5/weekly-plan.md` | 범위·Baseline·E2E Gate | Week 5 시작 | Ready |
+| 날짜별 Study Note | 예상·답변·관찰·교정 기록 | 각 학습 Session | Planned |
+| Event Loop·Rendering Learning Note | 재사용 가능한 개념 설명 | 기존 자료로 설명이 부족할 때 | Conditional |
+| Browser UI Lab Report | UI 상태와 Test Boundary 근거 | 최소 UI 실행 뒤 | Planned |
+| Week 5 WIL | 이해 변화·실패·E2E 상태 | 주말 실제 결과 | Planned |
+
+## Learning Evidence Gate
+
+- [ ] Week 4 지연 회상 결과를 기록했다.
+- [ ] Event Loop 실행 순서를 실행 전에 예상했다.
+- [ ] Task·Microtask·Rendering의 관찰 결과와 예상 차이를 설명했다.
+- [ ] Promise·Async/Await와 Fetch 오류 경계를 실패 Case로 확인했다.
+- [ ] Loading·Success·Not Found·Forbidden·Network Error 상태를 구분했다.
+- [ ] Event Delegation이 동적 Element에서도 동작하는 이유를 설명했다.
+- [ ] Pure Unit·DOM Integration·Browser E2E의 증명 범위를 구분했다.
+- [ ] 실제 Browser E2E를 실행했거나 Gate 실패와 `NOT_RUN`을 기록했다.
+- [ ] 기존 Java Test와 선택한 JavaScript Test 결과를 남겼다.
+- [ ] AI 도움 없이 작은 JavaScript 변경과 관련 Test를 수행했다.
+- [ ] Secret·개인정보·내부 URL과 로컬 절대 경로가 공개 자료에 없다.
+- [ ] Week 5 WIL에 완료·부분 완료·미수행 범위를 기록했다.
+
+## 계획 변경 기록
+
+Baseline 이후 학습 항목을 조용히 추가하거나 삭제하지 않는다.
+
+| 날짜 | 변경 전 | 변경 후 | 이유 | 영향 | 근거 |
+|---|---|---|---|---|---|
+| 2026-09-14 | Roadmap의 목록·상세·등록 UI와 E2E 전체 후보 | 기존 단건 조회 중심의 상태 UI, E2E는 인증·데이터 Gate 뒤 한 경로 | 현재 목록 API·Runtime 사용자가 없고 제품 기능보다 Browser 원리와 Test 경계를 우선 | Gate 미통과 시 Week 5는 `Partially Completed` | Source·환경 Baseline |
+
+## 공식 학습 자료 Baseline
+
+- [MDN — JavaScript execution model](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Event_loop)
+- [MDN — Using microtasks](https://developer.mozilla.org/en-US/docs/Web/API/HTML_DOM_API/Microtask_guide)
+- [MDN — async function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)
+- [MDN — Using the Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch)
+- [MDN — Event bubbling](https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/Event_bubbling)
+- [MDN — Critical rendering path](https://developer.mozilla.org/en-US/docs/Web/Performance/Guides/Critical_rendering_path)
+- [Node.js 22 — Test runner](https://nodejs.org/docs/latest-v22.x/api/test.html)
+- [Playwright — Web server](https://playwright.dev/docs/test-webserver)
+
+## 관련 기준
+
+- [심화과정 12주 학습 계획](../plan/advanced-track-12-week-plan.md)
+- [주차별 Roadmap](../plan/weekly-roadmap.md)
+- [학습 및 기술 콘텐츠 계획](../plan/learning-and-content-plan.md)
+- [Week 4 WIL](../week4/wil.md)
