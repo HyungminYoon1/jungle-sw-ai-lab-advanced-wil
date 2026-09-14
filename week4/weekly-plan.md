@@ -1,10 +1,11 @@
 # Week 4 학습 계획 — 인증·인가·Session·CSRF
 
 > 기간: 2026-09-07 ~ 2026-09-13
-> 상태: In Progress — 9월 12일 핵심 Test와 42개 회귀 통과, 보안 점검·WIL은 9월 13일 또는 14일로 이월
+> 상태: Completed — 9월 14일 통합 회상·보안 점검·WIL 블로그 게시·포럼 등록 완료
 > 사용 가능일: 월요일·금요일·토요일만
 > 목표 시간: 하루 약 5시간, 총 15시간
 > Hard Limit: 하루 6시간을 넘기지 않고 남는 항목은 Cut Line에 따라 이월
+> 보완·마감: 9월 13일은 개인 일정으로 `NOT_RUN`, 미완료 Must는 9월 14일에 마감
 
 ## 이번 주 학습 질문
 
@@ -30,8 +31,12 @@
 | 9월 12일 — Form Login·Session 최소 Green | 최종 회귀 실행 2026-09-12 18:01 KST, 전체 38개 통과·실패 0·오류 0·건너뜀 0; Test 전용 AGENT Login 성공·실패와 같은 Mock Session의 후속 Request 인증 복원 확인 |
 | 9월 12일 — Role Matrix 최소 Green | 최종 Clean 회귀 실행 2026-09-12 19:01 KST, 전체 41개 통과·실패 0·오류 0·건너뜀 0; Test 전용 USER 생성 `201`·조회 `403`, AGENT 조회 `200` 확인 |
 | 9월 12일 — CSRF 누락·유효 비교 | 최종 Clean 회귀 실행 2026-09-12 23:42 KST, 전체 42개 통과·실패 0·오류 0·건너뜀 0; 같은 USER Session·POST·Body에서 Token 없음 `403`, 유효 Token `201` 확인 |
+| 9월 14일 — 통합 회상 | Session 객체 흐름과 Status·Controller Matrix 통과; Role 인가 실패와 CSRF 검증 실패 구분은 한 차례 교정 뒤 통과 |
+| 9월 14일 — Secret·Log 점검 Red | 42개 Test는 통과했지만 두 Surefire Report에서 자동 생성 기본 Password 안내를 발견; 값은 확인·기록하지 않음 |
+| 9월 14일 — 기본 사용자 제거와 최종 Green | Runtime 사용자가 없는 현재 범위에서 기본 사용자 자동 구성을 제외; 10:43 KST 전체 42개 통과·실패 0·오류 0·건너뜀 0, Console·Report 생성 Password 안내 0건 |
+| 9월 14일 — WIL 공개 | 블로그 게시·포럼 등록 완료에 대한 사용자 확인; 외부 URL·등록 화면은 제공되지 않아 독립 확인하지 않음 |
 
-Starter 추가 전의 세 실행은 기존 In-memory Application 회귀 기준선이다. Starter 추가 후의 실패는 Default Auto-Configuration 영향 근거다. 9월 12일 실행은 익명 API `401`, BCrypt Password, Test 전용 Form Login·Session·Role Matrix·CSRF 비교와 기존 Web Infrastructure 회귀 근거지만, Runtime 사용자 구성, 실제 Browser Cookie·CSRF Network Trace나 PostgreSQL Adapter 동작 근거로 사용하지 않는다.
+Starter 추가 전의 세 실행은 기존 In-memory Application 회귀 기준선이다. Starter 추가 후의 실패는 Default Auto-Configuration 영향 근거다. 9월 12일과 14일 실행은 익명 API `401`, BCrypt Password, Test 전용 Form Login·Session·Role Matrix·CSRF 비교와 기존 Web Infrastructure 회귀 근거다. 기본 사용자 자동 구성을 제외한 것은 Runtime 사용자가 없다는 현재 경계를 명시하고 불필요한 임시 Password Log를 막은 것이며, Runtime 사용자 구성, 실제 Browser Cookie·CSRF Network Trace나 PostgreSQL Adapter 동작 근거로 사용하지 않는다.
 
 ## 3일 Scope 결정과 근거
 
@@ -173,7 +178,9 @@ Starter 추가 전의 세 실행은 기존 In-memory Application 회귀 기준�
 - Learning Note와 WIL 작성
 - 미완료 항목을 아래 이월 Gate로 분류
 
-**9월 12일 종료 결과:** Partially Completed — 같은 USER Login Session과 동일한 POST 조건에서 CSRF Token 없음은 `403`·Controller 미진입, 유효 Token은 `201`·Controller 진입으로 비교했다. Spring Security의 기존 기본 CSRF 방어를 Test로 확인했으며 Production 설정은 변경하지 않았다. 전체 42개 Clean Test가 통과했다. 23:47 KST에 학습을 종료했으며 Source·설정·Test Output·Log 노출 점검, 통합 회상과 WIL 정리는 9월 13일 일요일 또는 9월 14일 월요일로 이월한다. 실제 Cookie 관찰은 계속 Should 범위다.
+**9월 12일 종료 결과:** Partially Completed — 같은 USER Login Session과 동일한 POST 조건에서 CSRF Token 없음은 `403`·Controller 미진입, 유효 Token은 `201`·Controller 진입으로 비교했다. Spring Security의 기존 기본 CSRF 방어를 Test로 확인했으며 Production 설정은 변경하지 않았다. 전체 42개 Clean Test가 통과했다. 23:47 KST에 학습을 종료했으며 Source·설정·Test Output·Log 노출 점검, 통합 회상과 WIL 정리를 이월했다.
+
+**9월 14일 마감 결과:** Completed — 9월 13일은 개인 일정으로 진행하지 않았다. 14일 통합 회상에서 Session 흐름과 Status Matrix를 확인했고, Role 부족 `403`과 CSRF 검증 실패 `403`은 한 차례 교정 뒤 구분했다. 첫 Log Audit은 Green Test Report의 자동 생성 기본 Password 안내 2건을 발견했다. Runtime 사용자가 없는 현재 범위에서 기본 사용자 자동 구성을 제외하고 일반 `clean test` 42개와 Console·Report Pattern을 다시 점검했다. Week 4 WIL을 작성·검토했고 사용자가 블로그 게시와 포럼 등록을 완료했다고 확인했다. 실제 Cookie 관찰은 Should 범위의 `NOT_RUN`으로 마감한다.
 
 ## 검증 Matrix
 
@@ -186,7 +193,7 @@ Starter 추가 전의 세 실행은 기존 In-memory Application 회귀 기준�
 | Session | Login 결과를 후속 Request에서 재사용 | 매 요청 Password 재전송 없이 인증 상태 복원 설명 가능 |
 | CSRF | 인증된 POST의 Token 없음·유효 비교 | 없음은 `403`, 유효하면 다음 단계 진행 |
 | 회귀 | 전체 Maven Test | 실행 시각·명령·Test 수·결과 기록 |
-| Secret | 추적 Source와 공개 산출물 점검 | 원문 Credential·Token·환경 값 미노출 |
+| Secret | 추적 Source·공개 산출물·Test Output과 Log 점검 | 자동 생성 기본 Password 안내를 제거하고 선택한 민감 값 Pattern 미노출 |
 
 ## Test 책임 분리
 
@@ -208,6 +215,8 @@ Starter 추가 전의 세 실행은 기존 In-memory Application 회귀 기준�
 | SQL Injection | PostgreSQL Adapter가 생기기 전까지 이월하지 않음 |
 | Rate Limiting | Login Baseline과 실패 측정 기준이 안정된 뒤 재검토 |
 | HTTPS·Secure Cookie | Week 8 배포 환경에서 재검토 |
+
+최종 판단은 첫 번째 Case다. Week 4 Must는 완료했고 실제 Browser Cookie Trace는 Should의 `NOT_RUN`으로 WIL에 남겼다. XSS·CORS와 그 밖의 제외 항목은 Week 5에 자동 누적하지 않는다.
 
 ## GitHub Project Draft Issue 등록
 
@@ -260,3 +269,7 @@ Starter 추가 전의 세 실행은 기존 In-memory Application 회귀 기준�
 - 2026-09-12: Role Matrix 예상 문제는 사용자가 질문의 의도를 요청해 완성 예시로 설명했으며 독립 회상 통과로 기록하지 않았다. 현재 `.authenticated()`에서 USER 조회가 Controller까지 도달해 기대 `403` 대신 실제 `404`가 된 Red를 재현하고, 생성은 USER·AGENT, 단건 조회는 AGENT만 허용했다. USER 생성 `201`·조회 `403`·Controller 미진입과 AGENT 조회 `200`, 전체 41개 Clean Test를 확인했다. CSRF Token 누락·유효 비교는 미수행이다.
 - 2026-09-12: 사용자가 Role 부족에 따른 `403`을 재설명했고, CSRF 비교에서는 처음에 GET·POST 차이로 답한 뒤 두 요청 모두 같은 POST이고 유일한 차이가 Token 유무임을 교정했다. Token 없는 USER 생성은 `403`·Controller 미진입, 유효 Token 조건은 기존 `201`·Controller 진입으로 통과했다. 이는 Spring Security 기본 CSRF 방어의 특성 확인이며 Production Code 변경은 없었다. 전체 42개 Clean Test가 통과했다.
 - 2026-09-12 23:47 KST: 사용자의 종료 결정에 따라 추가 구현을 중단했다. 핵심 Security Test는 완료했지만 통합 회상, 전체 Secret·Log 노출 점검과 Week 4 WIL은 완료로 표시하지 않고 9월 13일 또는 14일로 이월했다. 실제 Cookie 관찰은 Should로 유지한다.
+- 2026-09-14: 9월 13일에는 개인 일정으로 작업하지 않았음을 기록했다. 통합 회상에서 Session 객체 흐름과 Status Matrix를 확인했고, Role 인가 실패와 CSRF 검증 실패는 한 차례 교정 뒤 구분해 `PASS_AFTER_CORRECTION`으로 판정했다.
+- 2026-09-14: 일반 `clean test` 42개가 통과한 뒤에도 Surefire Report 두 곳에 자동 생성 기본 Password 안내가 남은 것을 발견했다. 값은 확인·기록하지 않았으며, 임시 Option 대조 뒤 Runtime 기본 사용자 자동 구성을 Source에서 제외했다. 일반 명령 재실행 결과 42개 통과와 Console·Report 안내 0건을 확인했다.
+- 2026-09-14: 추적 Source·설정·공개 Markdown과 Test Report를 Pattern 기반으로 점검하고 Week 4 WIL 공개 전 초안을 작성했다. Must 완료에 따라 Week 4를 `Completed`로 마감하고 실제 Browser Cookie Trace는 `NOT_RUN`으로 남겼다.
+- 2026-09-14: 사용자가 Week 4 블로그 게시와 포럼 등록 완료를 확인했다. 외부 URL과 등록 화면은 제공되지 않아 독립 확인 상태로 확대하지 않았다.

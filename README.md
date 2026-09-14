@@ -3,7 +3,7 @@
 > 상태: Active
 > 시작일: 2026-08-18
 > 전체 기간: 기술 심화 8주 + 취업 심화 4주
-> 현재 단계: Week 1·2·3 완료 — Week 4 9월 11일 연장 Session의 Default Security 실험 완료, 남은 구현은 9월 12일로 이월
+> 현재 단계: Week 1·2·3·4 완료 — Week 4 WIL 블로그 게시·포럼 등록 완료
 
 이 저장소는 SW AI Lab 심화과정에서 선택한 기술을 학습하고, 이해가 바뀐 과정과 재현 가능한 근거를 주차별로 기록한다. 목표는 큰 제품을 기간 안에 완성하는 것이 아니라 AI/AX·Java Backend 직무에 필요한 개념을 직접 설명하고, 작은 실험과 Test로 검증하며, 필요한 범위만 서비스에 적용할 수 있는 역량을 만드는 것이다.
 
@@ -52,7 +52,7 @@
 | 1 | Java 객체지향·JUnit (Git 운영 Baseline) | Completed | [Week 1](./week1/README.md) |
 | 2 | HTTP·REST·Spring MVC·Layered Architecture | Completed | [Week 2](./week2/README.md) |
 | 3 | PostgreSQL·Transaction·Lock·Index | Completed | [Week 3](./week3/README.md) |
-| 4 | 인증·인가·Session·Web Security | In Progress | [Week 4](./week4/README.md) |
+| 4 | 인증·인가·Session·Web Security | Completed | [Week 4](./week4/README.md) · [WIL](./week4/wil.md) |
 | 5 | Browser JavaScript·Frontend·E2E·품질 | Not Started | 주차 시작 시 추가 |
 | 6 | LLM Structured Output·평가·Guardrail | Not Started | 주차 시작 시 추가 |
 | 7 | Docker·CI·관측·Linux Process | Not Started | 주차 시작 시 추가 |
@@ -72,6 +72,7 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [주차별 Roadmap](./plan/weekly-roadmap.md): 8주 기술 학습과 4주 취업 심화 순서
 - [학습 및 기술 콘텐츠 계획](./plan/learning-and-content-plan.md): 학습 방법, 증거, WIL과 AI 활용 원칙
 - [Week 4 3일 Session 인증 학습 계획](./week4/weekly-plan.md): 공지 검토 결과를 반영한 범위 결정, 실행 순서와 이월 조건
+- [Week 4 WIL](./week4/wil.md): Session 인증·Role·CSRF의 이해 변화, Test와 Log 점검 및 게시 근거
 - [AgentOps Lab 보류 안내](./plan/agentops-lab-12-week-plan.md): 과정 이후 별도로 검토할 장기 프로젝트
 - [계획 문서 안내](./plan/README.md): 현재 기준 문서와 Archive
 - [산출물 Template](./templates/README.md): Weekly Plan, Lab Report, Learning Note와 WIL 작성 방법

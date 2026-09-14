@@ -21,7 +21,7 @@ PasswordEncoder는 원문을 복호화하지 않고 검증 가능한 형태로 �
 
 `PasswordEncoder`는 Password를 단방향으로 변환하고, 로그인 입력 원문과 저장된 Encoding이 대응하는지 `matches`로 검사한다. 암호화처럼 저장 값을 복호화해 원문을 얻는 용도가 아니다.
 
-실습에서는 무작위 Salt를 사용하는 적응형 단방향 함수 구현을 선택한다. 같은 원문을 두 번 Encode했을 때 결과가 달라도 두 결과에 대한 `matches`가 모두 성공할 수 있다. 다만 이것은 모든 `PasswordEncoder` 구현의 보장이 아니라 선택한 Salt 기반 구현의 성질이다. 9월 11일 연장 Session의 Dependency Tree에서 Spring Security 7.1.1 해석은 확인했지만, 실제 Encoder 선택과 동작 Test는 9월 12일로 이월해 아직 `NOT_IMPLEMENTED`·`NOT_RUN`이다.
+실습에서는 무작위 Salt를 사용하는 적응형 단방향 함수 구현을 선택한다. 같은 원문을 두 번 Encode했을 때 결과가 달라도 두 결과에 대한 `matches`가 모두 성공할 수 있다. 다만 이것은 모든 `PasswordEncoder` 구현의 보장이 아니라 선택한 Salt 기반 구현의 성질이다. 9월 11일 연장 Session에서는 Spring Security 7.1.1 해석만 확인했고, 9월 12일 후속 Lab에서 `BCryptPasswordEncoder`를 구성해 서로 다른 두 Encoding, 올바른 후보의 Match 성공과 잘못된 후보의 실패를 실제 Test로 확인했다.
 
 ```text
 회원·Fixture 준비: raw password → encode → encoded password 저장

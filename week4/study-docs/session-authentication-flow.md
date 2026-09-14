@@ -3,7 +3,8 @@
 > 작성일: 2026-09-11
 > 문서 성격: 교육자료 — 사용자 이해 확인이나 Runtime 검증 근거가 아님
 > 공식 문서 기준: 2026-09-11 현재 Spring Security Reference 7.1.1
-> Lab 상태: Security Starter 추가·Spring Security 7.1.1 해석 확인, 명시적 인증·Session 구현 `NOT_IMPLEMENTED`
+> 작성 당시 Lab 상태: Security Starter 추가·Spring Security 7.1.1 해석 확인, 명시적 인증·Session 구현 `NOT_IMPLEMENTED`
+> 후속 실행 근거: 2026-09-12 Test 전용 Form Login·Mock Session·Role·CSRF Test 완료, 실제 Browser Cookie Trace `NOT_RUN`
 
 ## 핵심 질문
 
@@ -340,9 +341,9 @@ Lab의 Dependency Tree에서 Spring Security 7.1.1 해석을 확인했고, Start
 
 - 이 문서를 작성하고 읽은 것만으로 사용자가 인증 과정을 이해했다고 판정하지 않는다.
 - 사용자가 위 과정을 자신의 말로 다시 설명하면 개념 이해 근거가 된다.
-- Spring Security Starter는 추가했지만 명시적 Security 구성과 Password·사용자·Role 구현은 `NOT_IMPLEMENTED`다.
-- Login·Session·Role·CSRF Integration Test는 여전히 `NOT_RUN`이다.
-- Default Filter Chain의 `/login` Redirect는 관찰했지만, Login 이후 Session ID 변화와 Cookie 속성은 여전히 `NOT_RUN`이다.
+- 2026-09-11 이 문서를 작성할 당시에는 Spring Security Starter만 추가했고 명시적 Security 구성과 Password·사용자·Role 구현은 `NOT_IMPLEMENTED`였다.
+- 2026-09-12 후속 Lab에서 명시적 Security 계약, BCrypt, Test 전용 사용자 Form Login, Mock Session 복원, Role Matrix와 CSRF Integration Test를 실행하고 전체 42개 Test 통과를 확인했다.
+- 실제 Browser의 Login 이후 Session ID 변화, `Set-Cookie`·`Cookie` 교환과 Cookie 속성은 여전히 `NOT_RUN`이다. Mock Session Test를 실제 Browser Network 근거로 확대하지 않는다.
 
 ## 참고 자료
 

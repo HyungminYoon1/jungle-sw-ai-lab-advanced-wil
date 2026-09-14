@@ -2,7 +2,8 @@
 
 > 학습 귀속일: 2026-09-11 — 자정을 넘긴 연장 Session
 > 실제 실행 시각: 2026-09-12 00:41~00:42 KST
-> 상태: 익명 API `401`·BCrypt·Test 전용 Form Login·Session·Role Matrix·CSRF 비교 완료 — 전체 Test 42개 통과
+> 마감 재검증: 2026-09-14 10:43 KST
+> 상태: 익명 API `401`·BCrypt·Test 전용 Form Login·Session·Role Matrix·CSRF 비교와 기본 Credential Log 제거 완료 — 전체 Test 42개 통과
 > 공개 원칙: 생성된 개발용 Credential 값은 기록하지 않는다.
 
 ## 실험 질문
@@ -10,6 +11,7 @@
 1. Spring Security 의존성만 추가했을 때 기존 Standalone Controller Test와 실제 Spring Context Test는 각각 어떻게 달라지는가?
 2. 익명 API Request를 Login Page로 Redirect하지 않고 `401`로 끝내면서도 기존 Web Infrastructure Test의 책임을 어떻게 보존할 것인가?
 3. Test 전용 AGENT의 Form Login 결과를 후속 Request에 재사용했을 때 Password 없이 인증 상태가 복원되는가?
+4. 기능 Test가 모두 통과해도 Source·설정·Test Output과 Log에 Credential 값이 남을 수 있는가?
 
 ## 실험 경계
 
@@ -359,6 +361,51 @@ Token 없는 Test도 `authenticated().withRoles("USER")`를 먼저 확인한다.
 - 실제 Cookie의 `SameSite`·`Secure`·`HttpOnly` 속성, Cross-site Browser 동작과 Network Header는 관찰하지 않았다.
 - CSRF Token은 인증 정보를 만들거나 USER에게 Role을 부여하지 않는다. 이 Test는 이미 인증된 Session의 상태 변경 Request 검증만 다룬다.
 
+## 9월 14일 Secret·Log 점검과 기본 사용자 제거
+
+### Green Test 뒤 별도 점검
+
+2026-09-14 10:38 KST에 일반 `clean test`를 다시 실행해 42개 통과·실패 0·오류 0·건너뜀 0을 확인했다. 이어서 추적 Source·설정·공개 Markdown과 생성된 Surefire Report를 값이 아닌 Pattern의 존재 여부로 점검했다.
+
+실제 고정 Secret·Token·Credential 파일은 발견하지 않았지만 두 통합 테스트 Report에서 Spring Boot가 자동 생성한 기본 보안 Password 안내를 각각 한 건 발견했다. 값은 확인하거나 기록하지 않았다. 실제 운영 Credential은 아니지만 Password 값을 Log에 남기지 않는다는 이번 검증 기준에는 맞지 않는다.
+
+### 원인과 대조
+
+일반 Application Context에는 Runtime `UserDetailsService`가 없다. 이 조건에서 `UserDetailsServiceAutoConfiguration`이 기본 사용자를 만들고 임시 Password를 안내했다. Test 전용 USER·AGENT는 `SessionAuthenticationIntegrationTest`의 별도 Test Configuration에서만 제공되므로 자동 생성 사용자는 현재 계약에 필요하지 않다.
+
+먼저 Maven 실행 Option으로 해당 자동 구성만 제외해 대조했다.
+
+| 대조 실행 | Test | 실패·오류·건너뜀 | 생성 Password 안내 |
+|---|---:|---:|---:|
+| 기본 상태 | 42개 | 모두 0개 | Report 2건 |
+| 자동 구성 임시 제외 | 42개 | 모두 0개 | Console·Report 0건 |
+
+대조 뒤 Application 진입점에서 기본 사용자 자동 구성을 명시적으로 제외했다. 이 변경은 Runtime 사용자를 구현한 것이 아니다. 실제 사용자 저장소가 없는 상태를 유지하면서 이번 계약에 포함되지 않은 임시 기본 Credential 생성을 막는다.
+
+### 일반 명령 최종 재검증
+
+2026-09-14 10:43 KST에 별도 Option 없이 다시 실행했다.
+
+```powershell
+.\mvnw.cmd clean test
+```
+
+| 항목 | 결과 |
+|---|---:|
+| 전체 Test | 42개 |
+| 실패 | 0개 |
+| 오류 | 0개 |
+| 건너뜀 | 0개 |
+| Console의 생성 Password 안내 | 0건 |
+| Surefire Report의 생성 Password 안내 | 0건 |
+| Report의 BCrypt Encoding 값 | 0건 |
+| Report의 Session ID 값 | 0건 |
+| Report의 CSRF Token 값 | 0건 |
+
+추적 파일에서는 대표 Private Key·Access Token·JWT·BCrypt Literal과 민감 값의 직접 대입, 추적 `.env`·Credential 파일을 Pattern 기반으로 확인했으며 발견 건수는 0이었다. 공개 Markdown의 로컬 절대 경로도 0건이었다.
+
+이 점검은 선택한 Pattern과 현재 생성 Report 범위의 근거다. 알려지지 않은 모든 Secret 형식이나 이후 실행의 Log까지 안전하다고 일반화하지 않는다.
+
 ## 현재 증명 범위
 
 | 항목 | 상태 |
@@ -373,5 +420,8 @@ Token 없는 Test도 `authenticated().withRoles("USER")`를 먼저 확인한다.
 | Production Runtime `USER`·`AGENT` 구성 | `NOT_IMPLEMENTED`·`NOT_RUN` |
 | Test 전용 USER 생성 `201`·조회 `403`, AGENT 조회 `200` | `IMPLEMENTED`·`RUN`·`PASS` |
 | 인증된 `POST`의 CSRF Token 누락·유효 비교 | `IMPLEMENTED`·`RUN`·`PASS` |
+| 기본 사용자 자동 구성 제외와 생성 Password Log 제거 | `IMPLEMENTED`·`RUN`·`PASS` |
+| 추적 Source·공개 문서·최종 Test Report Pattern 점검 | `RUN`·`PASS` |
+| 실제 Browser Cookie·CSRF Network Trace | `NOT_RUN` |
 
 상세 시간 제한과 Cut Line은 [2026-09-12 학습 계획](../study-notes/2026-09-12-study-questions.md)에 기록한다.
