@@ -1,9 +1,11 @@
 # Week 5 학습 계획 — Browser JavaScript·Frontend 상태·Test 품질
 
 > 작성일: 2026-09-14
-> 상태: Baseline — 학습 시작 전
+> 최종 수정일: 2026-09-15
+> 상태: In Progress — 9월 14일 Event Loop 입문 일부 수행, 미실시 범위를 9월 15일 야간으로 이월
 > 기간: 2026-09-14 ~ 2026-09-20
 > 권장 학습량: 총 16~18시간, 하루 최대 6시간
+> 일정 제약: 9월 15일은 야간 최대 90분만 사용하며 9월 14일 이월 Must를 우선
 > 핵심 질문: Browser의 비동기 실행과 Rendering을 이해하면서 최소 사용자 흐름을 신뢰할 수 있게 검증할 수 있는가?
 
 ## 계획 배경
@@ -13,6 +15,10 @@ Week 4에는 Session 인증, Password 검증, Role 기반 인가와 CSRF 경계�
 현재 AI Helpdesk Lab에는 Ticket 생성과 단건 조회 API가 있지만 Browser UI, 정적 Resource, Frontend Package Manifest와 Browser E2E Test는 없다. Runtime 사용자는 구현하지 않았고 `USER`·`AGENT`는 Security Integration Test 안에서만 제공한다. 따라서 실제 Browser에서 보호 API의 성공 흐름을 검증하려면 Test 전용 인증과 데이터 준비 방식을 먼저 결정해야 한다.
 
 이번 주는 React 같은 Framework를 도입하기 전에 JavaScript 실행 순서, DOM Event, Rendering과 비동기 UI 상태를 작은 실험으로 확인한다. 그 뒤 기존 단건 조회 API에 연결 가능한 최소 화면을 만든다. 실제 Browser E2E는 Security를 비활성화하거나 Credential을 Source에 넣지 않고도 재현 가능한 조건이 준비될 때만 진행한다.
+
+9월 15일에는 야간만 사용할 수 있으므로 처음에는 지연 회상, Event Loop 배경 학습, 기본 실행 순서 예상과 첫 관찰을 9월 14일로 당기고, 15일에는 중첩 Microtask와 Main Thread Blocking Case만 짧게 재현하기로 계획했다.
+
+실제 9월 14일에는 Week 4 지연 회상을 한 차례 교정 뒤 통과했고, Timer Callback의 기본 순서까지 학습했다. 하지만 Promise Microtask와 현재 동기 Code의 순서를 혼동했고 후속 확인 문제, Browser·Node 실행과 Study Note 마감을 진행하지 못했다. 따라서 이 미실시 범위를 9월 15일 야간의 최우선 범위로 옮기며, 원래 15일에 계획한 중첩 Microtask와 Main Thread Blocking은 16일 첫 Block으로 이동한다.
 
 ## Week 4 지연 회상 Gate
 
@@ -123,7 +129,7 @@ Success | 401 | 403 | 404 | Network Error
 
 | 학습 주제 | 상태 | 핵심 질문 | 방법 | 증거 |
 |---|---|---|---|---|
-| Event Loop | 핵심 학습 | 동기 Code, Microtask와 Timer는 왜 그 순서로 실행되는가? | 실행 전 순서 작성 후 Node와 Browser Console 비교 | 예상·실제 표 |
+| Event Loop | 핵심 학습 | 동기 Code, Microtask와 Timer는 왜 그 순서로 실행되는가? | [Browser JavaScript Event Loop 입문](./study-docs/browser-javascript-event-loop-basics.md)을 읽고 실행 전 순서 작성 후 Node와 Browser Console 비교 | 예상·실제 표 |
 | Promise·Async/Await | 핵심 학습 | `await` 전후 Code와 Rejection은 어느 흐름으로 이동하는가? | 같은 동작을 Promise Chain과 `async` Function으로 비교 | 설명·실패 Spike |
 | Fetch | 핵심 학습 | HTTP `404`와 Network 실패는 왜 같은 방식으로 잡히지 않는가? | `response.ok` 검사 유무와 Reject Case 비교 | Test·관찰 Log |
 | UI 상태 | 선택 적용 | 비동기 Request 전후 화면 상태를 어떻게 빠짐없이 표현하는가? | 상태 표를 먼저 만들고 Rendering Function 작성 | State Matrix·Unit Test |
@@ -169,13 +175,41 @@ Playwright는 후보일 뿐 아직 선택·설치하지 않았다. Node 내장 T
 
 같은 Assertion을 모든 Layer에 복사하지 않는다. 하위 Test에서 충분한 상태 조합을 확인하고, Browser E2E는 사용자가 보는 대표 경로 한 개에 집중한다.
 
+## 9월 14일 수행 기록
+
+계획 시간은 3시간 10분이었지만 실제 소요 시간은 기록하지 않았으므로 추정해서 채우지 않는다.
+
+| 계획 | 실제 결과 | 판정 | 이월 |
+|---|---|---|---|
+| Week 4 지연 회상 세 문장 | Session 객체 이름을 한 차례 교정한 뒤 인증 복원, 두 `403`, Test와 Log 점검의 차이를 설명 | `PASS_AFTER_CORRECTION` | 없음 |
+| Event Loop 입문 자료 | Call Stack·현재 동기 실행·Timer Task·Microtask의 기본 설명을 진행했으나 문서 전체 학습은 확인하지 않음 | `PARTIAL` | 9월 15일 핵심 문장 회상 |
+| 세 Code Example 분류·예상 | Timer Case의 출력 순서는 맞혔지만 등록과 Callback 실행을 혼동했고, Promise Case는 `D`보다 `C`가 먼저라고 잘못 예상 | `REVIEW_REQUIRED` | 9월 15일 단순 Case부터 재확인 |
+| Browser Console·Node 실행 | 실행하지 않음 | `NOT_RUN` | 9월 15일 실행 |
+| 오개념·결과 기록 | 대화 근거를 Study Note로 옮겼지만 사용자의 최종 요약은 미작성 | `PARTIAL` | 9월 15일 마감 |
+
+자료를 생성하거나 정답 설명을 읽은 사실은 Event Loop 학습 완료 근거가 아니다. 9월 14일 Event Loop 범위는 `Partially Completed`로 유지한다.
+
+## 9월 15일 야간 이월 Block
+
+야간 최대 90분을 9월 14일 미실시 범위에 먼저 사용한다.
+
+| 순서 | 시간 | 내용 | 종료 조건 |
+|---:|---:|---|---|
+| 1 | 10분 | Timer 등록과 Callback 실행, 동기 Code와 Microtask 순서 회상 | 두 핵심 문장을 자료 없이 설명 |
+| 2 | 20분 | 미응답 `queueMicrotask` Case와 단순 Promise Case 재예상 | `X → Z → Y`, `A → D → C → B`를 Queue 변화로 설명 |
+| 3 | 20분 | Promise Executor와 `async`·`await` 입문 Case 분류 | 지금 실행되는 부분과 Microtask로 이어지는 부분 구분 |
+| 4 | 25분 | Browser Console과 Node에서 기본 Case 실행 | 예상·실제 출력과 실행 환경을 분리해 기록 |
+| 5 | 15분 | Study Note 마감 | 오답 원인, 교정 문장과 `PASS`·`REVIEW_REQUIRED` 판정 기록 |
+
+원래 9월 15일 범위였던 중첩 Microtask와 Main Thread Blocking은 9월 16일 첫 Block으로 옮긴다. 이월된 기본 개념을 설명하지 못한 상태에서 중첩 Case, Fetch나 UI 구현으로 넘어가지 않는다.
+
 ## 권장 일정
 
 | 날짜 | 학습·예상 | 실험·적용 | 종료 조건 | 상태 |
 |---|---|---|---|---|
-| 9월 14일 월요일 | Week 4 마감 확인, Week 5 범위·Baseline | 저장소·Runtime·Browser 준비 상태 확인 | 계획과 미준비 조건이 문서화됨 | Planned |
-| 9월 15일 화요일 | Week 4 지연 회상, Call Stack·Task·Microtask | 회상 Gate와 Event Loop 순서 Spike | 회상 판정과 중첩 Case의 예상·실제 설명 | Planned |
-| 9월 16일 수요일 | Promise·Async/Await·Fetch | HTTP 오류·Network 오류, UI State Model | 상태·오류 Matrix와 Test 초안 | Planned |
+| 9월 14일 월요일 | Week 4 지연 회상, Call Stack·Task·Microtask 입문 | Timer·Promise 기본 Case 예상, 실행은 미실시 | 회상은 통과, Event Loop는 교정 중 | `Partially Completed` |
+| 9월 15일 화요일 야간 | 14일 이월 Event Loop 기초 | 단순 Microtask 재예상, Promise Executor·`async` 입문, Browser·Node 실행 | 최대 90분 안에 기본 순서 설명과 Study Note 마감 | Planned |
+| 9월 16일 수요일 | 중첩 Microtask·Main Thread Blocking, Promise·Async/Await·Fetch | 이월 심화 Case 뒤 HTTP 오류·Network 오류와 UI State Model | Event Loop 교정 완료와 상태·오류 Matrix 초안 | Planned |
 | 9월 17일 목요일 | Event Bubbling·Delegation, Rendering | 동적 DOM Event와 최소 Rendering 관찰 | `target`·`currentTarget` 설명 | Planned |
 | 9월 18일 금요일 | Test Boundary Review | Ticket 단건 조회 최소 UI와 Pure Unit Test | Loading·Success·실패 상태 구분 | Planned |
 | 9월 19일 토요일 | E2E Gate Review | 통과 시 실제 Browser 한 경로, 실패 시 원인 기록 | `RUN·PASS` 또는 정확한 `NOT_RUN` | Planned |
@@ -200,14 +234,16 @@ Playwright는 후보일 뿐 아직 선택·설치하지 않았다. Node 내장 T
 | 산출물 | 목적 | 생성 조건 | 상태 |
 |---|---|---|---|
 | `week5/weekly-plan.md` | 범위·Baseline·E2E Gate | Week 5 시작 | Ready |
+| [Browser JavaScript Event Loop 입문](./study-docs/browser-javascript-event-loop-basics.md) | 배경지식 없이 실행 순서를 추적하기 위한 기초 자료 | 9월 14일 일정 당김 | Ready — 학습 여부는 별도 확인 |
+| [9월 14일 Study Note](./study-notes/2026-09-14-study-questions.md) | 실제 답변·교정과 미실시 범위 기록 | 9월 14일 Session 종료 | Recorded — Event Loop `REVIEW_REQUIRED` |
 | 날짜별 Study Note | 예상·답변·관찰·교정 기록 | 각 학습 Session | Planned |
-| Event Loop·Rendering Learning Note | 재사용 가능한 개념 설명 | 기존 자료로 설명이 부족할 때 | Conditional |
+| Rendering Learning Note | 재사용 가능한 Rendering 설명 | 입문 자료와 실제 관찰만으로 설명이 부족할 때 | Conditional |
 | Browser UI Lab Report | UI 상태와 Test Boundary 근거 | 최소 UI 실행 뒤 | Planned |
 | Week 5 WIL | 이해 변화·실패·E2E 상태 | 주말 실제 결과 | Planned |
 
 ## Learning Evidence Gate
 
-- [ ] Week 4 지연 회상 결과를 기록했다.
+- [x] Week 4 지연 회상 결과를 기록했다.
 - [ ] Event Loop 실행 순서를 실행 전에 예상했다.
 - [ ] Task·Microtask·Rendering의 관찰 결과와 예상 차이를 설명했다.
 - [ ] Promise·Async/Await와 Fetch 오류 경계를 실패 Case로 확인했다.
@@ -227,6 +263,8 @@ Baseline 이후 학습 항목을 조용히 추가하거나 삭제하지 않는�
 | 날짜 | 변경 전 | 변경 후 | 이유 | 영향 | 근거 |
 |---|---|---|---|---|---|
 | 2026-09-14 | Roadmap의 목록·상세·등록 UI와 E2E 전체 후보 | 기존 단건 조회 중심의 상태 UI, E2E는 인증·데이터 Gate 뒤 한 경로 | 현재 목록 API·Runtime 사용자가 없고 제품 기능보다 Browser 원리와 Test 경계를 우선 | Gate 미통과 시 Week 5는 `Partially Completed` | Source·환경 Baseline |
+| 2026-09-14 | 9월 15일에 지연 회상과 Event Loop 첫 Spike | 배경 학습·기본 예상·첫 관찰을 14일로 이동, 15일은 야간 90분 재현으로 축소 | 사용자가 15일에는 야간만 가능하다고 알림 | Promise·Fetch 이후 일정은 유지하고 15일 Scope 증가 방지 | 사용자 일정 |
+| 2026-09-15 | 14일에 Event Loop 입문·예상·첫 실행 완료 | 지연 회상만 완료, Event Loop는 교정 중, Browser·Node 실행 `NOT_RUN` | 날짜가 바뀌기 전에 14일 계획을 마치지 못함 | 15일 90분은 이월 Must 우선, 원래 중첩·Blocking은 16일로 이동 | 9월 14일 문답 기록 |
 
 ## 공식 학습 자료 Baseline
 
