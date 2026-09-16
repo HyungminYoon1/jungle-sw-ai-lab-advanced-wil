@@ -170,6 +170,8 @@ Timer의 대기 시간이 지났더라도 현재 Task가 끝나기 전에는 `ti
 
 ## Promise Callback도 발견 즉시 실행되지 않는다
 
+Promise의 목적, 상태, Executor·`resolve`·`then`의 역할이 아직 익숙하지 않다면 먼저 [JavaScript Promise와 Async/Await 기초](./javascript-promise-async-await-basics.md)를 학습한다. 이 절은 Promise 객체 자체보다 Event Loop에서 Handler가 실행되는 시점에 집중한다.
+
 이미 해결된 Promise라도 `.then` Callback은 현재 Code 중간에 바로 실행되지 않고 Microtask로 예약된다.
 
 ```javascript

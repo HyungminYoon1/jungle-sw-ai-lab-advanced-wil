@@ -1,10 +1,11 @@
 # Week 5 학습 계획 — Browser JavaScript·Frontend 상태·Test 품질
 
 > 작성일: 2026-09-14
-> 최종 수정일: 2026-09-16
-> 상태: Revised — 공지 기반 Week 5 선택 범위와 일정 축소 항목을 9월 16~18일에 복원
+> 최종 수정일: 2026-09-17
+> 상태: In Progress — Event Loop·Rendering 비교 통과, Promise 배경 학습 중
 > 기간: 2026-09-14 ~ 2026-09-20
-> 잔여 집중 학습량: 9월 16~18일 총 20시간, 하루 최대 7시간으로 한시 확대
+> 원 계획 집중 학습량: 9월 16~18일 총 20시간, 하루 최대 7시간으로 한시 확대
+> 실제 소요 시간: `NOT_RECORDED` — 계획 시간을 실제 학습 시간으로 대체하지 않음
 > 일정 제약: 9월 19~20일은 가족 행사로 필수 학습을 배치하지 않음
 > 핵심 질문: Browser의 비동기 실행과 Rendering을 이해하면서 최소 사용자 흐름을 신뢰할 수 있게 검증할 수 있는가?
 
@@ -23,6 +24,8 @@ Week 4에는 Session 인증, Password 검증, Role 기반 인가와 CSRF 경계�
 9월 15일에는 개인 일정이 지연되어 자정을 넘겼고 학습·실험을 진행하지 못했다. 19~20일에도 가족 행사로 학습이 제한되므로 남은 범위는 16~18일 세 날에 끝낸다.
 
 첫 압축안은 Event Loop·Promise·DOM Event·Rendering 같은 중심 범위를 유지했지만 CORS·XSS·Coverage 해석·정적 분석을 전용 근거 없이 조건부로 남겼고, `requestAnimationFrame`, 비동기 Race, `AbortController`, Network Panel 관찰을 일정 때문에 `Deferred`했다. 사용자는 시간을 더 투입하더라도 선택한 학습 자체를 빼지 않도록 요청했다. 이에 따라 제품 화면 수는 늘리지 않되 해당 학습을 독립 Spike와 최소 UI에 다시 포함하고, 16~18일 잔여 집중 학습 예산을 16시간 30분에서 20시간으로 늘린다.
+
+실제 9월 16일에는 단순·중첩 Microtask를 예상하고 Node.js와 Browser Console에서 실행했지만, 중첩 Microtask 원인의 최종 재설명은 날짜가 바뀐 뒤 완료했다. 9월 17일 00:55 KST까지 Main Thread Blocking과 이중 `requestAnimationFrame`·Performance Marker 비교를 완료했고 Promise는 배경 자료를 보완하는 단계에서 중단했다. Promise 이후 선택 범위는 수행하지 않았으며 삭제하지 않고 `NOT_RUN`으로 유지한다.
 
 ## Week 4 지연 회상 Gate
 
@@ -284,19 +287,50 @@ Gate를 통과하면 실제 Spring Server 흐름을 검증한다. Gate가 실패
 - 18일 안에 Must가 끝나지 않으면 Week 5를 `Partially Completed`로 판정하고 다음 학습 가능일로 명시적으로 이월한다.
 - 미완료분을 19~20일 가족 행사 시간에 자동 배치하지 않는다.
 
+## 9월 16~17일 실제 진행 기록
+
+실제 소요 시간은 측정하지 않았으므로 계획 시간에서 역산하지 않는다.
+
+### 9월 16일
+
+| 범위 | 실제 결과 | 판정 |
+|---|---|---|
+| 단순 Task·Microtask·Timer | 실행 전 예상과 Node.js·Browser Console 출력 일치 | `PASS` |
+| 중첩 Microtask | `A → E → B → C → D` 예상·Node.js·Browser 실행, 다음 Task 문자 한 차례 교정 | `RUN_PASS_AFTER_CORRECTION` |
+| 중첩 Microtask 원인 설명 | Browser 실행은 완료했지만 Queue 소진 원인의 최종 재설명은 날짜 경계 뒤로 넘어감 | `REVIEW_REQUIRED_AT_DATE_BOUNDARY` |
+| Main Thread Blocking·Rendering | 미실시 | `NOT_RUN` |
+| Promise·Fetch·CORS·UI 상태 모델 | 미실시 | `NOT_RUN` |
+
+상세 근거: [9월 16일 Study Note](./study-notes/2026-09-16-study-questions.md)
+
+### 9월 17일 00:55 KST 종료 요청 시점
+
+| 범위 | 실제 결과 | 판정 |
+|---|---|---|
+| 중첩 Microtask 원인 | 새 Microtask까지 Queue가 빌 때까지 처리한 뒤 다음 Task를 선택한다고 재설명 | `PASS_AFTER_TERMINOLOGY_CORRECTION` |
+| 기본 Main Thread Blocking | DOM은 `작업 중 → 완료`, 화면은 `대기 → 완료`로 관찰 | `RUN_PASS` |
+| 이중 `requestAnimationFrame` | 화면 `대기 → 작업 중 → 완료`, Callback Marker 간격 4.8ms·Blocking 1000.0ms 관찰 | `RUN_PASS` |
+| Performance Marker 해석 | Marker 간격과 Paint 시각을 같은 근거로 취급하지 않음 | `PASS` |
+| Promise 상태·`resolve`·`then` | 외부 검색 답변을 제공했으나 의미를 이해하지 못했다고 명시, 자료 보완 | `EXTERNAL_SOURCE_ANSWER_NOT_ASSESSED` |
+| Promise Runtime·Fetch 이후 선택 범위 | 미실시 | `NOT_RUN` |
+
+상세 근거: [9월 17일 Study Note](./study-notes/2026-09-17-study-questions.md)
+
+사용자는 자정 직후 학습을 중단하고 잠든 뒤 이어서 진행하기로 했다. 재개 시 Promise의 세 역할을 검색 없이 설명하는 Gate부터 시작한다. 선택한 학습 범위는 줄이지 않되, 실제 9월 17일 학습 뒤에도 18일까지 끝나지 않으면 Cut Line에 따라 `Partially Completed`와 명시적 이월을 사용한다.
+
 ## 권장 일정
 
 | 날짜 | 학습·예상 | 실험·적용 | 종료 조건 | 상태 |
 |---|---|---|---|---|
 | 9월 14일 월요일 | Week 4 지연 회상, Call Stack·Task·Microtask 입문 | Timer·Promise 기본 Case 예상, 실행은 미실시 | 회상은 통과, Event Loop는 교정 중 | `Partially Completed` |
 | 9월 15일 화요일 야간 | 개인 일정 지연 | 문답·실행 없음 | 학습 미실시를 숨기지 않고 이월 | `NOT_RUN` |
-| 9월 16일 수요일 | Event Loop·Promise·Async/Await·Fetch·CORS | Browser·Node·Rendering Timing·두 Origin Spike와 UI 상태 모델 | 실행 순서, Rendering과 CORS 실패·허용 설명 | Planned — 6시간 30분 |
-| 9월 17일 목요일 | DOM Event·Rendering·XSS·Race | 동적 목록, 최소 Ticket UI, XSS·Race·취소와 JavaScript Test | 상태·보안 경계·Delegation·Race 원인 설명 | Planned — 6시간 50분 |
-| 9월 18일 금요일 | Coverage·정적 분석·E2E·통합 회상 | Coverage 맹점, ESLint, Network Trace, E2E·회귀·WIL | 선택 키워드 근거와 최종 판정 | Planned — 6시간 40분 |
+| 9월 16일 수요일 | Event Loop·Promise·Async/Await·Fetch·CORS | 실제로는 Event Loop 기본·중첩 Browser·Node 실행까지 수행 | 중첩 원인 재설명은 날짜 경계 뒤 완료 | `Partially Completed` |
+| 9월 17일 목요일 | DOM Event·Rendering·XSS·Race | 00:55까지 Blocking·이중 `requestAnimationFrame` 완료, Promise 배경 학습 중 | 잠든 뒤 Promise 역할 Gate부터 재개 | `In Progress` |
+| 9월 18일 금요일 | Coverage·정적 분석·E2E·통합 회상 | 원 계획과 미완료 선택 범위를 실제 가능 시간에 따라 계속 수행 | 미완료를 삭제하지 않고 실제 결과로 최종 판정 | Planned — 범위 유지 |
 | 9월 19일 토요일 | 가족 행사 | 필수 학습 배치 없음 | 일정 보호 | No Required Work |
 | 9월 20일 일요일 | 가족 행사 | 필수 학습 배치 없음 | 일정 보호 | No Required Work |
 
-16~18일의 미완료분을 19~20일로 자동 이동하지 않는다. 실제 수행일과 계획일이 다르면 Study Note에 둘 다 기록하고, 이번 한시 계획의 하루 집중 학습 상한 7시간을 넘기지 않는다.
+16~18일의 미완료분을 19~20일로 자동 이동하지 않는다. 실제 수행일과 계획일이 다르면 Study Note에 둘 다 기록한다. 실제 학습 시간이 기록되지 않았으므로 계획 시간을 채운 것으로 간주하지 않으며, 잠든 뒤 확보 가능한 시간을 확인한 다음 18일까지의 완료 가능성을 다시 판정한다.
 
 ## 위험과 대응
 
@@ -316,8 +350,11 @@ Gate를 통과하면 실제 Spring Server 흐름을 검증한다. Gate가 실패
 |---|---|---|---|
 | `week5/weekly-plan.md` | 범위·Baseline·E2E Gate | Week 5 시작 | Ready |
 | [Browser JavaScript Event Loop 입문](./study-docs/browser-javascript-event-loop-basics.md) | 배경지식 없이 실행 순서를 추적하기 위한 기초 자료 | 9월 14일 일정 당김 | Ready — 학습 여부는 별도 확인 |
+| [JavaScript Promise와 Async/Await 기초](./study-docs/javascript-promise-async-await-basics.md) | Promise 상태·역할·Chain 선행 개념 | `resolve`·`then` 의미를 이해하지 못함 | Ready — 독립 재설명 `NOT_RUN` |
 | [9월 14일 Study Note](./study-notes/2026-09-14-study-questions.md) | 실제 답변·교정과 미실시 범위 기록 | 9월 14일 Session 종료 | Recorded — Event Loop `REVIEW_REQUIRED` |
-| 날짜별 Study Note | 예상·답변·관찰·교정 기록 | 각 학습 Session | Planned |
+| [9월 16일 Study Note](./study-notes/2026-09-16-study-questions.md) | Event Loop 예상·Node.js·Browser 실행 | 9월 16일 Session | Recorded — 날짜 경계에서 원인 설명 이월 |
+| [9월 17일 Study Note](./study-notes/2026-09-17-study-questions.md) | Rendering 비교와 Promise 배경 학습 | 9월 17일 00:55 종료 요청 | Recorded — Promise `BACKGROUND_LEARNING` |
+| 날짜별 후속 Study Note | 예상·답변·관찰·교정 기록 | 각 후속 학습 Session | Planned |
 | Rendering Learning Note | 재사용 가능한 Rendering 설명 | 입문 자료와 실제 관찰만으로 설명이 부족할 때 | Conditional |
 | Browser UI Lab Report | UI 상태와 Test Boundary 근거 | 최소 UI 실행 뒤 | Planned |
 | Week 5 WIL | 이해 변화·실패·E2E 상태 | 주말 실제 결과 | Planned |
@@ -325,15 +362,16 @@ Gate를 통과하면 실제 Spring Server 흐름을 검증한다. Gate가 실패
 ## Learning Evidence Gate
 
 - [x] Week 4 지연 회상 결과를 기록했다.
-- [ ] Event Loop 실행 순서를 실행 전에 예상했다.
-- [ ] Task·Microtask·Rendering의 관찰 결과와 예상 차이를 설명했다.
+- [x] Event Loop 실행 순서를 실행 전에 예상했다.
+- [x] Task·Microtask·Rendering의 관찰 결과와 예상 차이를 설명했다.
 - [ ] Promise·Async/Await와 Fetch 오류 경계를 실패 Case로 확인했다.
 - [ ] 두 Origin의 CORS 실패·Preflight·허용 Header 차이를 관찰했다.
 - [ ] Loading·Success·Not Found·Forbidden·Network Error 상태를 구분했다.
 - [ ] `textContent`와 위험한 HTML 삽입의 XSS 경계를 재현하고 설명했다.
 - [ ] Event Delegation이 동적 Element에서도 동작하는 이유를 설명했다.
 - [ ] Response Race를 재현하고 `AbortController` 적용 전후를 비교했다.
-- [ ] `requestAnimationFrame`·Performance Marker와 Network Panel 관찰을 기록했다.
+- [x] `requestAnimationFrame`·Performance Marker 관찰을 기록했다.
+- [ ] Browser Network Panel 관찰을 기록했다.
 - [ ] Pure Unit·DOM Integration·Browser E2E의 증명 범위를 구분했다.
 - [ ] Coverage 수치와 결함 검출의 차이, ESLint와 Test의 발견 범위를 설명했다.
 - [ ] 실제 Browser E2E를 실행했거나 Gate 실패와 `NOT_RUN`을 기록했다.
@@ -353,6 +391,7 @@ Baseline 이후 학습 항목을 조용히 추가하거나 삭제하지 않는�
 | 2026-09-15 | 14일에 Event Loop 입문·예상·첫 실행 완료 | 지연 회상만 완료, Event Loop는 교정 중, Browser·Node 실행 `NOT_RUN` | 날짜가 바뀌기 전에 14일 계획을 마치지 못함 | 15일 90분은 이월 Must 우선, 원래 중첩·Blocking은 16일로 이동 | 9월 14일 문답 기록 |
 | 2026-09-16 | 15일 야간 이월 학습 뒤 19~20일 마감 | 15일 `NOT_RUN`, 남은 Must를 16~18일 5시간 30분씩 배치, 19~20일 필수 과업 없음 | 개인 일정 지연과 가족 행사 | Should 전체 Deferred, E2E는 Gate 조건 유지 | 사용자 일정 |
 | 2026-09-16 | 공지 기반 CORS·XSS·Coverage·정적 분석이 약하고 네 Should가 Deferred인 16시간 30분 압축안 | 선택 키워드와 네 확장 실험을 모두 복원하고 잔여 집중 학습을 20시간으로 확대 | 시간을 더 투입하더라도 선택한 학습 자체를 빼지 말라는 사용자 요청 | 하루 상한을 한시적으로 7시간으로 높이고 제품 기능·UI 장식만 축소 | 사용자 결정·공지 Coverage 재대조 |
+| 2026-09-17 | 9월 16일에 Promise·Fetch·CORS·상태 모델까지 수행 | Event Loop·Rendering 비교까지만 실제 완료, Promise는 선행 개념부터 재학습 | 출력 문제를 풀 배경지식이 부족하고 검색 답변의 의미를 이해하지 못함 | 선택 범위는 유지하되 현재 상태를 `Partially Completed`·`NOT_RUN`으로 분리, 수면 뒤 재개 | 9월 16·17일 Study Note |
 
 ## 공식 학습 자료 Baseline
 
