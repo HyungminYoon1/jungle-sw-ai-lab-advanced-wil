@@ -1,11 +1,11 @@
 # Week 5 학습 계획 — Browser JavaScript·Frontend 상태·Test 품질
 
 > 작성일: 2026-09-14
-> 최종 수정일: 2026-09-15
-> 상태: In Progress — 9월 14일 Event Loop 입문 일부 수행, 미실시 범위를 9월 15일 야간으로 이월
+> 최종 수정일: 2026-09-16
+> 상태: Revised — 공지 기반 Week 5 선택 범위와 일정 축소 항목을 9월 16~18일에 복원
 > 기간: 2026-09-14 ~ 2026-09-20
-> 권장 학습량: 총 16~18시간, 하루 최대 6시간
-> 일정 제약: 9월 15일은 야간 최대 90분만 사용하며 9월 14일 이월 Must를 우선
+> 잔여 집중 학습량: 9월 16~18일 총 20시간, 하루 최대 7시간으로 한시 확대
+> 일정 제약: 9월 19~20일은 가족 행사로 필수 학습을 배치하지 않음
 > 핵심 질문: Browser의 비동기 실행과 Rendering을 이해하면서 최소 사용자 흐름을 신뢰할 수 있게 검증할 수 있는가?
 
 ## 계획 배경
@@ -18,7 +18,11 @@ Week 4에는 Session 인증, Password 검증, Role 기반 인가와 CSRF 경계�
 
 9월 15일에는 야간만 사용할 수 있으므로 처음에는 지연 회상, Event Loop 배경 학습, 기본 실행 순서 예상과 첫 관찰을 9월 14일로 당기고, 15일에는 중첩 Microtask와 Main Thread Blocking Case만 짧게 재현하기로 계획했다.
 
-실제 9월 14일에는 Week 4 지연 회상을 한 차례 교정 뒤 통과했고, Timer Callback의 기본 순서까지 학습했다. 하지만 Promise Microtask와 현재 동기 Code의 순서를 혼동했고 후속 확인 문제, Browser·Node 실행과 Study Note 마감을 진행하지 못했다. 따라서 이 미실시 범위를 9월 15일 야간의 최우선 범위로 옮기며, 원래 15일에 계획한 중첩 Microtask와 Main Thread Blocking은 16일 첫 Block으로 이동한다.
+실제 9월 14일에는 Week 4 지연 회상을 한 차례 교정 뒤 통과했고, Timer Callback의 기본 순서까지 학습했다. 하지만 Promise Microtask와 현재 동기 Code의 순서를 혼동했고 후속 확인 문제, Browser·Node 실행과 Study Note 마감을 진행하지 못했다.
+
+9월 15일에는 개인 일정이 지연되어 자정을 넘겼고 학습·실험을 진행하지 못했다. 19~20일에도 가족 행사로 학습이 제한되므로 남은 범위는 16~18일 세 날에 끝낸다.
+
+첫 압축안은 Event Loop·Promise·DOM Event·Rendering 같은 중심 범위를 유지했지만 CORS·XSS·Coverage 해석·정적 분석을 전용 근거 없이 조건부로 남겼고, `requestAnimationFrame`, 비동기 Race, `AbortController`, Network Panel 관찰을 일정 때문에 `Deferred`했다. 사용자는 시간을 더 투입하더라도 선택한 학습 자체를 빼지 않도록 요청했다. 이에 따라 제품 화면 수는 늘리지 않되 해당 학습을 독립 Spike와 최소 UI에 다시 포함하고, 16~18일 잔여 집중 학습 예산을 16시간 30분에서 20시간으로 늘린다.
 
 ## Week 4 지연 회상 Gate
 
@@ -50,9 +54,9 @@ Week 5 구현을 시작하기 전에 자료 없이 다음 세 문장을 완성�
 | Backend | Spring Boot 4.1.1, Java 25, In-memory Ticket Repository | 새 목록 API나 Database Adapter를 만들지 않음 |
 | API | `POST /api/tickets`, `GET /api/tickets/{id}` | 단건 조회를 최소 Browser 흐름으로 선택 |
 | Security | Session·Role·CSRF Test 완료, Runtime 사용자 없음 | Browser 성공 E2E 전 Test 전용 인증 Gate 필요 |
-| JavaScript Runtime | Node.js 22.23.2, npm 11.12.0 확인 | Version을 기억이 아니라 실행 결과로 기록 |
+| JavaScript Runtime | Node.js 22.23.2, npm 11.12.0, Node Test Coverage Option 확인 | Version과 Coverage 실행을 기억이 아니라 실행 결과로 기록 |
 | Browser | Chrome·Edge 설치 확인 | 실제 선택 Browser와 Version은 E2E 실행 시 기록 |
-| Frontend 구성 | 정적 Resource·`package.json`·Browser Test Runner 없음 | 필요한 최소 구성만 선택하고 설치 전 이유 기록 |
+| Frontend 구성 | 정적 Resource·`package.json`·Browser Test Runner·ESLint Command 없음 | 필요한 최소 구성만 선택하고 설치 전 이유 기록 |
 
 위 Baseline은 계획 시점 확인이다. 실제 학습 시작 전 두 저장소 상태와 Runtime Version을 다시 확인하며, 이후 변경이나 설치를 미리 완료한 것으로 취급하지 않는다.
 
@@ -87,16 +91,23 @@ Success | 401 | 403 | 404 | Network Error
 - Loading·Success·Empty 또는 Not Found·Forbidden·Error 상태 전이 정의
 - Event Bubbling의 `target`·`currentTarget`과 Event Delegation 비교
 - DOM·CSSOM·Render Tree·Layout·Paint의 기본 순서 설명
+- 두 Local Origin에서 CORS 실패, Simple Request와 Preflight·허용 Header 비교
+- 사용자 제공 문자열의 `textContent` Rendering과 위험한 HTML 삽입의 XSS 경계 비교
 - 최소 Ticket 단건 조회 화면과 의미 있는 JavaScript Test
+- Node Test Coverage로 측정 사각지대를 확인하고 높은 수치와 좋은 Test의 차이 설명
+- ESLint 기반 정적 분석을 실행하고 Test·Coverage와 발견 범위 비교
+- `requestAnimationFrame`·Performance Marker, 비동기 Response Race·`AbortController`, Network Panel Trace 수행
 - 실제 Browser E2E 1개 또는 Gate 실패를 포함한 `Partially Completed` 판정
 - Java 42개 회귀, Frontend Test 결과와 Week 5 WIL
 
-### Should — Must가 예상보다 빨리 끝날 때
+### 복원한 확장 실험 — 일정 때문에 제외하지 않음
 
 - `requestAnimationFrame`과 Performance Marker로 DOM 변경 뒤 Rendering 기회 관찰
 - 빠르게 연속 조회했을 때 늦은 Response가 최신 화면을 덮는 Race 재현
 - `AbortController`로 이전 조회 취소 비교
 - 실제 Browser Network Panel에서 Request·Response와 Timing 한 번 기록
+
+위 네 항목은 첫 압축안에서 `Deferred`했지만 학습량 재검토 뒤 16~18일 실행 계획에 복원했다. 완료 판정에는 예상·실행·관찰 또는 실패 원인 기록이 필요하며, 단순 언급으로 수행 처리하지 않는다.
 
 ### 이번 주에 포함하지 않음
 
@@ -110,20 +121,22 @@ Success | 401 | 403 | 404 | Network Error
 
 ### 조건부 후속
 
-- 사용자 입력을 HTML로 Rendering하는 경계가 생기면 `textContent`와 위험한 HTML 삽입 차이를 최소 XSS 질문으로 다룬다.
-- Frontend와 Backend가 다른 Origin에서 실행될 때만 CORS를 실제 Request Header로 재검토한다.
+- XSS는 외부 통신·Credential 접근이 없는 격리된 최소 Page에서 무해한 DOM Marker만 사용해 `textContent`와 위험한 HTML 삽입을 비교한다. Sanitizer·Trusted Types·CSP 전체 적용은 실제 HTML 허용 요구가 생길 때 후속 검토한다.
+- CORS는 두 Local Origin의 독립 Spike로 실패·Preflight·허용 Header를 확인한다. Helpdesk Runtime CORS 설정은 Frontend와 Backend를 실제로 다른 Origin에서 실행할 때만 적용한다.
 - Ticket 생성 UI와 CSRF Token 전달은 단건 조회 흐름과 E2E 인증 Gate가 안정된 뒤 판단한다.
 
 ## 시간 배분
 
 | 활동 | 계획 시간 | 종료 조건 |
 |---|---:|---|
-| 개념·공식 자료 | 4시간 | Event Loop·Promise·Rendering 흐름을 그림 없이도 설명 |
-| 독립 Spike | 5시간 | 예상, 실제 출력과 차이 원인 기록 |
-| 최소 UI·Test | 5시간 | 상태별 화면과 대표 실패 Test |
-| Review·회귀·WIL | 3~4시간 | 증명 범위와 `NOT_RUN` 경계 기록 |
+| 개념·공식 자료 | 5시간 | Event Loop·Promise·Rendering·CORS·XSS 경계를 설명 |
+| 독립 Spike | 7시간 | 예상, 실제 출력·Browser 관찰과 차이 원인 기록 |
+| 최소 UI·Test | 4시간 30분 | 상태별 화면, Coverage와 대표 실패 Test |
+| Review·회귀·WIL | 3시간 30분 | 정적 분석·E2E·회귀와 증명 범위 기록 |
 
-일일 미완료를 다음 날에 모두 더해 하루 6시간을 넘기지 않는다. 시간이 부족하면 UI 장식, Race·취소 실험, 실제 Network Trace 순으로 자른다. Event Loop 예상·관찰, UI 상태 구분과 Test 책임은 자르지 않는다.
+일일 집중 학습 상한은 이번 일정에 한해 7시간으로 늘린다. 시간이 부족하면 UI 장식, 추가 Backend Endpoint, WIL 문장 다듬기를 먼저 줄인다. 선택한 학습 키워드, 실패 재현과 Test 근거는 일정만을 이유로 삭제하지 않는다.
+
+9월 14일 실제 소요 시간을 기록하지 않았으므로 이를 추정해 남은 시간에서 빼지 않는다. 9월 16일 6시간 30분, 17일 6시간 50분, 18일 6시간 40분으로 총 20시간을 배치한다. 이 시간은 집중 학습 기준이며 식사와 긴 휴식은 포함하지 않는다. 각 90분 이내 Block 사이에는 최소 10분 쉬고, 이해가 무너진 상태에서 다음 키워드로 진행하지 않는다.
 
 ## 학습 계획
 
@@ -132,10 +145,14 @@ Success | 401 | 403 | 404 | Network Error
 | Event Loop | 핵심 학습 | 동기 Code, Microtask와 Timer는 왜 그 순서로 실행되는가? | [Browser JavaScript Event Loop 입문](./study-docs/browser-javascript-event-loop-basics.md)을 읽고 실행 전 순서 작성 후 Node와 Browser Console 비교 | 예상·실제 표 |
 | Promise·Async/Await | 핵심 학습 | `await` 전후 Code와 Rejection은 어느 흐름으로 이동하는가? | 같은 동작을 Promise Chain과 `async` Function으로 비교 | 설명·실패 Spike |
 | Fetch | 핵심 학습 | HTTP `404`와 Network 실패는 왜 같은 방식으로 잡히지 않는가? | `response.ok` 검사 유무와 Reject Case 비교 | Test·관찰 Log |
+| CORS | 독립 Spike | Browser는 왜 다른 Origin의 Response 읽기를 제한하며 Preflight는 언제 필요한가? | 두 Local Origin에서 실패·허용 조건과 Header 비교 | Browser Console·Network Trace |
 | UI 상태 | 선택 적용 | 비동기 Request 전후 화면 상태를 어떻게 빠짐없이 표현하는가? | 상태 표를 먼저 만들고 Rendering Function 작성 | State Matrix·Unit Test |
+| XSS Rendering 경계 | 독립 Spike | Server 문자열을 DOM에 넣을 때 Code가 아니라 Text로 다루려면 무엇을 사용해야 하는가? | 격리된 Page에서 `textContent`와 위험한 HTML 삽입 비교 | 안전한 최소 재현·설명 |
 | DOM Event | 핵심 학습 | 부모 Listener 하나가 동적으로 추가된 자식 Event를 어떻게 처리하는가? | 개별 Listener와 Delegation 비교 | Bubbling Spike |
 | Rendering | 독립 Spike | DOM 변경은 언제 Style·Layout·Paint로 이어지는가? | 공식 자료와 DevTools 최소 관찰 | Learning Note 또는 Study Note |
 | Test 책임 | 핵심 학습 | Pure Unit, DOM Integration과 실제 Browser E2E의 실패 의미는 무엇인가? | 같은 기능을 서로 다른 Boundary에서 비교 | Test 책임 표 |
+| Coverage 해석 | 핵심 학습 | 실행된 Line 비율이 높아도 중요한 결함을 놓칠 수 있는 이유는 무엇인가? | Node Test Coverage와 의도적으로 약한 Test 비교 | Coverage Report·해석 Note |
+| 정적 분석·Lint | 핵심 학습 | Code를 실행하지 않는 검사가 Test와 다른 문제를 어떻게 찾는가? | 최소 ESLint 설정으로 사용하지 않는 값·규칙 위반 재현 | Lint 실패·수정 결과 |
 | Browser E2E | 조건부 후속 | 실제 Session·Role을 유지한 단건 조회 성공을 재현할 수 있는가? | 아래 E2E Gate 통과 뒤 Browser 1종에서 실행 | 실제 Browser 결과 또는 `NOT_RUN` |
 
 ## Lab 계획
@@ -144,11 +161,15 @@ Success | 401 | 403 | 404 | Network Error
 |---:|---|---|---|---|
 | 1 | Task·Microtask·Timer 순서 Spike | 동기 Code 후 Microtask Queue가 비워지고 다음 Task가 실행된다. | 중첩 Microtask까지 예상과 실제를 설명 | Planned |
 | 2 | Promise·`async` 오류 Spike | HTTP 응답과 Network 오류는 다른 분기로 들어간다. | `response.ok` 누락 실패를 재현 | Planned |
-| 3 | UI State Model | Boolean `loading` 하나로는 여러 결과를 표현하기 어렵다. | 상태와 허용 전이를 표와 Test로 표현 | Planned |
-| 4 | Event Delegation | 부모 Listener는 Bubbling된 Event의 Target을 검사할 수 있다. | 동적 자식에서도 동작하고 잘못된 Target은 무시 | Planned |
-| 5 | Ticket 단건 조회 UI | Request 중·성공·각 실패가 다른 화면으로 보인다. | 최소 HTML·CSS·JavaScript와 Test | Planned |
-| 6 | Browser E2E Gate | Runtime 인증과 Test Data가 없으면 성공 흐름을 증명할 수 없다. | 아래 다섯 조건 판정 | Planned |
-| 7 | 전체 회귀·WIL | Frontend 변경이 기존 Java 계약을 깨지 않는다. | Java 42개와 선택한 JS·Browser Test 결과 기록 | Planned |
+| 3 | CORS 두 Origin Spike | Browser는 허용 Header가 없는 다른 Origin Response를 읽지 못한다. | 실패·Simple·Preflight·허용 조건을 Network에서 구분 | Planned |
+| 4 | UI State Model | Boolean `loading` 하나로는 여러 결과를 표현하기 어렵다. | 상태와 허용 전이를 표와 Test로 표현 | Planned |
+| 5 | Event Delegation | 부모 Listener는 Bubbling된 Event의 Target을 검사할 수 있다. | 동적 자식에서도 동작하고 잘못된 Target은 무시 | Planned |
+| 6 | Rendering·XSS 경계 | DOM 문자열 삽입 API에 따라 Text와 HTML 해석이 달라진다. | 격리된 Page에서 안전한 Rendering 기준 설명 | Planned |
+| 7 | Race·취소·Rendering Timing | 늦은 Response와 긴 Task가 최신 UI·Paint를 지연시킨다. | Race 재현, `AbortController`와 Rendering Marker 비교 | Planned |
+| 8 | Ticket 단건 조회 UI | Request 중·성공·각 실패가 다른 화면으로 보인다. | 최소 HTML·CSS·JavaScript와 Test | Planned |
+| 9 | Coverage·정적 분석 | Line 실행과 결함 검출은 같지 않고 Lint는 다른 실패를 찾는다. | Coverage 맹점과 Lint 실패·수정 근거 | Planned |
+| 10 | Browser E2E Gate | Runtime 인증과 Test Data가 없으면 성공 흐름을 증명할 수 없다. | 아래 다섯 조건 판정 | Planned |
+| 11 | 전체 회귀·WIL | Frontend 변경이 기존 Java 계약을 깨지 않는다. | Java 42개와 선택한 JS·Browser Test 결과 기록 | Planned |
 
 ## 실제 Browser E2E Gate
 
@@ -189,33 +210,93 @@ Playwright는 후보일 뿐 아직 선택·설치하지 않았다. Node 내장 T
 
 자료를 생성하거나 정답 설명을 읽은 사실은 Event Loop 학습 완료 근거가 아니다. 9월 14일 Event Loop 범위는 `Partially Completed`로 유지한다.
 
-## 9월 15일 야간 이월 Block
+## 9월 15일 실행 결과
 
-야간 최대 90분을 9월 14일 미실시 범위에 먼저 사용한다.
+개인 일정이 지연되어 계획한 야간 90분을 확보하지 못했고 자정을 넘겼다. 문답, Browser·Node 실행과 새 학습 기록은 모두 진행하지 않았다.
+
+판정: `NOT_RUN — SCHEDULE_CONSTRAINT`
+
+9월 14일에서 이월한 Event Loop 기본 순서 교정과 원래 15일 범위였던 중첩 Microtask·Main Thread Blocking은 9월 16일 Block에 합친다.
+
+## 9월 16~18일 복원 실행 계획
+
+### 9월 16일 — Event Loop·Promise·Fetch·CORS와 상태 모델
+
+집중 학습 상한: 6시간 30분
 
 | 순서 | 시간 | 내용 | 종료 조건 |
 |---:|---:|---|---|
-| 1 | 10분 | Timer 등록과 Callback 실행, 동기 Code와 Microtask 순서 회상 | 두 핵심 문장을 자료 없이 설명 |
-| 2 | 20분 | 미응답 `queueMicrotask` Case와 단순 Promise Case 재예상 | `X → Z → Y`, `A → D → C → B`를 Queue 변화로 설명 |
-| 3 | 20분 | Promise Executor와 `async`·`await` 입문 Case 분류 | 지금 실행되는 부분과 Microtask로 이어지는 부분 구분 |
-| 4 | 25분 | Browser Console과 Node에서 기본 Case 실행 | 예상·실제 출력과 실행 환경을 분리해 기록 |
-| 5 | 15분 | Study Note 마감 | 오답 원인, 교정 문장과 `PASS`·`REVIEW_REQUIRED` 판정 기록 |
+| 1 | 20분 | Timer 등록·Callback, 단순 Microtask 순서 재회상 | `X → Z → Y`, `A → D → C → B`를 Queue 변화로 설명 |
+| 2 | 35분 | Browser Console·Node 기본 Case 실행 | 실행 전 예상, 실제 출력과 환경을 기록 |
+| 3 | 40분 | 중첩 Microtask 실행 | Queue가 빌 때까지 처리되는 과정 설명 |
+| 4 | 50분 | 0.5초 동기 Blocking, `requestAnimationFrame`·Performance Marker | Main Thread 점유와 Rendering 기회 차이 관찰 |
+| 5 | 70분 | Promise Executor, Chain과 `async`·`await` | 동기 부분, Microtask Continuation과 Rejection 흐름 설명 |
+| 6 | 50분 | Fetch의 HTTP 오류·Network 오류 비교 | `response.ok` 검사와 Promise Reject 조건 구분 |
+| 7 | 60분 | 두 Local Origin CORS Spike | 차단·Simple·Preflight·허용 Header를 Network에서 구분 |
+| 8 | 45분 | Ticket 조회 UI 상태 모델 | Loading·Success·Not Found·Forbidden·Network Error 전이표 |
+| 9 | 20분 | Study Note 마감 | 예상·관찰·오답 원인과 독립 재설명 판정 기록 |
 
-원래 9월 15일 범위였던 중첩 Microtask와 Main Thread Blocking은 9월 16일 첫 Block으로 옮긴다. 이월된 기본 개념을 설명하지 못한 상태에서 중첩 Case, Fetch나 UI 구현으로 넘어가지 않는다.
+앞의 단순 Microtask 순서를 독립적으로 설명하지 못하면 중첩 Case로 넘어가지 않는다. CORS Spike는 Helpdesk 인증 설정을 임의로 약화하지 않고 독립된 두 Local Origin으로 먼저 실패 조건을 재현한다.
+
+### 9월 17일 — DOM Event·Rendering·XSS와 비동기 Race
+
+집중 학습 상한: 6시간 50분
+
+| 순서 | 시간 | 내용 | 종료 조건 |
+|---:|---:|---|---|
+| 1 | 60분 | Event Bubbling·`target`·`currentTarget`·Delegation | 동적 자식을 부모 Listener로 처리하는 이유 설명 |
+| 2 | 45분 | DOM·CSSOM·Render Tree·Layout·Paint | DOM 변경과 실제 Paint 시점을 구분 |
+| 3 | 30분 | Pure Unit·DOM Integration·Browser E2E 책임 설계 | 같은 Assertion을 중복하지 않는 Test 책임 표 |
+| 4 | 90분 | 기존 단건 조회 API용 최소 HTML·CSS·JavaScript | Loading과 성공·실패 상태가 서로 다르게 표시됨 |
+| 5 | 45분 | 무해한 DOM Marker만 쓰는 격리된 XSS Rendering Spike | `textContent`와 위험한 HTML 해석 차이·방어 경계 설명 |
+| 6 | 45분 | 느린 이전 Response가 최신 UI를 덮는 Race 재현 | 완료 순서와 화면 상태가 어긋나는 실패 관찰 |
+| 7 | 35분 | `AbortController`로 이전 조회 취소 | Race 완화 전후 동작과 한계 비교 |
+| 8 | 45분 | 상태 전이와 대표 실패 JavaScript Test | HTTP Status Mapping과 Network 실패 Test 통과 |
+| 9 | 15분 | Study Note | 구현보다 먼저 설명할 수 없었던 지점 기록 |
+
+새 목록 API, Frontend Framework와 Design System은 만들지 않는다. 동적 목록은 Event Delegation 학습용 독립 Spike로 만들고 제품 Endpoint를 추가하지 않는다. 최소 UI가 늦어지면 Style을 줄이고 상태 구분·XSS 경계·Test를 보존한다.
+
+### 9월 18일 — Coverage·정적 분석·E2E·통합 검증
+
+집중 학습 상한: 6시간 40분
+
+| 순서 | 시간 | 내용 | 종료 조건 |
+|---:|---:|---|---|
+| 1 | 20분 | Event Loop·Fetch·Event Delegation 지연 회상 | 자료 없이 핵심 흐름 설명 |
+| 2 | 30분 | 최소 UI·JavaScript Test 미완료분 마감 | 대표 성공·실패 Test와 증명 범위 확정 |
+| 3 | 45분 | Node Test Coverage 측정과 맹점 Case | 높은 Line Coverage가 결함 검출을 보장하지 않음을 재현 |
+| 4 | 45분 | 최소 ESLint 설정·실패·수정 | Test와 다른 정적 검사 발견 범위 설명 |
+| 5 | 30분 | Browser Network Panel Trace | Request·Response·Timing과 실행 환경 기록 |
+| 6 | 30분 | 실제 Backend Browser E2E Gate 판정 | 다섯 조건을 각각 `PASS` 또는 실패 사유로 기록 |
+| 7 | 60분 | 실제 Backend E2E 또는 격리된 Browser UI E2E | 실제 Server 여부를 구분한 `RUN·PASS` 또는 `NOT_RUN` 근거 |
+| 8 | 40분 | Java·JavaScript 전체 회귀 | Test 수·실패·오류·건너뜀과 실행 환경 기록 |
+| 9 | 75분 | Week 5 WIL 작성·검토 | 실제 수행·교정·미수행 경계가 드러나는 초안 |
+| 10 | 25분 | Secret·경로 점검과 최종 판정 | 완료·부분 완료·이월 항목 확정 |
+
+Gate를 통과하면 실제 Spring Server 흐름을 검증한다. Gate가 실패해도 Browser 자동화 자체의 학습을 빼지 않고 통제된 Test Double 경계의 UI 흐름을 실행하되, 이를 실제 Backend E2E로 부르지 않는다. Backend E2E는 정확히 `NOT_RUN`으로 기록한다. 외부 블로그 게시와 포럼 등록은 별도 확인이 필요한 작업이며 이번 학습 계획의 자동 완료 조건에 포함하지 않는다.
+
+### Cut Line
+
+- 공지 기반 선택 키워드와 복원한 네 확장 실험은 일정만을 이유로 삭제하지 않는다.
+- 시간이 부족하면 UI Style, 추가 화면·Endpoint, WIL 문장 다듬기를 먼저 줄인다.
+- Package·도구 설정은 최소화하되 Coverage와 ESLint 실행 근거는 생략하지 않는다.
+- E2E Gate가 실패하면 Security를 끄거나 Source에 Credential을 넣지 않는다. 격리된 UI E2E와 실제 Backend E2E의 명칭·근거를 분리한다.
+- 18일 안에 Must가 끝나지 않으면 Week 5를 `Partially Completed`로 판정하고 다음 학습 가능일로 명시적으로 이월한다.
+- 미완료분을 19~20일 가족 행사 시간에 자동 배치하지 않는다.
 
 ## 권장 일정
 
 | 날짜 | 학습·예상 | 실험·적용 | 종료 조건 | 상태 |
 |---|---|---|---|---|
 | 9월 14일 월요일 | Week 4 지연 회상, Call Stack·Task·Microtask 입문 | Timer·Promise 기본 Case 예상, 실행은 미실시 | 회상은 통과, Event Loop는 교정 중 | `Partially Completed` |
-| 9월 15일 화요일 야간 | 14일 이월 Event Loop 기초 | 단순 Microtask 재예상, Promise Executor·`async` 입문, Browser·Node 실행 | 최대 90분 안에 기본 순서 설명과 Study Note 마감 | Planned |
-| 9월 16일 수요일 | 중첩 Microtask·Main Thread Blocking, Promise·Async/Await·Fetch | 이월 심화 Case 뒤 HTTP 오류·Network 오류와 UI State Model | Event Loop 교정 완료와 상태·오류 Matrix 초안 | Planned |
-| 9월 17일 목요일 | Event Bubbling·Delegation, Rendering | 동적 DOM Event와 최소 Rendering 관찰 | `target`·`currentTarget` 설명 | Planned |
-| 9월 18일 금요일 | Test Boundary Review | Ticket 단건 조회 최소 UI와 Pure Unit Test | Loading·Success·실패 상태 구분 | Planned |
-| 9월 19일 토요일 | E2E Gate Review | 통과 시 실제 Browser 한 경로, 실패 시 원인 기록 | `RUN·PASS` 또는 정확한 `NOT_RUN` | Planned |
-| 9월 20일 일요일 | 전체 회상과 Test Pyramid | Java·JS 회귀, WIL 작성 | 완료·부분 완료·이월 판정 | Planned |
+| 9월 15일 화요일 야간 | 개인 일정 지연 | 문답·실행 없음 | 학습 미실시를 숨기지 않고 이월 | `NOT_RUN` |
+| 9월 16일 수요일 | Event Loop·Promise·Async/Await·Fetch·CORS | Browser·Node·Rendering Timing·두 Origin Spike와 UI 상태 모델 | 실행 순서, Rendering과 CORS 실패·허용 설명 | Planned — 6시간 30분 |
+| 9월 17일 목요일 | DOM Event·Rendering·XSS·Race | 동적 목록, 최소 Ticket UI, XSS·Race·취소와 JavaScript Test | 상태·보안 경계·Delegation·Race 원인 설명 | Planned — 6시간 50분 |
+| 9월 18일 금요일 | Coverage·정적 분석·E2E·통합 회상 | Coverage 맹점, ESLint, Network Trace, E2E·회귀·WIL | 선택 키워드 근거와 최종 판정 | Planned — 6시간 40분 |
+| 9월 19일 토요일 | 가족 행사 | 필수 학습 배치 없음 | 일정 보호 | No Required Work |
+| 9월 20일 일요일 | 가족 행사 | 필수 학습 배치 없음 | 일정 보호 | No Required Work |
 
-가용일이 달라지면 날짜별 Block을 순서대로 이동하되, 하루 6시간을 넘겨 숨겨서 누적하지 않는다. 실제 수행일과 계획일이 다르면 Study Note에 둘 다 기록한다.
+16~18일의 미완료분을 19~20일로 자동 이동하지 않는다. 실제 수행일과 계획일이 다르면 Study Note에 둘 다 기록하고, 이번 한시 계획의 하루 집중 학습 상한 7시간을 넘기지 않는다.
 
 ## 위험과 대응
 
@@ -225,7 +306,7 @@ Playwright는 후보일 뿐 아직 선택·설치하지 않았다. Node 내장 T
 | Backend 기능 확대 | 목록·검색·사용자 저장소 구현이 UI보다 먼저 커짐 | 기존 단건 조회만 사용하고 E2E Gate로 분리 | Open |
 | Security 우회 | E2E를 위해 CSRF·인가를 끄려 함 | 실행 중단 후 Test 전용 인증 경계 재설계 | Open |
 | Mock를 E2E로 오인 | Browser가 실제 Server에 Request하지 않음 | Fake DOM Test와 Backend E2E 명칭 분리 | Open |
-| 비동기 Race | 이전 Response가 최신 화면을 덮음 | Should Spike로 재현하고 필요할 때 취소·요청 ID 적용 | Open |
+| 비동기 Race | 이전 Response가 최신 화면을 덮음 | 9월 17일 Spike로 재현하고 `AbortController` 적용 전후 비교 | Planned |
 | UI 장식 과다 | CSS 작업이 핵심 실험보다 길어짐 | 상태 구분에 필요한 최소 Style만 유지 | Open |
 | Coverage 목표화 | 의미 없는 Line 실행 Test가 증가 | 대표 실패와 Boundary 설명을 완료 기준으로 사용 | Open |
 
@@ -247,9 +328,14 @@ Playwright는 후보일 뿐 아직 선택·설치하지 않았다. Node 내장 T
 - [ ] Event Loop 실행 순서를 실행 전에 예상했다.
 - [ ] Task·Microtask·Rendering의 관찰 결과와 예상 차이를 설명했다.
 - [ ] Promise·Async/Await와 Fetch 오류 경계를 실패 Case로 확인했다.
+- [ ] 두 Origin의 CORS 실패·Preflight·허용 Header 차이를 관찰했다.
 - [ ] Loading·Success·Not Found·Forbidden·Network Error 상태를 구분했다.
+- [ ] `textContent`와 위험한 HTML 삽입의 XSS 경계를 재현하고 설명했다.
 - [ ] Event Delegation이 동적 Element에서도 동작하는 이유를 설명했다.
+- [ ] Response Race를 재현하고 `AbortController` 적용 전후를 비교했다.
+- [ ] `requestAnimationFrame`·Performance Marker와 Network Panel 관찰을 기록했다.
 - [ ] Pure Unit·DOM Integration·Browser E2E의 증명 범위를 구분했다.
+- [ ] Coverage 수치와 결함 검출의 차이, ESLint와 Test의 발견 범위를 설명했다.
 - [ ] 실제 Browser E2E를 실행했거나 Gate 실패와 `NOT_RUN`을 기록했다.
 - [ ] 기존 Java Test와 선택한 JavaScript Test 결과를 남겼다.
 - [ ] AI 도움 없이 작은 JavaScript 변경과 관련 Test를 수행했다.
@@ -265,6 +351,8 @@ Baseline 이후 학습 항목을 조용히 추가하거나 삭제하지 않는�
 | 2026-09-14 | Roadmap의 목록·상세·등록 UI와 E2E 전체 후보 | 기존 단건 조회 중심의 상태 UI, E2E는 인증·데이터 Gate 뒤 한 경로 | 현재 목록 API·Runtime 사용자가 없고 제품 기능보다 Browser 원리와 Test 경계를 우선 | Gate 미통과 시 Week 5는 `Partially Completed` | Source·환경 Baseline |
 | 2026-09-14 | 9월 15일에 지연 회상과 Event Loop 첫 Spike | 배경 학습·기본 예상·첫 관찰을 14일로 이동, 15일은 야간 90분 재현으로 축소 | 사용자가 15일에는 야간만 가능하다고 알림 | Promise·Fetch 이후 일정은 유지하고 15일 Scope 증가 방지 | 사용자 일정 |
 | 2026-09-15 | 14일에 Event Loop 입문·예상·첫 실행 완료 | 지연 회상만 완료, Event Loop는 교정 중, Browser·Node 실행 `NOT_RUN` | 날짜가 바뀌기 전에 14일 계획을 마치지 못함 | 15일 90분은 이월 Must 우선, 원래 중첩·Blocking은 16일로 이동 | 9월 14일 문답 기록 |
+| 2026-09-16 | 15일 야간 이월 학습 뒤 19~20일 마감 | 15일 `NOT_RUN`, 남은 Must를 16~18일 5시간 30분씩 배치, 19~20일 필수 과업 없음 | 개인 일정 지연과 가족 행사 | Should 전체 Deferred, E2E는 Gate 조건 유지 | 사용자 일정 |
+| 2026-09-16 | 공지 기반 CORS·XSS·Coverage·정적 분석이 약하고 네 Should가 Deferred인 16시간 30분 압축안 | 선택 키워드와 네 확장 실험을 모두 복원하고 잔여 집중 학습을 20시간으로 확대 | 시간을 더 투입하더라도 선택한 학습 자체를 빼지 말라는 사용자 요청 | 하루 상한을 한시적으로 7시간으로 높이고 제품 기능·UI 장식만 축소 | 사용자 결정·공지 Coverage 재대조 |
 
 ## 공식 학습 자료 Baseline
 
@@ -272,9 +360,12 @@ Baseline 이후 학습 항목을 조용히 추가하거나 삭제하지 않는�
 - [MDN — Using microtasks](https://developer.mozilla.org/en-US/docs/Web/API/HTML_DOM_API/Microtask_guide)
 - [MDN — async function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)
 - [MDN — Using the Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch)
+- [MDN — Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS)
 - [MDN — Event bubbling](https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/Event_bubbling)
 - [MDN — Critical rendering path](https://developer.mozilla.org/en-US/docs/Web/Performance/Guides/Critical_rendering_path)
-- [Node.js 22 — Test runner](https://nodejs.org/docs/latest-v22.x/api/test.html)
+- [MDN — `innerHTML` Security considerations](https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML#security_considerations)
+- [Node.js 22 — Collecting code coverage](https://nodejs.org/docs/latest-v22.x/api/test.html#collecting-code-coverage)
+- [ESLint — Getting Started](https://eslint.org/docs/latest/use/getting-started)
 - [Playwright — Web server](https://playwright.dev/docs/test-webserver)
 
 ## 관련 기준
