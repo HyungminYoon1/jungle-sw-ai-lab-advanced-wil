@@ -1,19 +1,261 @@
 # Learning Note — JavaScript Promise와 Async/Await 기초
 
 > 작성일: 2026-09-17
+> 최종 수정일: 2026-09-18
 > 상태: Ready — 자료 작성은 완료 근거가 아니며 문답·실행 검증 필요
-> 선행 자료: [Browser JavaScript Event Loop 입문](./browser-javascript-event-loop-basics.md)
+> 선행 자료: [JavaScript 동기·비동기 0단계](./javascript-sync-async-foundations.md), [Browser JavaScript Event Loop 입문](./browser-javascript-event-loop-basics.md)
 
 ## 학습 목표
 
 이 문서는 다음 질문에 답하기 위한 입문 자료다.
 
-1. Promise는 무엇을 나타내는 객체인가?
-2. `pending`, `fulfilled`와 `rejected`는 무엇인가?
-3. Promise Executor, `resolve`와 `then` Handler의 역할은 어떻게 다른가?
-4. `resolve`를 호출해도 `then` Callback이 즉시 실행되지 않는 이유는 무엇인가?
-5. Promise Chain은 값과 실패를 다음 단계로 어떻게 전달하는가?
-6. `async`·`await`는 Promise와 어떤 관계인가?
+1. 동기 실행과 비동기 실행은 무엇이 다른가?
+2. 비동기와 병렬, Blocking과 Non-blocking은 왜 같은 말이 아닌가?
+3. Promise는 무엇을 나타내는 객체인가?
+4. `pending`, `fulfilled`와 `rejected`는 무엇인가?
+5. Promise Executor, `resolve`와 `then` Handler의 역할은 어떻게 다른가?
+6. `resolve`를 호출해도 `then` Callback이 즉시 실행되지 않는 이유는 무엇인가?
+7. Promise Chain은 값과 실패를 다음 단계로 어떻게 전달하는가?
+8. `async`·`await`는 Promise와 어떤 관계이며 `await`는 정확히 무엇을 미루는가?
+
+## 동기와 비동기부터 구분하기
+
+### 동기 실행
+
+동기 Function을 호출하면 호출자는 그 Function이 일을 끝내고 값을 반환할 때까지 다음 줄로 진행하지 못한다.
+
+```javascript
+function loadTitleSync() {
+    return "로그인 오류";
+}
+
+console.log("A");
+const title = loadTitleSync();
+console.log("B", title);
+console.log("C");
+```
+
+실행 흐름:
+
+```text
+A
+→ loadTitleSync 호출
+→ Function이 "로그인 오류" 반환
+→ B 로그인 오류
+→ C
+```
+
+호출자가 최종 결과를 직접 받을 때까지 그 호출 지점을 지나가지 못한다. 이것이 이 예제에서 “동기”라는 말의 핵심이다.
+
+동기는 반드시 느리다는 뜻이 아니다. 위 Function은 매우 빠르지만 동기다. 반대로 동기 작업이 오래 걸리면 현재 Thread를 계속 점유해 Click, Paint와 다른 JavaScript 실행을 지연시킬 수 있다.
+
+### 비동기 실행
+
+비동기 API는 오래 걸릴 수 있는 작업을 시작한 뒤 최종 결과가 나오기 전에 호출자에게 제어를 돌려준다. 호출자는 최종 결과 대신 Promise 같은 결과의 대표자를 먼저 받고 다음 Code를 계속 실행한다. 실제 결과는 나중에 Handler로 전달된다.
+
+```javascript
+function loadTitleAsync() {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve("로그인 오류");
+        }, 1000);
+    });
+}
+
+console.log("A");
+const titlePromise = loadTitleAsync();
+console.log("B");
+
+titlePromise.then((title) => {
+    console.log("C", title);
+});
+```
+
+개념 흐름:
+
+```text
+A
+→ 비동기 작업 시작
+→ 최종 문자열 대신 Promise를 먼저 반환
+→ B
+→ 이후 Timer 결과 준비
+→ Promise 결과 결정
+→ Microtask에서 C 로그인 오류
+```
+
+여기서 JavaScript가 결과를 기다리며 빈 반복문을 도는 것이 아니다. `loadTitleAsync()` 호출은 Promise를 반환하고 끝났으며, 호출자는 `B`를 실행할 수 있다.
+
+### 동기·비동기와 Blocking·Non-blocking은 구분한다
+
+두 구분은 관련이 있지만 같은 질문에 답하지 않는다.
+
+| 구분 | 묻는 질문 |
+|---|---|
+| 동기·비동기 | 호출자가 최종 결과를 언제 어떤 방식으로 받는가? |
+| Blocking·Non-blocking | 기다리는 동안 현재 실행 Thread가 다른 일을 할 기회를 얻는가? |
+
+Browser JavaScript의 입문 Case에서는 다음처럼 자주 나타난다.
+
+```text
+긴 동기 반복문
+→ 결과가 날 때까지 현재 Main Thread 점유
+→ Blocking
+
+Promise 기반 Timer·Network 대기
+→ Promise를 먼저 반환하고 현재 호출 흐름 종료
+→ 결과가 준비되면 Handler를 나중에 실행
+→ 기다리는 동안 Main Thread가 다른 Event를 처리할 수 있음
+```
+
+그러나 `async`라는 단어가 붙었다고 Function 내부의 모든 Code가 자동으로 Non-blocking이 되는 것은 아니다.
+
+```javascript
+async function blockMainThread() {
+    const startedAt = performance.now();
+
+    while (performance.now() - startedAt < 1000) {
+        // await 전의 긴 동기 Code가 Main Thread를 계속 점유한다.
+    }
+
+    return "완료";
+}
+```
+
+이 Function은 Promise를 반환하지만, 긴 반복문은 동기적으로 실행되므로 약 1초 동안 Main Thread를 막는다.
+
+### 비동기는 병렬 실행과 같은 말이 아니다
+
+비동기는 최종 결과를 나중에 받도록 실행 흐름을 조정하는 방식이다. 두 JavaScript Handler가 반드시 서로 다른 CPU Core에서 동시에 실행된다는 뜻은 아니다.
+
+Browser는 Network, Timer와 여러 내부 작업을 JavaScript Call Stack 밖에서 관리할 수 있다. 작업 결과가 준비되면 관련 Callback이나 Promise 반응이 Queue에 들어오고, JavaScript Handler는 Event Loop가 선택한 시점에 실행된다.
+
+입문 단계에서는 다음처럼 구분한다.
+
+```text
+비동기
+→ 기다리는 동안 다른 작업을 진행할 수 있도록 결과 전달 시점을 나눔
+
+병렬
+→ 둘 이상의 작업이 실제 같은 시각에 실행될 수 있음
+```
+
+비동기라고 해서 JavaScript Handler 자체가 자동으로 병렬 실행되는 것은 아니다.
+
+## `async`와 `await`를 먼저 한 문장으로 연결하기
+
+```text
+async Function
+→ 호출하면 항상 Promise를 반환
+
+await expression
+→ Promise 결과가 필요한 현재 Async Function의 뒷부분을 미루고 호출자에게 제어를 돌려줌
+```
+
+따라서 “`await`는 동기인가, 비동기인가?”에는 다음처럼 답한다.
+
+> `await`는 Promise 기반 비동기 흐름을 사용하는 문법이다. Code를 위에서 아래로 읽는 동기 Code처럼 보이게 하지만, 실행 시에는 현재 Async Function의 나머지를 중단하고 나중에 Microtask에서 재개한다.
+
+`await` 자체가 Network Request나 Timer를 비동기로 만드는 것은 아니다. `await` 오른쪽에는 대개 이미 비동기 작업의 결과를 나타내는 Promise가 온다.
+
+### `await`를 만났을 때 일어나는 일
+
+```javascript
+async function showTitle() {
+    console.log("B");
+
+    const title = await Promise.resolve("로그인 오류");
+
+    console.log("C", title);
+}
+
+console.log("A");
+showTitle();
+console.log("D");
+```
+
+`await` 전후를 경계로 Function을 두 조각으로 본다.
+
+```text
+showTitle의 첫 번째 조각
+→ console.log("B")
+→ await의 오른쪽 식 평가
+
+showTitle의 두 번째 조각
+→ title에 성공 값 대입
+→ console.log("C", title)
+```
+
+실제 흐름:
+
+```text
+현재 Script
+→ A 출력
+→ showTitle 호출
+
+showTitle의 첫 번째 조각
+→ B 출력
+→ await가 Promise를 확인
+→ showTitle의 두 번째 조각을 지금 실행하지 않음
+→ 호출자에게 제어 반환
+
+현재 Script 재개
+→ D 출력
+→ 현재 동기 Code 종료
+
+Microtask
+→ showTitle의 두 번째 조각 재개
+→ title에 "로그인 오류" 대입
+→ C 로그인 오류 출력
+```
+
+### 무엇이 멈추고 무엇이 계속되는가
+
+```text
+미뤄지는 것
+→ 현재 Async Function에서 await 뒤에 남은 Code
+
+계속될 수 있는 것
+→ 그 Async Function을 호출한 쪽의 나머지 Code
+→ 다른 Microtask와 다음 Event Loop 작업
+→ Browser가 처리할 수 있는 Rendering과 사용자 Event
+```
+
+`await`가 Main Thread를 붙잡고 결과를 기다리는 것이 아니다. 현재 Async Function은 제어를 반환하고, 결과가 준비되면 나머지 부분이 Microtask로 재개된다.
+
+Promise가 이미 fulfilled여도 `await` 뒤의 Code는 현재 Call Stack에서 즉시 이어지지 않는다. 위 예제에서 `Promise.resolve("로그인 오류")`의 결과가 이미 있어도 `D`가 `C`보다 먼저 출력되는 이유다.
+
+### Blocking 대기와 `await` 비교
+
+```javascript
+// Blocking: 현재 Thread를 계속 점유한다.
+const startedAt = performance.now();
+while (performance.now() - startedAt < 1000) {
+    // 다른 JavaScript와 Paint가 지연될 수 있다.
+}
+console.log("완료");
+```
+
+```javascript
+// Non-blocking 대기 경계: 현재 Async Function의 뒷부분을 미룬다.
+async function waitWithoutBlocking() {
+    await new Promise((resolve) => {
+        setTimeout(resolve, 1000);
+    });
+
+    console.log("완료");
+}
+```
+
+두 Code 모두 약 1초 뒤 `"완료"`에 도달할 수 있지만, 첫 번째는 Main Thread를 계속 점유하고 두 번째는 Timer를 기다리는 동안 호출자와 Event Loop에 제어를 돌려준다.
+
+### 가장 짧은 판별 기준
+
+Code를 볼 때 다음 순서로 묻는다.
+
+1. 호출자가 지금 최종 값을 직접 받는가, Promise를 먼저 받는가?
+2. 긴 작업 동안 현재 Main Thread가 계속 Code를 실행하며 점유되는가?
+3. `await`가 있다면 현재 Async Function의 어느 줄부터 나중으로 미뤄지는가?
+4. 호출자 쪽에서 그동안 계속 실행할 Code는 무엇인가?
 
 ## 한 문장 정의
 
@@ -481,6 +723,8 @@ Promise로 감쌌다는 이유만으로 CPU 작업이 다른 Thread로 이동하
 
 ## 공식 참고 자료
 
+- [MDN — Introducing asynchronous JavaScript](https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Async_JS/Introducing)
+- [MDN — JavaScript execution model](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model)
 - [MDN — Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
 - [MDN — Using promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises)
 - [MDN — async function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)
