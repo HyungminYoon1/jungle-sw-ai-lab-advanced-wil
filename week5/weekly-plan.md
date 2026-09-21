@@ -366,7 +366,7 @@ Week 5는 `Partially Completed`로 종료한다. 수행하지 않은 범위를 �
 | [9월 18일 Study Note](./study-notes/2026-09-18-study-questions.md) | Async/Await·Promise 실패 복구와 미실시 경계 | 9월 18일 학습 | Recorded — `Partially Completed` |
 | Rendering Learning Note | 재사용 가능한 Rendering 설명 | 입문 자료와 실제 관찰만으로 설명이 부족할 때 | Conditional |
 | Browser UI Lab Report | UI 상태와 Test Boundary 근거 | 최소 UI 실행 뒤 | Planned |
-| Week 5 WIL | 이해 변화·실패·E2E 상태 | 주말 실제 결과 | Planned |
+| [Week 5 WIL](./wil.md) | 이해 변화·실패·E2E 상태 | 주말 실제 결과 | Recorded — 블로그 게시·포럼 등록 완료, 사용자 확인 |
 
 ## Learning Evidence Gate
 
@@ -386,8 +386,8 @@ Week 5는 `Partially Completed`로 종료한다. 수행하지 않은 범위를 �
 - [ ] 실제 Browser E2E를 실행했거나 Gate 실패와 `NOT_RUN`을 기록했다.
 - [ ] 기존 Java Test와 선택한 JavaScript Test 결과를 남겼다.
 - [ ] AI 도움 없이 작은 JavaScript 변경과 관련 Test를 수행했다.
-- [ ] Secret·개인정보·내부 URL과 로컬 절대 경로가 공개 자료에 없다.
-- [ ] Week 5 WIL에 완료·부분 완료·미수행 범위를 기록했다.
+- [x] Secret·개인정보·내부 URL과 로컬 절대 경로가 공개 자료에 없다.
+- [x] Week 5 WIL에 완료·부분 완료·미수행 범위를 기록했다.
 
 ## 계획 변경 기록
 
@@ -401,6 +401,7 @@ Baseline 이후 학습 항목을 조용히 추가하거나 삭제하지 않는�
 | 2026-09-16 | 공지 기반 CORS·XSS·Coverage·정적 분석이 약하고 네 Should가 Deferred인 16시간 30분 압축안 | 선택 키워드와 네 확장 실험을 모두 복원하고 잔여 집중 학습을 20시간으로 확대 | 시간을 더 투입하더라도 선택한 학습 자체를 빼지 말라는 사용자 요청 | 하루 상한을 한시적으로 7시간으로 높이고 제품 기능·UI 장식만 축소 | 사용자 결정·공지 Coverage 재대조 |
 | 2026-09-17 | 9월 16일에 Promise·Fetch·CORS·상태 모델까지 수행 | Event Loop·Rendering 비교까지만 실제 완료, Promise는 선행 개념부터 재학습 | 출력 문제를 풀 배경지식이 부족하고 검색 답변의 의미를 이해하지 못함 | 선택 범위는 유지하되 현재 상태를 `Partially Completed`·`NOT_RUN`으로 분리 | 9월 16·17일 Study Note |
 | 2026-09-21 | Week 5 안에서 모든 선택 범위를 완료 | Promise·Async/Await까지 근거를 확정하고 Fetch 이후는 Week 6 수직 흐름으로 이월 | 9월 18일 이후 추가 학습 근거 없음 | Week 5를 `Partially Completed`로 종료하고 미수행 항목을 유지 | 9월 18일 Study Note·12주 계획 재조정 |
+| 2026-09-21 | Week 5 WIL 블로그·포럼 등록 전 | 블로그 게시와 포럼 등록 완료 | 사용자 완료 확인 | 학습 판정은 `Partially Completed`로 유지하고 공개 제출 카드만 `Done` 처리 | 사용자 확인·GitHub Project |
 
 ## 공식 학습 자료 Baseline
 

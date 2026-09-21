@@ -18,6 +18,21 @@ Week 3에는 PostgreSQL Constraint·Transaction·Lock·Index와 Query Plan을 SQ
 
 Week 6에는 두 미완료 범위를 하나의 수직 흐름으로 연결한다. Comment, 검색, 알림과 Dashboard 같은 수평 기능은 추가하지 않는다.
 
+## Week 5 미완료 범위의 Week 6 이월
+
+Week 5에서 실행하지 못한 항목은 완료로 바꾸지 않고 다음 실행 위치와 GitHub Project 카드에 연결했다. PostgreSQL 항목은 Week 3에서 개념 학습 뒤 보류한 Application 적용 범위다.
+
+| 이전 상태 | Week 6 실행 위치 | GitHub Project 카드 | 시작 상태 |
+|---|---|---|---|
+| Fetch HTTP 오류·Network 실패 `NOT_RUN` | 9월 21일 Fetch 비교 | Fetch·CORS와 Persistence 설계 | `Ready` |
+| CORS·Preflight·Network Trace `NOT_RUN` | 9월 21일 두 Origin Spike | Fetch·CORS와 Persistence 설계 | `Ready` |
+| PostgreSQL Adapter·Migration·Integration Test `NOT_IMPLEMENTED` / `NOT_RUN` | 9월 22일 실제 PostgreSQL 수직 Slice | PostgreSQL Migration·Repository Adapter·Integration Test | `Backlog` |
+| UI 상태·Event Delegation·XSS·Race `NOT_RUN` | 9월 23일 최소 Ticket UI | 최소 Ticket UI·Event·XSS·Response Race | `Backlog` |
+| 실제 API·Session·CSRF·PostgreSQL Browser E2E `NOT_RUN` | 9월 23~24일 실제 연결 | Session·CSRF·PostgreSQL 실제 Browser E2E | `Backlog` |
+| Coverage·Lint·Test 계층·전체 회귀 `NOT_RUN` | 9월 24일 품질 Gate | Coverage·Lint·전체 회귀와 WIL 마감 | `Backlog` |
+
+Week 5의 Event Loop·Rendering·Promise 학습과 WIL·포럼 제출 카드는 `Done`이다. 이는 수행한 범위의 기록·공개가 끝났다는 뜻이며, 위 이월 항목까지 Week 5에서 완료했다는 의미가 아니다.
+
 ## 이번 주 핵심 질문
 
 1. `fetch`의 HTTP `404`와 Network 실패는 Promise 상태와 UI 상태에서 어떻게 다른가?
@@ -161,6 +176,18 @@ Spring JDBC와 Spring Data JPA를 동시에 구현하지 않는다. 다음 질�
 - WIL Repository와 Helpdesk Lab 변경은 Repository별로 분리해 Commit한다.
 - 외부 블로그 게시, 포럼 등록과 Push는 별도 요청 없이 수행하지 않는다.
 
+## GitHub Project 실행 순서
+
+| 순서 | 카드 | 상태 | 상태 변경 조건 |
+|---:|---|---|---|
+| 1 | Fetch·CORS와 Persistence 설계 | `Ready` | 실제 첫 예상·실험을 시작할 때 `In progress` |
+| 2 | PostgreSQL Migration·Repository Adapter·Integration Test | `Backlog` | Adapter 선택과 Test 목록 확정 뒤 `Ready` |
+| 3 | 최소 Ticket UI·Event·XSS·Response Race | `Backlog` | PostgreSQL 생성·조회 계약 확보 뒤 `Ready` |
+| 4 | Session·CSRF·PostgreSQL 실제 Browser E2E | `Backlog` | 실제 Adapter·Migration·UI가 연결된 뒤 `Ready` |
+| 5 | Coverage·Lint·전체 회귀와 WIL 마감 | `Backlog` | 대표 수직 흐름의 정상·실패 근거 확보 뒤 `Ready` |
+
+계획 문서와 Project 카드 생성만으로 실행 상태를 `In Progress`로 올리지 않는다. 각 카드의 첫 실제 학습·구현 근거가 생길 때 상태를 변경한다.
+
 ## 실제 Browser E2E Gate
 
 다음 조건을 모두 만족해야 실제 Backend E2E라고 기록한다.
@@ -200,6 +227,7 @@ Gate 실패 시 격리 UI Test를 실제 Backend E2E라고 부르지 않는다. 
 |---|---|---|---|
 | 2026-09-21 | Week 5 미완료와 Week 3 PostgreSQL Adapter 보류분을 Week 6 한 수직 흐름으로 통합 | 기능 수를 늘리지 않되 선택 기술은 실제 서비스 연결 수준까지 깊게 구현한다는 사용자 결정과 기술 심화 공지 재검토 | AI Native는 Week 7, DevOps·System·AWS·HTTPS는 Week 8로 이동 |
 | 2026-09-21 | `In Progress` 초안을 실행 전 `Ready` 계획으로 구분하고 9월 21~24일에 27시간 30분을 배정 | 계획 작성과 학습·구현 완료를 혼동하지 않고, 선택 범위를 줄이지 않은 실행 순서를 명확히 하기 위함 | 실제 첫 학습·실험 근거가 생길 때만 실행 상태를 `In Progress`로 변경 |
+| 2026-09-21 | Week 5 이월 항목과 Week 6 Project 카드의 1:1 실행 위치를 기록 | 미완료 항목을 조용히 삭제하거나 중복 카드로 관리하지 않기 위함 | 첫 카드만 `Ready`, 선행 조건이 필요한 네 카드는 `Backlog` |
 
 ## 공식 자료 Baseline
 
