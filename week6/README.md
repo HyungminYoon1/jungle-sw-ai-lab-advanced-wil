@@ -11,6 +11,8 @@ Browser → Session Security → Ticket API → Application → PostgreSQL → R
 ## 문서
 
 - [Week 6 학습 계획](./weekly-plan.md)
+- [Fetch의 HTTP 오류와 CORS 기초](./study-docs/fetch-http-cors-foundations.md)
+- [Repository Port·PostgreSQL Adapter·Migration·Testcontainers](./study-docs/persistence-port-adapter-migration-testcontainers.md)
 
 Study Note와 Lab Report는 실제 학습·실험이 시작된 뒤 추가한다. 계획만 작성된 항목은 완료 근거로 취급하지 않는다.
 
