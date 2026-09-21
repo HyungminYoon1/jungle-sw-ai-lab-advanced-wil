@@ -1,9 +1,9 @@
 # Week 6 학습 계획 — Browser·PostgreSQL·Test 수직 마감
 
 > 작성일: 2026-09-21
-> 최종 수정일: 2026-09-21
+> 최종 수정일: 2026-09-22
 > 기간: 2026-09-21 ~ 2026-09-27
-> 집중 학습일: 2026-09-21 ~ 2026-09-24
+> 집중 학습일: 2026-09-22 ~ 2026-09-24
 > 문서 상태: Ready
 > 실행 상태: Not Started — 계획과 Source Audit은 학습·구현 완료 근거가 아님
 > 권장 학습 예산: 총 27시간 30분 — 실제 시간은 별도 기록하고 계획 시간을 수행 시간으로 대체하지 않음
@@ -24,11 +24,11 @@ Week 5에서 실행하지 못한 항목은 완료로 바꾸지 않고 다음 실
 
 | 이전 상태 | Week 6 실행 위치 | GitHub Project 카드 | 시작 상태 |
 |---|---|---|---|
-| Fetch HTTP 오류·Network 실패 `NOT_RUN` | 9월 21일 Fetch 비교 | Fetch·CORS와 Persistence 설계 | `Ready` |
-| CORS·Preflight·Network Trace `NOT_RUN` | 9월 21일 두 Origin Spike | Fetch·CORS와 Persistence 설계 | `Ready` |
-| PostgreSQL Adapter·Migration·Integration Test `NOT_IMPLEMENTED` / `NOT_RUN` | 9월 22일 실제 PostgreSQL 수직 Slice | PostgreSQL Migration·Repository Adapter·Integration Test | `Backlog` |
-| UI 상태·Event Delegation·XSS·Race `NOT_RUN` | 9월 23일 최소 Ticket UI | 최소 Ticket UI·Event·XSS·Response Race | `Backlog` |
-| 실제 API·Session·CSRF·PostgreSQL Browser E2E `NOT_RUN` | 9월 23~24일 실제 연결 | Session·CSRF·PostgreSQL 실제 Browser E2E | `Backlog` |
+| Fetch HTTP 오류·Network 실패 `NOT_RUN` | 9월 22일 Fetch 비교 | Fetch·CORS와 Persistence 설계 | `Ready` |
+| CORS·Preflight·Network Trace `NOT_RUN` | 9월 22일 두 Origin Spike | Fetch·CORS와 Persistence 설계 | `Ready` |
+| PostgreSQL Adapter·Migration·Integration Test `NOT_IMPLEMENTED` / `NOT_RUN` | 9월 22~23일 실제 PostgreSQL 수직 Slice | PostgreSQL Migration·Repository Adapter·Integration Test | `Backlog` |
+| UI 상태·Event Delegation·XSS·Race `NOT_RUN` | 9월 23~24일 최소 Ticket UI | 최소 Ticket UI·Event·XSS·Response Race | `Backlog` |
+| 실제 API·Session·CSRF·PostgreSQL Browser E2E `NOT_RUN` | 9월 24일 실제 연결 | Session·CSRF·PostgreSQL 실제 Browser E2E | `Backlog` |
 | Coverage·Lint·Test 계층·전체 회귀 `NOT_RUN` | 9월 24일 품질 Gate | Coverage·Lint·전체 회귀와 WIL 마감 | `Backlog` |
 
 Week 5의 Event Loop·Rendering·Promise 학습과 WIL·포럼 제출 카드는 `Done`이다. 이는 수행한 범위의 기록·공개가 끝났다는 뜻이며, 위 이월 항목까지 Week 5에서 완료했다는 의미가 아니다.
@@ -68,6 +68,15 @@ Secret, Credential과 환경 변수 값은 확인하거나 출력하지 않는�
 4. 작성한 Code를 완료 근거로 삼지 않고 Test·SQL·Network Trace와 재시작 결과를 확인한다.
 5. Study Note는 대화 로그가 아니라 핵심 개념, 처음의 오해와 수정된 이해를 1인칭으로 정리한다.
 6. WIL 문서 변경과 Helpdesk Lab 구현은 서로 다른 Repository와 Commit으로 분리한다.
+
+## 바로 사용할 학습 자료
+
+- Promise 회상: [JavaScript Promise와 Async/Await 기초](../week5/study-docs/javascript-promise-async-await-basics.md)
+- Event Loop 회상: [Browser JavaScript Event Loop 입문](../week5/study-docs/browser-javascript-event-loop-basics.md)
+- 9월 22일 Fetch·CORS: [Fetch의 HTTP 오류와 CORS 기초](./study-docs/fetch-http-cors-foundations.md)
+- 9월 22~23일 Persistence: [Repository Port·PostgreSQL Adapter·Migration·Testcontainers](./study-docs/persistence-port-adapter-migration-testcontainers.md)
+
+자료 작성은 실행 근거가 아니다. 실행 전 예상, 실제 Console·Network·Test 결과와 설명을 날짜별 Study Note와 Lab Report에 구분해 남긴다.
 
 ## 완료 목표
 
@@ -112,11 +121,15 @@ Spring JDBC와 Spring Data JPA를 동시에 구현하지 않는다. 다음 질�
 
 선택 전 두 Adapter를 모두 생성하지 않는다. 선택 결과는 Decision 또는 Lab Report에 남기며, 다른 방식은 완료한 것으로 표현하지 않는다.
 
-현재 Source Baseline에서는 Spring JDBC를 우선 후보로 둔다. Week 3에서 학습한 SQL·Constraint·Transaction과 Row Mapping을 직접 관찰할 수 있고, 현재 Domain에는 ORM 관계 Mapping과 N+1을 재현할 관계가 없기 때문이다. 다만 9월 21일 Gate에서 이 가정을 검토한 뒤 최종 선택한다.
+현재 Source Baseline에서는 Spring JDBC를 우선 후보로 둔다. Week 3에서 학습한 SQL·Constraint·Transaction과 Row Mapping을 직접 관찰할 수 있고, 현재 Domain에는 ORM 관계 Mapping과 N+1을 재현할 관계가 없기 때문이다. 다만 9월 22일 Gate에서 이 가정을 검토한 뒤 최종 선택한다.
 
-## 9월 21일 — Fetch·CORS·Persistence 설계
+## 9월 21일 — 미실시
 
-권장 학습 시간: 6시간 30분
+예정했던 Fetch·CORS·Persistence 설계 학습은 실시하지 않았다. 계획 시간을 실제 수행 시간으로 기록하지 않으며, 범위를 삭제하지 않고 9월 22~24일 일정에 재배치한다.
+
+## 9월 22일 — Fetch·CORS·Persistence 설계·Migration·Adapter
+
+권장 순학습 시간: 10시간 30분
 
 | 순서 | 시간 | 내용 | 종료 조건 |
 |---:|---:|---|---|
@@ -124,48 +137,47 @@ Spring JDBC와 Spring Data JPA를 동시에 구현하지 않는다. 다음 질�
 | 2 | 90분 | Fetch `2xx`·`404`·Network 실패 학습·실험 | `response.ok` 누락 Case와 Reject Case를 예상한 뒤 실행 |
 | 3 | 120분 | 두 Local Origin CORS Spike | Simple·Preflight·허용 Header를 Console·Network에서 구분 |
 | 4 | 120분 | Ticket Schema·Repository Port·Local Runtime Fixture와 Adapter 선택 | 선택 이유, Transaction·오류 Mapping과 Test 목록 작성 |
-| 5 | 30분 | 핵심 질문 재설명과 Study Note | 첫 답변에서 바뀐 이해와 실행 근거 정리 |
+| 5 | 45분 | PostgreSQL Driver·Migration·Testcontainers 최소 의존성 | 선택 이유와 Version 기록, Clean Build |
+| 6 | 75분 | Ticket Schema Migration | 빈 Database에서 자동 적용, Constraint 확인 |
+| 7 | 120분 | PostgreSQL Repository Adapter | 생성·단건 조회 SQL과 Row Mapping 구현, Integration Test 전 상태로 구분 |
+| 8 | 30분 | 핵심 질문 재설명과 Study Note | 첫 답변에서 바뀐 이해와 실행 근거 정리 |
 
-## 9월 22일 — Migration·PostgreSQL Adapter·Integration Test
+위 시간은 휴식을 제외한 순학습 시간이다. 긴 Block 사이의 휴식과 식사 시간은 별도로 확보한다.
 
-권장 학습 시간: 7시간
+## 9월 23일 — PostgreSQL Integration Test와 최소 UI
 
-| 순서 | 시간 | 내용 | 종료 조건 |
-|---:|---:|---|---|
-| 1 | 45분 | PostgreSQL Driver·Migration·Testcontainers 최소 의존성 | 선택 이유와 Version 기록, Clean Build |
-| 2 | 75분 | Ticket Schema Migration | 빈 Database에서 자동 적용, Constraint 확인 |
-| 3 | 120분 | PostgreSQL Repository Adapter | 생성·단건 조회가 실제 SQL과 Row Mapping으로 동작 |
-| 4 | 105분 | Repository Integration Test | 실제 PostgreSQL Container에서 정상·누락·Constraint Case 확인 |
-| 5 | 45분 | Transaction·Rollback Test | 실패 뒤 부분 데이터가 남지 않음을 확인 |
-| 6 | 30분 | In-memory 회귀와 학습 정리 | 기존 Application 계약 유지, 두 Adapter 근거 구분 |
-
-## 9월 23일 — 최소 UI·Event·XSS·Race와 실제 API 연결
-
-권장 학습 시간: 7시간
+권장 순학습 시간: 5시간 30분 — 6시간 가용 범위 안에 휴식 여유 포함
 
 | 순서 | 시간 | 내용 | 종료 조건 |
 |---:|---:|---|---|
-| 1 | 30분 | Loading·Success·Not Found·Forbidden·Network Error 상태 표 | 상태와 허용 전이 확정 |
-| 2 | 105분 | Ticket 생성·조회 최소 HTML·CSS·JavaScript | UI 장식 없이 상태가 구분됨 |
-| 3 | 45분 | Event Bubbling·Delegation | 동적 Element와 잘못된 Target Case 실행 |
-| 4 | 45분 | `textContent`와 위험한 HTML 삽입 비교 | 무해한 Marker로 XSS Rendering 경계 설명 |
-| 5 | 60분 | 느린 Response Race와 `AbortController` | 이전 Response가 최신 UI를 덮는 실패와 완화 비교 |
-| 6 | 105분 | 실제 API 연결 | Session·Role·CSRF를 끄지 않고 PostgreSQL 결과 표시 |
-| 7 | 30분 | 핵심 질문 재설명과 Study Note | DOM·Network·Security·Database 흐름을 자신의 말로 연결 |
+| 1 | 105분 | Repository Integration Test | 실제 PostgreSQL Container에서 정상·누락·Constraint Case 확인 |
+| 2 | 45분 | Transaction·Rollback Test | 실패 뒤 부분 데이터가 남지 않음을 확인 |
+| 3 | 30분 | Loading·Success·Not Found·Forbidden·Network Error 상태 표 | 상태와 허용 전이 확정 |
+| 4 | 105분 | Ticket 생성·조회 최소 HTML·CSS·JavaScript | UI 장식 없이 상태가 구분됨 |
+| 5 | 45분 | Event Bubbling·Delegation | 동적 Element와 잘못된 Target Case 실행 |
 
-## 9월 24일 — Test 품질·E2E·회귀·WIL
+위 시간은 휴식을 제외한 최대 순학습 시간이다. Database Integration 근거를 확보하지 못하면 최소 UI를 먼저 구현해 완료한 것처럼 처리하지 않고, 남은 실행 범위를 24일 첫 Block으로 명시적으로 넘긴다.
 
-권장 학습 시간: 7시간
+## 9월 24일 — XSS·Race·실제 API·Test 품질·E2E·회귀·WIL
+
+권장 순학습 시간: 11시간 30분
 
 | 순서 | 시간 | 내용 | 종료 조건 |
 |---:|---:|---|---|
-| 1 | 60분 | JavaScript 상태·HTTP Mapping Test | 대표 정상·실패 Test 통과 |
-| 2 | 45분 | Coverage 사각지대 실험 | 높은 Line Coverage와 결함 검출이 다름을 재현 |
-| 3 | 45분 | 정적 분석·Lint | Test와 다른 실패를 발견·수정 |
-| 4 | 120분 | Browser Network Trace·E2E Gate와 대표 흐름 | 실제 Browser·Server·Security·PostgreSQL 연결 결과 확보 |
-| 5 | 60분 | Java·JavaScript 전체 회귀 | Test 수·실패·오류·건너뜀과 환경 기록 |
-| 6 | 30분 | Secret·Log·경로 점검 | 공개 문서와 Report에 민감 값·로컬 절대 경로 없음 |
-| 7 | 60분 | Week 6 WIL과 최종 재설명 | 계획 대비 완료·교정·미수행 경계와 핵심 질문 답변 기록 |
+| 1 | 30분 | In-memory 회귀와 Database 학습 정리 | 기존 Application 계약 유지, 두 Adapter 근거 구분 |
+| 2 | 45분 | `textContent`와 위험한 HTML 삽입 비교 | 무해한 Marker로 XSS Rendering 경계 설명 |
+| 3 | 60분 | 느린 Response Race와 `AbortController` | 이전 Response가 최신 UI를 덮는 실패와 완화 비교 |
+| 4 | 105분 | 실제 API 연결 | Session·Role·CSRF를 끄지 않고 PostgreSQL 결과 표시 |
+| 5 | 30분 | UI·API 핵심 질문 재설명과 Study Note | DOM·Network·Security·Database 흐름을 자신의 말로 연결 |
+| 6 | 60분 | JavaScript 상태·HTTP Mapping Test | 대표 정상·실패 Test 통과 |
+| 7 | 45분 | Coverage 사각지대 실험 | 높은 Line Coverage와 결함 검출이 다름을 재현 |
+| 8 | 45분 | 정적 분석·Lint | Test와 다른 실패를 발견·수정 |
+| 9 | 120분 | Browser Network Trace·E2E Gate와 대표 흐름 | 실제 Browser·Server·Security·PostgreSQL 연결 결과 확보 |
+| 10 | 60분 | Java·JavaScript 전체 회귀 | Test 수·실패·오류·건너뜀과 환경 기록 |
+| 11 | 30분 | Secret·Log·경로 점검 | 공개 문서와 Report에 민감 값·로컬 절대 경로 없음 |
+| 12 | 60분 | Week 6 WIL과 최종 재설명 | 계획 대비 완료·교정·미수행 경계와 핵심 질문 답변 기록 |
+
+위 시간은 휴식을 제외한 순학습 시간이다. 작성한 Code 양 때문에 WIL 시간을 줄이지 않고, 미검증 항목은 그대로 `NOT_RUN` 또는 `Partially Completed`로 남긴다.
 
 ## 산출물과 Commit 경계
 
@@ -228,6 +240,8 @@ Gate 실패 시 격리 UI Test를 실제 Backend E2E라고 부르지 않는다. 
 | 2026-09-21 | Week 5 미완료와 Week 3 PostgreSQL Adapter 보류분을 Week 6 한 수직 흐름으로 통합 | 기능 수를 늘리지 않되 선택 기술은 실제 서비스 연결 수준까지 깊게 구현한다는 사용자 결정과 기술 심화 공지 재검토 | AI Native는 Week 7, DevOps·System·AWS·HTTPS는 Week 8로 이동 |
 | 2026-09-21 | `In Progress` 초안을 실행 전 `Ready` 계획으로 구분하고 9월 21~24일에 27시간 30분을 배정 | 계획 작성과 학습·구현 완료를 혼동하지 않고, 선택 범위를 줄이지 않은 실행 순서를 명확히 하기 위함 | 실제 첫 학습·실험 근거가 생길 때만 실행 상태를 `In Progress`로 변경 |
 | 2026-09-21 | Week 5 이월 항목과 Week 6 Project 카드의 1:1 실행 위치를 기록 | 미완료 항목을 조용히 삭제하거나 중복 카드로 관리하지 않기 위함 | 첫 카드만 `Ready`, 선행 조건이 필요한 네 카드는 `Backlog` |
+| 2026-09-22 | 9월 21일 미실시 범위를 9월 22~24일에 재배치 | 수행하지 않은 계획을 완료로 기록하지 않고 선택한 학습 범위를 유지하기 위함 | 총 27시간 30분과 완료 목표는 유지하고, 22일 8시간 30분·23일 9시간 45분·24일 9시간 15분의 순학습 일정으로 변경 |
+| 2026-09-22 | 9월 23일 가용시간을 6시간 이하로 제한하고 Adapter는 22일, XSS·Race와 In-memory 회귀는 24일로 이동 | 제한된 날에 Integration Test와 최소 UI의 선행관계에 집중하고 학습 범위를 삭제하지 않기 위함 | 총 27시간 30분은 유지하고, 22일 10시간 30분·23일 5시간 30분·24일 11시간 30분의 순학습 일정으로 조정 |
 
 ## 공식 자료 Baseline
 
