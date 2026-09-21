@@ -1,87 +1,94 @@
-# 2026-09-14 — Week 5 지연 회상과 Event Loop 입문
+# 2026-09-14 — Session 인증 복습과 Event Loop 첫 이해
 
 > 날짜: 2026-09-14
-> 상태: Session Paused — Week 4 회상 통과, Event Loop 기본 순서 교정 중
-> 실제 소요 시간: `NOT_RECORDED`
-> 실행 근거: Browser Console·Node 모두 `NOT_RUN`
+> 학습 주제: Session 인증 복원, 두 종류의 `403`, Timer와 Microtask
 
-## 날짜 경계
+## 핵심 질문
 
-9월 14일에는 Week 4 지연 회상과 Event Loop 입문 문답을 진행했다. Timer 기본 Case의 출력 순서는 맞혔지만 Timer 등록과 Callback 실행 시점을 혼동했고, Promise Microtask가 현재 Script의 동기 Code보다 먼저 실행된다고 잘못 예상했다.
+1. Browser와 Server는 Session 인증을 위해 각각 무엇을 보관하며, 후속 요청에서 인증은 어떤 객체 순서로 복원되는가?
+2. 같은 `403 Forbidden`이어도 Authorization 실패와 CSRF 검증 실패를 어떻게 구분할 수 있는가?
+3. 인증·인가 기능 Test가 통과해도 Secret Log 점검이 별도로 필요한 이유는 무엇인가?
+4. `setTimeout(...)` 호출과 전달한 Callback은 각각 언제 실행되는가?
+5. Promise Microtask는 현재 동기 Code와 다음 Timer Task 사이의 어느 시점에 실행되는가?
 
-Microtask 교정 뒤 제시한 확인 문제에는 날짜가 바뀌기 전 답하지 못했다. 따라서 Event Loop 학습은 완료로 판정하지 않고 나머지 예상·실행·정리를 9월 15일 야간으로 옮긴다.
+## Session 인증은 무엇을 복원하는가
 
-## Week 4 지연 회상
+Browser와 Server가 각각 무엇을 보관하는지 다시 정리했다.
 
-### 1. Session 인증 복원
+처음에는 Browser가 Session과 사용자 정보를 함께 보관하는 것처럼 막연하게 생각했다. 하지만 Session 방식에서 Browser가 보관하고 후속 요청에 보내는 것은 Session ID가 담긴 Cookie다. Spring 기반 Application이라면 대표적으로 `JSESSIONID`가 이 역할을 한다.
 
-사용자는 다음 흐름을 설명했다.
+Server는 `JSESSIONID`로 `HttpSession`을 찾고, 그 안에 저장된 `SecurityContext`를 현재 요청을 처리하는 `SecurityContextHolder`에 복원한다.
 
 ```text
 Browser
-→ Cookie에 담긴 Session ID 전송
-
+└─ Cookie: JSESSIONID
+       │
+       ▼
 Server
-→ 해당 ID로 Session 저장소 탐색
-→ 그 안의 사용자 정보를 꺼냄
-→ 현재 Request의 Context에 복원
+└─ HttpSession
+   └─ SecurityContext
+      └─ Authentication
+         ├─ 사용자 식별 정보
+         └─ Authority·Role
+
+현재 요청
+└─ SecurityContextHolder
+   └─ 복원된 SecurityContext
 ```
 
-핵심 방향은 맞았지만 구체적인 Spring Security 객체 이름을 다음처럼 교정했다.
+이 구조를 통해 후속 요청에서는 Password를 다시 보내지 않아도 된다. Browser가 보낸 Session ID로 Server가 이전에 성공한 인증 결과를 찾아 현재 요청에 복원하기 때문이다.
+
+여기서 바로잡은 핵심은 다음과 같다.
+
+- Browser가 `SecurityContext`를 보관하는 것이 아니다.
+- Browser는 Session ID만 보관하고 전송한다.
+- 실제 인증 결과인 `Authentication`은 Server의 `SecurityContext` 안에 있다.
+- `SecurityContextHolder`는 현재 요청을 처리하는 동안 인증 정보에 접근하는 위치다.
+
+## 같은 `403`도 실패 원인은 다를 수 있다
+
+두 요청이 모두 `403 Forbidden`을 반환하더라도 실패한 보안 단계는 다를 수 있다.
+
+### AGENT 전용 Ticket을 USER가 조회한 경우
+
+로그인한 `USER`에게는 유효한 `Authentication`이 있다. 하지만 요청한 자원이 `AGENT` Role을 요구하므로 Authorization 단계에서 거부된다.
 
 ```text
-Browser Cookie의 JSESSIONID
-→ HttpSession 탐색
-→ SecurityContext 조회
-→ 현재 Request의 SecurityContextHolder에 복원
-
-HttpSession
-└─ SecurityContext
-   └─ Authentication
-```
-
-Browser가 보관하는 것은 `SecurityContext`가 아니라 Session ID Cookie다. `Authentication`에는 인증된 사용자 식별 정보와 Authority가 들어 있다.
-
-### 2. 두 `403`의 구분
-
-사용자의 답변:
-
-```text
-인증된 USER가 AGENT 전용 Ticket 조회
-→ 인가 없음
-
-인증된 USER가 CSRF Token 없이 Ticket 생성
-→ CSRF Token 없음
-```
-
-이를 실행 단계의 용어로 정리하면 다음과 같다.
-
-```text
-AGENT 전용 조회
-→ Role 조건 불충족
+인증 성공
+→ ROLE_USER 보유
+→ AGENT 권한 조건 불충족
 → Authorization DENY
-→ 403
-
-Token 없는 상태 변경 요청
-→ CSRF 검증 실패
-→ 403
+→ 403 Forbidden
 ```
 
-### 3. Test와 Log 점검의 차이
+### USER가 CSRF Token 없이 Ticket을 생성한 경우
 
-사용자의 답변:
+이 요청을 보낸 `USER`도 인증되어 있을 수 있다. 그러나 Session Cookie가 자동으로 전송되는 상태 변경 요청에는 유효한 CSRF Token이 필요하다. Token이 없거나 일치하지 않으면 Authorization 판단이나 Controller 실행보다 앞에서 요청이 거부될 수 있다.
 
-> 보안 기능이 동작한다는 것과 비밀값이 Log에 출력된다는 것은 다른 문제이기 때문에 별도로 검증이 필요합니다.
+```text
+인증된 Session Cookie 전송
+→ 상태 변경 요청의 CSRF Token 검사
+→ Token 없음 또는 불일치
+→ CSRF 검증 실패
+→ 403 Forbidden
+```
 
-기능 Test가 응답 Status와 인증·인가 동작을 검증하더라도 모든 Log 내용을 자동으로 검사한다고 볼 수 없다. 따라서 기능 회귀와 민감 값 Log Pattern 점검은 서로 다른 근거로 유지한다.
+처음에는 Status만 보면 실패 원인도 같다고 생각하기 쉬웠다. 이제는 `403`이라는 결과만 보지 않고 어느 Filter와 검사 단계에서 요청이 거부됐는지를 함께 확인해야 한다고 이해했다.
 
-판정: `PASS_AFTER_CORRECTION`
+## 보안 기능 Test와 Secret Log 점검은 별도다
 
-## Event Loop 입문
+인증·인가 Test가 통과했다고 해서 민감 값이 Log에 출력되지 않는다는 사실까지 증명되는 것은 아니다.
 
-### 1. Timer 기본 Case
+예를 들어 다음 두 질문은 서로 다른 검증이 필요하다.
 
-제시한 Code:
+- 익명 요청이 차단되고 Role 규칙과 CSRF 방어가 동작하는가?
+- Password, Session ID, Token이나 Credential이 Log에 노출되지 않는가?
+
+첫 번째는 Request·Response와 Security 동작을 확인하는 기능 Test다. 두 번째는 실제 Log 출력과 금지 Pattern을 검사해야 한다. 보안 기능이 정상이어도 Debug Log나 예외 메시지가 비밀값을 출력할 수 있으므로 두 근거를 분리해야 한다.
+
+## `setTimeout` 호출과 Callback 실행은 같은 시점이 아니다
+
+Event Loop 학습은 다음 간단한 예제에서 시작했다.
 
 ```javascript
 console.log("A");
@@ -93,23 +100,29 @@ setTimeout(() => {
 console.log("C");
 ```
 
-사용자는 최종 출력 `A → C → B`를 맞혔고 `B` Callback이 다음 Task에서 기다린다고 구분했다. 다만 `setTimeout` 호출 자체가 다음 Loop에서 호출된다고 설명했다.
+출력 순서는 `A → C → B`라고 올바르게 예상했지만, 처음에는 `setTimeout` 호출 자체도 다음 Event Loop에서 실행된다고 생각했다.
 
-교정:
+실제로는 `setTimeout(...)` 호출이 현재 Script에서 동기적으로 실행된다. 이 호출은 Timer를 등록하고 곧바로 반환한다. 나중에 실행되는 것은 `setTimeout` 함수 자체가 아니라 전달한 Callback이다.
 
 ```text
-setTimeout(...) 호출
-→ 현재 Script에서 동기적으로 실행되어 Timer 등록
+현재 Script
+→ A 출력
+→ setTimeout(...) 호출로 Timer Callback 등록
+→ C 출력
 
-전달한 Callback
-→ Timer 조건을 만족한 뒤 나중 Task에서 실행
+이후 Timer Task
+→ Callback 실행
+→ B 출력
 ```
 
-판정: `PARTIAL` — 출력 순서는 맞혔지만 등록과 Callback 실행의 구분을 독립적으로 다시 설명하지 않음
+따라서 비동기 API를 이해할 때는 다음 둘을 분리해서 봐야 한다.
 
-### 2. Promise Microtask 기본 Case
+- 지금 실행되는 등록 함수
+- 조건을 만족한 뒤 나중에 실행되는 Callback
 
-제시한 Code:
+## Microtask는 현재 동기 Code보다 먼저 실행되지 않는다
+
+Timer와 Promise Handler를 함께 둔 예제에서는 처음 예상이 틀렸다.
 
 ```javascript
 console.log("A");
@@ -125,74 +138,38 @@ Promise.resolve().then(() => {
 console.log("D");
 ```
 
-사용자는 Microtask Queue의 `C`와 다음 Task의 `B`는 올바르게 분류했다. 그러나 동기 실행 종료 시 이미 출력된 값을 `A`만으로 보았고 최종 순서를 `A → C → D → B`로 예상했다.
+처음에는 `C`가 `D`보다 먼저 실행되어 `A → C → D → B`가 될 것으로 생각했다. Promise Handler가 Timer보다 먼저 실행된다는 사실을 현재 동기 Code보다도 먼저 실행된다는 뜻으로 잘못 확대했기 때문이다.
 
-교정한 실행 순서:
+올바른 실행 흐름은 다음과 같다.
 
 ```text
 현재 Script의 동기 Code
 → A 출력
-→ Timer 등록
-→ Promise Handler를 Microtask로 예약
+→ Timer Callback 등록
+→ Promise Handler를 Microtask로 등록
 → D 출력
 
-현재 Script 종료 뒤 Microtask
+현재 Script가 끝난 뒤 Microtask
 → C 출력
 
 다음 Timer Task
 → B 출력
 
-최종: A → D → C → B
+최종 출력: A → D → C → B
 ```
 
-핵심 교정 문장:
+이때 정리한 가장 중요한 문장은 다음과 같다.
 
-> Microtask는 현재 동기 Code보다 먼저가 아니라, 현재 동기 Code가 모두 끝난 뒤 다음 Task보다 먼저 실행된다.
+> Microtask는 현재 동기 Code보다 먼저 실행되는 것이 아니라, 현재 동기 Code가 모두 끝난 뒤 다음 Task보다 먼저 실행된다.
 
-판정: `REVIEW_REQUIRED` — 정답 설명 뒤 새로운 Case에서 독립 확인하지 않음
+## 최종적으로 정리한 이해
 
-### 3. 답하지 못한 확인 문제
+이번 학습에서 다음 오개념을 바로잡았다.
 
-```javascript
-console.log("X");
+1. Browser는 인증 정보 전체가 아니라 Session ID Cookie를 보관한다.
+2. 같은 `403`이어도 Authorization 실패와 CSRF 검증 실패는 원인이 다르다.
+3. 보안 기능 Test와 Secret Log 노출 점검은 서로 다른 근거다.
+4. `setTimeout(...)` 호출은 현재 동기 Code에서 실행되고, Callback만 나중 Task에서 실행된다.
+5. Microtask는 남아 있는 현재 동기 Code를 추월하지 않는다.
 
-queueMicrotask(() => {
-    console.log("Y");
-});
-
-console.log("Z");
-```
-
-다음 세 항목은 9월 15일에 자료를 보지 않고 먼저 답한다.
-
-```text
-현재 Script에서 즉시 출력되는 값:
-Script가 끝난 뒤 실행되는 값:
-최종 출력 순서:
-```
-
-## 9월 14일 미실시 범위
-
-- Event Loop 입문 문서 전체 학습: 완료 여부 미확인
-- 단순 Microtask Case의 독립 재설명: `NOT_RUN`
-- Promise Executor와 `async`·`await` 입문 Case: `NOT_RUN`
-- Browser Console에서 기본 Case 실행: `NOT_RUN`
-- Node에서 같은 기본 Case 실행: `NOT_RUN`
-- 예상과 실제 차이에 대한 사용자 최종 요약: `NOT_RUN`
-
-## 9월 15일 이월 Gate
-
-1. Timer 등록과 Callback 실행 시점을 구분한다.
-2. 현재 동기 Code, Microtask와 다음 Task의 순서를 자료 없이 설명한다.
-3. 미응답 `X·Y·Z` Case와 Promise 기본 Case를 다시 예상한다.
-4. Browser Console과 Node에서 실행한 뒤 예상과 실제를 기록한다.
-5. 틀린 경우 정답만 바꾸지 않고 어느 Code를 잘못 분류했는지 설명한다.
-
-9월 15일 야간 최대 90분 안에 이 Gate를 먼저 처리한다. 중첩 Microtask와 Main Thread Blocking은 기본 순서 교정 뒤 9월 16일에 진행한다.
-
-## 근거 경계
-
-- 이 문서는 9월 14일 대화에서 확인된 답변과 교정 내용을 기록한다.
-- 교정 설명을 제공한 것은 사용자가 같은 내용을 독립적으로 다시 설명했다는 근거가 아니다.
-- Browser와 Node 실행을 하지 않았으므로 실제 Runtime 출력 근거는 아직 없다.
-- Week 4 지연 회상 통과를 Week 5 Event Loop 학습 완료로 확장하지 않는다.
+Event Loop의 실행 순서는 다음 학습에서 실제 Node.js와 Browser Console로 확인했다. 실행 결과와 중첩 Microtask는 [9월 16일 Study Note](./2026-09-16-study-questions.md)에 정리했다.
