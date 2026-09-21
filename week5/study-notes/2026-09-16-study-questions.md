@@ -7,7 +7,7 @@
 
 ## 날짜와 학습 범위
 
-9월 14일에는 Timer 등록과 Callback 실행 시점, 현재 동기 Code와 Promise Microtask의 순서를 혼동했다. 9월 15일에는 개인 일정으로 학습을 진행하지 못했다. 9월 16일에는 [9월 14일 Study Note](./2026-09-14-study-questions.md)의 미응답 Case부터 다시 시작했다.
+9월 14일에는 Timer 등록과 Callback 실행 시점, 현재 동기 Code와 Promise Microtask의 순서를 혼동했다. 9월 15일에는 새 학습 근거가 없었다. 9월 16일에는 [9월 14일 Study Note](./2026-09-14-study-questions.md)의 미응답 Case부터 다시 시작했다.
 
 이번 기록은 다음 범위까지만 다룬다.
 

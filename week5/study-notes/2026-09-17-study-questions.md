@@ -1,9 +1,9 @@
 # 2026-09-17 — 중첩 Microtask 재설명과 Event Loop 연장 학습
 
 > 날짜: 2026-09-17
-> 상태: Session Paused — Event Loop·Rendering 비교 통과, Promise 역할은 배경 학습 중
+> 상태: Partially Completed — Event Loop·Rendering과 Promise 기본 실행 통과, `await` Runtime은 9월 18일 기록
 > 실제 소요 시간: `NOT_RECORDED`
-> 실행 근거: 일반 Browser Main Thread Blocking·이중 `requestAnimationFrame` `RUN_PASS`, Promise Runtime `NOT_RUN`
+> 실행 근거: 일반 Browser Main Thread Blocking·이중 `requestAnimationFrame`, Node.js·Browser Promise 기본·실패 전달 `RUN_PASS`
 
 ## 날짜 경계
 
@@ -333,11 +333,7 @@ Promise가 fulfilled되었을 때 실행할 Handler를 등록
 
 사용자의 요청에 따라 개념 설명을 우선하고 [JavaScript Promise와 Async/Await 기초](../study-docs/javascript-promise-async-await-basics.md)에 실제 작업·`resolve`·`then`의 구분과 시간 순서 표를 보완했다.
 
-## 9월 17일 자정 직후 종료 상태
-
-> 종료 요청 시각 확인: 2026-09-17 00:55 KST
-
-사용자는 자정이 지난 뒤 현재 학습을 마치고 잠든 다음 이어서 진행하기로 했다.
+## Event Loop·Rendering 학습 종료 상태
 
 완료 또는 통과한 범위:
 
@@ -361,7 +357,356 @@ Promise가 fulfilled되었을 때 실행할 Handler를 등록
 2. Promise Executor와 `then` Handler의 실행 시점을 구분한다.
 3. 보류한 `A·B·C·D` 출력 순서를 예상한 뒤 Node.js와 Browser에서 실행한다.
 
-Session 판정: `PARTIALLY_COMPLETED_CONTINUE_AFTER_REST`
+Session 판정: `PARTIALLY_COMPLETED`
+
+## Promise 학습 후속 확인
+
+Promise를 결과가 나중에 들어오는 상자로 단순화하고 `resolve`와 `then`의 역할을 다시 설명했다.
+
+사용자의 독립 답변:
+
+```text
+resolve:
+만들어진 결과를 Promise에 알려주는 것
+
+then:
+나중에 실행할 일을 등록하는 것
+```
+
+판정: `BASIC_ROLE_PASS`
+
+- `resolve`가 실제 Ticket을 만드는 작업과 Promise 결과 통지를 구분했다.
+- `then`이 Handler를 지금 실행하는 것이 아니라 나중 실행할 일을 등록한다고 설명했다.
+- `pending`·`fulfilled` 상태 변화와 Handler의 Microtask 실행 시점은 후속 확인이 필요하다.
+
+### Promise 기본 상태 변화
+
+제시한 흐름:
+
+```javascript
+const promise = new Promise((resolve) => {
+    setTimeout(() => {
+        resolve("ticket-1");
+    }, 1000);
+});
+
+promise.then((value) => {
+    console.log(value);
+});
+```
+
+사용자의 독립 답변:
+
+```text
+Promise 생성 직후:
+상태 pending, 결과 없음
+
+pending 상태에서 then(handler) 호출:
+Promise 상태가 fulfilled로 바뀌지 않음
+
+resolve("ticket-1") 호출 뒤:
+상태 fulfilled, 결과 "ticket-1"
+
+then Handler가 나중에 전달받는 값:
+"ticket-1"
+```
+
+판정: `BASIC_STATE_PASS`
+
+- `then` 등록 자체가 Promise 상태를 바꾸지 않는다고 설명했다.
+- 일반 값을 사용하는 현재 Case에서 `resolve(value)` 뒤 상태와 결과를 연결했다.
+- 등록된 Handler가 Promise의 성공 값을 인자로 받는다고 설명했다.
+- Executor와 `then` Handler의 실행 시점은 다음 Gate에서 확인한다.
+
+### Executor와 `then` Handler 실행 시점 — 첫 예상
+
+제시한 Code:
+
+```javascript
+console.log("A");
+
+const promise = new Promise((resolve) => {
+    console.log("B");
+    resolve("ticket-1");
+});
+
+promise.then((value) => {
+    console.log("C", value);
+});
+
+console.log("D");
+```
+
+사용자의 최초 예상:
+
+```text
+A: 현재 Stack
+B: 현재 Stack
+C: 현재 Stack
+D: 현재 Stack
+최종: A → B → C → D
+```
+
+`A`, Executor의 `B`와 `D`를 현재 동기 실행으로 분류한 것은 맞다. `C`만 교정이 필요하다.
+
+```text
+resolve("ticket-1")
+→ Promise 결과를 fulfilled("ticket-1")로 결정
+→ then Handler를 현재 Call Stack에서 직접 호출하지 않음
+
+현재 동기 Code
+→ A
+→ B
+→ resolve
+→ then Handler 등록
+→ D
+
+현재 Task 종료 뒤 Microtask
+→ C ticket-1
+```
+
+교정 뒤 사용자가 다시 설명한 내용:
+
+```text
+promise.then(...) 호출 자체:
+현재 Stack에서 실행하고 C를 출력할 Handler를 등록
+
+then에 전달한 Handler 내부:
+지금 실행하지 않고 현재 Task 종료 뒤 Microtask에서 실행
+
+최종:
+A → B → D → C
+```
+
+판정: `PASS_AFTER_CORRECTION`
+
+### Executor·`then` 기본 Case — Node.js 실행
+
+> 실행 환경: Node.js `v22.23.2`
+
+실제 출력:
+
+```text
+A
+B
+D
+C ticket-1
+```
+
+예상과 실제 출력이 일치했다.
+
+판정: `NODE_PROMISE_EXECUTOR_CASE_PASS`
+
+Browser Console 실행은 아직 `NOT_RUN`이다.
+
+### Executor·`then` 기본 Case — Browser Console 실행
+
+사용자가 전달한 실제 프로그램 출력:
+
+```text
+A
+B
+D
+C ticket-1
+```
+
+Node.js 실행과 마찬가지로 실행 전 교정한 예상과 일치했다.
+
+사용자의 원인 설명:
+
+```text
+B가 D보다 먼저인 이유:
+Promise 객체 생성 후 즉시 실행
+
+C가 D보다 나중인 이유:
+then Handler를 등록하고 다음 Stack에서 결과 결정
+```
+
+`B` 설명은 Executor가 즉시 실행된다는 의미로 맞다. `C` 설명은 다음 두 사건을 섞었다.
+
+```text
+resolve("ticket-1")
+→ Promise 결과는 이미 fulfilled("ticket-1")로 결정
+
+promise.then(handler)
+→ 이미 결정된 결과를 받을 Handler 등록
+
+현재 Task 종료
+→ Microtask에서 Handler 실행
+→ C ticket-1 출력
+```
+
+판정:
+
+- Browser Runtime 출력: `RUN_PASS`
+- Executor 즉시 실행 설명: `PASS_AFTER_WORDING_CORRECTION`
+- `resolve` 결과 결정과 Handler 실행 시점 설명: `REVIEW_REQUIRED`
+
+교정 뒤 사용자가 다시 설명한 내용:
+
+```text
+resolve("ticket-1") 호출:
+Promise의 결과가 이미 정해짐
+
+promise.then(handler) 호출:
+이미 결정된 결과를 받을 Handler 등록
+
+현재 Task에서 D 출력 뒤:
+Microtask에서 Handler가 이미 결정된 "ticket-1"을 받아 출력
+```
+
+판정: `PROMISE_EXECUTOR_BASIC_PASS_AFTER_CORRECTION`
+
+- Promise 결과 결정과 Handler 등록을 구분했다.
+- 현재 Task의 동기 Code와 `then` Handler의 Microtask 실행을 구분했다.
+- Node.js와 Browser Console에서 `A → B → D → C ticket-1`을 확인했다.
+- Promise Chain, 실패 전달과 `async`·`await`는 아직 `NOT_RUN`이다.
+
+### Promise Chain — 값 전달
+
+제시한 Code:
+
+```javascript
+const firstPromise = Promise.resolve(2);
+
+const secondPromise = firstPromise.then((value) => {
+    return value * 3;
+});
+
+secondPromise.then((value) => {
+    console.log(value);
+});
+```
+
+사용자의 독립 답변:
+
+```text
+첫 번째 Handler가 받는 값: 2
+첫 번째 Handler가 반환하는 값: 6
+반환값이 결과가 되는 Promise: secondPromise
+두 번째 Handler가 받는 값: 6
+firstPromise의 결과가 2에서 6으로 바뀌는가: 아니요
+```
+
+판정: `PROMISE_CHAIN_VALUE_PASS`
+
+- 원래 `firstPromise`의 결과와 새 `secondPromise`의 결과를 분리했다.
+- Handler 반환값이 `then`이 반환한 새 Promise의 결과가 된다고 설명했다.
+- Chain의 Microtask 실행 순서와 실패 전달은 아직 확인하지 않았다.
+
+### Promise 핵심 역할 — 압축 회상
+
+Code 전체를 외우는 대신 `확정·예약·전달` 세 단어로 역할을 압축했다.
+
+사용자의 독립 회상:
+
+```text
+resolve는 결과를 확정하고,
+then은 후속 작업을 예약하며,
+Handler의 return은 값을 다음 Promise로 전달한다.
+```
+
+판정: `PROMISE_CORE_MNEMONIC_RECALL_PASS`
+
+- `resolve`, `then`과 Handler `return`의 역할을 서로 바꾸지 않고 설명했다.
+- 이 판정은 직후 회상 근거이며 장기 기억을 증명하지 않는다.
+- 다음 학습 시작 시 자료 없이 같은 세 역할을 지연 회상한 뒤 Promise Chain의 실행 순서로 확장한다.
+
+### Ticket 객체를 사용한 Chain 적용
+
+제시한 흐름:
+
+```javascript
+const ticketPromise = Promise.resolve({
+    id: 1,
+    title: "로그인 오류"
+});
+
+const titlePromise = ticketPromise.then((ticket) => {
+    return ticket.title;
+});
+```
+
+사용자는 처음에 Ticket 객체 전체를 `titlePromise`의 결과로 답했다. Handler가 실제로 반환하는 `ticket.title`에 초점을 맞춰 교정한 뒤 다음과 같이 구분했다.
+
+```text
+ticketPromise의 결과: { id: 1, title: "로그인 오류" }
+titlePromise의 결과: "로그인 오류"
+```
+
+판정: `PROMISE_CHAIN_TICKET_VALUE_PASS_AFTER_CORRECTION`
+
+- 다음 Promise에는 이전 Promise의 결과가 자동 복사되는 것이 아니라 Handler의 반환값이 전달됨을 적용했다.
+- Promise Chain의 실패 경로와 `catch`는 이 시점에는 아직 `NOT_RUN`이었다.
+
+### Promise Chain — `throw` 실패 전달 Browser 실행
+
+실행한 핵심 흐름:
+
+```javascript
+console.log("A");
+
+Promise.resolve({ id: 1 })
+    .then((ticket) => {
+        console.log("B", ticket.id);
+        throw new Error("Ticket 형식 오류");
+    })
+    .then(() => {
+        console.log("C 저장 성공");
+    })
+    .catch((error) => {
+        console.log("D", error.message);
+    });
+
+console.log("E");
+```
+
+사용자가 전달한 Browser Console 출력:
+
+```text
+A
+E
+B 1
+D Ticket 형식 오류
+undefined
+```
+
+관찰:
+
+- 현재 동기 Code의 `A`, `E`가 먼저 출력됐다.
+- 첫 번째 `then` Handler는 Microtask에서 `B 1`을 출력한 뒤 Exception을 발생시켰다.
+- 그 Handler가 반환할 다음 Promise는 rejected가 됐고, 성공 Handler의 `C 저장 성공`은 실행되지 않았다.
+- 뒤의 `catch`가 전달된 Error를 받아 `D Ticket 형식 오류`를 출력했다.
+- 마지막 `undefined`는 이번 Code 평가 결과를 Console이 표시한 값이며 Promise 실패 출력이 아니다.
+
+판정: `PROMISE_THROW_CATCH_BROWSER_RUN_PASS`
+
+- `return → 다음 Promise fulfilled`, `throw → 다음 Promise rejected`의 실패 경로를 Browser에서 확인했다.
+- `async`·`await` 변환과 `try`·`catch`는 이 시점에는 아직 `NOT_RUN`이었다.
+
+### `async` Function의 반환값
+
+제시한 Code:
+
+```javascript
+async function loadTitle() {
+    return "로그인 오류";
+}
+
+const result = loadTitle();
+```
+
+사용자의 독립 답변:
+
+```text
+result의 종류: 성공한 Promise
+result가 가진 성공 값: "로그인 오류"
+```
+
+판정: `ASYNC_FUNCTION_RETURN_PASS`
+
+- `async` Function이 문자열을 호출자에게 직접 반환하는 것이 아니라 그 값으로 fulfilled된 Promise를 반환한다고 구분했다.
+- `await` 기본 Case는 날짜 경계 뒤 Browser에서 실행했으므로 [9월 18일 Study Note](./2026-09-18-study-questions.md)에 기록한다.
 
 ## 근거 경계
 
@@ -370,4 +715,5 @@ Session 판정: `PARTIALLY_COMPLETED_CONTINUE_AFTER_REST`
 - Main Thread Blocking 기본 Case는 오늘 일반 Browser에서 실행했다.
 - 이중 `requestAnimationFrame`과 Performance Marker 비교는 일반 Browser에서 `RUN_PASS`다.
 - Marker는 Paint 자체의 시작·종료 시각을 측정하지 않았으므로 정확한 Paint Timing은 `NOT_MEASURED`다.
-- 9월 16일에 계획했지만 수행하지 못한 Promise·Fetch·CORS·UI 상태 모델을 완료로 표현하지 않는다.
+- Promise Executor·Handler, 값 전달과 `throw`·`catch`는 Node.js 또는 Browser Runtime과 교정 뒤 설명 근거가 있다.
+- `await` Browser Runtime은 9월 18일 근거이며, Fetch·CORS·UI 상태 모델은 이 날짜에 `NOT_RUN`이다.
