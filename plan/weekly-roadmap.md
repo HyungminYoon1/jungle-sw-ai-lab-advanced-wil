@@ -1,6 +1,7 @@
 # SW AI Lab 심화과정 12주 주차별 Roadmap
 
 > 작성일: 2026-08-18
+> 최종 수정일: 2026-09-21
 > 상태: Active
 > 전체 기간: 기술 심화 8주 + 취업 심화 4주
 > 공통 실습: AI Helpdesk Learning Lab
@@ -11,8 +12,9 @@
 
 - 한 주에는 핵심 질문 한 가지와 2~4개의 밀접한 개념만 우선한다.
 - 개념을 설명하고 예상한 뒤 최소 실패·비교 실험을 먼저 수행한다.
-- Helpdesk Lab 적용은 학습 질문에 필요한 최소 범위로 제한한다.
-- 서비스 통합 비용이 개념 학습보다 커지면 독립 Spike로 전환한다.
+- Week 1~8 Helpdesk Lab 적용은 한 수직 흐름에 필요한 범위로 제한하고 수평 기능을 추가하지 않는다.
+- 통합 비용이 개념 학습보다 커지면 독립 Spike로 원인을 먼저 확인하되, PostgreSQL 영속성·Security·AI 검증·배포 같은 필수 수직 연결은 생략하지 않는다.
+- Week 9~12에는 취업 활동을 우선하며 AI 보조 수평 확장을 주 6시간 이내에서 수행한다.
 - 매주 최소 한 개의 설명·Test·Trace·Query Plan·Metric 또는 평가 결과를 남긴다.
 - 미완료 주제를 다음 주에 무조건 누적하지 않고 중요도와 선행 조건을 다시 판단한다.
 - 이미 사용하는 도구는 운영 Baseline으로 짧게 진단하고, 확인된 공백만 보충한다.
@@ -204,11 +206,11 @@ Git은 핵심 학습 완료 조건과 분리한다. 운영 Baseline의 개념·�
 ### 실험과 적용
 
 - Event Loop 실행 순서를 예상하고 실제 결과와 비교하는 독립 Spike
-- Vanilla JavaScript로 Ticket 목록·상세·등록 화면 구현
+- Vanilla JavaScript로 Ticket 등록·단건 조회 상태 화면 구현
 - 동적 목록에서 개별 Listener와 Event Delegation 비교
 - 일부 API가 실패해도 상태가 구분되는 UI 구현
 - 핵심 사용자 흐름 한 개를 Browser E2E로 검증
-- Domain Unit, Database Integration과 E2E가 중복 검증하지 않도록 역할 정리
+- Domain Unit, Security Integration과 E2E가 중복 검증하지 않도록 역할 정리
 - Coverage가 높지만 결함을 잡지 못하는 예와 의미 있는 실패 Test 비교
 
 ### 완료 근거
@@ -225,7 +227,49 @@ Git은 핵심 학습 완료 조건과 분리한다. 운영 Baseline의 개념·�
 - 시각적 장식과 Design System
 - 모든 경로의 E2E 자동화
 
-## 6주차 — LLM Structured Output·평가·Guardrail
+Week 5는 Event Loop·Rendering·Promise의 일부 실행 근거를 확보했지만 Fetch 이후 UI·Test와 실제 PostgreSQL 수직 연결을 완료하지 못했다. 이 상태를 `Partially Completed`로 보존하고 Week 6에서 미완료 범위와 Week 3 PostgreSQL Adapter 보류분을 함께 마감한다.
+
+## 6주차 — Browser·PostgreSQL·Test 수직 마감
+
+### 핵심 질문
+
+> Browser의 Session 요청이 실제 PostgreSQL 영속성까지 이어지고, 각 계층의 실패를 Test와 Trace로 구분할 수 있는가?
+
+### 핵심 학습
+
+- Promise·Async/Await, Fetch의 HTTP 오류와 Network 오류
+- CORS, Event Delegation, Browser Rendering과 Loading·Error 상태
+- PostgreSQL Migration과 Repository Adapter
+- Transaction·Constraint와 Domain 오류 Mapping
+- Testcontainers 기반 실제 Database Integration Test
+- Unit·Integration·Browser E2E의 책임, Coverage와 정적 분석
+
+### 실험과 적용
+
+- `2xx`·`403`·`404`·Network 실패를 구분하는 최소 Ticket UI
+- 두 Local Origin에서 CORS 실패·Preflight·허용 Header 비교
+- In-memory와 PostgreSQL Repository 구현체를 같은 Port 뒤에서 교체
+- Migration으로 Schema를 재현하고 Ticket 등록·조회·재시작 후 영속성 확인
+- 실제 PostgreSQL Container에서 Constraint·Transaction 실패와 Rollback 확인
+- Session Login부터 Ticket 등록·조회·PostgreSQL까지 대표 Browser 흐름 한 개 검증
+- Coverage 사각지대와 Lint 실패를 각각 재현하고 Test 책임 표 작성
+
+### 완료 근거
+
+- Fetch·CORS·DOM Event의 예상·실행·관찰 기록
+- PostgreSQL Adapter·Migration Source와 Testcontainers 실행 결과
+- Local SQL 실험, In-memory Test와 실제 PostgreSQL Integration Test의 명시적 구분
+- 최소 Browser UI와 대표 E2E 또는 Gate 실패가 포함된 `NOT_RUN` 기록
+- Java·JavaScript 회귀 결과와 Week 6 WIL
+
+### 이번 주 비범위
+
+- Comment, 검색·Pagination, 알림, Dashboard와 UI 장식
+- React·SSR·전역 상태 Library
+- N+1·Connection Pool·Replication을 제품 기능과 함께 확장
+- Security를 끄거나 Credential을 Source에 넣어 E2E를 통과시키는 방식
+
+## 7주차 — LLM Structured Output·평가·Guardrail
 
 ### 핵심 질문
 
@@ -243,7 +287,7 @@ Git은 핵심 학습 완료 조건과 분리한다. 운영 Baseline의 개념·�
 ### 실험과 적용
 
 - 같은 문의에서 Prompt-only JSON과 강제 Structured Output 안정성 비교
-- 요약·카테고리·우선순위 Suggestion을 별도 결과로 저장
+- Schema와 Guardrail을 통과한 요약·카테고리·우선순위 Suggestion만 PostgreSQL에 별도 결과로 저장
 - 정상·모호·악성 입력을 포함한 작은 Versioned Dataset 구성
 - 정확성, Schema 준수, Latency와 비용을 같은 조건에서 기록
 - Prompt Injection 입력과 민감 정보 출력 방지 Case 확인
@@ -254,8 +298,9 @@ Git은 핵심 학습 완료 조건과 분리한다. 운영 Baseline의 개념·�
 - Prompt·Schema·Dataset Version
 - 평가 결과와 대표 실패 Case
 - Provider 실패·Timeout·Invalid Output Test
+- 검증 실패 결과가 Domain 상태와 PostgreSQL을 오염시키지 않는 Integration Test
 - Guardrail 한계와 Human 확인 경계
-- Week 6 WIL
+- Week 7 WIL
 
 ### 이번 주 비범위
 
@@ -263,79 +308,53 @@ Git은 핵심 학습 완료 조건과 분리한다. 운영 Baseline의 개념·�
 - LoRA, VLM과 대규모 Model Benchmark
 - 실제 Email·일정·게시 Side Effect
 
-## 7주차 — Docker·CI·관측·Linux Process
+## 8주차 — DevOps·System·AWS Cloud·HTTPS 수직 배포
 
 ### 핵심 질문
 
-> 다른 환경에서도 같은 방식으로 실행하고, 실패한 Process와 Request의 단서를 로그·Metric에서 찾을 수 있는가?
+> 실제 PostgreSQL을 사용하는 Helpdesk를 Container·CI·AWS·HTTPS로 재현하고, Process와 Request 실패를 Log·Metric에서 추적할 수 있는가?
 
 ### 핵심 학습
 
-- Image·Container·Layer와 Dockerfile
-- Docker Compose Network, Volume과 환경 변수
-- GitHub Actions의 Build·Test·정적 검사
-- 구조화된 Log, Health Check와 최소 Metric
-- Linux Process, Exit Code, Signal과 Graceful Shutdown
-- `ps`, `top`, `kill`, Log Pipeline과 `/proc`
+- Image·Container·Layer, Dockerfile과 Build Cache
+- Docker Compose Network·Volume·환경 변수와 Application·PostgreSQL 연결
+- GitHub Actions Build·Test·정적 검사와 ECR Image 전달
+- Linux Process·Exit Code·Signal·Graceful Shutdown, `/proc`와 CLI Log Pipeline
+- 구조화된 Log, Health Check와 최소 Request·Error·Latency Metric
+- IAM User·Role·Policy와 최소 권한
+- ECS·ECR Container 실행 책임과 RDS 관리형 Database 책임
+- Route 53 DNS, ACM Certificate, TLS 신뢰 사슬과 HTTPS
+- 환경별 Secret 분리, RDS Backup과 Application Rollback 경계
 
 ### 실험과 적용
 
-- Application과 PostgreSQL을 Compose로 재현
-- Layer 순서에 따른 Build Cache 차이 관찰
-- Pull Request 또는 Push에서 Test가 실패·성공하는 CI 확인
-- Secret은 CI Secret 또는 환경 변수로만 주입하고 값은 출력하지 않음
-- SIGTERM과 강제 종료에서 종료 흐름과 남은 Process 확인
-- Log를 CLI Pipeline으로 집계하고 오류 요청을 추적
-- 필요한 최소 Request 수·오류·Latency Metric 관찰
+- 새 환경에서 Docker Compose로 Application과 PostgreSQL을 실행하고 실제 저장·조회
+- Dockerfile Layer 순서를 바꾸어 Cache Hit·Miss와 Build 시간을 비교
+- CI의 Test 실패·복구·Image Build를 확인하고 민감 값은 출력하지 않음
+- SIGTERM과 강제 종료에서 요청·Connection·Exit Code와 남은 Process 비교
+- ECR Image를 ECS에 배포하고 IAM 권한 부족과 최소 권한 추가 과정을 관찰
+- Application이 RDS PostgreSQL에 연결되고 재배포 뒤에도 Ticket이 유지되는지 확인
+- Route 53과 ACM으로 DNS 검증·HTTPS 연결·HTTP Redirect와 Certificate를 관찰
+- CloudWatch Log·Metric에서 의도적으로 발생시킨 오류 Request를 추적
+- 잘못된 Application Version을 이전 Image로 되돌리고 RDS Backup·복구 책임을 문서화
 
 ### 완료 근거
 
-- 새 환경 실행 절차
-- CI 실패·복구 결과
-- Process·Signal·Exit Code 관찰 Note
-- Log·Metric 기반 실패 추적 예
-- Week 7 WIL
+- Dockerfile·Compose와 Clean Run 절차
+- GitHub Actions 실패·복구 및 ECR Image 근거
+- Process·Signal·Exit Code·`/proc` 관찰 Note
+- IAM 최소 권한, ECS·RDS 연결과 CloudWatch 오류 추적 결과
+- 공개 HTTPS Request·Certificate·DNS Trace와 실제 PostgreSQL 영속성
+- Application Rollback, RDS Backup 경계, 비용·Resource 정리 Checklist
+- Week 8 최종 WIL과 Portfolio용 수직 흐름 설명
 
 ### 이번 주 비범위
 
-- Jenkins, Kubernetes와 무중단 배포
-- Prometheus·Grafana·Loki 전체 Stack을 목표로 삼기
+- Jenkins, Kubernetes, Blue-Green·Canary와 무중단 배포
+- Prometheus·Grafana·Loki 전체 Stack
+- Auto Scaling, WAF, CloudFront, Terraform과 Multi-AZ 고가용성 검증
 - Mini Shell, Mini VM과 복잡한 IPC
-
-## 8주차 — 최소 Cloud·HTTPS·통합 복습
-
-### 핵심 질문
-
-> 선택한 학습 결과를 공개 가능한 환경에서 재현하고, 이해한 범위와 남은 한계를 정확히 설명할 수 있는가?
-
-### 핵심 학습
-
-- 최소 권한과 환경별 Secret 분리
-- DNS Record, TLS Certificate와 HTTPS
-- 관리형 실행 환경과 Database의 책임 경계
-- 배포·Rollback·Backup의 기본
-- 전체 학습 근거의 연결과 설명 가능성
-
-### 실험과 적용
-
-- 비용과 운영 부담을 먼저 확인하고 한 개 환경에만 최소 배포
-- 공개 Domain이 필요할 때 DNS와 HTTPS 흐름 관찰
-- 불필요한 공개 Port와 권한 제거
-- 장애 또는 잘못된 배포를 이전 Version으로 되돌리는 절차 확인
-- 실행 방법, 범위, 알려진 한계와 비용을 문서화
-- Week 1~7의 취약 개념을 재실험하고 새 기능은 시작하지 않음
-
-### 완료 근거
-
-- 최소 배포·실행 안내와 공개 Checklist
-- HTTPS·권한·Secret 점검 결과
-- 선택한 핵심 학습의 대표 Test·Trace·Query Plan·평가 Link
-- 8주 최종 WIL과 Portfolio용 학습 요약
-
-### 이번 주 비범위
-
-- ECS·ECR·RDS·WAF·CloudFront·Terraform을 모두 구성
-- Auto Scaling과 고가용성 검증 주장
+- Comment·검색·알림·Dashboard 같은 수평 기능
 - AgentOps Lab 재개
 
 ## 9주차 — 취업 Baseline과 근거 전환
@@ -350,10 +369,13 @@ Git은 핵심 학습 완료 조건과 분리한다. 운영 Baseline의 개념·�
 - Helpdesk Lab의 직접 구현·AI 보조·미구현 범위 구분
 - Java·Spring·Database·Security·AI 면접 질문 Baseline
 - Coding Test와 지원 활동 추적 방식 확정
+- 취업 근거에 도움이 되는 Comment·상태 변경·검색·알림·Dashboard 중 필요한 기능만 AI로 수평 확장
+- AI 생성 Code는 요구사항·Module 책임·데이터·권한·실패·Acceptance Test를 검토한 뒤 인수하고 주 6시간을 넘기지 않음
 
 ### 완료 근거
 
 - 직무별 Project 설명과 대표 근거 Link
+- AI 보조 구현 범위와 사용자가 직접 검토·판단한 범위
 - 취약 개념 목록과 보완 순서
 - 주간 취업 활동 요약과 WIL
 
@@ -418,3 +440,7 @@ Git은 핵심 학습 완료 조건과 분리한다. 운영 Baseline의 개념·�
 ## 주차별 변경 관리
 
 Weekly Plan의 Baseline 이후 학습 항목을 조용히 추가하거나 완료로 바꾸지 않는다. 변경할 때는 날짜, 변경 전·후, 이유, 핵심 질문과 다음 주 영향을 기록한다.
+
+| 날짜 | 변경 | 이유 | 영향 |
+|---|---|---|---|
+| 2026-09-21 | Week 5 미완료와 PostgreSQL Adapter를 Week 6에서 수직 마감하고, AI Native를 Week 7, DevOps·System·AWS Cloud·HTTPS를 Week 8로 재배치 | 기술 심화 공지는 선택 기술을 실제 활용 가능한 수준과 라이브 서비스 흐름으로 연결하도록 요구하며, 수평 기능보다 수직 깊이를 우선한다는 사용자 결정 | Week 1~8은 `DEEP_LEARNING_MODE`, Week 9~12는 취업 우선 `AI_ASSISTED_PRODUCTIZATION_MODE`로 운영 |

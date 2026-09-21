@@ -1,6 +1,7 @@
 # 심화과정 학습 및 기술 콘텐츠 계획
 
 > 작성일: 2026-08-18
+> 최종 수정일: 2026-09-21
 > 상태: Active
 > 대상 기간: 기술 심화 8주 + 취업 심화 4주
 
@@ -16,6 +17,15 @@
 - 예상과 실제가 다른 이유를 공식 자료와 관찰 근거로 설명한다.
 - 작은 변경을 직접 수행하고 Test로 회귀를 막는다.
 - 언제 기술을 사용하거나 사용하지 않을지 Trade-off를 설명한다.
+
+## 1.1 단계별 구현 모드
+
+| 기간 | 모드 | 구현 원칙 | 사용자의 책임 |
+|---|---|---|---|
+| Week 1~8 | `DEEP_LEARNING_MODE` | 기능 수를 제한하고 Browser부터 PostgreSQL·AI·배포까지 한 수직 흐름을 깊게 연결 | 핵심 Code 추적·수정, 정상·실패 재현, Test·Trace·Metric 해석 |
+| Week 9~12 | `AI_ASSISTED_PRODUCTIZATION_MODE` | 취업 활동을 우선하며 AI로 Portfolio 기능을 수평 확장 | 요구사항, Architecture, 데이터·권한·실패 경계, Acceptance Test와 운영 결과 검토 |
+
+학습용 프로젝트라는 이유로 실제 PostgreSQL 영속성, Security, API 계층, CI와 Cloud 배포를 Mock이나 문서로 대체하지 않는다. 반대로 Week 1~8에는 Comment·검색·알림·Dashboard 같은 수평 기능을 추가하지 않는다.
 
 ## 2. 학습 Cycle
 
@@ -53,13 +63,13 @@
 | 객체지향 | 핵심 | Encapsulation, Abstraction, Polymorphism, Composition, SOLID와 필요한 Pattern | Domain Unit Test, 변경 전후 Diff와 설명 | Pattern 개수 채우기 제외 |
 | Web 원리 | 핵심·독립 Spike | DNS·TCP 기초, HTTP, REST, Cookie·Session, CORS와 Cache | Request Trace, Header와 Network 관찰 | HTTP 버전 Benchmark, CDN·WebSocket은 조건부 |
 | Backend | 핵심·선택 적용 | MVC, Layered Architecture, DI·IoC, 예외 처리, Idempotency와 동시성 | Layer Trace, HTTP Test와 책임 설명 | Queue, Cache, Load Balancing, GraphQL과 Batch는 조건부 |
-| Database | 핵심·선택 적용 | 정규화, ACID, Isolation, Lock, Index, 실행 계획, N+1과 Pool | 실제 PostgreSQL Test, Query Plan과 Query 수 | Replication·Sharding 제외, NoSQL은 선택 Note |
-| 인증·보안 | 핵심·선택 적용 | 인증·인가, Hashing, Session, XSS, CSRF, SQL Injection, Rate Limit과 Secret | 공격·우회 Test, Header와 Policy 표 | JWT·OAuth2·분산 Session은 중복 구현하지 않음 |
+| Database | 핵심·선택 적용 | 정규화, ACID, Isolation, Lock, Index, 실행 계획, Migration과 PostgreSQL Adapter | 실제 PostgreSQL Integration Test, Query Plan과 Query 수 | N+1·Pool은 실행 조건이 생길 때 보충, Replication·Sharding 제외, NoSQL은 선택 Note |
+| 인증·보안 | 핵심·선택 적용 | 인증·인가, Hashing, Session, XSS, CSRF와 Secret | 공격·우회 Test, Header와 Policy 표 | Parameterized Query·SQL Injection과 Rate Limit은 조건부 후속, JWT·OAuth2·분산 Session은 중복 구현하지 않음 |
 | Frontend | 선택 적용·Spike | Event Loop, Promise, Event Delegation, Browser Rendering과 UI 상태 | 실행 순서 비교, 최소 UI와 E2E | React, SSR, 전역 상태와 Bundle 최적화 제외 |
 | Test·품질 | 핵심·운영 실습 | Unit, Integration, Testcontainers, E2E, 정적 분석과 Coverage 해석 | 실패 재현 Test, CI와 Test Pyramid | Coverage 수치만으로 완료 판정하지 않음 |
 | AI Native | 핵심·선택 적용 | Prompt, Structured Output, Evaluation, Guardrail과 Prompt Injection | Versioned Dataset, Schema·실패 Test, 평가 결과 | RAG·LoRA·VLM·Multi-Agent 제외 |
 | DevOps | 핵심·운영 실습 | Docker, Compose, CI, Secret, Health, Log와 Metric | Clean Run, CI, 장애 추적과 실행 절차 | Jenkins·Kubernetes·무중단 배포 제외 |
-| Cloud | 선택 적용 | 최소 권한, DNS, HTTPS와 한 개 배포 환경 | 배포·권한·비용·복구 기록 | AWS 서비스 전체 구성, Terraform과 Auto Scaling 제외 |
+| Cloud | 핵심·선택 적용 | IAM 최소 권한, ECS·ECR, RDS, CloudWatch, DNS·HTTPS와 한 개 배포 환경 | 배포·권한·Log·Metric·비용·복구 기록 | Auto Scaling·WAF·CloudFront·Terraform과 Multi-AZ 검증 제외 |
 | System | 독립 Spike | Linux CLI, Process·Signal, Exit Code와 `/proc` | Process 관찰, Log Pipeline과 종료 Test | Mini Shell·VM과 복잡한 IPC 제외 |
 
 Matrix는 해야 할 일 목록이 아니다. 핵심 질문에 답하지 않는 항목은 선택하지 않는다.
@@ -75,7 +85,7 @@ Git처럼 이미 실제 작업에 사용하는 도구는 별도 반나절 학습
 | Helpdesk 선택 적용 | 20% | 설정·통합이 학습 시간의 절반을 넘음 |
 | 설명·동료 Review·WIL | 15% | 결과는 있으나 왜 그런지 말하지 못함 |
 
-구현이 오래 걸리면 학습 시간을 줄이지 않고 적용 범위를 줄인다. 한 주의 산출물 수가 많아져 기록이 학습을 방해하면 핵심 Lab Report 한 개와 WIL만 남긴다.
+구현이 오래 걸리면 학습 시간을 줄이지 않고 수평 기능, UI 장식과 중복 산출물을 줄인다. 선택한 수직 흐름의 PostgreSQL 영속성·Security·AI 검증·배포는 생략하지 않는다. 한 주의 산출물 수가 많아져 기록이 학습을 방해하면 핵심 Lab Report 한 개와 WIL만 남긴다.
 
 ## 6. 주제 완료 기준
 
@@ -95,12 +105,13 @@ Git처럼 이미 실제 작업에 사용하는 도구는 별도 반나절 학습
 
 ## 7. AI 활용 원칙
 
-- AI에게 질문하기 전에 현재 이해, 예상과 구체적인 막힘을 적는다.
-- 한 번에 전체 기능을 요청하지 않고 설명, 실험, Test와 작은 Diff로 나눈다.
+- Week 1~8에는 AI에게 질문하기 전에 현재 이해, 예상과 구체적인 막힘을 적는다.
+- Week 1~8에는 한 번에 전체 기능을 요청하지 않고 설명, 실험, Test와 작은 Diff로 나눈다.
 - AI가 제시한 사실과 Library 사용법은 공식 자료 또는 실제 실행으로 확인한다.
-- 생성 코드는 Layer 책임, 상태 변경, Transaction, 권한과 실패 흐름을 직접 Trace한다.
-- 핵심 규칙의 작은 변형을 직접 작성해 이해 여부를 확인한다.
-- 설명하거나 수정하거나 Test로 실패를 재현할 수 없는 생성 코드는 완료로 인정하지 않는다.
+- Week 1~8 생성 Code는 Layer 책임, 상태 변경, Transaction, 권한과 실패 흐름을 직접 Trace하고, 핵심 규칙의 작은 변형을 직접 작성해 이해 여부를 확인한다.
+- 설명하거나 수정하거나 Test로 실패를 재현할 수 없는 생성 Code는 Week 1~8 완료 근거로 인정하지 않는다.
+- Week 9~12에는 AI가 Module 단위 기능을 빠르게 구현할 수 있다. 사용자는 Line별 직접 작성보다 전체 구조와 기능 경계를 우선 이해하되, 데이터 영속성·권한·외부 Side Effect·Secret·실패 복구와 Acceptance Test는 직접 검토한다.
+- Week 9~12 수평 확장은 주 6시간 이내에서 취업 활동과 연결되는 기능만 수행한다.
 - WIL에는 AI가 한 일과 학습자가 선택·수정·검증한 일을 구분한다.
 - Secret, 개인정보, 비공개 원문과 내부 URL을 Prompt나 공개 산출물에 넣지 않는다.
 

@@ -16,9 +16,10 @@
 ## 범위 결정
 
 - [학습 우선 범위 전환 Decision](./decisions/0001-learning-first-scope.md)
+- [깊은 수직 학습과 AI 보조 수평 확장 Decision](./decisions/0002-depth-first-ai-assisted-expansion.md)
 - [AgentOps Lab 보류 안내](./agentops-lab-12-week-plan.md)
 
-AI Helpdesk Learning Lab은 공지 학습 주제를 관찰하는 작은 공통 실습 대상이다. Lab 기능 자체가 학습 목표보다 우선하지 않으며, 주제에 따라 독립 실험이 더 적합하면 서비스에 통합하지 않는다.
+AI Helpdesk Learning Lab은 공지 학습 주제를 관찰하는 공통 실습 대상이다. Week 1~8에는 수평 기능 수보다 Browser·Security·Application·PostgreSQL·AI·배포를 잇는 수직 깊이를 우선한다. 독립 실험은 원리를 분리해 확인하기 위한 근거이며 PostgreSQL 영속성·API 흐름·배포 같은 선택 수직 연결을 대체하지 않는다. Week 9~12에는 취업 활동을 우선하면서 AI 보조 수평 확장을 별도 모드로 수행한다.
 
 ## Archive
 

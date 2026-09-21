@@ -3,7 +3,7 @@
 > 상태: Active
 > 시작일: 2026-08-18
 > 전체 기간: 기술 심화 8주 + 취업 심화 4주
-> 현재 단계: Week 1·2·3·4 완료 — Week 5 Browser JavaScript·Frontend·Test 품질 Baseline 계획 수립
+> 현재 단계: Week 1·2·3·4 완료 — Week 5 부분 완료, Week 6 Browser·PostgreSQL·Test 수직 마감
 
 이 저장소는 SW AI Lab 심화과정에서 선택한 기술을 학습하고, 이해가 바뀐 과정과 재현 가능한 근거를 주차별로 기록한다. 목표는 큰 제품을 기간 안에 완성하는 것이 아니라 AI/AX·Java Backend 직무에 필요한 개념을 직접 설명하고, 작은 실험과 Test로 검증하며, 필요한 범위만 서비스에 적용할 수 있는 역량을 만드는 것이다.
 
@@ -25,7 +25,9 @@
 
     로그인 → 문의 등록 → AI 분류 제안 → 담당자 확인 → 상태 변경 → 이력 조회
 
-이 Lab은 완성해야 할 Production 제품이 아니다. 한 주의 학습 질문을 관찰할 수 있을 때만 최소 기능을 추가하며, 개념에 따라 독립된 재현 실험이 더 적절하면 작은 예제로 분리한다.
+이 Lab은 Week 1~8에 많은 제품 기능을 완성하는 프로젝트가 아니다. 대신 선택한 한 수직 흐름에서는 Browser, Security, Application, PostgreSQL, AI와 배포를 실제로 연결한다. 독립 재현 실험은 원리를 이해하기 위한 준비 근거이며 실제 PostgreSQL 영속성·API 흐름·배포를 대신하지 않는다.
+
+Week 9~12에는 취업 활동을 우선하면서 검증된 기반 위에 AI를 활용해 Portfolio 기능을 수평 확장한다. 이때 사용자는 모든 Line을 직접 작성하기보다 요구사항, Architecture, 데이터·권한·실패 경계, Acceptance Test와 운영 결과를 검토한다.
 
 ### 초기 범위
 
@@ -33,7 +35,7 @@
 - 인증: Session 방식 한 가지
 - AI: 요약·카테고리·우선순위 Structured Output와 평가
 - UI: 핵심 흐름을 확인할 수 있는 최소 Browser 화면
-- 운영: 한 개 실행 환경, Docker Compose와 GitHub Actions
+- 운영: Docker Compose, GitHub Actions, AWS의 한 개 실행 환경·관리형 PostgreSQL과 HTTPS
 
 ### 초기 제외 범위
 
@@ -53,10 +55,10 @@
 | 2 | HTTP·REST·Spring MVC·Layered Architecture | Completed | [Week 2](./week2/README.md) |
 | 3 | PostgreSQL·Transaction·Lock·Index | Completed | [Week 3](./week3/README.md) |
 | 4 | 인증·인가·Session·Web Security | Completed | [Week 4](./week4/README.md) · [WIL](./week4/wil.md) |
-| 5 | Browser JavaScript·Frontend·E2E·품질 | Planned | [Week 5 학습 계획](./week5/weekly-plan.md) |
-| 6 | LLM Structured Output·평가·Guardrail | Not Started | 주차 시작 시 추가 |
-| 7 | Docker·CI·관측·Linux Process | Not Started | 주차 시작 시 추가 |
-| 8 | 최소 Cloud·HTTPS·통합 복습 | Not Started | 주차 시작 시 추가 |
+| 5 | Browser JavaScript·Frontend·E2E·품질 기초 | Partially Completed | [Week 5 학습 계획](./week5/weekly-plan.md) |
+| 6 | Browser·PostgreSQL·Test 수직 마감 | In Progress | [Week 6 학습 계획](./week6/weekly-plan.md) |
+| 7 | LLM Structured Output·평가·Guardrail | Not Started | 주차 시작 시 추가 |
+| 8 | Docker·CI·System·AWS Cloud·HTTPS | Not Started | 주차 시작 시 추가 |
 | 9 | 취업 Baseline·Portfolio 근거 정리 | Not Started | 주차 시작 시 추가 |
 | 10 | 맞춤 지원·기술 면접 보완 | Not Started | 주차 시작 시 추가 |
 | 11 | 면접·과제 대응과 취약 개념 재학습 | Not Started | 주차 시작 시 추가 |
@@ -74,6 +76,8 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [Week 4 3일 Session 인증 학습 계획](./week4/weekly-plan.md): 공지 검토 결과를 반영한 범위 결정, 실행 순서와 이월 조건
 - [Week 4 WIL](./week4/wil.md): Session 인증·Role·CSRF의 이해 변화, Test와 Log 점검 및 게시 근거
 - [Week 5 Browser JavaScript 학습 계획](./week5/weekly-plan.md): Event Loop·DOM·비동기 UI 상태와 실제 Browser E2E Gate
+- [Week 6 Browser·PostgreSQL 수직 마감 계획](./week6/weekly-plan.md): 실제 영속성, 최소 UI와 계층별 Test를 연결하는 일정
+- [깊은 수직 학습과 AI 보조 수평 확장 Decision](./plan/decisions/0002-depth-first-ai-assisted-expansion.md): Week 1~8과 Week 9~12의 구현 모드
 - [AgentOps Lab 보류 안내](./plan/agentops-lab-12-week-plan.md): 과정 이후 별도로 검토할 장기 프로젝트
 - [계획 문서 안내](./plan/README.md): 현재 기준 문서와 Archive
 - [산출물 Template](./templates/README.md): Weekly Plan, Lab Report, Learning Note와 WIL 작성 방법
@@ -82,7 +86,7 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 
 1. 주차 시작 시 핵심 질문 한 가지와 선택한 공지 학습 주제를 정한다.
 2. 개념을 학습하고 예상 결과를 먼저 적은 뒤 가장 작은 실패·비교 실험을 수행한다.
-3. 관찰 결과를 설명하고 필요할 때만 Helpdesk Lab에 최소 범위로 적용한다.
+3. 관찰 결과를 설명하고 한 수직 흐름에 필요한 최소 기능만 Helpdesk Lab에 실제로 연결한다.
 4. Test, Trace, Query Plan, Header, Metric 또는 직접 설명으로 이해를 검증한다.
 5. 실패와 범위 변경을 숨기지 않고 Lab Report·Learning Note와 WIL에 남긴다.
 
