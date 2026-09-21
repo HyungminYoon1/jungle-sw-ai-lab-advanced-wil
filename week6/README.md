@@ -17,7 +17,8 @@ Study Note와 Lab Report는 실제 학습·실험이 시작된 뒤 추가한다.
 ## 상태
 
 - Week 5: `Partially Completed`
-- Week 6: `In Progress`
+- Week 6 계획: `Ready`
+- Week 6 실행: `Not Started`
 - PostgreSQL Adapter: `NOT_IMPLEMENTED`
 - PostgreSQL Integration Test: `NOT_RUN`
 - 실제 Browser·Server·PostgreSQL E2E: `NOT_RUN`
