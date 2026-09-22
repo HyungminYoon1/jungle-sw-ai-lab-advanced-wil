@@ -13,14 +13,21 @@ Browser → Session Security → Ticket API → Application → PostgreSQL → R
 - [Week 6 학습 계획](./weekly-plan.md)
 - [Fetch의 HTTP 오류와 CORS 기초](./study-docs/fetch-http-cors-foundations.md)
 - [Repository Port·PostgreSQL Adapter·Migration·Testcontainers](./study-docs/persistence-port-adapter-migration-testcontainers.md)
+- [Spring JDBC와 JPA의 차이와 선택 기준](./study-docs/spring-jdbc-and-jpa-selection-guide.md)
 
-Study Note와 Lab Report는 실제 학습·실험이 시작된 뒤 추가한다. 계획만 작성된 항목은 완료 근거로 취급하지 않는다.
+- [9월 22일 Study Questions](./study-notes/2026-09-22-study-questions.md)
+- [PostgreSQL Migration·Repository Adapter·Testcontainers Lab](./lab-reports/2026-09-22-postgresql-migration-repository-testcontainers-lab.md)
+
+계획이나 Code 작성만으로 완료 처리하지 않고, 실제 실행 결과와 아직 검증하지 않은 범위를 분리한다.
 
 ## 상태
 
 - Week 5: `Partially Completed`
 - Week 6 계획: `Ready`
-- Week 6 실행: `Not Started`
-- PostgreSQL Adapter: `NOT_IMPLEMENTED`
-- PostgreSQL Integration Test: `NOT_RUN`
+- Week 6 실행: `In Progress` — Fetch·CORS Local Browser Spike와 PostgreSQL Migration·JDBC Adapter·Testcontainers Integration Test 실행
+- CORS Simple `GET`·JSON `POST` Preflight: `USER_VERIFIED`; Credential 포함 CORS: `NOT_RUN`
+- PostgreSQL Adapter 방식: Spring JDBC `IMPLEMENTED`
+- Flyway V1 Migration: 실제 PostgreSQL 17.6에서 `APPLIED`
+- PostgreSQL Integration Test: 5개 `PASSED`
+- 전체 Java Clean Test: 49개 `PASSED`
 - 실제 Browser·Server·PostgreSQL E2E: `NOT_RUN`

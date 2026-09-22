@@ -5,7 +5,7 @@
 > 기간: 2026-09-21 ~ 2026-09-27
 > 집중 학습일: 2026-09-22 ~ 2026-09-24
 > 문서 상태: Ready
-> 실행 상태: Not Started — 계획과 Source Audit은 학습·구현 완료 근거가 아님
+> 실행 상태: In Progress — Fetch·CORS Local Browser Spike `USER_VERIFIED`; Flyway·Spring JDBC Adapter와 실제 PostgreSQL Testcontainers Integration Test `PASSED`; Credential 포함 CORS·Transaction Rollback·UI·E2E는 미실행
 > 권장 학습 예산: 총 27시간 30분 — 실제 시간은 별도 기록하고 계획 시간을 수행 시간으로 대체하지 않음
 > 모드: `DEEP_LEARNING_MODE`
 > 핵심 질문: Browser의 Session 요청이 실제 PostgreSQL 영속성까지 이어지고, 각 계층의 실패를 Test와 Trace로 구분할 수 있는가?
@@ -75,6 +75,7 @@ Secret, Credential과 환경 변수 값은 확인하거나 출력하지 않는�
 - Event Loop 회상: [Browser JavaScript Event Loop 입문](../week5/study-docs/browser-javascript-event-loop-basics.md)
 - 9월 22일 Fetch·CORS: [Fetch의 HTTP 오류와 CORS 기초](./study-docs/fetch-http-cors-foundations.md)
 - 9월 22~23일 Persistence: [Repository Port·PostgreSQL Adapter·Migration·Testcontainers](./study-docs/persistence-port-adapter-migration-testcontainers.md)
+- JDBC·JPA 선택: [Spring JDBC와 JPA의 차이와 선택 기준](./study-docs/spring-jdbc-and-jpa-selection-guide.md)
 
 자료 작성은 실행 근거가 아니다. 실행 전 예상, 실제 Console·Network·Test 결과와 설명을 날짜별 Study Note와 Lab Report에 구분해 남긴다.
 
@@ -121,7 +122,7 @@ Spring JDBC와 Spring Data JPA를 동시에 구현하지 않는다. 다음 질�
 
 선택 전 두 Adapter를 모두 생성하지 않는다. 선택 결과는 Decision 또는 Lab Report에 남기며, 다른 방식은 완료한 것으로 표현하지 않는다.
 
-현재 Source Baseline에서는 Spring JDBC를 우선 후보로 둔다. Week 3에서 학습한 SQL·Constraint·Transaction과 Row Mapping을 직접 관찰할 수 있고, 현재 Domain에는 ORM 관계 Mapping과 N+1을 재현할 관계가 없기 때문이다. 다만 9월 22일 Gate에서 이 가정을 검토한 뒤 최종 선택한다.
+2026-09-22 선택 Gate에서 Spring JDBC를 이번 수직 흐름의 Adapter 방식으로 결정했다. 직접 작성한 SQL·Parameter Binding·Constraint와 Row Mapping을 관찰해야 하고, 현재 Domain에는 ORM 관계 Mapping과 N+1을 재현할 관계가 없기 때문이다. 이후 Flyway V1·JDBC Adapter를 구현하고 실제 PostgreSQL 17.6 Testcontainer에서 Integration Test 5개와 전체 Clean Test 49개를 통과했다. 구체적인 실행 범위와 한계는 [Lab Report](./lab-reports/2026-09-22-postgresql-migration-repository-testcontainers-lab.md)에 기록한다.
 
 ## 9월 21일 — 미실시
 
@@ -144,19 +145,28 @@ Spring JDBC와 Spring Data JPA를 동시에 구현하지 않는다. 다음 질�
 
 위 시간은 휴식을 제외한 순학습 시간이다. 긴 Block 사이의 휴식과 식사 시간은 별도로 확보한다.
 
-## 9월 23일 — PostgreSQL Integration Test와 최소 UI
+### 9월 22일 실제 진행 결과
+
+- Fetch `200`·`404`·연결 실패와 CORS Simple `GET`·JSON `POST` Preflight를 실제 Browser에서 비교했다.
+- Spring JDBC를 선택하고 Flyway·PostgreSQL Driver·Testcontainers 의존성을 추가했다.
+- 빈 PostgreSQL 17.6 Container에 V1 Migration을 자동 적용했다.
+- 생성·단건 조회·Row 복원·누락 조회와 두 Constraint 실패를 실제 PostgreSQL에서 검증했다.
+- 기존 In-memory·Security Test와 PostgreSQL Test를 함께 실행해 총 49개가 통과했다.
+- Transaction Rollback과 UI 이후 범위는 아직 실행하지 않았다.
+
+## 9월 23일 — PostgreSQL 복습·Transaction과 최소 UI
 
 권장 순학습 시간: 5시간 30분 — 6시간 가용 범위 안에 휴식 여유 포함
 
 | 순서 | 시간 | 내용 | 종료 조건 |
 |---:|---:|---|---|
-| 1 | 105분 | Repository Integration Test | 실제 PostgreSQL Container에서 정상·누락·Constraint Case 확인 |
-| 2 | 45분 | Transaction·Rollback Test | 실패 뒤 부분 데이터가 남지 않음을 확인 |
+| 1 | 60분 | Migration·JDBC Adapter·Integration Test Code 복습 | Profile·SQL·Row 복원과 5개 Test의 증명 범위를 자료 없이 설명 |
+| 2 | 90분 | Transaction·Rollback Test | 같은 Transaction의 중간 실패 뒤 부분 데이터가 남지 않음을 실제 PostgreSQL에서 확인 |
 | 3 | 30분 | Loading·Success·Not Found·Forbidden·Network Error 상태 표 | 상태와 허용 전이 확정 |
 | 4 | 105분 | Ticket 생성·조회 최소 HTML·CSS·JavaScript | UI 장식 없이 상태가 구분됨 |
 | 5 | 45분 | Event Bubbling·Delegation | 동적 Element와 잘못된 Target Case 실행 |
 
-위 시간은 휴식을 제외한 최대 순학습 시간이다. Database Integration 근거를 확보하지 못하면 최소 UI를 먼저 구현해 완료한 것처럼 처리하지 않고, 남은 실행 범위를 24일 첫 Block으로 명시적으로 넘긴다.
+위 시간은 휴식을 제외한 최대 순학습 시간이다. 9월 22일에 Database Integration 실행은 앞당겨 완료했지만 Code를 독립적으로 설명하는 학습은 계속한다. Transaction Rollback 근거를 확보하지 못하면 최소 UI와 섞어 완료한 것처럼 처리하지 않고, 남은 실행 범위를 24일 첫 Block으로 명시적으로 넘긴다.
 
 ## 9월 24일 — XSS·Race·실제 API·Test 품질·E2E·회귀·WIL
 

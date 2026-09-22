@@ -1,8 +1,5 @@
 # Learning Note — Fetch의 HTTP 오류와 CORS 기초
 
-> 작성일: 2026-09-21
-> 최종 수정일: 2026-09-22
-> 상태: Ready — 학습자료 작성은 실험 완료 근거가 아님
 > 선행 자료: [JavaScript Promise와 Async/Await 기초](../../week5/study-docs/javascript-promise-async-await-basics.md), [Browser JavaScript Event Loop 입문](../../week5/study-docs/browser-javascript-event-loop-basics.md)
 > 핵심 질문: `fetch`의 Promise 상태, HTTP Status, Body 해석과 UI 상태를 어떻게 구분할 것인가?
 
@@ -456,7 +453,7 @@ Access-Control-Allow-Credentials: true
 
 Credential이 포함된 CORS Response에서 `Access-Control-Allow-Origin: *`는 사용할 수 없다. 허용할 Origin을 명시해야 한다. Cookie의 `SameSite` 등 Cookie 정책도 별도로 만족해야 하므로 `credentials: "include"` 한 줄만으로 전송이 항상 보장되는 것은 아니다.
 
-이 구조에서도 CSRF 방어는 사라지지 않는다. Browser가 Cookie를 자동 전송할 수 있기 때문에 상태 변경 요청에는 기존 Week 4에서 학습한 CSRF Token 경계를 유지해야 한다.
+이 구조에서도 CSRF 방어는 사라지지 않는다. Browser가 Cookie를 자동 전송할 수 있기 때문에 상태 변경 요청에는 CSRF Token 경계를 유지해야 한다.
 
 ## CORS 실패를 Network Panel에서 확인하는 순서
 
@@ -519,7 +516,7 @@ fetch("/tickets/1", { signal: controller.signal })
 controller.abort();
 ```
 
-Week 6 UI에서는 최소한 다음을 구분할 필요가 있다.
+Ticket UI에서는 최소한 다음을 구분할 필요가 있다.
 
 - HTTP `404`
 - HTTP `403`
@@ -527,9 +524,9 @@ Week 6 UI에서는 최소한 다음을 구분할 필요가 있다.
 - 의도적인 Abort
 - JSON 해석 실패
 
-## 오늘의 최소 실험 순서
+## 최소 실험 순서
 
-아직 실행하지 않은 계획이다. 실행 전 예상표를 먼저 작성한다.
+개념을 확인하려면 실행 전 예상표를 먼저 작성한다.
 
 1. 같은 Origin에서 `200` Response를 요청한다.
 2. 존재하지 않는 Ticket으로 `404` Response를 요청한다.
@@ -537,7 +534,7 @@ Week 6 UI에서는 최소한 다음을 구분할 필요가 있다.
 4. UI와 API를 다른 Port로 실행하고 CORS 허용 전 결과를 확인한다.
 5. CORS를 정확한 Origin에만 허용하고 다시 확인한다.
 6. JSON `POST`에서 `OPTIONS`와 실제 요청을 구분한다.
-7. Session Cookie와 CSRF Token을 유지한 요청은 별도 단계에서 검증한다.
+7. Session Cookie와 CSRF Token을 유지한 요청을 검증한다.
 
 각 Case에서 다음 근거를 남긴다.
 
@@ -579,12 +576,12 @@ Week 6 UI에서는 최소한 다음을 구분할 필요가 있다.
 10. Cross-Origin Session 요청에서 Client와 Server가 각각 무엇을 설정해야 하는가?
 11. CORS가 CSRF 방어를 대체하지 못하는 이유는 무엇인가?
 
-## 완료와 근거의 경계
+## 실험 근거를 구분하는 원칙
 
-- 이 문서를 읽은 것만으로 Fetch·CORS 학습을 완료하지 않는다.
+- 문서를 읽는 것과 Browser에서 동작을 검증하는 것은 다르다.
 - `200`·`404`·연결 실패의 Promise 상태를 실행 전에 예상하고 실제 결과와 비교한다.
 - 두 Origin 실험에서 `OPTIONS`와 실제 요청을 Network Panel로 구분한다.
-- Session·CSRF를 끈 요청은 이번 Helpdesk의 실제 인증 흐름 근거로 사용하지 않는다.
+- Session·CSRF를 끈 요청은 실제 인증 흐름의 근거로 사용하지 않는다.
 - Console 출력만으로 Server 도달 여부를 단정하지 않고 Network Trace와 Server 측 근거를 함께 본다.
 
 ## 공식 참고 자료
