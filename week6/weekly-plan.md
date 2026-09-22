@@ -1,11 +1,11 @@
 # Week 6 학습 계획 — Browser·PostgreSQL·Test 수직 마감
 
 > 작성일: 2026-09-21
-> 최종 수정일: 2026-09-22
+> 최종 수정일: 2026-09-23
 > 기간: 2026-09-21 ~ 2026-09-27
 > 집중 학습일: 2026-09-22 ~ 2026-09-24
 > 문서 상태: Ready
-> 실행 상태: In Progress — Fetch·CORS Local Browser Spike `USER_VERIFIED`; Flyway·Spring JDBC Adapter와 실제 PostgreSQL Testcontainers Integration Test `PASSED`; Credential 포함 CORS·Transaction Rollback·UI·E2E는 미실행
+> 실행 상태: In Progress — 9월 22일 Fetch·CORS Local Browser Spike `USER_VERIFIED`; Flyway·Spring JDBC Adapter와 실제 PostgreSQL Testcontainers Integration Test `PASSED`; 남은 설명·Credential CORS·Transaction·재시작 영속성·UI는 9월 23일로 이월
 > 권장 학습 예산: 총 27시간 30분 — 실제 시간은 별도 기록하고 계획 시간을 수행 시간으로 대체하지 않음
 > 모드: `DEEP_LEARNING_MODE`
 > 핵심 질문: Browser의 Session 요청이 실제 PostgreSQL 영속성까지 이어지고, 각 계층의 실패를 Test와 Trace로 구분할 수 있는가?
@@ -152,7 +152,8 @@ Spring JDBC와 Spring Data JPA를 동시에 구현하지 않는다. 다음 질�
 - 빈 PostgreSQL 17.6 Container에 V1 Migration을 자동 적용했다.
 - 생성·단건 조회·Row 복원·누락 조회와 두 Constraint 실패를 실제 PostgreSQL에서 검증했다.
 - 기존 In-memory·Security Test와 PostgreSQL Test를 함께 실행해 총 49개가 통과했다.
-- Transaction Rollback과 UI 이후 범위는 아직 실행하지 않았다.
+- `Optional.empty().map(...).orElseThrow(...)` 실행 순서를 마지막 점검에서 반대로 답했으므로 독립 설명은 완료하지 않았다.
+- Credential 포함 CORS·Security의 `OPTIONS` 처리·UI 오류 Mapping·JSON 형식 검증·Transaction Rollback·Application 재시작 영속성은 실행하거나 설명을 마무리하지 않았으므로 9월 23일로 이월했다.
 
 ## 9월 23일 — PostgreSQL 복습·Transaction과 최소 UI
 
@@ -160,13 +161,13 @@ Spring JDBC와 Spring Data JPA를 동시에 구현하지 않는다. 다음 질�
 
 | 순서 | 시간 | 내용 | 종료 조건 |
 |---:|---:|---|---|
-| 1 | 60분 | Migration·JDBC Adapter·Integration Test Code 복습 | Profile·SQL·Row 복원과 5개 Test의 증명 범위를 자료 없이 설명 |
-| 2 | 90분 | Transaction·Rollback Test | 같은 Transaction의 중간 실패 뒤 부분 데이터가 남지 않음을 실제 PostgreSQL에서 확인 |
-| 3 | 30분 | Loading·Success·Not Found·Forbidden·Network Error 상태 표 | 상태와 허용 전이 확정 |
-| 4 | 105분 | Ticket 생성·조회 최소 HTML·CSS·JavaScript | UI 장식 없이 상태가 구분됨 |
-| 5 | 45분 | Event Bubbling·Delegation | 동적 Element와 잘못된 Target Case 실행 |
+| 1 | 45분 | Migration·JDBC Adapter·`Optional` 흐름 복습 | Profile·SQL·Row 복원·5개 Test의 범위와 `Optional.empty()`에서 `404`까지를 자료 없이 설명 |
+| 2 | 45분 | Credential 포함 CORS·Spring Security `OPTIONS` 경계 | Client·Server 설정과 Filter Chain의 Preflight·실제 요청 처리를 구분 |
+| 3 | 105분 | Transaction Rollback·Application 재시작 영속성 Test | 중간 실패 뒤 부분 데이터가 없고, PostgreSQL을 유지한 Application 재시작 뒤 Ticket이 남음을 확인 |
+| 4 | 30분 | HTTP·Network UI 상태와 JSON 형식 검증 경계 | `401`·`403`·`404`·Network Error와 문법·Property 검증을 표로 구분 |
+| 5 | 105분 | Ticket 생성·조회 최소 HTML·CSS·JavaScript | UI 장식 없이 Loading·Success·Not Found·Forbidden·Network Error가 구분됨 |
 
-위 시간은 휴식을 제외한 최대 순학습 시간이다. 9월 22일에 Database Integration 실행은 앞당겨 완료했지만 Code를 독립적으로 설명하는 학습은 계속한다. Transaction Rollback 근거를 확보하지 못하면 최소 UI와 섞어 완료한 것처럼 처리하지 않고, 남은 실행 범위를 24일 첫 Block으로 명시적으로 넘긴다.
+위 시간은 휴식을 제외한 최대 순학습 시간이다. 9월 22일에 Database Integration 실행은 앞당겨 완료했지만 Code를 독립적으로 설명하는 학습은 계속한다. 기존 23일의 Event Delegation은 삭제하지 않고 24일 JavaScript Test Block에 통합한다. Transaction Rollback이나 재시작 영속성 근거를 확보하지 못하면 최소 UI와 섞어 완료한 것처럼 처리하지 않고, 남은 실행 범위를 24일 첫 Block으로 명시적으로 넘긴다.
 
 ## 9월 24일 — XSS·Race·실제 API·Test 품질·E2E·회귀·WIL
 
@@ -179,7 +180,7 @@ Spring JDBC와 Spring Data JPA를 동시에 구현하지 않는다. 다음 질�
 | 3 | 60분 | 느린 Response Race와 `AbortController` | 이전 Response가 최신 UI를 덮는 실패와 완화 비교 |
 | 4 | 105분 | 실제 API 연결 | Session·Role·CSRF를 끄지 않고 PostgreSQL 결과 표시 |
 | 5 | 30분 | UI·API 핵심 질문 재설명과 Study Note | DOM·Network·Security·Database 흐름을 자신의 말로 연결 |
-| 6 | 60분 | JavaScript 상태·HTTP Mapping Test | 대표 정상·실패 Test 통과 |
+| 6 | 60분 | Event Delegation·JavaScript 상태·HTTP Mapping Test | 동적 Element·잘못된 Target과 대표 정상·실패 Test 통과 |
 | 7 | 45분 | Coverage 사각지대 실험 | 높은 Line Coverage와 결함 검출이 다름을 재현 |
 | 8 | 45분 | 정적 분석·Lint | Test와 다른 실패를 발견·수정 |
 | 9 | 120분 | Browser Network Trace·E2E Gate와 대표 흐름 | 실제 Browser·Server·Security·PostgreSQL 연결 결과 확보 |
@@ -252,6 +253,7 @@ Gate 실패 시 격리 UI Test를 실제 Backend E2E라고 부르지 않는다. 
 | 2026-09-21 | Week 5 이월 항목과 Week 6 Project 카드의 1:1 실행 위치를 기록 | 미완료 항목을 조용히 삭제하거나 중복 카드로 관리하지 않기 위함 | 첫 카드만 `Ready`, 선행 조건이 필요한 네 카드는 `Backlog` |
 | 2026-09-22 | 9월 21일 미실시 범위를 9월 22~24일에 재배치 | 수행하지 않은 계획을 완료로 기록하지 않고 선택한 학습 범위를 유지하기 위함 | 총 27시간 30분과 완료 목표는 유지하고, 22일 8시간 30분·23일 9시간 45분·24일 9시간 15분의 순학습 일정으로 변경 |
 | 2026-09-22 | 9월 23일 가용시간을 6시간 이하로 제한하고 Adapter는 22일, XSS·Race와 In-memory 회귀는 24일로 이동 | 제한된 날에 Integration Test와 최소 UI의 선행관계에 집중하고 학습 범위를 삭제하지 않기 위함 | 총 27시간 30분은 유지하고, 22일 10시간 30분·23일 5시간 30분·24일 11시간 30분의 순학습 일정으로 조정 |
+| 2026-09-23 | 9월 22일에 마무리하지 못한 독립 설명과 Credential CORS·Transaction·재시작 영속성·UI 경계를 9월 23일로 이월 | 실행한 Code와 Test를 곧바로 이해 완료로 간주하지 않고, 틀린 답변과 `NOT_RUN` 범위를 먼저 회수하기 위함 | 23일 5시간 30분 한도는 유지하고 Event Delegation을 24일 JavaScript Test Block에 통합 |
 
 ## 공식 자료 Baseline
 

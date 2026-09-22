@@ -1,9 +1,10 @@
-# 2026-09-22 Study Questions — Fetch의 Response·HTTP Status·UI 상태
+# 2026-09-22 Study Questions — Fetch·CORS와 PostgreSQL Adapter
 
-> 상태: In Progress
+> 상태: Partially Completed — 실행 근거는 확보했지만 일부 개념의 독립 설명과 실패 검증은 9월 23일로 이월
 > 실행 환경: Local Node HTTP Server와 실제 Browser
 > 근거 범위: Fetch·CORS 실행 비교, Spring JDBC Adapter·Flyway Migration과 실제 PostgreSQL Testcontainers Integration Test
-> 비근거 범위: Credential 포함 CORS·Transaction Rollback·Application 재시작 뒤 영속성·Browser E2E
+> 9월 23일 이월: `Optional.empty()` 흐름, Credential 포함 CORS와 Security의 `OPTIONS` 처리, UI 오류 Mapping·JSON 형식 검증, Transaction Rollback·Application 재시작 뒤 영속성
+> 후속 범위: 실제 Browser·Security·PostgreSQL E2E
 
 ## 오늘 이해한 핵심 흐름
 
@@ -289,6 +290,18 @@ PostgreSQL 조회 Row 0개
 
 익명 사용자는 Security에서 `401`, `USER`는 조회 인가에서 `403`으로 먼저 차단되므로 위 Repository 흐름까지 도달하지 않는다.
 
+마지막 확인 질문에서는 `Optional.empty().map(...)`의 Lambda가 실행되고 `orElseThrow(...)`는 실행되지 않는다고 반대로 답했다. 올바른 흐름은 다음과 같다.
+
+```text
+Optional.empty()
+→ map(...)의 Lambda는 실행되지 않음
+→ 빈 Optional이 그대로 다음 단계로 전달됨
+→ orElseThrow(...) 실행
+→ TicketNotFoundException
+```
+
+Code에 적힌 결과를 읽는 것과 이 흐름을 자료 없이 설명하는 것은 다르다. 이 부분은 아직 독립적으로 설명할 수 있는 수준까지 마무리하지 못했으므로 9월 23일 첫 복습 항목으로 이월한다.
+
 ## Code 복습 핵심 질문
 
 1. `restore()`도 새 Java 객체를 만드는데 왜 “새 Ticket 생성”과 다른가?
@@ -298,13 +311,17 @@ PostgreSQL 조회 Row 0개
 5. 빈 List가 `Optional.empty()`와 `404`로 이어지는 순서는 무엇인가?
 6. `Optional.empty().map(...)`의 Lambda와 그 뒤 `orElseThrow(...)` 중 무엇이 실행되는가?
 
-## 남은 핵심 질문
+## 9월 23일로 이월한 핵심 질문
 
-1. Credential이 포함된 Cross-Origin 요청에서 Client와 Server는 각각 무엇을 설정해야 하는가?
-2. Preflight 허용 뒤 실제 Response에도 CORS Header가 필요한 이유는 무엇인가?
+1. `Optional.empty().map(...).orElseThrow(...)`에서는 어느 Callback이 실행되며, 그것이 어떻게 `404`로 이어지는가?
+2. Credential이 포함된 Cross-Origin 요청에서 Client와 Server는 각각 무엇을 설정해야 하는가?
 3. Spring Security Filter Chain은 `OPTIONS`와 실제 요청을 각각 어디에서 허용·거부하는가?
 4. HTTP `401`·`403`·`404`와 Network Error를 Helpdesk UI 상태로 어떻게 분리할 것인가?
 5. JSON 문법 검증 뒤 Ticket Property와 Type은 어느 경계에서 검증할 것인가?
+6. 같은 Transaction의 중간 실패가 앞선 변경까지 Rollback한다는 것을 어떤 Test로 증명할 것인가?
+7. Application만 재시작하고 PostgreSQL은 유지했을 때 저장한 Ticket이 남는다는 것을 어떻게 검증할 것인가?
+
+Preflight Response와 실제 Response가 각각 CORS 허용 Header를 가져야 하는 이유는 설명할 수 있게 되었으므로 이월 질문에서 제외했다.
 
 ## 근거의 한계
 
@@ -314,4 +331,4 @@ PostgreSQL 조회 Row 0개
 - Cookie 같은 Credential을 포함한 CORS 요청은 아직 실행하지 않았으므로 `NOT_RUN`이다.
 - 실제 PostgreSQL Repository는 Integration Test로 직접 호출했지만, Helpdesk Controller와 Security Filter Chain을 거치는 Browser 요청은 아직 실행하지 않았다.
 - Server가 없는 Port의 실패를 관찰했으며 Timeout·DNS 실패·Abort를 각각 재현한 것은 아니다.
-- PostgreSQL Adapter와 실제 Database Integration Test는 실행했지만, Transaction Rollback과 Application 재시작 뒤 데이터 보존은 아직 `NOT_RUN`이다.
+- PostgreSQL Adapter와 실제 Database Integration Test는 실행했지만, Transaction Rollback과 Application 재시작 뒤 데이터 보존은 `NOT_RUN`이며 9월 23일로 이월했다.

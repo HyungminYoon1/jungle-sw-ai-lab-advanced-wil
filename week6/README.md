@@ -23,11 +23,13 @@ Browser → Session Security → Ticket API → Application → PostgreSQL → R
 ## 상태
 
 - Week 5: `Partially Completed`
-- Week 6 계획: `Ready`
+- Week 6 계획: `In Progress`
 - Week 6 실행: `In Progress` — Fetch·CORS Local Browser Spike와 PostgreSQL Migration·JDBC Adapter·Testcontainers Integration Test 실행
+- 9월 22일 학습: `Partially Completed` — 실행 근거는 확보했지만 독립 설명과 일부 실패 검증은 9월 23일로 이월
 - CORS Simple `GET`·JSON `POST` Preflight: `USER_VERIFIED`; Credential 포함 CORS: `NOT_RUN`
 - PostgreSQL Adapter 방식: Spring JDBC `IMPLEMENTED`
 - Flyway V1 Migration: 실제 PostgreSQL 17.6에서 `APPLIED`
 - PostgreSQL Integration Test: 5개 `PASSED`
 - 전체 Java Clean Test: 49개 `PASSED`
+- Transaction Rollback·Application 재시작 영속성: `NOT_RUN` — 9월 23일 이월
 - 실제 Browser·Server·PostgreSQL E2E: `NOT_RUN`
