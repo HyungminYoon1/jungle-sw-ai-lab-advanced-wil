@@ -262,6 +262,55 @@ Ticket 생성이 단일 `INSERT`인 예제에서는 “INSERT가 실패했다”
 
 실제 Use Case가 없는 상태라면 인위적인 Test Fixture를 Production 기능처럼 포장하지 않고 Lab 전용 재현임을 명시한다.
 
+## `TransactionTemplate`과 `JdbcTemplate`의 책임은 다르다
+
+Spring JDBC를 사용한다고 `JdbcTemplate.update()` 한 번이 여러 SQL을 자동으로 하나의 Transaction으로 묶는 것은 아니다.
+
+```text
+TransactionTemplate
+→ Transaction 시작·Commit·Rollback 경계를 관리
+
+JdbcTemplate
+→ SQL을 실행하고 현재 Thread에 연결된 Transaction이 있으면 그 Transaction에 참여
+```
+
+Rollback을 재현하는 최소 구조는 다음과 같다.
+
+```java
+assertThatThrownBy(() ->
+        transactionTemplate.executeWithoutResult(status -> {
+            int insertedRows = jdbcTemplate.update(
+                    "INSERT INTO tickets (title, status) VALUES (?, ?)",
+                    "정상 Ticket",
+                    "OPEN");
+
+            assertThat(insertedRows).isOne();
+
+            jdbcTemplate.update(
+                    "INSERT INTO tickets (title, status) VALUES (?, ?)",
+                    "   ",
+                    "OPEN");
+        }))
+        .isInstanceOf(DataIntegrityViolationException.class);
+
+assertThat(ticketCount()).isZero();
+```
+
+이 Test의 근거는 세 단계가 함께 있어야 한다.
+
+```text
+첫 번째 INSERT 영향 Row 수 1
+→ 첫 번째 변경은 실제로 성공
+
+두 번째 INSERT Constraint 실패
+→ Transaction을 실패시키는 사건 발생
+
+Transaction 밖에서 최종 Row 수 0
+→ 앞서 성공한 첫 번째 INSERT까지 Rollback
+```
+
+예외가 발생했다는 사실만으로는 Rollback을 증명하지 못한다. Transaction이 없다면 첫 번째 INSERT가 이미 반영된 뒤 두 번째 INSERT만 실패할 수도 있다. 이 경우에도 예외는 발생하지만 최종 Row 수는 1일 수 있다.
+
 ## Testcontainers가 증명하는 것
 
 Testcontainers는 Test 실행 중 실제 PostgreSQL Container를 시작해 Application Code가 실제 PostgreSQL Protocol과 SQL 동작을 사용하도록 한다.
@@ -290,6 +339,40 @@ Testcontainers Test가 증명하지 않는 것도 있다.
 - 배포 환경의 Secret 주입이 올바르다는 사실
 
 Container가 Test 뒤 제거되더라도 Test 중 실제 PostgreSQL을 사용했다는 점은 유효하다. 다만 이것을 외부 영구 Database 운영 근거로 확대하지 않는다.
+
+## Application Context 재생성과 영속성의 증명 범위
+
+Application Context를 닫고 새 Context를 만들어도 같은 PostgreSQL을 사용하면 저장한 Row를 다시 조회할 수 있어야 한다.
+
+```text
+같은 JVM Process
+│
+├─ Spring Context A 시작
+│  ├─ Repository A 생성
+│  ├─ Ticket 저장
+│  └─ 첫 번째 try 블록 종료와 함께 Context A close
+│
+├─ 같은 PostgreSQL Container와 Schema 유지
+│
+└─ Spring Context B 시작
+   ├─ Repository B 새로 생성
+   └─ 같은 ID로 Ticket 조회
+```
+
+`isNotSameAs(firstRepository)`는 두 Repository가 같은 Java 객체가 아니라는 사실만 증명한다. Ticket 데이터가 같은지, Database가 운영 수준으로 안전한지는 이 Assertion 하나로 증명되지 않는다.
+
+두 번째 Context에서 같은 ID를 조회하고 Title·Status가 보존됐음을 확인하면 다음 범위의 근거가 된다.
+
+> Spring Context와 Repository Bean을 새로 만들어도 같은 PostgreSQL에 저장된 특정 Ticket Row를 다시 읽을 수 있다.
+
+다음 범위로는 확대하지 않는다.
+
+- JVM Process 재시작
+- PostgreSQL Process 또는 Container 재시작
+- Docker Volume을 통한 장기 보존
+- Backup·복구와 Production 내구성
+
+JVM Process 재시작을 증명하려면 첫 Application Process를 실제로 종료하고 별도 Process를 시작해야 한다. PostgreSQL 재시작 영속성을 증명하려면 Database Storage를 유지한 채 PostgreSQL Process 또는 Container를 재생성하는 별도 조건이 필요하다.
 
 ## Test 계층별 증명 범위
 
@@ -369,6 +452,8 @@ Driver, Flyway와 Testcontainers의 정확한 Artifact 조합은 사용하는 Sp
 6. Migration File과 수동 `CREATE TABLE`은 재현성에서 무엇이 다른가?
 7. In-memory Repository Test가 통과해도 Testcontainers Test가 필요한 이유는 무엇인가?
 8. 단일 `INSERT` 실패와 여러 변경의 Transaction Rollback은 무엇이 다른가?
+9. `TransactionTemplate`과 `JdbcTemplate`은 각각 어떤 책임을 가지는가?
+10. Context A와 B를 사용하는 Test가 JVM Process 재시작 근거가 아닌 이유는 무엇인가?
 
 ## 흔한 오해
 
