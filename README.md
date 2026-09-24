@@ -56,7 +56,7 @@ Week 9~12에는 취업 활동을 우선하면서 검증된 기반 위에 AI를 �
 | 3 | PostgreSQL·Transaction·Lock·Index | Completed | [Week 3](./week3/README.md) |
 | 4 | 인증·인가·Session·Web Security | Completed | [Week 4](./week4/README.md) · [WIL](./week4/wil.md) |
 | 5 | Browser JavaScript·Frontend·E2E·품질 기초 | Partially Completed | [Week 5 학습 계획](./week5/weekly-plan.md) · [WIL](./week5/wil.md) |
-| 6 | Browser·PostgreSQL·Test 수직 마감 | In Progress — 9월 22일 부분 완료, 잔여 학습은 23일 이월 | [Week 6 학습 계획](./week6/weekly-plan.md) |
+| 6 | Browser·PostgreSQL·Test 수직 마감 | In Progress — PostgreSQL Rollback·Context 재생성과 MockMvc CSRF 근거 확보, 최소 UI·Browser E2E 미실행 | [Week 6 학습 계획](./week6/weekly-plan.md) |
 | 7 | LLM Structured Output·평가·Guardrail | Not Started | 주차 시작 시 추가 |
 | 8 | Docker·CI·System·AWS Cloud·HTTPS | Not Started | 주차 시작 시 추가 |
 | 9 | 취업 Baseline·Portfolio 근거 정리 | Not Started | 주차 시작 시 추가 |
