@@ -1,12 +1,12 @@
 # Week 6 학습 계획 — Browser·PostgreSQL·Test 수직 마감
 
 > 작성일: 2026-09-21
-> 최종 수정일: 2026-09-23
+> 최종 수정일: 2026-09-24
 > 기간: 2026-09-21 ~ 2026-09-27
-> 집중 학습일: 2026-09-22 ~ 2026-09-24
-> 문서 상태: Ready
-> 실행 상태: In Progress — 9월 22일 Fetch·CORS Local Browser Spike `USER_VERIFIED`; Flyway·Spring JDBC Adapter와 실제 PostgreSQL Testcontainers Integration Test `PASSED`; 남은 설명·Credential CORS·Transaction·재시작 영속성·UI는 9월 23일로 이월
-> 권장 학습 예산: 총 27시간 30분 — 실제 시간은 별도 기록하고 계획 시간을 수행 시간으로 대체하지 않음
+> 집중 학습일: 2026-09-22, 2026-09-24, 2026-09-27 야간
+> 문서 상태: In Progress
+> 실행 상태: In Progress — Fetch·CORS Spike와 PostgreSQL Adapter에 이어 Rollback·Spring Context 재생성 Focused Test와 MockMvc CSRF Endpoint Test 통과; 최소 UI·Local Browser 사용자·실제 Browser E2E·품질 Gate·WIL은 9월 27일 야간에 계속 진행
+> 권장 학습 예산: 전체 범위는 기존 총 27시간 30분 기준, 9월 27일 남은 순학습 10시간 — 실제 시간은 별도 기록하고 계획 시간을 수행 시간으로 대체하지 않음
 > 모드: `DEEP_LEARNING_MODE`
 > 핵심 질문: Browser의 Session 요청이 실제 PostgreSQL 영속성까지 이어지고, 각 계층의 실패를 Test와 Trace로 구분할 수 있는가?
 
@@ -190,6 +190,36 @@ Spring JDBC와 Spring Data JPA를 동시에 구현하지 않는다. 다음 질�
 
 위 시간은 휴식을 제외한 순학습 시간이다. 작성한 Code 양 때문에 WIL 시간을 줄이지 않고, 미검증 항목은 그대로 `NOT_RUN` 또는 `Partially Completed`로 남긴다.
 
+### 9월 24일 실제 진행 결과
+
+- `Optional.empty().map(...).orElseThrow(...)`에서 `map` Lambda는 실행되지 않고 `orElseThrow`가 `TicketNotFoundException`을 만든다는 흐름을 다시 설명했다.
+- Credential CORS와 Spring Security `OPTIONS` 순서를 설명했지만, 실제 Helpdesk Session Cookie를 포함한 Cross-Origin 요청은 실행하지 않았다.
+- 첫 번째 INSERT 성공 뒤 두 번째 Constraint 실패가 발생하는 같은 Transaction에서 최종 Row 수가 0임을 PostgreSQL 17.6 Focused Test로 확인했다.
+- 같은 PostgreSQL Container를 유지한 채 Spring Context A를 닫고 Context B를 새로 만들어 같은 Ticket을 조회하는 Focused Test를 통과했다. 이는 같은 JVM 안의 Context 재생성 근거이며 Process·Container 재시작 근거는 아니다.
+- HTTP Status·JSON 문법·Ticket Property 검증, `textContent`, Event Delegation, `dataset`, Response Race와 `AbortController`를 예제로 설명했다. 실제 최소 UI와 JavaScript Test는 아직 작성하지 않았다.
+- `/api/csrf` Endpoint와 같은 MockMvc Session의 후속 POST를 추가해 `in-memory` Focused Test 9개를 통과했다. 실제 Browser의 JSON Parsing·Header 구성과 PostgreSQL 저장 근거는 아니다.
+- `postgres,local-browser` Profile의 책임을 구분했지만 Local Browser Runtime 사용자 Configuration은 아직 구현하지 않았다.
+- 현재 변경을 포함한 Java 전체 Clean Test 53개는 실패·오류·건너뜀 없이 통과했다. JavaScript Test·Coverage·Lint, 실제 Browser E2E와 Week 6 WIL은 실행하지 않았다.
+
+## 9월 27일 야간 — 최소 UI·실제 수직 흐름·품질 Gate·WIL 마감
+
+권장 순학습 시간: 10시간 — 야간에 시작해 자정을 넘길 수 있으며 실제 종료 시각은 Study Note에 별도로 기록
+
+| 순서 | 시간 | 내용 | 종료 조건 |
+|---:|---:|---|---|
+| 1 | 30분 | 현재 근거와 미실행 Gate 재확인 | PostgreSQL·MockMvc 근거와 Browser·JavaScript 미실행 범위를 자료 없이 구분 |
+| 2 | 45분 | Credential CORS·Spring Security `OPTIONS` 실제 확인 | Cookie 없는 Preflight와 Credential 실제 요청의 Filter Chain·Network Trace를 구분 |
+| 3 | 60분 | `local-browser` 사용자와 CSRF Runtime 경계 | Source에 Credential 값을 두지 않고 환경 값 누락 시 조용히 실행하지 않으며 USER·AGENT Login Test 통과 |
+| 4 | 105분 | 최소 Ticket UI와 JavaScript Test | JSON 구조 검증, `textContent`, Event Delegation, HTTP UI Mapping과 Response Race 정상·실패 Test 통과 |
+| 5 | 90분 | 같은 Origin 실제 API·PostgreSQL 연결 | Session·Role·CSRF를 끄지 않고 생성·조회가 `JdbcTicketRepository`와 PostgreSQL까지 도달 |
+| 6 | 90분 | 실제 Browser E2E와 Network Trace | AGENT 조회, USER 권한 실패, CSRF 실패·성공과 대표 Network 실패를 Browser·Server 근거로 연결 |
+| 7 | 60분 | Coverage 사각지대·Lint | 높은 Line Coverage가 결함 검출을 보장하지 않는 Case와 정적 분석의 별도 실패를 재현 |
+| 8 | 45분 | Java·JavaScript 전체 회귀 | Test 수·실패·오류·건너뜀, PostgreSQL·Browser 환경과 실행 Command 기록 |
+| 9 | 30분 | Secret·Log·공개 경로 점검 | Credential·Session ID·CSRF Token 값과 로컬 절대 경로가 Source·Log·Report·공개 문서에 없음 |
+| 10 | 45분 | Week 6 WIL과 완료 판정 | 핵심 질문을 자신의 말로 답하고 완료·부분 완료·미수행 범위를 근거별로 기록 |
+
+위 시간은 휴식을 제외한 순학습 시간이다. 9월 24일에 학습한 개념을 구현 완료로 간주하지 않고, 실제 UI·Test·Trace에서 다시 검증한다. 자정을 넘겨도 같은 9월 27일 학습 세션으로 기록하되 실제 실행일과 종료 시각은 숨기지 않는다.
+
 ## 산출물과 Commit 경계
 
 - `week6/study-notes/`: 날짜별 핵심 질문, 처음의 이해와 수정된 개념
@@ -241,7 +271,7 @@ Gate 실패 시 격리 UI Test를 실제 Backend E2E라고 부르지 않는다. 
 - 일정이 부족하면 UI Style, 추가 화면, 중복 Report와 편의 기능을 먼저 줄인다.
 - PostgreSQL Adapter·Migration·실제 Integration Test를 In-memory Test로 대체하지 않는다.
 - 실제 Browser E2E Gate를 통과하지 못하면 결과를 `Partially Completed`로 기록한다.
-- 9월 24일까지 핵심 수직 흐름이 끝나지 않으면 Week 7 첫 Block에서 미완료 Gate를 먼저 닫되, 선택 학습 항목을 조용히 삭제하지 않는다.
+- 9월 27일 야간까지 핵심 수직 흐름이 끝나지 않으면 Week 7 첫 Block에서 미완료 Gate를 먼저 닫되, 선택 학습 항목을 조용히 삭제하지 않는다.
 - 완료 여부는 작성한 Code 양이 아니라 설명·정상/실패 재현·Test 또는 Trace 근거로 판정한다.
 
 ## 계획 변경 기록
@@ -254,6 +284,7 @@ Gate 실패 시 격리 UI Test를 실제 Backend E2E라고 부르지 않는다. 
 | 2026-09-22 | 9월 21일 미실시 범위를 9월 22~24일에 재배치 | 수행하지 않은 계획을 완료로 기록하지 않고 선택한 학습 범위를 유지하기 위함 | 총 27시간 30분과 완료 목표는 유지하고, 22일 8시간 30분·23일 9시간 45분·24일 9시간 15분의 순학습 일정으로 변경 |
 | 2026-09-22 | 9월 23일 가용시간을 6시간 이하로 제한하고 Adapter는 22일, XSS·Race와 In-memory 회귀는 24일로 이동 | 제한된 날에 Integration Test와 최소 UI의 선행관계에 집중하고 학습 범위를 삭제하지 않기 위함 | 총 27시간 30분은 유지하고, 22일 10시간 30분·23일 5시간 30분·24일 11시간 30분의 순학습 일정으로 조정 |
 | 2026-09-23 | 9월 22일에 마무리하지 못한 독립 설명과 Credential CORS·Transaction·재시작 영속성·UI 경계를 9월 23일로 이월 | 실행한 Code와 Test를 곧바로 이해 완료로 간주하지 않고, 틀린 답변과 `NOT_RUN` 범위를 먼저 회수하기 위함 | 23일 5시간 30분 한도는 유지하고 Event Delegation을 24일 JavaScript Test Block에 통합 |
+| 2026-09-24 | 24일까지 확보한 PostgreSQL·MockMvc 근거는 유지하고 미실행 UI·Browser E2E·품질 Gate·WIL을 27일 야간으로 재배치 | 학습한 개념을 구현 완료로 오인하지 않고 Week 6에서 선택한 범위를 조용히 삭제하지 않기 위함 | 27일 야간에 순학습 10시간을 배정하고, 종료하지 못한 Gate만 Week 7 첫 Block으로 명시적으로 연결 |
 
 ## 공식 자료 Baseline
 
