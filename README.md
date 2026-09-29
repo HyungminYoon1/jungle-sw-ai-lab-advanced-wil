@@ -56,8 +56,8 @@ Week 9~12에는 취업 활동을 우선하면서 검증된 기반 위에 AI를 �
 | 3 | PostgreSQL·Transaction·Lock·Index | Completed | [Week 3](./week3/README.md) |
 | 4 | 인증·인가·Session·Web Security | Completed | [Week 4](./week4/README.md) · [WIL](./week4/wil.md) |
 | 5 | Browser JavaScript·Frontend·E2E·품질 기초 | Partially Completed | [Week 5 학습 계획](./week5/weekly-plan.md) · [WIL](./week5/wil.md) |
-| 6 | Browser·PostgreSQL·Test 수직 마감 | In Progress — PostgreSQL Rollback·Context 재생성과 MockMvc CSRF 근거 확보, 최소 UI·Browser E2E 미실행 | [Week 6 학습 계획](./week6/weekly-plan.md) |
-| 7 | LLM Structured Output·평가·Guardrail | Not Started | 주차 시작 시 추가 |
+| 6 | Browser·PostgreSQL·Test 수직 마감 | Partially Completed — Local 수직 검증과 블로그·포럼 게시 완료, 핵심 개념 독립 재설명은 후속 복습 | [Week 6 학습 계획](./week6/weekly-plan.md) · [WIL](./week6/wil.md) |
+| 7 | LLM Structured Output·평가·Guardrail | Planned — 9월 29일 시작 예정 | 주차 시작 시 추가 |
 | 8 | Docker·CI·System·AWS Cloud·HTTPS | Not Started | 주차 시작 시 추가 |
 | 9 | 취업 Baseline·Portfolio 근거 정리 | Not Started | 주차 시작 시 추가 |
 | 10 | 맞춤 지원·기술 면접 보완 | Not Started | 주차 시작 시 추가 |
@@ -78,6 +78,7 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [Week 5 Browser JavaScript 학습 계획](./week5/weekly-plan.md): Event Loop·DOM·비동기 UI 상태와 실제 Browser E2E Gate
 - [Week 5 WIL](./week5/wil.md): Event Loop·Rendering·Promise의 이해 변화와 Week 6 이월 경계
 - [Week 6 Browser·PostgreSQL 수직 마감 계획](./week6/weekly-plan.md): 실제 영속성, 최소 UI와 계층별 Test를 연결하는 일정
+- [Week 6 WIL](./week6/wil.md): Browser·Session·CSRF·PostgreSQL 수직 흐름과 블로그·포럼 게시 기록
 - [깊은 수직 학습과 AI 보조 수평 확장 Decision](./plan/decisions/0002-depth-first-ai-assisted-expansion.md): Week 1~8과 Week 9~12의 구현 모드
 - [AgentOps Lab 보류 안내](./plan/agentops-lab-12-week-plan.md): 과정 이후 별도로 검토할 장기 프로젝트
 - [계획 문서 안내](./plan/README.md): 현재 기준 문서와 Archive

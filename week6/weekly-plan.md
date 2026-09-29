@@ -1,12 +1,12 @@
 # Week 6 학습 계획 — Browser·PostgreSQL·Test 수직 마감
 
 > 작성일: 2026-09-21
-> 최종 수정일: 2026-09-24
-> 기간: 2026-09-21 ~ 2026-09-27
-> 집중 학습일: 2026-09-22, 2026-09-24, 2026-09-27 야간
-> 문서 상태: In Progress
-> 실행 상태: In Progress — Fetch·CORS Spike와 PostgreSQL Adapter에 이어 Rollback·Spring Context 재생성 Focused Test와 MockMvc CSRF Endpoint Test 통과; 최소 UI·Local Browser 사용자·실제 Browser E2E·품질 Gate·WIL은 9월 27일 야간에 계속 진행
-> 권장 학습 예산: 전체 범위는 기존 총 27시간 30분 기준, 9월 27일 남은 순학습 10시간 — 실제 시간은 별도 기록하고 계획 시간을 수행 시간으로 대체하지 않음
+> 최종 수정일: 2026-09-29
+> 기간: 2026-09-21 ~ 2026-09-29 — Week 7도 9월 29일 시작
+> 집중 학습일: 2026-09-22, 2026-09-24, 2026-09-27 야간, 2026-09-28, 2026-09-29
+> 문서 상태: Partially Completed — Local 기술 Gate와 블로그·포럼 게시 완료, 핵심 개념 독립 재설명은 후속 복습
+> 실행 상태: 실제 Browser·PostgreSQL 수직 흐름, Java·JavaScript 회귀와 품질 검사 통과. 블로그 게시·포럼 등록 완료 (사용자 확인)
+> 남은 학습: 핵심 개념을 자료 없이 다시 설명하는 복습을 Week 7과 병행
 > 모드: `DEEP_LEARNING_MODE`
 > 핵심 질문: Browser의 Session 요청이 실제 PostgreSQL 영속성까지 이어지고, 각 계층의 실패를 Test와 Trace로 구분할 수 있는가?
 
@@ -220,6 +220,59 @@ Spring JDBC와 Spring Data JPA를 동시에 구현하지 않는다. 다음 질�
 
 위 시간은 휴식을 제외한 순학습 시간이다. 9월 24일에 학습한 개념을 구현 완료로 간주하지 않고, 실제 UI·Test·Trace에서 다시 검증한다. 자정을 넘겨도 같은 9월 27일 학습 세션으로 기록하되 실제 실행일과 종료 시각은 숨기지 않는다.
 
+### 9월 27일 실제 진행 결과
+
+- `local-browser` Profile에서 외부 설정으로 USER·AGENT를 만들고 BCrypt로 Encoding하는 Main Source Configuration을 구현했다. 필수 값 누락·공백 실패를 포함한 Configuration Test 3개와 Main Context Form Login Test 2개가 통과했다.
+- 새 변경을 포함한 전체 Java 회귀는 아직 실행하지 않았다. Focused Test 5개 통과를 전체 회귀 근거로 확대하지 않는다.
+- 실제 Server를 `in-memory,local-browser` Profile로 실행했다. 익명 `/api/csrf`는 `401`, Form Login은 `302`, 인증된 Session의 `/api/csrf`는 `200`이었다.
+- 같은 인증 Session에서 CSRF Header 없는 Ticket POST는 `403`, 유효한 Header를 JavaScript가 추가한 POST는 `201 Created`와 Location Header를 반환했다. 이 흐름은 In-memory Ticket 저장 근거이며 PostgreSQL 근거가 아니다.
+- Cross-Origin Simple GET은 Server가 `200`을 반환하고 JSESSIONID도 전송했지만 CORS 허용 Header가 없어 JavaScript Fetch가 `TypeError`로 rejected되는 것을 확인했다.
+- Cross-Origin JSON POST의 Preflight에는 Cookie가 없었고 현재 Security가 `401`을 반환했다. 자동화 Chrome Network Event에서 OPTIONS만 `401 Response`를 받았고 POST는 Response 없이 `PreflightMissingAllowOriginHeader`로 실패한 것을 확인했다.
+- Helpdesk CORS 허용 설정, 최소 Ticket UI·JavaScript Test, `postgres,local-browser` 실제 Browser E2E, Coverage·Lint·전체 회귀·WIL은 완료하지 않았다.
+- 실제 Session ID·Credential·CSRF Token 값은 공개 기록에 남기지 않는다.
+
+## 9월 28일 10시 이후 — CORS 허용부터 PostgreSQL Browser E2E·품질 Gate 마감
+
+권장 순학습 시간: 10시간
+
+| 순서 | 시간 | 내용 | 종료 조건 |
+|---:|---:|---|---|
+| 1 | 45분 | 9월 27일 실패 Trace 재설명과 CORS 계약 확정 | OPTIONS `401`, Response 없는 POST와 필요한 허용 Header를 자료 없이 설명 |
+| 2 | 60분 | Credential CORS Red·Green Test와 실제 Browser 재검증 | 구체적 `4173` Origin·Credentials·Method·Header 허용, Preflight 성공 뒤 실제 요청 전송 확인 |
+| 3 | 105분 | 최소 Ticket UI와 JavaScript Test | HTTP 상태·JSON 구조·`textContent`·Event Delegation·Response Race의 정상·실패 Test 통과 |
+| 4 | 105분 | `postgres,local-browser` 실제 API 연결 | Session·CSRF를 유지한 생성·조회가 `JdbcTicketRepository`와 PostgreSQL Row까지 도달 |
+| 5 | 90분 | 실제 Browser E2E와 Network·Database Trace | AGENT 정상, USER 권한 실패, CSRF 실패·성공과 PostgreSQL 저장 근거를 계층별로 구분 |
+| 6 | 60분 | JavaScript Coverage 사각지대와 Lint | 높은 Line Coverage가 결함 검출을 보장하지 않는 Case와 정적 분석의 별도 실패 확인 |
+| 7 | 75분 | Java·JavaScript 전체 회귀와 Secret·공개 경로 점검 | Test 수·실패·오류·건너뜀 기록, 민감 값과 공개 문서의 로컬 절대 경로 없음 |
+| 8 | 60분 | Study Note·Lab Report·Week 6 WIL과 완료 판정 | 핵심 질문 재설명, 완료·부분 완료·미수행 범위를 근거별로 기록 |
+
+시간이 부족해도 CORS·PostgreSQL·Security 검증을 생략하고 UI 기능 수만 늘리지 않는다. Styling과 편의 기능을 먼저 줄이고, 실행하지 못한 Gate는 상태를 그대로 남긴다.
+
+### 9월 28일 실제 진행 결과
+
+- Credential CORS 허용·거부를 Spring Security Focused Test로 검증했다. 허용된 Preflight의 Status와 허용 Header를 함께 확인하고, 허용되지 않은 Origin은 거부됨을 확인했다.
+- 실제 `in-memory,local-browser` Browser에서 허용 Origin의 익명 `401`, CSRF Header 없는 POST `403`과 허용되지 않은 Origin의 읽을 수 없는 Response를 구분했다.
+- 이는 PostgreSQL 저장이나 인증된 Cross-Origin 생성 `201`의 근거가 아니므로 9월 29일 수직 검증으로 넘겼다.
+
+## 9월 29일 — Week 6 Local 수직 마감과 이해 확인
+
+Week 7은 9월 29일부터 시작한다. 같은 날 Week 6의 남은 마감 작업도 선택 범위를 줄이지 않고 아래 순서로 진행한다.
+
+| 순서 | 범위 | 종료 조건 |
+|---:|---|---|
+| 1 | 최소 Ticket UI와 JavaScript Test | HTTP·JSON·Ticket 실패 경계, Event Delegation, 안전한 Text, 최신 요청 Race Test |
+| 2 | 실제 Browser·Security·PostgreSQL E2E | 빈 DB Migration, AGENT 생성·조회, Cross-Origin Preflight·POST, USER·CSRF·익명 실패, 새 Java Process의 Row 조회 |
+| 3 | JavaScript Coverage·Lint와 전체 회귀 | Source 기준 Coverage, 약한 Assertion 반례, Lint의 별도 오류, Java·JavaScript Test 수 기록 |
+| 4 | Study Note·Lab Report·WIL 초안 | 근거 범위와 미검증 범위를 분리하고, 사용자가 핵심 흐름을 자료 없이 설명한 뒤 문장 검토 |
+
+### 9월 29일 실행 결과와 남은 Gate
+
+- 최소 UI·Node Test 12개, 실제 Browser E2E와 PostgreSQL Row 확인을 실행했다. 같은 Container를 유지한 채 Java Process를 새로 시작해 기존 Row를 조회했다.
+- Cross-Origin Browser에서 `OPTIONS`와 실제 `POST 201`을 확인했다. Network 이벤트의 수집 배열 순서를 HTTP 전송 순서로 해석하지 않았다.
+- Java `clean test` 61개, JavaScript Test 12개가 실패·오류·건너뜀 없이 통과했다. UI Source Coverage는 Line `85.51%`, Branch `77.05%`; ESLint 오류 0이며 별도 약한 Assertion·Lint 반례를 실행했다.
+- [9월 29일 Study Note](./study-notes/2026-09-29-study-questions.md), [Browser Lab Report](./lab-reports/2026-09-29-browser-session-csrf-postgresql-e2e.md), [Week 6 WIL](./wil.md)을 작성했다. Week 6 블로그 게시와 포럼 등록은 사용자가 완료했다. 핵심 흐름의 독립 재설명은 후속 복습으로 남겼다.
+- 운영 배포, HTTPS, PostgreSQL Container·Volume 재시작은 이번 Local Gate의 증명 범위가 아니다.
+
 ## 산출물과 Commit 경계
 
 - `week6/study-notes/`: 날짜별 핵심 질문, 처음의 이해와 수정된 개념
@@ -227,9 +280,11 @@ Spring JDBC와 Spring Data JPA를 동시에 구현하지 않는다. 다음 질�
 - `week6/wil.md`: 주간 이해 변화, 실제 완료·부분 완료·미수행 경계
 - Helpdesk Lab: Migration·Adapter·Integration Test와 UI·E2E Source
 - WIL Repository와 Helpdesk Lab 변경은 Repository별로 분리해 Commit한다.
-- 외부 블로그 게시, 포럼 등록과 Push는 별도 요청 없이 수행하지 않는다.
+- 외부 블로그 게시와 포럼 등록은 사용자가 완료했다. Push는 별도 요청 없이 수행하지 않는다.
 
-## GitHub Project 실행 순서
+## GitHub Project 카드 생성 시 실행 순서
+
+아래 상태는 계획 수립 당시의 시작 상태다. 현재 GitHub Project 상태를 다시 조회하거나 변경했다는 뜻이 아니다.
 
 | 순서 | 카드 | 상태 | 상태 변경 조건 |
 |---:|---|---|---|
@@ -271,7 +326,7 @@ Gate 실패 시 격리 UI Test를 실제 Backend E2E라고 부르지 않는다. 
 - 일정이 부족하면 UI Style, 추가 화면, 중복 Report와 편의 기능을 먼저 줄인다.
 - PostgreSQL Adapter·Migration·실제 Integration Test를 In-memory Test로 대체하지 않는다.
 - 실제 Browser E2E Gate를 통과하지 못하면 결과를 `Partially Completed`로 기록한다.
-- 9월 27일 야간까지 핵심 수직 흐름이 끝나지 않으면 Week 7 첫 Block에서 미완료 Gate를 먼저 닫되, 선택 학습 항목을 조용히 삭제하지 않는다.
+- 9월 29일 Local 수직 검증과 블로그·포럼 게시를 마쳤다. 독립 재설명은 Week 7과 병행하고 완료로 표시하지 않는다.
 - 완료 여부는 작성한 Code 양이 아니라 설명·정상/실패 재현·Test 또는 Trace 근거로 판정한다.
 
 ## 계획 변경 기록
@@ -285,6 +340,10 @@ Gate 실패 시 격리 UI Test를 실제 Backend E2E라고 부르지 않는다. 
 | 2026-09-22 | 9월 23일 가용시간을 6시간 이하로 제한하고 Adapter는 22일, XSS·Race와 In-memory 회귀는 24일로 이동 | 제한된 날에 Integration Test와 최소 UI의 선행관계에 집중하고 학습 범위를 삭제하지 않기 위함 | 총 27시간 30분은 유지하고, 22일 10시간 30분·23일 5시간 30분·24일 11시간 30분의 순학습 일정으로 조정 |
 | 2026-09-23 | 9월 22일에 마무리하지 못한 독립 설명과 Credential CORS·Transaction·재시작 영속성·UI 경계를 9월 23일로 이월 | 실행한 Code와 Test를 곧바로 이해 완료로 간주하지 않고, 틀린 답변과 `NOT_RUN` 범위를 먼저 회수하기 위함 | 23일 5시간 30분 한도는 유지하고 Event Delegation을 24일 JavaScript Test Block에 통합 |
 | 2026-09-24 | 24일까지 확보한 PostgreSQL·MockMvc 근거는 유지하고 미실행 UI·Browser E2E·품질 Gate·WIL을 27일 야간으로 재배치 | 학습한 개념을 구현 완료로 오인하지 않고 Week 6에서 선택한 범위를 조용히 삭제하지 않기 위함 | 27일 야간에 순학습 10시간을 배정하고, 종료하지 못한 Gate만 Week 7 첫 Block으로 명시적으로 연결 |
+| 2026-09-28 | 27일 야간의 Local Browser Session·CSRF와 CORS 실패 기준선까지를 실제 진행으로 확정하고 나머지를 28일 10시 이후로 연장 | Focused Test·In-memory Browser 근거를 PostgreSQL E2E나 전체 회귀로 확대하지 않고 선택한 범위를 유지하기 위함 | CORS 허용·최소 UI·PostgreSQL Browser E2E·품질 Gate·WIL에 순학습 10시간을 재배정 |
+| 2026-09-29 | Week 6을 29일까지 연장하고 Week 7 시작을 30일로 정함 | CORS·UI·PostgreSQL Browser E2E·품질 Gate를 Week 7에 섞지 않고 Week 6의 실제 근거로 마감하기 위함 | Local 기술 Gate를 실행했고 독립 설명·WIL 검토만 남음 |
+| 2026-09-29 | Week 7 시작을 같은 날인 29일로 앞당김 | 사용자 일정 결정. Week 6의 남은 문장 검토를 완료로 오인하지 않고 병행하기 위함 | Week 6 Local 기술 Gate는 유지, WIL 검토 상태는 별도 기록 |
+| 2026-09-29 | Week 6 블로그 게시와 포럼 등록을 완료로 기록 | 사용자 완료 확인 | 공개 작업은 완료, 핵심 개념의 독립 재설명은 Week 7과 병행 |
 
 ## 공식 자료 Baseline
 

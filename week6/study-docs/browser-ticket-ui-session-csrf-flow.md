@@ -302,6 +302,7 @@ async function openTicket(ticketId) {
     const controller = new AbortController();
     activeController = controller;
     const requestId = ++latestRequestId;
+    const isCurrent = () => requestId === latestRequestId;
 
     try {
         let response;
@@ -312,11 +313,15 @@ async function openTicket(ticketId) {
                 { signal: controller.signal }
             );
         } catch (error) {
-            if (error.name === "AbortError") {
+            if (!isCurrent() || error.name === "AbortError") {
                 return;
             }
 
-            showNetworkError();
+            showRequestUnavailable();
+            return;
+        }
+
+        if (!isCurrent()) {
             return;
         }
 
@@ -345,7 +350,7 @@ async function openTicket(ticketId) {
         try {
             ticket = await response.json();
         } catch (error) {
-            if (error.name === "AbortError") {
+            if (!isCurrent() || error.name === "AbortError") {
                 return;
             }
 
@@ -353,12 +358,12 @@ async function openTicket(ticketId) {
             return;
         }
 
-        if (!isTicket(ticket)) {
-            showInvalidResponse();
+        if (!isCurrent()) {
             return;
         }
 
-        if (requestId !== latestRequestId) {
+        if (!isTicket(ticket)) {
+            showInvalidResponse();
             return;
         }
 
@@ -371,7 +376,7 @@ async function openTicket(ticketId) {
 }
 ```
 
-JSON Body를 읽는 동안의 `AbortError`도 의도적 취소로 분리한다. `requestId` 비교는 이전 요청이 이미 다음 단계로 진행된 경우에도 오래된 결과가 최신 UI를 덮지 못하게 하는 마지막 방어다.
+JSON Body를 읽는 동안의 `AbortError`도 의도적 취소로 분리한다. `requestId` 비교는 성공뿐 아니라 HTTP 오류·Request 실패·JSON 실패의 UI 변경 전에도 필요하다. 이전 요청이 이미 다음 단계로 진행됐더라도 오래된 결과가 최신 화면을 덮지 못하게 한다.
 
 기본적인 취소 Case에서 `fetch` Promise는 `AbortError`로 rejected될 수 있다. 이는 의도적인 취소이므로 Network Error UI를 표시하지 않는다.
 
