@@ -4,9 +4,9 @@
 > 최종 수정일: 2026-09-29
 > 기간: 2026-09-21 ~ 2026-09-29 — Week 7도 9월 29일 시작
 > 집중 학습일: 2026-09-22, 2026-09-24, 2026-09-27 야간, 2026-09-28, 2026-09-29
-> 문서 상태: Partially Completed — Local 기술 Gate와 블로그·포럼 게시 완료, 핵심 개념 독립 재설명은 후속 복습
+> 문서 상태: Completed — Local 기술 Gate, 핵심 개념 독립 재설명, 블로그·포럼 게시 완료
 > 실행 상태: 실제 Browser·PostgreSQL 수직 흐름, Java·JavaScript 회귀와 품질 검사 통과. 블로그 게시·포럼 등록 완료 (사용자 확인)
-> 남은 학습: 핵심 개념을 자료 없이 다시 설명하는 복습을 Week 7과 병행
+> 완료 판정: 9월 29일 자료 없는 재설명에서 요청 흐름·실패 경계·영속성·Test 근거를 확인
 > 모드: `DEEP_LEARNING_MODE`
 > 핵심 질문: Browser의 Session 요청이 실제 PostgreSQL 영속성까지 이어지고, 각 계층의 실패를 Test와 Trace로 구분할 수 있는가?
 
@@ -270,7 +270,8 @@ Week 7은 9월 29일부터 시작한다. 같은 날 Week 6의 남은 마감 작�
 - 최소 UI·Node Test 12개, 실제 Browser E2E와 PostgreSQL Row 확인을 실행했다. 같은 Container를 유지한 채 Java Process를 새로 시작해 기존 Row를 조회했다.
 - Cross-Origin Browser에서 `OPTIONS`와 실제 `POST 201`을 확인했다. Network 이벤트의 수집 배열 순서를 HTTP 전송 순서로 해석하지 않았다.
 - Java `clean test` 61개, JavaScript Test 12개가 실패·오류·건너뜀 없이 통과했다. UI Source Coverage는 Line `85.51%`, Branch `77.05%`; ESLint 오류 0이며 별도 약한 Assertion·Lint 반례를 실행했다.
-- [9월 29일 Study Note](./study-notes/2026-09-29-study-questions.md), [Browser Lab Report](./lab-reports/2026-09-29-browser-session-csrf-postgresql-e2e.md), [Week 6 WIL](./wil.md)을 작성했다. Week 6 블로그 게시와 포럼 등록은 사용자가 완료했다. 핵심 흐름의 독립 재설명은 후속 복습으로 남겼다.
+- [9월 29일 Study Note](./study-notes/2026-09-29-study-questions.md), [Browser Lab Report](./lab-reports/2026-09-29-browser-session-csrf-postgresql-e2e.md), [Week 6 WIL](./wil.md)을 작성했다. Week 6 블로그 게시와 포럼 등록은 사용자가 완료했다. 이후 자료 없는 복습에서 Session·CSRF·CORS, Fetch의 Response 경계, Row 복원·Rollback, Response Race와 Test별 증명 범위를 다시 설명했고, 사전 `OPTIONS`의 Cookie 오해를 교정했다.
+- 초기 Project 카드의 세부 계획 가운데 CSS 장식, `currentTarget` 값의 별도 Log, Browser Network Timing 수치는 실행하지 않았다. 최소 UI의 상태·Delegation·안전한 Text·Race, Request·Response 실패 지점과 실제 Database Row는 각각 Browser·Test 근거로 확인했다. 카드 본문에도 이 차이를 남겼다.
 - 운영 배포, HTTPS, PostgreSQL Container·Volume 재시작은 이번 Local Gate의 증명 범위가 아니다.
 
 ## 산출물과 Commit 경계
@@ -295,6 +296,8 @@ Week 7은 9월 29일부터 시작한다. 같은 날 Week 6의 남은 마감 작�
 | 5 | Coverage·Lint·전체 회귀와 WIL 마감 | `Backlog` | 대표 수직 흐름의 정상·실패 근거 확보 뒤 `Ready` |
 
 계획 문서와 Project 카드 생성만으로 실행 상태를 `In Progress`로 올리지 않는다. 각 카드의 첫 실제 학습·구현 근거가 생길 때 상태를 변경한다.
+
+2026-09-29 마감 시에는 위 다섯 카드의 완료 조건과 실제 근거를 대조하고, 계획 대비 실행하지 않은 세부 항목을 카드에 명시한 뒤 모두 `Done`으로 변경했다. 위 표의 `Ready`·`Backlog`는 계획 수립 당시의 상태다.
 
 ## 실제 Browser E2E Gate
 
@@ -326,7 +329,7 @@ Gate 실패 시 격리 UI Test를 실제 Backend E2E라고 부르지 않는다. 
 - 일정이 부족하면 UI Style, 추가 화면, 중복 Report와 편의 기능을 먼저 줄인다.
 - PostgreSQL Adapter·Migration·실제 Integration Test를 In-memory Test로 대체하지 않는다.
 - 실제 Browser E2E Gate를 통과하지 못하면 결과를 `Partially Completed`로 기록한다.
-- 9월 29일 Local 수직 검증과 블로그·포럼 게시를 마쳤다. 독립 재설명은 Week 7과 병행하고 완료로 표시하지 않는다.
+- 9월 29일 Local 수직 검증·블로그·포럼 게시와 독립 재설명을 마쳤다. 실행하지 않은 운영·배포 범위는 Week 8 계획으로 유지한다.
 - 완료 여부는 작성한 Code 양이 아니라 설명·정상/실패 재현·Test 또는 Trace 근거로 판정한다.
 
 ## 계획 변경 기록
@@ -344,6 +347,7 @@ Gate 실패 시 격리 UI Test를 실제 Backend E2E라고 부르지 않는다. 
 | 2026-09-29 | Week 6을 29일까지 연장하고 Week 7 시작을 30일로 정함 | CORS·UI·PostgreSQL Browser E2E·품질 Gate를 Week 7에 섞지 않고 Week 6의 실제 근거로 마감하기 위함 | Local 기술 Gate를 실행했고 독립 설명·WIL 검토만 남음 |
 | 2026-09-29 | Week 7 시작을 같은 날인 29일로 앞당김 | 사용자 일정 결정. Week 6의 남은 문장 검토를 완료로 오인하지 않고 병행하기 위함 | Week 6 Local 기술 Gate는 유지, WIL 검토 상태는 별도 기록 |
 | 2026-09-29 | Week 6 블로그 게시와 포럼 등록을 완료로 기록 | 사용자 완료 확인 | 공개 작업은 완료, 핵심 개념의 독립 재설명은 Week 7과 병행 |
+| 2026-09-29 | Week 6 핵심 개념 독립 재설명을 완료하고 주차 상태를 `Completed`로 변경 | 사용자가 요청·보안·영속성·UI Race·Test 경계를 자료 없이 설명하고 `OPTIONS` Cookie 오해를 교정 | Week 6 학습 마감. 운영 배포·HTTPS는 원래 Week 8 범위 유지 |
 
 ## 공식 자료 Baseline
 

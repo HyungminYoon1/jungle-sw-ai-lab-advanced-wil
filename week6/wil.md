@@ -2,7 +2,7 @@
 
 > 기간: 2026-09-21 ~ 2026-09-29
 > 문서 상태: 블로그 게시·포럼 등록 완료 (사용자 확인)
-> 학습 상태: Local 수직 구현·검증 Gate 통과. 핵심 개념의 독립 설명 점검은 진행 중.
+> 학습 상태: Completed — Local 수직 구현·검증, 핵심 개념 독립 설명 점검 완료.
 
 ## 이번 주 요약
 
@@ -22,7 +22,7 @@
 | 품질 Gate | Java 61개·JavaScript 12개 Test 통과, ESLint 오류 0, Coverage 사각지대 실험 | Local 실행 완료 |
 | 운영 환경·배포·HTTPS | 이번 주 실행하지 않음 | Week 8 범위 |
 | 블로그·포럼 | Week 6 블로그 게시와 포럼 등록을 사용자가 완료 | 완료 |
-| 핵심 개념 독립 설명 | 자료 없이 주요 흐름을 다시 설명하는 복습 | 진행 중 |
+| 핵심 개념 독립 설명 | Session·CSRF·CORS, Fetch, PostgreSQL Rollback·복원, Response Race와 Test 범위를 자료 없이 재설명 | 완료 |
 
 ## Repository Port 뒤의 저장 구현을 교체했다
 
@@ -58,6 +58,6 @@ Cross-Origin 요청에서 CORS는 Browser JavaScript가 응답을 읽을 수 있
 
 이번 새 Process 조회는 Java Application만 종료·재시작하고 같은 PostgreSQL Container를 유지한 실험이다. 같은 JVM 안의 Context 재생성보다 강한 근거지만 PostgreSQL Container·Volume이나 Host 재시작 뒤 복구 증거는 아니다. Local Runtime USER·AGENT는 메모리에만 있고, Ticket은 PostgreSQL에 저장된다. 이 구성을 운영용 인증 저장소로 표현하지 않는다.
 
-Week 7은 9월 29일부터 시작한다. Week 6에는 Local 수직 검증을 마치고 블로그 글을 게시해 포럼에도 등록했다. 핵심 흐름을 자료 없이 다시 설명하는 복습은 Week 7과 병행한다. 외부 배포, HTTPS와 운영 안정성은 Week 8에서 현재 흐름을 대상으로 다루고, Comment·검색·Dashboard 같은 수평 확장은 이후로 남긴다.
+Week 7은 9월 29일부터 시작한다. Week 6에는 Local 수직 검증을 마치고 블로그 글을 게시해 포럼에도 등록했다. 마지막 복습에서 Session·CSRF·CORS의 순서, Database Row 복원과 Rollback, 늦은 Response와 Test별 증명 범위를 내 말로 다시 설명했다. 처음에는 사전 `OPTIONS`에도 Cookie가 실린다고 답했지만, 사전 요청과 실제 `POST`를 구분해 바로잡았다. 외부 배포, HTTPS와 운영 안정성은 Week 8에서 현재 흐름을 대상으로 다루고, Comment·검색·Dashboard 같은 수평 확장은 이후로 남긴다.
 
 실행 절차와 한계는 [PostgreSQL Lab](./lab-reports/2026-09-22-postgresql-migration-repository-testcontainers-lab.md)과 [Browser 수직 흐름 Lab](./lab-reports/2026-09-29-browser-session-csrf-postgresql-e2e.md)에 분리해 두었다.

@@ -1,7 +1,7 @@
 # 2026-09-29 — Browser에서 PostgreSQL까지 한 요청으로 연결하기
 
 > 학습 범위: 최소 Ticket UI, Response Race, Session·CSRF, Credential CORS, PostgreSQL 영속성, Test·Coverage·Lint
-> 상태: Local 수직 흐름과 품질 검증 실행 완료. 블로그·포럼 게시 완료, 핵심 개념의 독립 설명은 후속 복습 중.
+> 상태: Completed — Local 수직 흐름과 품질 검증, 블로그·포럼 게시, 핵심 개념 독립 재설명 완료.
 
 ## 핵심 질문
 
@@ -56,6 +56,14 @@ Ticket UI Source의 Node Test는 12개 통과했다. `ticket-ui.mjs`의 Line Cov
 - 실제 Browser·PostgreSQL E2E: Migration, AGENT 정상, Cross-Origin `OPTIONS`·`POST`, 새 Java Process 조회, USER `403`, CSRF 없음 `403`, 익명 `401` 통과.
 - Java Clean Test: 61개 통과, Failures·Errors·Skipped 0. JavaScript Test: 12개 통과, 실패·건너뜀 0. ESLint: 오류 0.
 - 이 숫자는 Local 실행 근거다. 외부 배포·운영 환경이나 Database Container 재시작 검증이 아니다.
-- Week 6 블로그 게시와 포럼 등록을 마쳤다. 위 핵심 질문을 자료 없이 다시 설명하는 복습은 계속한다.
+- Week 6 블로그 게시와 포럼 등록을 마쳤다.
+
+## 마감 복습에서 바로잡은 이해
+
+자료 없이 다시 설명하면서 Ticket 생성 요청의 경로를 Browser의 Session Cookie와 JavaScript가 붙이는 CSRF Header부터 Security Filter, Controller, Service, Repository와 PostgreSQL Row까지 연결했다. `IN_PROGRESS` Row를 조회할 때는 새 Ticket을 만드는 대신 저장된 상태를 복원해야 한다. 같은 Transaction의 두 번째 INSERT가 실패했다면 첫 번째 INSERT도 남지 않아야 하며, 예외 발생만이 아니라 Transaction 종료 뒤 Database Row로 확인한다.
+
+처음에는 Cross-Origin 사전 `OPTIONS`에도 `JSESSIONID`가 실린다고 답했다. 다시 구분해 보니 사전 요청에는 Cookie가 없고, 허용된 뒤의 실제 요청에는 `credentials` 설정과 Cookie 정책이 허용할 때 Cookie가 실릴 수 있다. 사전 요청의 성공은 실제 `POST`의 인증·CSRF·인가 성공을 보장하지 않는다. CSRF Header가 빠진 `POST`는 Controller에 도달하지 못하고 Ticket도 생성되지 않는다.
+
+늦게 도착한 Ticket 1의 실패가 최신 Ticket 2의 `404` 화면을 덮어서는 안 된다. 화면을 바꾸는 성공·실패 분기에서 최신 요청 번호를 확인해야 한다. JavaScript Unit Test, 실제 PostgreSQL Integration Test와 Browser E2E가 각각 확인하는 범위도 구분했다. Line Coverage는 실행 가능한 줄이 실행된 비율이며, 잘못된 `401` 화면 Mapping을 찾으려면 실행 여부뿐 아니라 정확한 기대값을 Assertion해야 한다.
 
 자세한 실행 조건과 관찰 범위는 [Browser 수직 흐름 Lab Report](../lab-reports/2026-09-29-browser-session-csrf-postgresql-e2e.md)에 분리해 기록했다.

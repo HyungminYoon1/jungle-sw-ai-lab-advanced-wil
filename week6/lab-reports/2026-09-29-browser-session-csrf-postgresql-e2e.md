@@ -66,6 +66,6 @@ Coverage의 한계는 [의도적으로 잘못된 Status Mapping 예제](../examp
 - 운영용 사용자 저장소, Credential 보관·회전 정책, 외부 배포와 HTTPS.
 - PostgreSQL Container·Volume·Host 재시작 뒤의 복구 또는 Backup.
 - 모든 Browser·Origin·Network 조건의 호환성. 이번 실제 E2E는 지정된 Local Browser와 두 Local Origin에 한정된다.
-- 사용자의 개념 숙지. Code·Test 통과와 핵심 흐름을 스스로 설명할 수 있는지는 별도 확인이 필요하다.
+- 이 Lab 실행만으로 사용자의 개념 숙지까지 증명하지 않는다. 별도의 독립 설명 결과는 [9월 29일 학습노트](../study-notes/2026-09-29-study-questions.md)에 기록했다.
 
 WIL 공개 문서에는 Session ID·Password·CSRF Token의 실제 값을 남기지 않는다.

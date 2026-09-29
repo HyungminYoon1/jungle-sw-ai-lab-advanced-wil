@@ -32,7 +32,8 @@ Browser → Session Security → Ticket API → Application → PostgreSQL → R
 
 - Week 5: `Partially Completed`
 - Week 6 계획: 9월 29일까지 마감 작업을 진행하며, Week 7도 9월 29일부터 시작
-- Week 6 실행: Local 구현·검증 Gate 통과, 블로그 게시·포럼 등록 완료. 핵심 개념의 독립 설명은 후속 복습 중
+- Week 6 실행: `Completed` — Local 구현·검증 Gate, 핵심 개념 독립 재설명, 블로그 게시·포럼 등록 완료
+- GitHub Project Week 6 카드 5개: 완료 근거와 미측정 범위를 본문에 정리한 뒤 `Done`으로 변경
 - 9월 22일 학습: `Partially Completed` — 실행 근거는 확보했지만 독립 설명과 일부 실패 검증은 9월 23일로 이월
 - 9월 24일 학습: `In Progress` — 이월한 개념을 교정하고 Rollback·Context 재생성·CSRF Focused Test 근거 확보
 - 9월 27일 학습: `In Progress` — Local Browser 사용자 Focused Test와 실제 Session·CSRF 흐름, CORS Simple GET·Preflight 실패 Trace 확인
@@ -51,4 +52,4 @@ Browser → Session Security → Ticket API → Application → PostgreSQL → R
 - 실제 Browser Session·CSRF Ticket 생성: `in-memory,local-browser`에서 익명 `401`, 인증 뒤 CSRF 없음 `403`, 유효 Token `201`을 `USER_VERIFIED`
 - 실제 Browser·Server·PostgreSQL E2E: Local `postgres,local-browser`에서 AGENT 정상·USER `403`·CSRF 없음 `403`·익명 `401`, Cross-Origin POST와 새 Java Process 조회 `PASSED`
 - Ticket UI Source Coverage: Line `85.51%`, Branch `77.05%`; 별도 Coverage 사각지대 실험과 ESLint 오류 0 확인
-- Week 6 WIL: 블로그 게시·포럼 등록 완료 (사용자 확인). 핵심 흐름의 독립 재설명은 후속 복습으로 남음
+- Week 6 WIL: 블로그 게시·포럼 등록 완료 (사용자 확인). 핵심 흐름의 독립 재설명도 9월 29일 확인
