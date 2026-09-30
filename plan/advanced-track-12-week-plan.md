@@ -1,7 +1,7 @@
 # SW AI Lab 심화과정 12주 학습 계획
 
 > 작성일: 2026-08-18
-> 최종 수정일: 2026-09-21
+> 최종 수정일: 2026-10-01
 > 상태: Active
 > 대상 기간: 기술 심화 8주 + 취업 심화 4주
 > 대상 직무: AI/AX 개발자, Java Backend 개발자, AI Platform·LLMOps Backend 개발자
@@ -49,14 +49,14 @@ Week 8 종료 전에는 다음 최소 흐름을 실제 환경에서 연결하고
 1. Browser가 HTTPS로 Session 로그인과 Ticket 요청을 보낸다.
 2. Security Filter Chain이 인증·인가·CSRF를 검사한다.
 3. Controller와 Application Service가 Domain 규칙을 실행한다.
-4. PostgreSQL Adapter가 Migration으로 생성된 Schema에 Ticket과 검증된 AI Suggestion을 저장한다.
+4. PostgreSQL Adapter가 Migration으로 생성된 Schema에 Ticket·최초 문의 Message를 저장하고, AI 처리 상태와 검증된 Suggestion을 별도로 기록한다.
 5. 실제 PostgreSQL Integration Test와 대표 Browser E2E가 계층 연결을 확인한다.
 6. CI가 Build·Test·정적 검사를 실행하고, Container Image가 Cloud 환경에 배포된다.
 7. Secret을 Source와 Log에서 분리하고 Health·Log·Metric·HTTPS·Rollback 근거를 남긴다.
 
 ### 고정 범위
 
-- User, Ticket, Comment와 AI Suggestion 이내의 Domain
+- User, Ticket, Message와 AI Suggestion 이내의 Domain
 - Session 인증과 사용자·담당자 권한
 - PostgreSQL Migration·Repository Adapter·Integration Test와 최소 Browser 화면
 - Structured Output 한 개, 고정 평가 Dataset과 실패 처리
@@ -66,9 +66,10 @@ Week 8 종료 전에는 다음 최소 흐름을 실제 환경에서 연결하고
 
 - AI는 제안만 하며 외부 Side Effect를 자동 실행하지 않는다.
 - Week 1~8에는 로그인·Ticket 등록·조회·AI Suggestion 확인이라는 한 수직 흐름에 필요한 코드만 추가한다.
+- Week 7에서는 최초 문의 Message를 Ticket과 함께 저장한 뒤 자동 AI 처리를 연결한다. 기본 정상·실패 흐름부터 검증하고, 단일 Application·PostgreSQL에서 중단 후 처리 재개를 확인하는 최소 복구로 이어간다.
 - 같은 기능을 여러 Framework로 완성하지 않는다.
 - 제품에 맞지 않는 개념은 독립 Spike로 먼저 재현하되, 선택한 수직 흐름의 필수 연결을 Spike로 대체하지 않는다.
-- Week 1~8에는 Comment 확장, 검색·Pagination, 알림, Dashboard와 UI 장식을 추가하지 않는다.
+- Week 1~8에는 후속 대화·공식 답변, 검색·Pagination, 알림, Dashboard와 UI 장식을 추가하지 않는다. 분산 Queue·Worker 운영으로 범위를 넓히지 않는다.
 - Week 9~12에는 AI가 기능 Code 초안을 만들 수 있지만, 사용자는 요구사항·Architecture·데이터·권한·실패 처리·Acceptance Test와 운영 결과를 검토한다.
 
 ## 4. 학습 항목 상태
@@ -122,7 +123,7 @@ Week 8 종료 전에는 다음 최소 흐름을 실제 환경에서 연결하고
 | 4 | 인증·보안 | Session과 권한·공격 방어 실패 Case |
 | 5 | Browser·Frontend·Test 기초 | Event Loop·Rendering·Promise의 실행 근거와 미완료 경계 |
 | 6 | Browser·PostgreSQL·Test 수직 마감 | 최소 UI에서 Session API와 실제 PostgreSQL 영속성을 잇고 Integration·E2E 근거 확보 |
-| 7 | AI Native | Structured Output, 고정 평가·Guardrail과 검증된 Suggestion 저장 |
+| 7 | AI Native | 최초 문의 보존, Structured Output·고정 평가·Guardrail, 자동 AI 처리와 검증된 Suggestion 저장 |
 | 8 | DevOps·System·Cloud 통합 | Container·CI·Process·관측을 거쳐 IAM·ECS·ECR·RDS·DNS·HTTPS 수직 배포 |
 
 세부 학습 질문과 비범위는 [주차별 Roadmap](./weekly-roadmap.md)을 따른다.
@@ -133,7 +134,7 @@ Week 8 종료 전에는 다음 최소 흐름을 실제 환경에서 연결하고
 - Java·Spring·Database·Security·AI 질문을 Lab의 실패와 판단으로 설명한다.
 - 공고별 요구 역량에 맞춰 지원 자료를 조정한다.
 - 코딩 Test와 면접에서 확인된 취약 개념만 작은 Spike로 다시 학습한다.
-- AI를 활용해 Comment, 상태 변경, 검색, 알림과 Dashboard 같은 수평 기능을 빠르게 확장할 수 있다.
+- AI를 활용해 후속 Message·공식 답변, 상태 변경, 검색, 알림과 Dashboard 같은 수평 기능을 빠르게 확장할 수 있다.
 - 수평 확장은 주 6시간 이내의 Portfolio 작업으로 제한하고 지원·면접 일정을 침해하지 않는다.
 - AI 생성 Code 전체를 직접 작성한 것으로 표현하지 않고, 사용자가 검토한 Architecture·보안·데이터·Test·운영 범위를 구분한다.
 

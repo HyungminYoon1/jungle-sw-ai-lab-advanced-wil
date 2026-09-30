@@ -1,7 +1,7 @@
 # 심화과정 학습 및 기술 콘텐츠 계획
 
 > 작성일: 2026-08-18
-> 최종 수정일: 2026-09-21
+> 최종 수정일: 2026-10-01
 > 상태: Active
 > 대상 기간: 기술 심화 8주 + 취업 심화 4주
 
@@ -25,7 +25,9 @@
 | Week 1~8 | `DEEP_LEARNING_MODE` | 기능 수를 제한하고 Browser부터 PostgreSQL·AI·배포까지 한 수직 흐름을 깊게 연결 | 핵심 Code 추적·수정, 정상·실패 재현, Test·Trace·Metric 해석 |
 | Week 9~12 | `AI_ASSISTED_PRODUCTIZATION_MODE` | 취업 활동을 우선하며 AI로 Portfolio 기능을 수평 확장 | 요구사항, Architecture, 데이터·권한·실패 경계, Acceptance Test와 운영 결과 검토 |
 
-학습용 프로젝트라는 이유로 실제 PostgreSQL 영속성, Security, API 계층, CI와 Cloud 배포를 Mock이나 문서로 대체하지 않는다. 반대로 Week 1~8에는 Comment·검색·알림·Dashboard 같은 수평 기능을 추가하지 않는다.
+학습용 프로젝트라는 이유로 실제 PostgreSQL 영속성, Security, API 계층, CI와 Cloud 배포를 Mock이나 문서로 대체하지 않는다. 반대로 Week 1~8에는 후속 대화·공식 답변, 검색·알림·Dashboard 같은 수평 기능을 추가하지 않는다.
+
+Week 7의 최초 Message 저장과 자동 AI 처리는 문의 접수부터 제안 확인까지 잇는 수직 학습에 포함한다. 기본 정상·실패 Test를 먼저 확인하고, 접수 후 별도 처리와 단일 Application·PostgreSQL의 최소 재시작 복구로 발전시킨다. 후속 대화 UI와 분산 Queue·Worker는 이번 학습 범위에 포함하지 않는다. 계약의 합의 여부와 실제 구현·실행 근거는 구분해 기록한다.
 
 ## 2. 학습 Cycle
 

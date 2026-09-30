@@ -74,6 +74,9 @@ Option 3을 선택한다.
 - `plan/learning-and-content-plan.md`
 - `week5/weekly-plan.md`
 - `week6/weekly-plan.md`
+- `week7/weekly-plan.md`
+- `week7/ai-suggestion-contract-draft.md`
+- `week7/study-docs/ai-suggestion-trust-boundaries.md`
 
 ## Follow-up Review
 
@@ -81,3 +84,22 @@ Option 3을 선택한다.
 - Week 7 종료: Structured Output·Dataset·Guardrail과 저장 경계 확인
 - Week 8 종료: CI·Container·AWS·HTTPS·관측·E2E Gate 최종 판정
 - Week 9 시작: 수평 확장 허용 여부와 주 6시간 상한 확인
+
+## 2026-09-30 범위 명확화 — 최초 Message와 자동 AI 처리
+
+### Context와 선택지
+
+Ticket을 하나의 문의 주제와 상태를 관리하는 컨테이너로 두고, 고객 문의와 공식 답변을 Message로 연결하는 방향을 검토했다. Ticket의 `description`과 Message에 원문을 중복 저장하는 안보다 최초 문의부터 Message로 저장하는 안이 이후 대화 모델과 일관된다.
+
+AI 호출까지 접수 Transaction에 묶는 안, 접수 후 수동으로 AI 실행을 요청하는 안, 접수 Commit 뒤 서버가 자동 처리하는 안을 비교했다. AI 실패로 고객 문의를 취소하지 않고, 사용자가 별도 실행 요청을 하지 않아도 제안이 생성되는 마지막 방식을 목표로 합의했다.
+
+### Decision과 이유
+
+- Week 7에서는 Ticket·최초 Message 저장, AI 처리 상태와 Suggestion 분리, 접수 성공 후 서버의 자동 AI 처리만 연결한다.
+- 최초 Ticket·Message는 같은 Transaction에 저장하고, AI 호출·검증·결과 저장 실패와 독립적으로 보존한다.
+- 기본 AI 정상·실패 흐름을 먼저 검증한 뒤, 접수 Commit·201 응답 후 자동 처리와 단일 Application·PostgreSQL의 최소 중단 복구로 발전시킨다. 처리 중단으로 영구 대기하는 문제를 다루되 분산 Queue·Worker 운영까지 확장하지 않는다.
+- 후속 고객 메시지·공식 답변의 작성·조회 UI는 Week 9 이후 수평 확장으로 남긴다. 최초 Message 분리는 새로운 대화 기능 추가가 아니라 AI 입력 원문을 저장하는 경계의 정리다.
+
+### 영향과 후속 검토
+
+상위 계획과 Week 7 계획·계약 초안·학습자료에 이 구분을 반영한다. 작업 등록과 접수 Commit 사이의 누락 방지, 상태 전이, 재시도 한도, 중단 복구와 중복 제안 방지의 구체 계약은 다음 학습에서 검토한다. 기존 USER·AGENT 권한 계약은 변경하지 않는다. 이번 합의는 설계 방향이며 구현·실제 Provider 호출·PostgreSQL 검증 완료를 의미하지 않는다.

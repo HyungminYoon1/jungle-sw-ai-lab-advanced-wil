@@ -1,7 +1,7 @@
 # SW AI Lab 심화과정 12주 주차별 Roadmap
 
 > 작성일: 2026-08-18
-> 최종 수정일: 2026-09-21
+> 최종 수정일: 2026-10-01
 > 상태: Active
 > 전체 기간: 기술 심화 8주 + 취업 심화 4주
 > 공통 실습: AI Helpdesk Learning Lab
@@ -287,7 +287,9 @@ Week 5는 Event Loop·Rendering·Promise의 일부 실행 근거를 확보했지
 ### 실험과 적용
 
 - 같은 문의에서 Prompt-only JSON과 강제 Structured Output 안정성 비교
+- Ticket과 최초 문의 Message를 같은 Transaction에 저장하고, 문의 접수 성공과 AI 처리 성공을 구분
 - Schema와 Guardrail을 통과한 요약·카테고리·우선순위 Suggestion만 PostgreSQL에 별도 결과로 저장
+- 기본 AI 정상·실패 Test → 접수 Commit·201 응답 후 서버의 자동 처리 → 단일 Application·PostgreSQL의 최소 재시작 복구 순서로 연결
 - 정상·모호·악성 입력을 포함한 작은 Versioned Dataset 구성
 - 정확성, Schema 준수, Latency와 비용을 같은 조건에서 기록
 - Prompt Injection 입력과 민감 정보 출력 방지 Case 확인
@@ -299,6 +301,7 @@ Week 5는 Event Loop·Rendering·Promise의 일부 실행 근거를 확보했지
 - 평가 결과와 대표 실패 Case
 - Provider 실패·Timeout·Invalid Output Test
 - 검증 실패 결과가 Domain 상태와 PostgreSQL을 오염시키지 않는 Integration Test
+- AI 실패 뒤에도 접수된 Ticket·Message가 남는 Test와 처리 상태·제안 저장 및 최소 복구 근거
 - Guardrail 한계와 Human 확인 경계
 - Week 7 WIL
 
@@ -307,6 +310,9 @@ Week 5는 Event Loop·Rendering·Promise의 일부 실행 근거를 확보했지
 - Multi-Agent Workflow, RAG와 Vector Database
 - LoRA, VLM과 대규모 Model Benchmark
 - 실제 Email·일정·게시 Side Effect
+- 후속 대화·공식 답변 UI, 분산 Queue·Worker 운영
+
+최초 Message와 자동 처리의 설계·확인 순서는 [Week 7 계획](../week7/weekly-plan.md)과 [계약 초안](../week7/ai-suggestion-contract-draft.md)에서 관리한다. 상태·재시도·복구 세부 계약은 질문을 통해 검토하며, 설계 합의를 구현 완료로 표시하지 않는다.
 
 ## 8주차 — DevOps·System·AWS Cloud·HTTPS 수직 배포
 
@@ -369,7 +375,7 @@ Week 5는 Event Loop·Rendering·Promise의 일부 실행 근거를 확보했지
 - Helpdesk Lab의 직접 구현·AI 보조·미구현 범위 구분
 - Java·Spring·Database·Security·AI 면접 질문 Baseline
 - Coding Test와 지원 활동 추적 방식 확정
-- 취업 근거에 도움이 되는 Comment·상태 변경·검색·알림·Dashboard 중 필요한 기능만 AI로 수평 확장
+- 취업 근거에 도움이 되는 후속 Message·공식 답변·상태 변경·검색·알림·Dashboard 중 필요한 기능만 AI로 수평 확장
 - AI 생성 Code는 요구사항·Module 책임·데이터·권한·실패·Acceptance Test를 검토한 뒤 인수하고 주 6시간을 넘기지 않음
 
 ### 완료 근거
@@ -444,3 +450,4 @@ Weekly Plan의 Baseline 이후 학습 항목을 조용히 추가하거나 완료
 | 날짜 | 변경 | 이유 | 영향 |
 |---|---|---|---|
 | 2026-09-21 | Week 5 미완료와 PostgreSQL Adapter를 Week 6에서 수직 마감하고, AI Native를 Week 7, DevOps·System·AWS Cloud·HTTPS를 Week 8로 재배치 | 기술 심화 공지는 선택 기술을 실제 활용 가능한 수준과 라이브 서비스 흐름으로 연결하도록 요구하며, 수평 기능보다 수직 깊이를 우선한다는 사용자 결정 | Week 1~8은 `DEEP_LEARNING_MODE`, Week 9~12는 취업 우선 `AI_ASSISTED_PRODUCTIZATION_MODE`로 운영 |
+| 2026-09-30 | Week 7 입력을 Ticket의 최초 Message로 분리하고 접수 성공 뒤 자동 AI 처리·최소 복구를 단계적으로 연결 | 문의 원문은 AI 실패와 독립적으로 보존하고, 기본 흐름부터 검증한다는 설계 합의 | 평가·Guardrail 학습은 유지하며 후속 대화·공식 답변과 분산 운영은 제외. 세부 계약·구현·평가는 아직 미완료 |
