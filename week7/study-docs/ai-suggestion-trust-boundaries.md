@@ -98,6 +98,8 @@ AI 작업 상태: SUCCEEDED
 
 비동기 실행과 재시작 복구도 별개다. 원문 Commit과 작업 등록 사이에 Process가 종료되면 작업이 누락될 수 있다. 작업을 함께 영속화하거나 누락을 찾아 복구할 규칙이 필요하다. 실행 중이라는 기록이 오래 남았다고 실제 작업이 계속 실행 중인 것은 아니므로 중단 판정 조건도 정한다. 같은 Job의 제안 중복 저장을 막아도 외부 호출·비용까지 정확히 한 번을 보장하지는 않는다.
 
+작업 상태, Timeout, 재시도와 중단 후 복구의 관계는 [AI 비동기 처리의 생애주기](./ai-async-processing-lifecycle.md)에서 설명한다.
+
 ## Test가 증명하는 범위
 
 - 가짜 Provider·Repository를 쓰는 Unit Test는 입력 부족 때 Provider를 호출하지 않는지, 잘못된 출력 뒤 `save()`를 호출하지 않는지 확인한다. 실제 Provider 품질이나 PostgreSQL Row는 증명하지 않는다.
