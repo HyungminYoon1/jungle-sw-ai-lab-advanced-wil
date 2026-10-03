@@ -109,6 +109,22 @@ Provider가 지원하는 JSON Schema는 전체 표준의 일부다. Application�
 
 예를 들어 nullable Field를 전송용 Schema에서 허용하더라도 `SUGGEST`에서는 null을 거부해야 한다. 공백 제거 후 Unicode Code Point 길이, 분류 중복과 `decision`별 Field 조합도 Application 규칙이다. 두 비교 방식에 같은 규칙을 적용해야 한다.
 
+## 불확실한 제안·제안 보류·Provider 거부
+
+다음 세 결과는 서로 다른 의미다.
+
+| 결과 | 의미 | 검사할 경계 |
+|---|---|---|
+| `SUGGEST`, `priority: "UNDETERMINED"` | 요약과 분류를 제안하되 긴급도는 판단하지 못함 | 제안의 구조·값과 원문 충실도 |
+| `ABSTAIN`, 나머지 세 Field는 `null` | 제안 자체를 만들지 않겠다는 명시적인 결과 | 보류의 구조와 해당 원문에서 보류할 근거 |
+| Provider의 거부 응답 | 공급자가 생성을 거부함 | Provider 응답 처리. 제안 JSON으로 임의 변환하지 않음 |
+
+필드 누락이나 공백 요약도 `ABSTAIN`이 아니라 출력 계약 위반이다. 검증기가 `ABSTAIN`의 구조를 통과시켰다고 해서 그 원문에서 제안을 보류하는 판단까지 옳았다는 뜻은 아니다. 정보가 부족해도 확인한 사실을 요약할 수 있는 경우와, 의미 있는 제안을 만들 수 없는 경우를 구체적인 입력으로 구분한다.
+
+예를 들어 “문제가 생겼습니다. 확인해주세요.”는 문제 확인 요청이라는 의미를 요약할 수 있다. 종류·긴급도 정보가 부족한 부분만 `UNDETERMINED`로 남긴다. 중립적인 제목 `문의`와 본문 `ㅁㄴㅇㄹ ???`처럼 제목·본문 모두에서 문의 내용을 해석할 수 없는 입력에는 `ABSTAIN`을 사용할 수 있다. 단순히 짧거나 오타·외국어가 있다는 이유로 보류하지 않는다. 과제에 맞는 응답을 만들 수 없는 입력의 처리 기준을 Prompt에 명시하는 방법은 [OpenAI 공식 가이드](https://developers.openai.com/api/docs/guides/structured-outputs#handling-user-generated-input)를 참고한다.
+
+검증 결과 객체는 검사한 Field·값을 후속 단계에 전달한다. DB 저장, Job 완료, Tool 실행과 Ticket 상태 변경은 별도 Application 로직이 담당한다. 오류를 기록할 때에는 입력이 포함될 수 있는 Parser 메시지 대신 고정된 오류 코드를 사용한다.
+
 ## 실패와 사용량을 기록하는 방법
 
 HTTP 인증·요금 오류, 연결 실패·Timeout, Provider 거부·미완료, JSON 문법 실패와 계약 위반을 구분한다. 출력이 없는 실패를 가짜 요약 0점으로 채우거나, 사용량을 알 수 없는데 비용 0원으로 기록하지 않는다.

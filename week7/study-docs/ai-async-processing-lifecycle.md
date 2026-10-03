@@ -19,12 +19,12 @@
 ```text
 문의 접수
   Browser → Security → Controller → Application Service
-    → 접수 Transaction: Ticket + 최초 Message 저장
+    → 접수 Transaction: Ticket + 최초 Message + PENDING Job 저장
     → Commit
     → Browser에 201 Created
 
 접수 Commit 후 별도 AI 처리
-  처리할 원문과 작업 확인
+  Worker가 Commit된 PENDING Job 조회
     → 실행 상태 기록
     → 입력 Message 조회
     → Provider 호출과 응답 수신
@@ -34,15 +34,25 @@
     → 담당자가 작업 상태와 제안을 조회
 ```
 
-이 설계에서 접수의 `201`은 Ticket·최초 Message의 저장 완료를 뜻한다. AI 호출이나 제안 저장 완료를 뜻하지 않는다. 이후 AI가 실패하더라도 이미 접수한 문의를 취소하지 않는다.
+이 설계에서 접수의 `201`은 Ticket·최초 Message의 저장과 처리할 Job 등록의 완료를 뜻한다. AI 호출이나 제안 저장 완료를 뜻하지 않는다. Worker는 Commit된 Job을 대상으로 실행하며, 접수 응답은 AI 완료를 기다리지 않는다. 이후 AI가 실패하더라도 이미 접수한 문의를 취소하지 않는다.
 
-Ticket과 최초 Message를 같은 Transaction으로 저장하면 메시지 없는 빈 Ticket만 접수되는 일을 막을 수 있다. 결과 저장도 같은 원리로 Suggestion과 Job 완료 표시를 함께 Commit하도록 설계할 수 있다. Transaction은 묶인 변경을 함께 반영하거나 함께 취소하는 경계다. [PostgreSQL Transaction 문서](https://www.postgresql.org/docs/17/tutorial-transactions.html)
+Ticket·최초 Message·Job을 같은 Transaction으로 저장하면 메시지 없는 빈 Ticket이나 작업 기록 없는 새 접수가 남는 일을 막을 수 있다. 대신 Message 또는 Job 저장이 실패하면 접수 전체가 Rollback된다. 결과 저장도 같은 원리로 Suggestion과 Job 완료 표시를 함께 Commit하도록 설계할 수 있다. Transaction은 묶인 변경을 함께 반영하거나 함께 취소하는 경계다. [PostgreSQL Transaction 문서](https://www.postgresql.org/docs/17/tutorial-transactions.html)
 
-Provider를 기다리는 동안 결과 저장용 Transaction을 계속 열어둘 필요는 없다. 외부 호출은 DB Transaction 밖에서 하고, 응답을 검증한 뒤 필요한 저장 작업만 짧게 묶는 편이 좋다. DB Rollback으로 이미 실행된 Provider 호출이나 그 비용을 되돌릴 수는 없다.
+| 실패 시점 | 원본 Ticket·Message | AI 처리 |
+|---|---|---|
+| 접수 Commit 전 Message 또는 Job 저장 실패 | 새 접수 전체 Rollback | Provider를 호출하지 않음 |
+| 접수 Commit 후 Provider 호출·출력 검증 실패 | 이미 접수한 원문 유지 | 제안 없이 실패·재시도 정책 적용 |
+| 접수 Commit 후 Suggestion 저장 실패 | 이미 접수한 원문 유지 | 결과 저장의 재시도·복구 조건 확인 |
+
+Provider를 기다리는 동안 접수·실행권 확보·결과 저장용 Transaction을 계속 열어두지 않는다. 외부 호출은 DB Transaction 밖에서 하고, 응답을 검증한 뒤 필요한 저장 작업만 짧게 묶는다. DB Rollback으로 이미 실행된 Provider 호출이나 그 비용을 되돌릴 수는 없다.
 
 ## 처리할 작업을 찾는 방법
 
-첫 번째 방법은 접수할 때 실행할 Job도 같은 Transaction으로 기록하는 것이다. 원문과 작업이 함께 Commit되므로 접수는 됐는데 실행할 작업 기록은 없는 틈을 줄일 수 있다. 대신 Job 등록 실패도 접수 Transaction에 영향을 준다는 설계 선택이 생긴다.
+앞의 예제는 접수할 때 실행할 Job도 같은 Transaction으로 기록하는 방법을 사용한다. 원문과 작업이 함께 Commit되므로 접수는 됐는데 실행할 작업 기록은 없는 틈을 막는다. 대신 Job 등록 실패도 접수 Transaction에 영향을 준다.
+
+Worker는 Server 시작 시와 주기적인 조회로 실행 대상인 Job을 찾을 수 있다. 접수 후 메모리 알림은 실행을 앞당기는 보조 수단일 수 있지만 유일한 실행 근거로 삼지 않는다. Commit 뒤 알림 전에 Process가 종료돼도 DB의 `PENDING` Job을 다시 찾을 수 있어야 하기 때문이다. Job 저장과 재조회 가능성이 Provider의 정확히 한 번 실행까지 보장하지는 않는다.
+
+업무 데이터와 처리할 작업을 같은 Transaction에 기록하는 원리는 [Transactional Outbox 설명](https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html)을 참고할 수 있다. 별도 Message Broker 대신 DB Job을 조회하는 설계에도 이 원리를 적용할 수 있다.
 
 두 번째 방법은 Server가 저장된 Message 중 AI 처리 대상인 원문을 찾아 작업을 등록하는 것이다. 이 경우 접수 직후 메모리 작업 등록이 누락되더라도 원문에서 다시 찾을 수 있다. 다만 이미 처리 중이거나 재시도를 끝낸 Message를 매번 새 작업으로 만들지 않도록 처리 상태를 확인해야 한다.
 
@@ -117,6 +127,30 @@ Server가 Provider 응답을 최대 10초 기다린다고 가정하자. 10초가
 
 재시작할 때 시도 횟수를 0으로 되돌리면 정한 한도를 우회할 수 있다. 중단 후 재개까지 같은 작업의 예산에 포함하려면 횟수를 영속적으로 관리하고, 어떤 지점에서 횟수를 기록할지 정해야 한다. 외부 요청과 횟수 기록도 별개이므로 중간 종료의 처리 규칙이 필요하다.
 
+### 호출 예약과 Provider 실행은 다르다
+
+한도를 먼저 확보하려면 외부 요청 전에 짧은 DB Transaction으로 실행권과 잔여 한도를 확인하고 한 번의 요청을 예약해 Commit할 수 있다. 이후 Provider를 Transaction 밖에서 호출하고 확인한 결과를 별도로 기록한다. Job을 등록했다는 사실, 호출을 예약했다는 사실, 실제 Provider 결과를 확인했다는 사실은 서로 다르다.
+
+예약 Commit 직후 Process가 종료되면 실제 요청은 아직 전송되지 않았을 수도 있다. 반대로 요청은 접수됐지만 결과를 기록하기 전에 종료됐을 수도 있다. 따라서 예약 횟수만으로 Provider 실행·청구 횟수를 확정하지 않는다. 결과가 불명확한 예약을 자동 반환하면 재시작할 때 호출 한도를 반복 사용할 위험이 있다.
+
+외부 호출까지 같은 DB Transaction 안에 넣어도 이 문제를 해결하지 못한다. 예를 들어 예약을 기록한 뒤 Provider가 요청을 실행했고, 전송 상태의 Commit 직전에 Process가 종료됐다고 가정하자. DB의 예약·전송 기록은 Rollback될 수 있지만 외부 AI 실행은 되돌아가지 않는다. **Transaction이 열린 동안 실행한 코드와 그 Transaction으로 함께 취소할 수 있는 작업은 다르다.** Spring도 원격 호출에 Transaction Context를 자동으로 전파하지 않는다. [Spring Transaction 설명](https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative.html)
+
+먼저 예약을 Commit하는 방식도 전송 여부를 완벽히 증명하지는 않는다. 불명확한 시도의 기록을 남겨 한도를 지키고, 가능한 Provider 결과 조회·공식적으로 지원되는 멱등성 기능과 복구 정책으로 후속 처리를 판단하는 방식이다. 구체적인 기록 이름과 복구 조건은 Application과 Provider의 계약에서 정한다.
+
+### 전체 생성 요청과 출력 보완 요청을 함께 제한한다
+
+전체 생성 요청 상한과 출력 보완 요청 상한은 서로 다른 조건이다. 최초 요청은 전체 횟수에만 포함하고, 누락된 Field를 보완하기 위한 새 생성 요청은 전체 횟수와 추가 보완 횟수에 모두 포함한다. 두 상한을 설정값으로 분리하면 남은 횟수와 실패 유형에 따라 다음 요청을 허용할지 판단할 수 있다. 남은 전체 횟수가 있다는 이유만으로 모든 오류를 재시도하지는 않는다.
+
+예를 들어 전체 상한 4회·추가 보완 상한 2회라고 가정하자. 누락 → 누락 → 정상 응답이라면 전체 생성 요청 3회와 추가 보완 2회를 사용한다. 세 번째 응답도 누락이라면 전체 횟수가 한 번 남아 있어도 보완 상한에 도달했으므로 더 보완하지 않는다. 반대로 전체 상한 2회라면 보완 상한에 여유가 있어도 전체 2회에서 중단한다. 숫자는 정책 비교용 가정이며 보편적인 권장값이 아니다.
+
+같은 누락이 반복되면 생성 결과뿐 아니라 요청 Schema·Server 검증 규칙·Adapter 변환을 살펴본다. 변환 Code가 Field를 버리는 오류라면 Provider를 다시 호출해도 해결되지 않는다. 단순한 반복만으로 원인을 확정하지는 않지만, 확인된 설정·변환 오류를 생성 재시도로 고치려 하지 않는다.
+
+### 한 요청의 대기 시간과 Job 전체 처리 기한은 다르다
+
+한 번의 Provider 요청에서 응답을 기다리는 한도와 Job 전체의 처리 기한도 분리한다. 한 요청의 대기 한도를 넘기면 가능한 기존 결과 조회·확인을 거쳐 제한적 재호출을 검토할 수 있다. 이전 결과를 끝내 확인하지 못했다면 중복 실행·비용 가능성을 감수하는 재시도다. 재시도 사이에는 간격을 두고 전체 횟수·시간 조건을 함께 확인한다.
+
+Job 전체 처리 기한을 넘기면 새 생성 요청을 중단한다. 재시작할 때 횟수나 전체 기한을 새로 시작하지 않는다. 기한의 기준 시점과 Queue 대기 시간을 포함할지는 업무 정책에서 정한다. 생성 요청 상한에 도달해도 허용된 시간 안에서 기존 결과를 확인하는 것은 새 생성 요청과 다르다.
+
 ## AI 재호출과 DB 저장 재시도는 다른 작업이다
 
 검증된 AI 응답 객체가 현재 Server 메모리에 남아 있고, 저장 Transaction의 Rollback까지 확인했다면 DB 저장을 다시 시도할 수 있다. 이미 사용할 결과가 있으므로 저장 오류를 해결하려고 AI에 새로 생성해 달라고 요청할 필요는 없다.
@@ -160,6 +194,7 @@ Spring의 `@Async`는 호출자의 흐름과 별도로 작업을 실행하도록
 다음은 실패 실험에서 확인할 항목이다. 실제 결과는 Test나 Database 관찰로 확인한다.
 
 - Provider 실패: 호출 횟수와 실패 경로, Suggestion 0건, 이미 접수한 Ticket·Message 유지.
+- 접수 실패: Message·Job 저장 오류로 접수 Transaction이 Rollback된 뒤 새 Ticket·Message·Job이 모두 없는지, Provider 호출도 없는지.
 - 출력 검증 실패: Provider 호출은 했지만 Suggestion 저장 경로에는 진입하지 않았는지.
 - 저장 실패: 유효한 응답 뒤 저장을 시도했지만 결과 Transaction 종료 후 제안이 없는지, 성공 상태만 남지 않았는지.
 - 저장 재시도: 유효한 객체를 재사용할 때 Provider 호출 횟수는 늘지 않고, 제안은 한 건만 Commit되는지.
@@ -179,5 +214,10 @@ Test Double의 호출 횟수는 실제 Provider의 실행·요금 근거가 아�
 8. 검증된 응답이 메모리에 남아 있는 경우와 Process 재시작으로 사라진 경우에 저장 재시도 조건은 어떻게 달라지는가?
 9. Suggestion 저장과 Job 완료 표시를 같은 Transaction에 두는 이유는 무엇인가?
 10. 메모리 Queue에 작업을 넣는 것과 재시작 후 작업을 복구하는 것은 왜 다른가?
+11. 출력 보완 요청은 전체 생성 횟수와 보완 횟수 중 어느 쪽에 포함되며, 한쪽 상한만 남아 있으면 계속 보완할 수 있는가?
+12. 한 요청의 대기 한도와 Job 전체 처리 기한을 넘긴 경우에는 각각 어떤 작업을 더 할 수 있는가?
+13. Job 등록 실패로 새 접수가 Rollback되는 경우와, 접수 Commit 뒤 Provider 실패에도 원문이 남는 경우는 왜 모순되지 않는가?
+14. Job을 같은 Transaction에 저장했더라도 Worker의 재조회가 필요한 이유는 무엇인가?
+15. 호출 예약 횟수와 Provider 실행 횟수는 왜 다를 수 있으며, 외부 호출을 DB Transaction 안에 넣어도 그 차이를 없애지 못하는 이유는 무엇인가?
 
 입력·출력·권한·화면 표시의 검증은 [AI 제안의 신뢰 경계와 검증 근거](./ai-suggestion-trust-boundaries.md)를 참고한다.
