@@ -1,7 +1,7 @@
 # SW AI Lab 심화과정 12주 주차별 Roadmap
 
 > 작성일: 2026-08-18
-> 최종 수정일: 2026-10-04
+> 최종 수정일: 2026-10-06
 > 상태: Active
 > 전체 기간: 기술 심화 8주 + 취업 심화 4주
 > 공통 실습: AI Helpdesk Learning Lab
@@ -314,7 +314,7 @@ Week 5는 Event Loop·Rendering·Promise의 일부 실행 근거를 확보했지
 
 최초 Message와 자동 처리의 설계·확인 순서는 [Week 7 계획](../week7/weekly-plan.md)과 [계약 초안](../week7/ai-suggestion-contract-draft.md)에서 관리한다. 상태·재시도·복구 세부 계약은 질문을 통해 검토하며, 설계 합의를 구현 완료로 표시하지 않는다.
 
-10/3 학습 회차는 마감했으며 Week 7은 진행 중이다. 남은 실제 AI 평가·개인정보 전처리 실험·HTTP 연결·자동 처리·Suggestion 저장·복구·Browser 검증은 10/5 야간 또는 10/6에 재개한다. 10/4에는 새 학습을 배정하지 않는다. 재개 후 실제 진도와 Week 8 가용시간을 점검하되 Cloud·HTTPS 범위를 줄이거나 미완료 학습을 Week 9로 자동 이월하지 않는다.
+10/5 학습 회차는 연장 실험을 포함해 마감했다. 개인정보 6회·기존/보완 Prompt 비교 각 52회, HTTP 접수·Job 실행권·결과 저장과 실제 Java AI→PostgreSQL 한 건을 확인했다. Week 7은 진행 중이며 자동 Worker·조건부 재시도·중단 복구·AGENT 조회·Browser·요약과 Injection 수동 평가·독립 설명·WIL은 10/6에 이어간다. 실험 보고서는 실제 실행일을 유지한다. 10/4 학습 제외는 유지하며 Week 8의 Cloud·HTTPS 범위를 줄이거나 미완료 학습을 Week 9로 자동 이월하지 않는다.
 
 ## 8주차 — DevOps·System·AWS Cloud·HTTPS 수직 배포
 
@@ -454,3 +454,4 @@ Weekly Plan의 Baseline 이후 학습 항목을 조용히 추가하거나 완료
 | 2026-09-21 | Week 5 미완료와 PostgreSQL Adapter를 Week 6에서 수직 마감하고, AI Native를 Week 7, DevOps·System·AWS Cloud·HTTPS를 Week 8로 재배치 | 기술 심화 공지는 선택 기술을 실제 활용 가능한 수준과 라이브 서비스 흐름으로 연결하도록 요구하며, 수평 기능보다 수직 깊이를 우선한다는 사용자 결정 | Week 1~8은 `DEEP_LEARNING_MODE`, Week 9~12는 취업 우선 `AI_ASSISTED_PRODUCTIZATION_MODE`로 운영 |
 | 2026-09-30 | Week 7 입력을 Ticket의 최초 Message로 분리하고 접수 성공 뒤 자동 AI 처리·최소 복구를 단계적으로 연결 | 문의 원문은 AI 실패와 독립적으로 보존하고, 기본 흐름부터 검증한다는 설계 합의 | 평가·Guardrail 학습은 유지하며 후속 대화·공식 답변과 분산 운영은 제외. 세부 계약·구현·평가는 아직 미완료 |
 | 2026-10-04 | 10/3 회차를 마감하고 Week 7 잔여 과업을 10/5 야간 또는 10/6에 재개 | 사용자의 종료·재개 일정 요청 | 학습 범위와 10/4 제외 유지. 실제 AI 개인정보 실험·전송 직전 입력 검사를 포함하고 재개일 누적 예산 확인. Week 8 시간 배분은 재점검하며 Week 9 자동 이월 없음 |
+| 2026-10-06 | 10/5 회차의 실제 AI 비교·접수·예약·결과 저장·Java Live 근거를 반영하고 남은 과업을 10/6에 재개 | 사용자의 학습 회차 마감·기록·Commit 요청 | 실제 실행일과 학습 회차를 구분. 자동 Worker·복구·조회·Browser·수동 평가·복습·WIL을 유지하고 Week 8 Cloud·HTTPS 축소·Week 9 자동 이월은 하지 않음 |

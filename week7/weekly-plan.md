@@ -1,10 +1,10 @@
 # Week 7 학습 계획 — LLM Structured Output·평가·Guardrail
 
 > 작성일: 2026-09-29
-> 최종 수정일: 2026-10-04
-> 상태: In Progress — 10/3 회차 마감. 접수 원자성·독립 Java 출력 검증·공통 Prompt 보완까지 진행했으며, 미완료 과업은 10/5 야간 또는 10/6에 재개
+> 최종 수정일: 2026-10-06
+> 상태: In Progress — 10/5 학습 회차 마감, 실제 Java AI→PostgreSQL 한 건 확인. 남은 Worker·복구·Browser·수동 채점은 10/6에 재개
 > 초기 기간: 2026-09-29 ~ 2026-10-03
-> 이월 재개: 2026-10-05 야간 또는 2026-10-06
+> 이월 재개: 2026-10-06 — 10/5 회차의 연장 실험은 해당 Study Note에 포함하고 Lab Report는 실제 실행일 유지
 > 학습 제외일: 2026-10-04 일요일
 > 초기 권장 순학습 시간: 40시간 — 휴식·식사 시간 제외. 실제 투입 시간·잔여 과업의 소요 시간과는 구분
 > 모드: `DEEP_LEARNING_MODE`
@@ -14,7 +14,7 @@
 
 Week 6에는 최소 Browser UI에서 Session·CSRF를 유지하며 Ticket을 실제 PostgreSQL에 생성·조회했다. 9월 29일 기록상 Java Test 61개와 JavaScript Test 12개가 통과했고, 실제 Browser와 Database Row를 함께 확인했다. 이 결과는 AI 기능의 근거가 아니다.
 
-현재 HTTP의 Ticket 입력은 `title` 하나이며 Spring에 연결된 AI 호출과 Suggestion 저장 기능은 없다. 별도 접수 Service에서는 최초 Message·`PENDING` Job의 PostgreSQL 저장과 Rollback을 검증했다. 독립 스크립트로 OpenAI의 Prompt-only와 Structured Outputs 응답 두 건은 확인했다. Week 7에는 최초 문의 Message를 입력으로 삼아 AI 제안 한 가지만 더한다. Ticket은 대화 묶음, Message는 원문, Job은 AI 처리 상태, Suggestion은 검증된 결과로 구분한다. AI가 Ticket 상태를 자동 변경하거나 공식 답변을 게시하지 않는다.
+PostgreSQL의 HTTP 접수는 `title`·`body`를 받아 인증 작성자와 최초 Message·`PENDING` Job까지 저장한다. 기존 In-memory 제목 전용 실험은 별도로 보존했다. 검증된 출력의 제안·복수 Category·Job 완료는 별도 결과 Transaction으로 저장한다. Processor를 한 번 직접 실행한 실제 Java Provider·PostgreSQL 연결은 확인했고, 자동 Worker의 실행·복구는 남아 있다. 독립 Provider 비교와 이 저장 실험을 구분한다. Week 7에는 최초 문의 Message를 입력으로 삼아 AI 제안 한 가지만 더한다. Ticket은 대화 묶음, Message는 원문, Job은 AI 처리 상태, Suggestion은 검증된 결과로 구분한다. AI가 Ticket 상태를 자동 변경하거나 공식 답변을 게시하지 않는다.
 
 ## 이번 주 목표
 
@@ -68,7 +68,7 @@ Tool Calling Spike는 가짜 Tool과 허용 목록을 이용한다. 실제 외�
 
 ## 평가·검증 설계
 
-고정 Dataset v2 초안은 실존 사용자 정보가 없는 합성 문의 13건이다. 기존 정상 4건, 모호 3건, Prompt Injection 3건, 민감 정보 취급 2건을 유지하고 복수 문제 1건을 추가한다. 정답을 억지로 하나로 정할 수 없는 Case는 `판단 보류` 기준을 Rubric에 명시한다. Prompt-only와 Schema 강제 방식을 같은 Dataset·Model 설정으로 각각 두 번 실행하는 52회 비교를 기본안으로 검토한다. 이전 48회보다 4회 늘어난 계획이다. 10월 2일 이번 비교의 비용은 $1 이내로 승인받았으며, 우선 N01에서 최대 두 번 호출한다. 전체 52회 평가는 기준을 고정한 뒤 진행하며 자동 실행하지 않는다.
+고정 Dataset v2 초안은 실존 사용자 정보가 없는 합성 문의 13건이다. 기존 정상 4건, 모호 3건, Prompt Injection 3건, 민감 정보 취급 2건을 유지하고 복수 문제 1건을 추가한다. 정답을 억지로 하나로 정할 수 없는 Case는 `판단 보류` 기준을 Rubric에 명시한다. Prompt-only와 Schema 강제 방식을 같은 Dataset·Model 설정으로 각각 두 번 실행하는 52회 비교다. 10/2 N01 예비 두 건에 이어, 10/5 별도의 하루 누적 $1 승인 아래 개인정보 6회·고정 비교 52회와 공통 Prompt v4 재비교 52회를 실행했다. 기대값·Dataset은 유지했으며 Case별 수동 채점은 남아 있다.
 
 | 지표 | 확인 방법 | 해석 경계 |
 |---|---|---|
@@ -93,7 +93,7 @@ Prompt·Schema·Dataset은 Version을 붙여 변경 전후를 비교한다. 원�
 
 ## 날짜별 실행 계획
 
-아래 표는 10/3 회차 마감을 반영한 실행 계획이다. 시간 열의 기존 배정은 9/29에 잡은 초기 순학습 시간이며 실제 투입 시간이나 잔여 작업량이 아니다. 자정을 넘겨 이어진 문답은 해당 학습 회차의 Note에 포함하고, 실험 보고서는 실제 실행일을 유지한다. 남은 평가·검증·수직 구현은 10/5 야간 또는 10/6에 재개한다.
+아래 표는 10/5 회차 마감을 반영한 실행 계획이다. 시간 열의 기존 배정은 9/29에 잡은 초기 순학습 시간이며 실제 투입 시간이나 잔여 작업량이 아니다. 연장된 학습은 해당 회차의 Note에 포함하고 실험 보고서는 실제 실행일을 유지한다. 남은 자동 실행·복구·조회·Browser·수동 평가는 10/6에 재개한다.
 
 | 날짜 | 초기 배정 | 학습·실험·적용 | 종료 조건·현재 근거 |
 |---|---:|---|---|
@@ -103,7 +103,8 @@ Prompt·Schema·Dataset은 Version을 붙여 변경 전후를 비교한다. 원�
 | 10/2 금 | 9시간 | 실제: 복수 Category·전체 Priority 토의 → N01 실제 예비 비교·핵심 누락 평가 → 13건·52회 평가의 오프라인 준비 → 보안·전송 최소화 방향 → 가짜 Tool Calling 실행 | 연장 구간 포함 회차 마감. JavaScript 54개 통과. 전체 고정 평가·전처리·Spring AI·Message/Job/Suggestion Migration과 수직 Test는 미실시 |
 | 10/3 토 | 초기 9시간 | 실행권·호출 예약·Transaction 문답, 접수 원자성 PostgreSQL 실습, Java 출력 검증, `ABSTAIN` 사례·공통 Prompt 보완, 전송 전 개인정보 확인 기준 | 회차 마감. 전체 Java 140개·JavaScript 56개 통과. 전처리·실제 전체 평가·HTTP 연결·자동 처리·Suggestion·복구는 미완료 |
 | **10/4 일** | **0시간** | **새 학습·구현 배정 없음** | **자정 이후의 회차 마감 기록은 10/3 Note에 포함** |
-| 10/5 월 야간 또는 10/6 화 | 재개 시 가용시간 확인 | 평가 조건·당일 누적 예산 확인 → 전처리와 실제 AI 실험·전송 입력 검사 → 고정 평가·실패 경계 → HTTP·Worker·Suggestion → 복구·Browser·회귀·WIL | 아래 재개 순서에 따라 남은 범위를 유지. 재개일을 전체 완료일로 간주하지 않음 |
+| 10/5 월 회차·연장 실험 | 실제 투입 시간 미집계 | 종류별 전처리·실제 AI 비교 → HTTP 접수·Job 실행권·결과 저장 → 단일 Processor·Spring AI Adapter → 실제 Java AI 저장 한 건 | 회차 마감. 개인정보 6회·v3/v4 각 52회, 무료 Java 318개·JavaScript 104개·ESLint와 별도 Live Test 1개 통과. 자동 Worker·복구·Browser·수동 평가는 미완료 |
+| 10/6 화 재개 | 재개 시 가용시간 확인 | 재시도 핵심 질문 → 자동 Worker·대기·조건부 재예약 → 동일 DB의 중단 복구 → AGENT 조회·Browser → 수동 평가·복습·최종 회귀·WIL | 아래 순서와 완료 Gate를 유지. 재개일을 전체 완료일로 간주하지 않음 |
 
 10월 3일은 초기 목표 종료일이었지만 Week 7 완료 Gate는 아직 남아 있다. 선택한 학습 키워드와 10/4 학습 제외는 유지한다. 재개 시 가용시간과 선행 조건을 확인하고, 실제 진도에 따라 Week 8 시간 배분도 점검한다. Week 8의 Cloud·HTTPS 범위를 줄이거나 미완료 학습을 Week 9로 자동 이월하지 않는다. 블로그 게시·포럼 등록은 별도 공개 절차다.
 
@@ -113,13 +114,21 @@ Prompt·Schema·Dataset은 Version을 붙여 변경 전후를 비교한다. 원�
 - 합의한 방향: Ticket은 대화 묶음, 원문은 Message에 저장, 접수 원본은 AI와 독립 보존, 최종 B 방식과 단계적 학습. 전체 Priority는 개별 문제와 보고된 누적·결합 영향으로 판단. 유효한 `ABSTAIN`은 Job `ABSTAINED`·Suggestion 0건으로 기록하며, 문의 Priority와 보안 신호를 분리하고 AI 전송용 복사본의 불필요한 민감 정보를 제거.
 - 접수 원자성 합의: Ticket·최초 Message·`PENDING` Job을 같은 Transaction으로 Commit. Job 등록 실패도 접수 실패이며, Commit된 문의는 이후 AI 실패로 취소하지 않음. Provider 호출은 Transaction 밖에서 하고 Worker는 DB의 실행 대상 Job을 다시 조회.
 - 재시도 원칙 합의: 전체 생성 요청과 추가 보완 요청의 상한을 설정값으로 분리하고 실패 유형별 조건을 함께 확인. 요청 한 번의 대기 한도·재시도 간격·Job 전체 처리 기한을 구분하며 재시작으로 횟수나 전체 기한을 초기화하지 않음. 결과 확인을 마쳐도 복구할 수 없는 결과 불명 Job은 사유를 남겨 `FAILED`로 종료.
-- 잠정안: 나머지 Job 상태·복구 정책, 추가 `ABSTAIN` 경계 사례, 전체·보완 상한과 시간 설정의 구체값·오류별 재시도 조건, 본문·요약 길이와 조회 표현, 전처리·탐지·원문 보관의 세부 정책.
-- 실제 확인: N01의 독립 Provider 응답 두 건과 원문 대조. [최소 비교 기록](./lab-reports/2026-10-02-openai-structured-output-pilot.md).
+- 정책 초기값 승인: Job별 설정 Snapshot, 전체 생성 3회·추가 보완 1회, 요청 대기 60초·실행권 120초·Backoff 5초·최초 Claim부터 전체 300초. 누적 예약은 0부터 증가하고 재시작·설정 변경으로 초기화하지 않음.
+- 남은 계약: Provider 실패 유형별 재시도·기존 결과 조회와 결과 저장 재시도의 종료 기준, 추가 `ABSTAIN` 경계·요약 길이·조회 표현, 전처리·탐지·원문 보관의 세부 정책.
+- 실제 확인: N01의 예비 두 건과 10/5 개인정보 6회·고정 비교 52회. [최소 비교 기록](./lab-reports/2026-10-02-openai-structured-output-pilot.md), [고정 비교와 Prompt 보완](./lab-reports/2026-10-05-ai-output-policy-comparison.md).
 - 실제 접수 저장: Message·초기 Job의 V2와 별도 PostgreSQL 접수 Service 구현. 새 Integration Test 15개, 전체 Java Clean Test 76개·기존 JavaScript 54개 통과. [접수 원자성 실험](./lab-reports/2026-10-03-ticket-receipt-atomicity-lab.md).
 - 출력 계약 검증: 독립 Java 검증기 Unit Test 64개, 이후 전체 Java Clean Test 140개·JavaScript 54개 통과. 누락·추가·공백·길이·Enum과 `SUGGEST`/`ABSTAIN` 조합을 확인. [출력 검증 실험](./lab-reports/2026-10-03-ai-output-validation-lab.md).
 - 보류 사례 확인: 문의 의미를 해석할 수 없는 입력은 `ABSTAIN`, 확인 요청은 이해할 수 있는 정보 부족 입력은 `SUGGEST`로 구분. 공통 Prompt `prompt-v3-abstain-draft`와 새 준비 Test 2개를 추가한 JavaScript 56개 통과. 기존 13건·52회 계획 유지, 실제 AI 판단은 미실시.
-- 미실시: 13건 전체의 고정 비교 평가, 전송 전 민감 정보·Provider 실패 경계, 검증기 Runtime 연결·접수 HTTP 입력 연결, Worker·Attempt·호출 예약·Suggestion Migration과 Spring AI 처리, 새 Security·Browser 흐름과 복구 실험.
-- 준비 확인: 10/3에 10/2 미실시분을 재개해 13건·52개 최초 응답 비교 계획과 기대값 분리·예산 계산 Test를 추가. 새 Test 14개를 포함한 기존 JavaScript 41개 통과. 실제 전송·실행 간 예산 보존은 미구현.
+- 실행권 기반: 정책 설정·V3와 PostgreSQL Claim·예약 원장·이전 Attempt 차단을 구현. 새 Test 29개와 전체 Java 236개·JavaScript 79개, ESLint 통과. 자동 Worker·Provider·Suggestion 저장은 미연결. [Job 정책·예약 검증](./lab-reports/2026-10-05-job-policy-and-reservation-lab.md).
+- 결과 저장: V4와 별도 Category Table·결과 Service로 제안·분류·Job 완료를 함께 저장. 새 Test 19개와 전체 Java 255개·JavaScript 79개·ESLint 통과. 실제 PostgreSQL의 부분 실패 Rollback과 원문 보존, 중복·현재 Attempt를 확인. [제안 결과 저장 검증](./lab-reports/2026-10-05-suggestion-result-storage-lab.md).
+- 단일 Job 처리: 예약 Commit·고정 Message 입력·전송용 복사본·Provider Port·출력 검증·별도 결과 저장을 연결했다. 통제된 Provider와 실제 PostgreSQL의 처리 Test 19개는 실제 AI 호출과 구분한다.
+- Java Provider 연결: Spring AI 2.0.1 Adapter·직렬화된 Body 검사·SDK와 HTTP 재시도 차단·실패 종류와 `Retry-After` 전달을 구현했다. HTTP Test 44개와 전체 Java Clean Test 318개·JavaScript 104개·ESLint가 통과했다. [Java Provider 연결 검증](./lab-reports/2026-10-06-java-provider-adapter-lab.md), [10/5 회차 핵심 질문](./study-notes/2026-10-05-study-questions.md).
+- 실제 Java 실험: 합성 문의 한 건과 새 PostgreSQL Testcontainer에서 접수 Service·단일 Processor·실제 Spring AI 호출·제안 저장을 연결했다. 실제 HTTP 1회·`200`, Job `SUCCEEDED`, Suggestion·Category 각 1건, 원문 보존과 별도 Live Test 1개 통과를 확인했다. 요약 수동 평가는 `NOT_SCORED`, Browser E2E는 미실시다.
+- 실행기 기동 오류: 자식 환경의 `PATHEXT` 누락으로 Maven이 실행되지 않는데 종료 코드 `0`이 나오는 현상을 무료 점검으로 재현했다. 필요한 Windows 변수와 예약 전 기동 점검을 추가한 뒤, 사용자가 한 번의 수동 복구로 Live 실험을 실행했다. 이전 불명 예약은 유지했고, 이번 호출 사용량만 확인했다. 이전 비용과 하루 전체 합계는 미확인이다.
+- 남은 필수 확인: Case별 수동 채점, 자동 Worker의 대기·조건부 재시도와 가능한 결과 확인, 조회·Security·Browser 흐름과 Application 중단 복구 실험, 자료 없는 핵심 설명과 WIL.
+- 별도 후속 검토: 일반 개인정보 탐지와 운영 키 보관 정책. 현재 합성 입력 실험을 실제 고객 정보 처리나 운영 배포 검증으로 확대하지 않는다.
+- 준비 확인: 10/3에 10/2 미실시분을 재개해 13건·52개 최초 응답 비교 계획과 기대값 분리·예산 계산 Test를 추가. 당시 새 Test 14개를 포함한 JavaScript 41개 통과. 실제 전송·실행 간 예산 보존은 10/5 독립 실행기로 연결했다.
 - 독립 Spike 확인: 가짜 Tool의 정상·금지 이름·금지 인자·실행 중 실패는 각각 실행 1·0·0·1회. 새 Test 13개와 기존 41개를 함께 실행해 총 54개 통과. [실험 기록](./lab-reports/2026-10-03-tool-calling-validation-spike.md). 실제 Provider·DB 호출은 없으며 자료 없는 설명은 후속 확인.
 - 학습 기록: [9/30 핵심 질문과 설계 정리](./study-notes/2026-09-30-study-questions.md). 토의 정리를 자료 없는 독립 설명이나 실제 실행 근거로 대신하지 않는다.
 
@@ -149,23 +158,29 @@ Prompt·Schema·Dataset은 Version을 붙여 변경 전후를 비교한다. 원�
 4. Guardrail·경계 Test: 필드 누락·빈 문자열·공백·허용값 위반과 Provider 실패를 합성 응답 또는 Test Double로 분리한다. 실제 Provider 관찰과 혼합하지 않으며 잘못된 제안 저장 없음과 원문 보존의 검증 범위를 기록한다.
 5. Tool Calling 설명 확인: 가짜 Spike의 Code·Test 실행은 완료했다. 허용하지 않은 인자를 실행 전에 거부하는 이유와 Provider 요청 횟수·Tool 실행 횟수의 차이를 자료 없이 설명하는 것은 남아 있다. 실제 외부 작업이나 Ticket 상태 변경은 추가하지 않는다.
 
-10/2에 승인받은 $1은 해당 일자의 누적 상한이며 다음 실험일의 호출 예산으로 자동 갱신하지 않는다. 현재 준비 Code는 실제 전송과 실행 간 누계 보존을 지원하지 않는다. 유료 본 평가 전에 해당 일자의 호출 범위·상한과 누계 관리 방식을 확인한다.
+10/2에 승인받은 $1은 해당 일자의 누적 상한이며 다음 실험일의 호출 예산으로 자동 갱신하지 않는다. 10/2 회차 마감 당시의 준비 Code는 실제 전송과 실행 간 누계 보존을 지원하지 않았다. 이후 실행기 준비와 새 예산 승인은 다음 재개 기록에서 구분한다.
 
 ### 10/3 회차 마감과 10/5 야간·10/6 재개 순서
 
-10/3 문답에서는 DB Row Lock과 저장된 실행권, 현재 Attempt와 이전 실행의 결과, 새 생성 한도와 기존 결과 저장을 구분했다. 이후 접수 원자성의 첫 실습에 합의해 HTTP 입력을 바꾸지 않는 Service 단계부터 검증했다. 현재 V2의 Job 상태는 `PENDING`만 지원하며 자동 처리와 조회 화면은 아직 없다. [10/3 핵심 질문과 실습](./study-notes/2026-10-03-study-questions.md)
+10/3 문답에서는 DB Row Lock과 저장된 실행권, 현재 Attempt와 이전 실행의 결과, 새 생성 한도와 기존 결과 저장을 구분했다. 이후 접수 원자성의 첫 실습에 합의해 HTTP 입력을 바꾸지 않는 Service 단계부터 검증했다. 당시 V2의 Job 상태는 `PENDING`만 지원했고 자동 처리와 조회 화면은 없었다. [10/3 핵심 질문과 실습](./study-notes/2026-10-03-study-questions.md)
 
 접수 실습 뒤에는 Java 출력 계약 검증기를 독립적으로 구현했다. 구조가 맞는 거짓 요약도 통과하는 Case를 포함했으며, Provider 거부·전처리·실제 저장까지 완료한 것은 아니다. 이어서 의미를 해석할 수 없는 입력의 `ABSTAIN` 사례에 합의하고 두 방식의 공통 Prompt를 정렬했다. 마지막 실행 근거는 전체 Java 140개·JavaScript 56개 통과다. 이 회차의 실제 Provider 호출은 0회이며 여기까지 10/3 회차로 마감한다.
 
-개인정보 실험은 실제 AI 모델을 사용하라는 사용자 요청을 반영한다. 실제 개인정보 대신 합성 자리표시자를 사용하고, 최종 요약뿐 아니라 실제 전송 직전 요청 Body의 작업 지시·제목·본문에 불필요한 값이 남았는지 확인한다. 전송용 복사본 검사와 AI 응답 검사는 별도 근거다. 원문·Credential을 Log로 출력하지 않으며, 전처리와 이 실험은 아직 미실시다.
+개인정보 실험은 실제 AI 모델을 사용하라는 사용자 요청을 반영한다. 실제 개인정보 대신 합성 자리표시자를 사용하고, 최종 요약뿐 아니라 실제 전송 직전 요청 Body의 작업 지시·제목·본문에 불필요한 값이 남았는지 확인한다. 전송용 복사본 검사와 AI 응답 검사는 별도 근거다. 원문·Credential을 Log로 출력하지 않는다. 10/3 회차 마감 시점에는 전처리와 이 실험이 미실시였다.
 
-10/5 야간 또는 10/6에는 다음 순서로 재개한다.
+10/5에는 알려진 합성 값의 종류를 남기는 Java 치환기와 최종 Body 검사, 이를 사용하는 독립 API 실행기를 준비했다. 직렬화 순서 Test까지 보완한 입력 Test 32개·실험용 Bridge 14개·출력 Test 64개, 선택한 Java Test 총 110개가 통과했다. 공통 Prompt Test 보완 뒤 JavaScript 전체 74개·ESLint 검사도 통과했다. 실제 Java 전처리를 연결한 Dry run의 API 호출은 0회다. 이는 전체 Java 회귀나 Spring AI·Worker·PostgreSQL 제안 저장 완료가 아니다. [10/5 핵심 질문과 입력·판단 검증](./study-notes/2026-10-05-study-questions.md)
 
-1. 설명과 평가 조건: 새 접수·검증 Code의 핵심 경계를 설명하고 남은 기대값·보류 사례를 확인한다. Dataset·Rubric·Prompt를 고정하며, 재개일의 누적 호출 예산·결과 보존 방식을 확인한다.
-2. 입력 Guardrail: 전송 전 민감 정보 처리를 구현하고 실제 AI로 합성 입력을 실험한다. 전송 직전 요청을 검사하고, 접수 원문 보존과 안전한 Log를 확인한다. 실패 경계의 Unit Test·Test Double은 보완 근거로 사용한다.
-3. 고정 비교·실패 경계: 13건 × 두 방식 × 두 반복의 52회 본 평가를 수행한다. 개인정보 학습용 별도 호출은 52회 결과와 분리하되 그날 누적 비용에는 포함한다. Provider 거부·Timeout·연결 실패·잘못된 출력과 제안 저장 없음도 확인한다.
-4. 수직 연결: 접수 HTTP의 제목·본문·인증 작성자를 연결한다. 접수 Commit 뒤 Worker·Provider·출력 검증·Suggestion 저장을 실제 PostgreSQL까지 연결하고 원문 보존을 확인한다.
-5. 복구와 마감: 현재 Attempt·호출 한도 예약·실행 기한·재시도·중단 복구를 구현·검증한다. 이후 Session·Role·CSRF의 최소 Browser 흐름과 전체 회귀·정적 검사·Secret·Log 점검, WIL을 마무리한다.
+10/5 Helpdesk 실험 전체의 누적 상한 $1을 새로 승인받았다. 새 실행기는 호출 전 예약·실행 간 누계 보존·미정산 호출의 중단을 지원한다. N01·S01·S02 × 두 방식의 6회 개인정보 실험과 52회 고정 비교에서 두 방식 모두 형식 26/26 통과, 분류 후보 24/26·Priority 후보 20/26 일치였다. 이후 같은 Dataset·기대값으로 공통 Prompt v4 재비교 52회를 실행했고, 두 방식 모두 형식·결정·분류·Priority 후보 26/26이 일치했다. 요약·Injection 수동 채점은 남아 있다. 이날 110회의 누적 비용 추정은 $0.0165825이고 미정산 예약은 없다. 전용 PowerShell의 Helpdesk 키를 사용하며 논문용 키는 사용하지 않는다.
+
+### 10/5 회차 마감과 10/6 재개 순서
+
+10/5 회차에서는 단일 Processor·Spring AI Adapter·실제 Java AI 저장 한 건까지 확인했다. 실제 실행일이 10/6인 연장 실험도 10/5 Study Note에 포함하며, Lab Report는 실행일을 유지한다. 마지막 무료 전체 회귀는 Java 318개·JavaScript 104개·ESLint 통과이고 별도 Live Test 한 건도 통과했다. 남은 범위는 10/6에 아래 순서로 이어간다.
+
+1. 재시도 질문과 자동 Worker: Backoff·`Retry-After`·전체 기한의 마지막 질문부터 확인한다. Commit된 Job을 찾아 실행하고 실패 유형별 대기·현재 Attempt·남은 한도를 지키는 조건부 재예약을 연결한다.
+2. 중단 복구: 같은 PostgreSQL을 유지한 Application 종료·재시작에서 미완료 Job과 예약·기한을 복원하고, 가능한 기존 결과 확인·이전 Attempt 차단·중복 제안 방지를 검증한다.
+3. 조회·Browser: AGENT에게 작업 상태·제안을 보여주는 최소 조회를 연결하고 Session·Role·CSRF, 접수 `201`과 AI 완료의 분리, 안전한 Text 표시를 실제 Browser에서 확인한다.
+4. 평가·독립 설명: v3/v4 비교 결과의 요약·Injection 수동 채점을 진행한다. 형식·후보 Label 개선과 요약 충실도를 구분하고 Tool Calling·Transaction·실행권의 핵심 개념을 자료 없이 설명한다.
+5. 회귀·공개 마감: 남은 구현 뒤 전체 회귀·정적 검사·Secret·Log 점검을 다시 실행하고 WIL을 작성한다. 블로그 게시·포럼 등록은 확인된 뒤 완료로 처리한다.
 
 현재 논리적 출력 초안으로 평가 자료를 준비하는 것과 그 초안을 Lab 구현 계약으로 확정하는 것은 다르다. 추가 보류 경계나 아직 검토하지 않은 기대값을 임의로 확정하지 않는다. Job 등록의 접수 Transaction 포함은 합의했으며, 실행권·재시도·복구 세부 계약은 구현 전에 검토한다. 이 검토를 평가 준비와 독립적인 최소 AI 비교까지 모두 막는 선행 조건으로 확대하지 않는다.
 
@@ -185,7 +200,29 @@ Prompt·Schema·Dataset은 Version을 붙여 변경 전후를 비교한다. 원�
 - 권한·범위: 기존 `USER`·`AGENT` 접수 권한은 유지한다. 최초 Message 입력·AI 연결만 이번 주 구현하며, 고객의 자기 대화 조회·후속 메시지·공식 답변 기능은 이후 별도 계약이다.
 - 적용 대상: 생성 요청·Application·Domain·Repository·Browser 입력·Migration·관련 Test와 AI 입력 조회. Job 등록은 접수 Transaction에 포함한다. 실행권·중단 복구와 결과 저장의 구체적인 조건은 후속 검토한다.
 - 후속 검증: 기존 Ticket 조회·Message 0건, 새 접수 세 Row의 원자성과 Message·Job 실패의 Rollback, Commit 뒤 AI 실패의 Ticket·Message 유지, 같은 입력의 제안 저장·작업 상태를 실제 PostgreSQL에서 확인한다.
-- 상태: Message·초기 Job V2와 별도 접수 Service의 PostgreSQL Test는 완료. 접수 HTTP 연결·Spring AI·Suggestion Migration·새 Browser 수직 Test는 미실시. 독립 Provider 예비 호출 두 건과 Java 출력 계약 Unit Test는 별도 근거다.
+- 상태: Message·초기 Job V2와 접수 HTTP 연결, V3 실행권·예약과 V4 제안 결과 저장의 PostgreSQL Test는 완료. 본문 `body`·인증 작성자·2,000 Code Point 계약과 실행 모드 분리를 적용했다. 단일 Job 처리와 Spring AI Adapter의 무료 Test에 이어 실제 Java AI 호출·PostgreSQL 저장 한 건도 확인했다. 자동 Worker·새 Browser 수직 Test와 독립 Provider 비교의 수동 내용 평가는 남아 있다.
+
+### 10월 5일 HTTP 접수 검증
+
+`postgres`에서 `title`·`body`와 `Authentication.getName()`을 접수 Service에 전달한다. 본문은 앞뒤 Java 공백을 제외한 2,000 Unicode Code Point까지 허용하고 원문은 그대로 보존한다. 기존 `in-memory` 제목 전용 생성과 공통 조회는 유지했다.
+
+새 HTTP Test 17개에서 USER·AGENT 작성자, 세 Row Commit, 본문 검증 `400`, CSRF `403`, 익명 `401`, Message·Job 저장 실패의 접수 Rollback과 안전한 Log를 확인했다. Domain 길이 Test 4개를 포함해 전체 Java Clean Test 207개·JavaScript 79개와 ESLint가 통과했다. [HTTP 접수 실험](./lab-reports/2026-10-05-ticket-receipt-http-lab.md)
+
+새 본문 UI는 준비했지만 실제 Browser E2E는 아직 실행하지 않았다. `PENDING` Job은 저장된 작업 기록이며 Worker·실제 AI 처리·Suggestion 저장이나 복구가 완료됐다는 뜻은 아니다.
+
+### 10월 5일 Job 정책·실행권·예약 검증
+
+Job별 정책 Snapshot과 누적 예약 증가 표현, 시간·횟수 초기값을 승인했다. V3는 기존 문의와 V2 Job을 보존하며 정책·현재 Attempt·예약 원장과 기한을 추가한다. Claim은 별도 Transaction으로 Commit하고, Lease 만료만으로 일반 조회가 재호출을 예약하지 않도록 결과 확인 후 복구 경로와 분리했다.
+
+정책 10개·Migration 1개·실행권 18개를 포함한 전체 Java 236개·JavaScript 79개와 ESLint가 통과했다. 동시 Claim·복구, 예약 원장 실패 Rollback, 누적 한도·기한과 이전 Attempt의 조건부 갱신을 실제 PostgreSQL에서 확인했다. Provider 호출은 0회였으며 자동 Worker·Provider 조회·Suggestion 결과 저장·실제 Application 재시작은 다음 단계다. [검증 기록](./lab-reports/2026-10-05-job-policy-and-reservation-lab.md)
+
+### 10월 5일 제안 결과 저장 검증
+
+복수 Category를 부모 제안과 별도 분류 Table로 저장하는 권장안을 승인했다. V4는 V1~V3와 접수 원문·Job 정책·예약을 유지하며 결과 저장 Table과 완료 상태를 추가한다. 결과 Service는 현재 Attempt를 Row Lock 안에서 확인하고 제안·전체 분류·Job 완료를 같은 짧은 Transaction으로 Commit한다.
+
+새 결과 Test 18개·Migration Test 1개를 포함해 전체 Java Clean Test 255개·JavaScript 79개와 ESLint가 통과했다. 두 번째 분류 INSERT나 완료 UPDATE 실패 시 결과 전체 Rollback, 이전 `RUNNING` 유지, 접수 원문 보존을 확인했다. 생성 한도 소진과 Lease 만료만으로 현재 응답을 버리지는 않았으며 이전 Attempt와 중복 결과는 변경하지 않았다. [검증 기록](./lab-reports/2026-10-05-suggestion-result-storage-lab.md)
+
+이번 Test는 합성 출력 객체를 실제 PostgreSQL에 저장했다. Provider·자동 Worker·새 Browser·실제 Process 중단 복구는 실행하지 않았다. 구조 검증·실행권·결과 저장을 연결한 것과 실제 AI 수직 흐름을 완성한 것을 구분하며 Week 7은 In Progress로 유지한다.
 
 ## 실행 중 판단할 정책·저장 경계
 
@@ -205,7 +242,7 @@ Prompt·Schema·Dataset은 Version을 붙여 변경 전후를 비교한다. 원�
 | AI 응답이 JSON Schema를 통과하지만 내용이 틀림 | Dataset Rubric과 Human 검토를 별도로 적용한다. Schema 점수만으로 품질을 주장하지 않는다. |
 | 통합 구현이 학습을 압도 | UI 장식·추가 화면·복수 Provider를 줄인다. 평가·Guardrail·실제 PostgreSQL 수직 연결은 삭제하지 않는다. |
 | Prompt Injection이 출력 또는 행동을 오염 | 사용자 입력을 명령으로 승격하지 않고, 출력 검증과 Side Effect 금지를 Code 경계에서 적용한다. |
-| Week 7의 이월 과업으로 Week 8 가용시간이 줄어듦 | 10/5 야간 또는 10/6 재개 시 실제 잔여량·가용시간을 확인한다. 선택한 수직 범위와 Cloud·HTTPS는 유지하며 미실행 Gate를 완료로 바꾸거나 Week 9로 자동 이월하지 않는다. |
+| Week 7의 이월 과업으로 Week 8 가용시간이 줄어듦 | 10/6 재개 시 실제 잔여량·가용시간을 확인한다. 선택한 수직 범위와 Cloud·HTTPS는 유지하며 미실행 Gate를 완료로 바꾸거나 Week 9로 자동 이월하지 않는다. |
 
 ## 산출물과 Project Card
 
@@ -227,8 +264,19 @@ GitHub Project에는 다음 다섯 Card를 계획한다. 첫 Card만 `Ready`, �
 
 ## Week 7 완료 Gate
 
+### 10월 5일 회차 마감 시 잔여 범위 — 10월 6일 재개
+
+10월 5일에 시작한 과업은 WIL 작성·게시만 남은 상태가 아니다. 접수·예약·검증·결과 저장과 Java Provider Adapter의 Test에 이어 실제 AI 저장 한 건을 확인했다. 자동 실행·복구·학습 확인은 계속 진행한다.
+
+1. 완료: 합성 문의 한 건의 실제 Java AI 호출·제안 저장·원문 보존을 확인했다. Processor를 직접 한 번 실행한 선택 실험이며 자동 Worker·Browser E2E는 별도 검증한다.
+2. 자동 Worker에 대기·실패 유형별 재시도·현재 Attempt·횟수·전체 기한을 연결하고 같은 DB를 유지한 Application 중단 복구를 검증한다.
+3. AGENT의 작업 상태·제안 조회와 Session·Role·CSRF를 유지하는 최소 Browser 흐름을 확인한다.
+4. 고정 비교 결과의 요약·Injection 수동 평가, 핵심 개념 복습과 최종 회귀·노출 점검 뒤 WIL을 작성하고 게시·포럼 등록을 확인한다.
+
+### 완료 체크
+
 - [ ] Prompt 지시, 사용자 데이터, Model 출력과 Application 검증의 경계를 자신의 말로 설명했다.
-- [x] 실제 Provider에서 Prompt-only와 Schema 강제 응답을 같은 조건으로 비교했다. N01·방식별 1회인 예비 비교이며 전체 고정 평가와 구분한다.
+- [x] 실제 Provider에서 Prompt-only와 Schema 강제 응답을 같은 조건으로 비교했다. N01 예비 두 건에 이어 13건·52회 고정 비교를 실행했고 결과와 Version을 보존했다.
 - [ ] Versioned Dataset·Rubric과 구조·내용·실패·지연·사용량 결과가 있다.
 - [ ] 대표 Injection·민감 출력·Provider 실패를 재현하고 제한한 경계를 설명했다.
 - [ ] 검증된 제안만 실제 PostgreSQL에 별도 저장하며 AI 실패 시 접수 완료된 Ticket·최초 Message가 보존된다.
@@ -262,6 +310,12 @@ GitHub Project에는 다음 다섯 Card를 계획한다. 첫 Card만 `Ready`, �
 | 2026-10-03 | JavaScript의 독립 구조 검사만 있으며 Server 출력 검증기 미구현 | 순수 Java 검증기와 새 Unit Test 64개 구현, 전체 Java 140개·JavaScript 54개 통과 | 계속 학습·구현 요청에 따라 계약의 형식 경계부터 실습 | 내용 판정·입력 전처리·Provider 실패·저장·보류 사례는 남김. 기존 Field·Enum·학습 범위·10/4 제외 유지 |
 | 2026-10-03 | 구체적인 보류 사례 미확정 | 문의 의미를 해석할 수 없는 입력의 `ABSTAIN`과 정보 부족 요청의 `SUGGEST`를 구분 | 사용자 동의 후 계약·공통 Prompt에 반영 | 새 Test 2개 포함 JavaScript 56개 통과. 13건·52회 유지, 실제 AI·Job 저장 검증은 미실시 |
 | 2026-10-04 | 10/3에 남은 평가·검증·수직 구현을 계속 진행할 예정 | 연장 구간을 포함해 10/3 회차 마감, 미완료 과업은 10/5 야간 또는 10/6에 재개 | 사용자의 회차 종료·재개 일정 요청 | 학습 범위·52회 본 평가·10/4 제외 유지. 실제 AI 개인정보 실험과 전송 직전 요청 검사 포함, 당일 누적 예산은 재개 전에 확인. Week 8 시간 배분은 재점검하며 Week 9 자동 이월 없음 |
+| 2026-10-05 | 전처리·실제 전송·실행 간 비용 누계 미구현 | 종류별 Java 치환·Body 검사와 독립 실행기 준비, 당일 합산 $1 승인 | 실제 AI로 전송 전 입력을 확인하는 실습 재개 | 최초 준비 때 선택한 Java 109개·JavaScript 71개 통과와 Dry run 호출 0회. 이후 직렬화와 Prompt Test 보완 결과는 아래에 기록 |
+| 2026-10-05 | 고정 Dataset 실제 응답 미확인 | 개인정보 6회·고정 비교 52회 확인, 같은 판단 오류에 공통 Prompt v4 준비 | 사용자 실행 결과의 형식·판단을 구분하고 정책 명확화안 승인 | 선택한 Java 110개·JavaScript 74개·ESLint 통과. 기대값·이전 결과 유지, 재비교·수동 채점·Spring 수직 연결·복구 Gate는 남김 |
+| 2026-10-05 | v4 재비교와 실행권의 구체적인 정책·DB 저장 미반영 | 보관된 v4 실제 52회 결과 집계를 반영하고, 승인한 정책 Snapshot·누적 예약·기한과 V3 실행권 기반 검증 | 실제 집계와 문서 상태 대조, 실행권 구현 승인 | v4의 두 방식 후보 Label 각 26/26 일치. Java 236개·JavaScript 79개 통과. 수동 채점·자동 Worker·Provider·Suggestion·Browser·Application 복구 Gate는 유지 |
+| 2026-10-05 | 제안·분류·Job 완료 결과 저장 미구현 | 별도 분류 Table·V4·현재 Attempt를 보호하는 결과 Transaction과 내부 조회 구현 | 분리 저장 권장안에 사용자 승인, Rollback과 Commit 불명확의 차이 확인 | 새 Test 19개·Java 255개·JavaScript 79개·ESLint 통과. 실제 Provider·Worker·조회 API·Browser·Process 복구 Gate와 기존 학습 범위 유지 |
+| 2026-10-06 | 실제 Java AI 호출·PostgreSQL 저장 미확인 | 합성 문의 한 건의 실제 응답·제안 저장·원문 보존과 별도 Live Test 1개 통과 확인 | 수정된 실행기의 사용자 실행 결과와 로컬 결과·JUnit Report 대조 | 자동 Worker·복구·조회 API·Browser·수동 내용 평가·복습·WIL 범위 유지 |
+| 2026-10-06 | 10/5 연장 학습의 내용이 10/6 Note와 분산됨, 재개일 미분리 | 현재까지를 10/5 회차로 마감하고 남은 과업을 10/6에 재개 | 사용자의 회차 마감·문서 갱신·Commit 요청 | 실제 실행일의 Lab Report·기존 근거는 유지. 자동 Worker·복구·조회·Browser·수동 평가·복습·WIL과 Week 8 Cloud·HTTPS 범위를 줄이지 않음 |
 
 ## 관련 기준
 
