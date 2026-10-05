@@ -109,6 +109,20 @@ AI 응답을 받고 검증까지 마쳤어도 DB 저장에서 실패할 수 있�
 
 DB 장애라면 `FAILED`를 기록하는 작업도 실패할 수 있다. 실제 Row에는 이전 `RUNNING`이 남을 수 있으므로, Code가 의도한 최종 상태와 실제 DB에 반영된 상태를 구분한다.
 
+### Rollback이 Job을 자동으로 FAILED로 바꾸지는 않는다
+
+결과 저장 전 Job이 `RUNNING`으로 Commit돼 있었다고 가정하자. 새 Transaction에서 제안 INSERT와 `SUCCEEDED` UPDATE를 실행했지만 이후 오류로 Rollback됐다면 두 변경은 모두 취소된다. DB에는 이전 `RUNNING`이 남는다. `FAILED`는 Transaction의 자동 오류 표시가 아니라 Application이 정한 업무 상태다. 그 상태가 필요하다면 현재 Attempt와 실패 정책을 확인해 별도로 기록하고 Commit해야 한다.
+
+이는 이미 접수한 Ticket·Message를 Rollback하는 것과도 다르다. 접수 Commit, 호출 예약 Commit과 결과 저장 Commit은 별도 경계다. 결과 저장 실패로 앞선 Commit까지 취소되지는 않는다.
+
+### 복수 분류는 한 제안에 속한 여러 Row일 수 있다
+
+제안의 요약·우선순위를 부모 Table에, 복수 Category를 자식 Table에 보관할 수 있다. 분류가 `["ACCOUNT", "BILLING"]`이면 제안은 한 건, 분류는 두 Row다. 각 분류 Row는 같은 Suggestion을 참조한다. 이것은 Ticket이나 AI 작업을 두 건으로 분리하는 것과 다르다.
+
+`(suggestion_id, category)`가 복합 Primary Key라면 같은 제안의 서로 다른 Category는 허용하지만 같은 조합의 중복은 거부한다. Foreign Key는 분류 Row가 존재하는 제안을 참조하게 한다. 부모 제안·모든 분류·Job 완료 UPDATE를 함께 묶으면 두 번째 분류 INSERT의 실패도 결과 전체를 되돌린다.
+
+Foreign Key는 부모에 자식이 반드시 한 건 이상 있다는 규칙까지 보장하지 않는다. 일반 Row CHECK로 다른 Table의 개수를 검사해서도 안 된다. 최소 목록은 Application에서 검증하고 결과 Transaction으로 저장하거나, 직접 SQL 변경까지 허용하는 요구가 있다면 별도의 DB 강제 방법을 설계한다. [PostgreSQL CHECK의 범위](https://www.postgresql.org/docs/17/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS)
+
 ## Timeout은 실행 실패가 확정됐다는 뜻이 아니다
 
 Server가 Provider 응답을 최대 10초 기다린다고 가정하자. 10초가 지나면 Server는 기다리기를 중단할 수 있다. 그러나 Provider가 요청을 받지 못했는지, 아직 생성 중인지, 생성을 끝냈지만 응답 전달이 실패했는지는 Timeout 하나만으로 알 수 없다.
@@ -127,6 +141,28 @@ Server가 Provider 응답을 최대 10초 기다린다고 가정하자. 10초가
 
 재시작할 때 시도 횟수를 0으로 되돌리면 정한 한도를 우회할 수 있다. 중단 후 재개까지 같은 작업의 예산에 포함하려면 횟수를 영속적으로 관리하고, 어떤 지점에서 횟수를 기록할지 정해야 한다. 외부 요청과 횟수 기록도 별개이므로 중간 종료의 처리 규칙이 필요하다.
 
+### SDK 재시도와 제공자 내부 재처리는 다르다
+
+SDK는 API 호출을 돕는 라이브러리이며, Server에 설치하면 우리 Server Process 안에서 실행된다. AI 제공자가 작성한 SDK라도 제공자 Server 내부의 프로그램과 같은 것은 아니다.
+
+Worker가 SDK 메서드를 한 번 호출했는데 SDK가 최초 요청 뒤 두 번 재전송했다면, Job은 한 건이고 메서드 호출은 한 번이지만 Model 생성 HTTP 요청은 세 번 시도한 것이다. 호출 한도를 새 생성 요청 기준으로 정했다면 각 재전송도 같은 한도에 포함해야 한다. OpenAI Java SDK도 자동 재시도와 이를 조정하는 설정을 제공한다. [OpenAI Java SDK의 재시도 설명](https://developers.openai.com/api/reference/java#retries)
+
+SDK 자동 재시도를 끄고 Application이 새 요청을 관리하거나, 각 SDK 재전송이 같은 예약·한도 경계를 거치게 만들 수 있다. 중요한 것은 여러 계층의 재시도가 한도를 우회하지 않게 하는 것이다. 한 번의 예약 뒤 SDK가 여러 요청을 보내는 문제는 사후 로그만 추가해서 해결되지 않는다. [OpenAI의 중첩 재시도 지침](https://developers.openai.com/api/docs/guides/rate-limits)
+
+우리 Server는 한 번 요청했지만 AI 제공자가 자기 Server 안에서 처리를 다시 한 경우는 별개다. 공개되지 않은 내부 실행 횟수를 우리 로그로 알아낼 수 있다고 가정하지 않는다. 우리 호출 예약·전송 시도·확인된 결과와 제공자가 공개한 사용량을 구분하고, 각각을 제공자 내부 실행 횟수나 실제 청구액으로 바꾸어 해석하지 않는다.
+
+로그는 이미 발생한 일을 관찰하고, 호출 예약은 앞으로 보낼 요청을 제한한다. Job ID·Attempt·요청 ID·오류 코드·지연과 확인한 사용량은 진단에 활용할 수 있지만, Credential·원문 Prompt·전체 응답을 그대로 출력하지 않는다. 확인하지 못한 사용량은 0이 아니라 미확인으로 남긴다.
+
+### 같은 429라도 재시도 조건은 다르다
+
+HTTP `429`라는 값만으로 잠시 기다리면 해결될 오류인지 알 수는 없다. 짧은 시간에 요청이 몰린 Rate Limit은 기다린 뒤 회복될 수 있지만, 크레딧이 소진된 경우에는 충전 등 원인이 해결돼야 한다. Provider가 반환한 오류 유형을 구분하고, 확인되지 않은 원인을 임의로 일시적인 제한으로 바꾸지 않는다. [OpenAI 오류 유형](https://developers.openai.com/api/docs/guides/error-codes)
+
+일시적인 Rate Limit 응답의 `Retry-After: 15`는 다음 요청까지 최소 15초를 기다리라는 뜻이다. Application의 재시도 간격이 5초라면 더 긴 15초를 적용한다. 15초를 기다렸다는 사실만으로 새 요청이 허용되지는 않으며, 같은 Job의 남은 횟수·전체 처리 기한과 현재 실행권을 다시 확인해야 한다. Provider의 최소 대기보다 먼저 Job 기한이 끝난다면 더 일찍 호출해서는 안 된다. [OpenAI 재시도 지침](https://developers.openai.com/api/docs/guides/rate-limits)
+
+대기 시간을 보내는 동안 DB Transaction과 Row Lock을 계속 유지할 필요는 없다. 오류와 다음 실행 가능 시각을 짧은 Transaction으로 기록하고, 실행 가능한 시점에 새 요청의 조건을 확인해 예약을 Commit하는 방식으로 연결할 수 있다. SDK 자동 재시도를 사용한다면 이 대기와 예약 경계를 우회하지 않는지도 확인한다.
+
+첫 요청이 Rate Limit으로 실패했더라도 예약 횟수를 되돌리지는 않는다. 이후 허용된 새 요청은 전체 생성 예약을 한 번 더 사용한다. 누락된 출력 Field를 보완하는 요청과는 다르므로 출력 보완 횟수는 늘리지 않는다. 입력 원문을 이미 접수한 Transaction 역시 취소하지 않는다.
+
 ### 호출 예약과 Provider 실행은 다르다
 
 한도를 먼저 확보하려면 외부 요청 전에 짧은 DB Transaction으로 실행권과 잔여 한도를 확인하고 한 번의 요청을 예약해 Commit할 수 있다. 이후 Provider를 Transaction 밖에서 호출하고 확인한 결과를 별도로 기록한다. Job을 등록했다는 사실, 호출을 예약했다는 사실, 실제 Provider 결과를 확인했다는 사실은 서로 다르다.
@@ -136,6 +172,40 @@ Server가 Provider 응답을 최대 10초 기다린다고 가정하자. 10초가
 외부 호출까지 같은 DB Transaction 안에 넣어도 이 문제를 해결하지 못한다. 예를 들어 예약을 기록한 뒤 Provider가 요청을 실행했고, 전송 상태의 Commit 직전에 Process가 종료됐다고 가정하자. DB의 예약·전송 기록은 Rollback될 수 있지만 외부 AI 실행은 되돌아가지 않는다. **Transaction이 열린 동안 실행한 코드와 그 Transaction으로 함께 취소할 수 있는 작업은 다르다.** Spring도 원격 호출에 Transaction Context를 자동으로 전파하지 않는다. [Spring Transaction 설명](https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative.html)
 
 먼저 예약을 Commit하는 방식도 전송 여부를 완벽히 증명하지는 않는다. 불명확한 시도의 기록을 남겨 한도를 지키고, 가능한 Provider 결과 조회·공식적으로 지원되는 멱등성 기능과 복구 정책으로 후속 처리를 판단하는 방식이다. 구체적인 기록 이름과 복구 조건은 Application과 Provider의 계약에서 정한다.
+
+### 정책 사본과 누적 예약 횟수를 함께 보관한다
+
+Application 설정은 새 Job을 등록할 때 사용할 기본 정책이다. 실행 중인 Job의 정책은 등록 당시 DB에 저장한 사본, 즉 Snapshot에서 읽을 수 있다. 그러면 Application 설정을 바꾸거나 재시작해도 기존 Job의 한도와 시간 제한이 바뀌지 않는다. 설정 변경을 기존 Job에도 적용하려면 암묵적으로 덮어쓰지 말고 별도 정책 변경 절차를 정해야 한다.
+
+상한과 누적 예약 횟수를 저장한다면 남은 횟수는 다음처럼 계산한다.
+
+```text
+남은 생성 횟수 = maxGenerationAttempts - reservedGenerationCount
+```
+
+상한이 5이고 누적 값이 4라면 다섯 번째 요청을 예약할 수 있다. 예약 값을 5로 증가시켜 Commit한 뒤 그 요청을 보낸다. Commit 뒤 값이 상한에 도달했다는 이유로 방금 허용한 다섯 번째 요청을 취소하지 않는다. 여섯 번째 새 요청을 예약하려 할 때 거부한다.
+
+한도 확인과 증가를 서로 다른 Transaction으로 처리하면 두 Worker가 동시에 4를 읽고 각각 호출할 수 있다. 현재 상태·Attempt·남은 한도를 확인하고 실행권 변경·예약 횟수 증가·예약 원장 INSERT를 함께 묶는다. 원장 저장이 실패하면 실행권과 카운터도 Rollback되어야 한다. 이미 별도로 Commit한 접수 데이터는 그대로 남는다.
+
+### Row Lock과 실행권은 다른 수명을 가진다
+
+Row Lock은 DB Row를 변경하는 동안 다른 Transaction과의 경쟁을 제어한다. Transaction이 끝나면 Lock은 해제되지만 `RUNNING`·현재 Attempt·실행권 기한은 DB에 남는다. 이후 다른 Worker가 Lock을 얻을 수 있다는 사실만으로 기존 실행권을 교체할 수는 없다.
+
+Queue 조회에서 `FOR UPDATE SKIP LOCKED`를 사용하면 다른 Transaction이 잠근 Job을 기다리지 않고 다음 후보를 확인할 수 있다. Queue의 작업 분배에는 유용하지만, 특정 Row의 최신 상태를 빠짐없이 조회하는 일반 조회를 대신하는 기능은 아니다. [PostgreSQL의 Locking Clause 설명](https://www.postgresql.org/docs/17/sql-select.html#SQL-FOR-UPDATE-SHARE)
+
+Provider를 기다리는 동안에는 Lock을 유지하지 않는다. 결과가 돌아왔을 때 현재 Attempt와 상태를 보호된 변경 구간에서 다시 확인한다. Attempt 2로 교체된 뒤 Attempt 1의 응답이 늦게 도착했다면, 이전 응답이 Job 실패·완료 상태나 Suggestion을 바꾸지 못하게 한다. 일반 SELECT로 확인한 뒤 따로 저장하면 그 사이에 실행권이 바뀔 수 있다.
+
+실행권 기한이 지났더라도 아직 다른 Attempt로 교체되지 않았다면 기존 응답은 여전히 현재 Attempt의 응답이다. 새 호출의 허용 조건과 이미 허용한 호출의 결과 반영 조건을 구분한다. Job 전체 처리 기한과 저장 정책은 별도로 적용한다.
+
+### 독립 Transaction의 Commit 뒤에 Provider를 호출한다
+
+Spring Service의 `@Transactional(propagation = REQUIRES_NEW)`는 바깥 Transaction이 있더라도 별도 Transaction을 시작한다. 실행권과 예약을 이 경계에서 Commit한 뒤 호출자에게 반환하면, 이후 Provider 호출이 바깥 Transaction의 Commit을 기다리지 않는다.
+
+이 동작은 Spring이 관리하는 Service의 Transaction Proxy를 통해 호출할 때 적용된다. 같은 객체 내부에서 메서드를 직접 호출하거나 `new`로 만든 객체의 Annotation만 믿으면 같은 경계가 적용되는 것은 아니다. [Spring의 Transaction Propagation 설명](https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/tx-propagation.html), [Transaction Annotation과 Proxy](https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/annotations.html)
+
+독립 Transaction을 사용한다는 이유로 Worker 전체를 하나의 Transaction으로 묶지는 않는다. 실행권·예약 Commit, 외부 Provider 호출, 검증된 결과의 저장 Commit은 서로 다른 구간이다.
+
+바깥 Transaction이 있는 상태에서 `REQUIRES_NEW`를 호출하면 추가 DB Connection이 필요하다. Connection Pool의 여유 없이 여러 Thread에서 중첩 호출하면 자원 부족이나 교착 상태를 만들 수 있다. Worker의 전체 흐름에는 Transaction을 열지 않고, 필요한 짧은 DB 작업만 Service 경계로 나누는 이유다.
 
 ### 전체 생성 요청과 출력 보완 요청을 함께 제한한다
 
@@ -156,6 +226,8 @@ Job 전체 처리 기한을 넘기면 새 생성 요청을 중단한다. 재시�
 검증된 AI 응답 객체가 현재 Server 메모리에 남아 있고, 저장 Transaction의 Rollback까지 확인했다면 DB 저장을 다시 시도할 수 있다. 이미 사용할 결과가 있으므로 저장 오류를 해결하려고 AI에 새로 생성해 달라고 요청할 필요는 없다.
 
 그렇다고 모든 저장 오류에 반복 INSERT를 보내는 것은 아니다. 저장할 값 자체가 제약을 위반했다면 원인을 고쳐야 한다. Commit 응답을 받지 못해 실제 반영 여부가 불명확하다면 먼저 같은 Job의 제안과 완료 상태를 확인하고, 중복 저장 방지 규칙에 따라 처리한다. Rollback 확인과 Commit 결과 불명확은 다른 경우다.
+
+Job·제안·분류를 여러 SELECT로 조회할 때는 서로 다른 시점의 값을 조합하지 않는지도 확인한다. 읽기 전용 `REPEATABLE_READ` Transaction은 첫 조회의 Snapshot을 후속 조회에서도 사용한다. 조회가 시작된 뒤의 새 Commit까지 즉시 보장하는 것은 아니며 다음 조회에서 최신 결과를 확인할 수 있다. [PostgreSQL Isolation 설명](https://www.postgresql.org/docs/17/transaction-iso.html#XACT-REPEATABLE-READ)
 
 Process가 종료되면 메모리에만 있던 응답 객체는 사라진다. Job에 “검증 단계 성공”을 기록했다고 그 응답 내용까지 보존되는 것은 아니다. 재시작 후 저장만 재개하려면 결과를 안전하게 영속 보관하거나 Provider에서 다시 확인할 수 있어야 한다. 결과를 보관하는 방안에는 민감 정보·접근 권한·보관 기간을 별도로 정해야 하며, 전체 Prompt나 원본 응답을 무조건 저장하거나 Log에 출력하지 않는다.
 
@@ -219,5 +291,18 @@ Test Double의 호출 횟수는 실제 Provider의 실행·요금 근거가 아�
 13. Job 등록 실패로 새 접수가 Rollback되는 경우와, 접수 Commit 뒤 Provider 실패에도 원문이 남는 경우는 왜 모순되지 않는가?
 14. Job을 같은 Transaction에 저장했더라도 Worker의 재조회가 필요한 이유는 무엇인가?
 15. 호출 예약 횟수와 Provider 실행 횟수는 왜 다를 수 있으며, 외부 호출을 DB Transaction 안에 넣어도 그 차이를 없애지 못하는 이유는 무엇인가?
+16. Application 설정을 바꿔도 기존 Job의 정책 Snapshot을 유지하면 어떤 혼란을 막을 수 있는가?
+17. 상한 5회에서 예약 횟수를 4에서 5로 Commit한 뒤 다섯 번째 요청을 보내는 것은 왜 한도 위반이 아닌가?
+18. Row Lock을 얻는 것과 현재 Attempt를 교체할 권한을 얻는 것은 어떻게 다른가?
+19. 예약 원장 INSERT가 실패했을 때 실행권 변경도 되돌려야 하는 이유는 무엇인가?
+20. 결과 Transaction에서 `SUCCEEDED` UPDATE까지 실행했더라도 Rollback 뒤 `RUNNING`이 남는 이유는 무엇인가?
+21. `(suggestion_id, category)`의 복합 Primary Key와 Foreign Key는 각각 무엇을 보장하며, 최소 분류 한 건까지 보장하는가?
+22. Commit 응답을 받지 못했을 때 AI를 다시 호출하기 전에 같은 Job의 결과를 확인해야 하는 이유는 무엇인가?
+23. Worker의 SDK 메서드 호출은 한 번인데 Model 생성 HTTP 요청은 세 번일 수 있는 이유는 무엇인가?
+24. 우리 Server의 SDK 재전송과 AI 제공자 Server 내부 재처리를 같은 횟수로 기록하면 어떤 문제가 생기는가?
+25. 로그 기록과 호출 예약은 각각 언제 무엇을 확인하거나 제한하는가?
+26. 일시적인 Rate Limit과 크레딧 부족이 같은 `429`여도 재시도 조건은 왜 다른가?
+27. `Retry-After: 15`와 Application Backoff 5초가 함께 적용될 때 최소 대기는 얼마이며, 대기 뒤에도 무엇을 다시 확인해야 하는가?
+28. Rate Limit 재시도는 전체 생성 횟수와 출력 보완 횟수에 각각 어떻게 반영되는가?
 
 입력·출력·권한·화면 표시의 검증은 [AI 제안의 신뢰 경계와 검증 근거](./ai-suggestion-trust-boundaries.md)를 참고한다.

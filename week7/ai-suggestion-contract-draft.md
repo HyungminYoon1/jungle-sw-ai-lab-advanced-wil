@@ -1,23 +1,23 @@
 # AI Suggestion 계약 초안
 
-> 상태: 입력 모델·문의 보존·접수와 Job 등록의 원자성·호출 예약의 Commit 경계·최종 처리 방향·복수 Category·문의 유형의 경계·전체 Priority·유효한 `ABSTAIN`의 기록 기준 합의 — Schema 세부값·나머지 작업 상태·복구 정책은 검토 중
+> 상태: 입력·접수·예약·결과 저장 합의와 단일 Provider 연결 확인 — 자동 Worker·복구·조회·Browser는 남아 있음
 > 작성일: 2026-09-29
-> 최종 수정일: 2026-10-04
+> 최종 수정일: 2026-10-06
 > 논리적 계약 Version: `v2.1-draft` — v2의 출력 구조를 유지하고 전체 Priority의 의미를 보완
-> 구현 상태: N01 독립 Provider 응답 두 건 확인. PostgreSQL 접수 Service·Message/Job V2 Migration과 새 Integration Test 15개, Java 출력 계약 Unit Test 64개 통과. 접수 HTTP 연결·Worker·Spring AI·Suggestion 저장은 미구현
+> 구현 상태: PostgreSQL HTTP 접수·V3 실행권·V4 결과 저장·단일 Processor·Spring AI Adapter 구현. 전체 무료 Java Clean Test 318개·JavaScript 104개와 ESLint 통과, 실제 Java AI→PostgreSQL 별도 Live Test 1개 통과. 자동 Worker·복구·조회·Browser·수동 내용 평가는 후속 과제
 
 이 문서는 Week 7의 한 수직 흐름에 필요한 입력·출력·권한·저장·실패 계약을 검토하기 위한 초안이다. 출력 구조 v2는 단일 `category` 문자열을 복수 값을 담는 `categories` 목록으로 변경한 **우리 Application의 논리적 Schema 초안**이다. `v2.1-draft`에서는 구조를 바꾸지 않고 개별 문제와 누적·결합 영향을 함께 보는 Priority 기준을 추가했다. OpenAI 최소 비교에는 별도의 전송용 Schema와 이전 계약 `v2-draft`를 사용했다. 그 결과가 전체 논리적 계약이나 Spring 저장 흐름의 Test 통과를 뜻하지는 않는다. [최소 비교 기록](./lab-reports/2026-10-02-openai-structured-output-pilot.md)
 
 ## 현재 기준과 합의한 Ticket·Message 모델
 
-- 현재 Lab의 `POST /api/tickets`는 제목만 받아 `USER`·`AGENT`가 생성할 수 있다. `GET /api/tickets/{id}`는 `AGENT`만 읽는다. AI 기능은 아직 없다.
+- 현재 Lab의 `POST /api/tickets`는 `in-memory`에서 제목만, `postgres`에서는 제목·본문을 받아 `USER`·`AGENT`가 접수할 수 있다. `GET /api/tickets/{id}`는 `AGENT`만 읽는다. 자동 AI 처리 연결은 아직 없다.
 - Ticket은 한 주제의 대화와 처리 상태를 관리하는 묶음이다. 고객 문의와 고객에게 게시한 응대팀 답변은 각각 `ticket_messages`의 Row로 두고 Ticket을 참조한다. Ticket과 Message의 관계는 1:N이다.
 - 최초 문의도 Message 한 건이다. `tickets.description`에 같은 본문을 중복 저장하지 않는다. 앞서 검토한 nullable `description` Column 추가안은 이 모델로 대체한다. 해당 Column은 아직 구현되지 않았다.
-- 새 접수는 제목과 공백이 아닌 최초 메시지 본문을 함께 받는다. Request Field 이름과 응답의 메시지 표현은 후속 검토에서 확정한다. 현재 제목만 보내던 Browser와 Test는 새 입력 계약에 맞춰 변경해야 한다.
+- PostgreSQL의 새 접수 Request Field는 `title`·`body`로 확정했다. 제목과 공백이 아닌 최초 메시지 본문을 함께 받으며, 응답은 기존 `id`·`title`·`status`를 유지한다. 최초 Message·Job은 접수 Transaction으로 저장하고 응답을 AI 완료로 해석하지 않는다.
 - 기존 Ticket Row에는 메시지를 임의로 만들지 않는다. 기존 문의는 Message 0건인 상태로 계속 조회하며, 제목 복사·`없음` 문자열·AI 생성 글로 없는 원문을 채우지 않는다.
 - Week 7에서는 최초 메시지 저장과 AI 연결만 구현한다. 후속 메시지·공식 답변 작성, 내부 메모와 대화 UI 확장은 Week 9 이후 범위다. AI Suggestion은 공식 답변 Message로 자동 게시하지 않는다.
 - AI 입력은 Server가 조회한 제목과 최초 문의 메시지다. 작업에 입력 메시지 식별자를 연결하는 안을 사용하며, 메시지가 해당 Ticket에 속하는지도 검증한다. 대화 전체 입력·메시지 수정에 따른 Version 정책은 이번 초기 흐름에서 다루지 않는다.
-- 최초 메시지 본문의 잠정 상한은 공백 제거 후 2,000 Unicode Code Point다. 길면 조용히 자르지 않고 새 접수를 `400`으로 거부한다. 상한과 문자 계산 방식은 다시 확인한다.
+- 최초 메시지 본문은 앞뒤 Java `String.strip()` 공백을 제외한 2,000 Unicode Code Point로 제한한다. DTO와 Domain에서 검사하고 초과하면 자르지 않고 `400`으로 거부한다. 길이 계산용 복사본과 저장 원문을 구분해 통과한 본문은 공백까지 그대로 저장한다. Byte·사용자에게 보이는 글자 묶음·UTF-16 Code Unit의 개수와는 다른 기준이다.
 
 Message의 `body`는 `NOT NULL`과 공백·길이 검증의 대상으로 삼는다. 기존 Ticket에 Message가 없는 것과 존재하는 Message의 본문이 비어 있는 것은 다르다. 새 접수의 최초 Message 필수 규칙은 Application과 실제 PostgreSQL Test에서 확인한다. 메시지가 없는 기존 Ticket으로는 Provider를 호출하지 않는다.
 
@@ -29,9 +29,15 @@ Message의 `body`는 `NOT NULL`과 공백·길이 검증의 대상으로 삼는�
 
 외부 AI로 전송할 복사본에서 요약·분류에 불필요한 주소·연락처·비밀값을 제거하거나 치환하는 방향에도 합의했다. 전처리는 Provider 호출 전에 Server에서 수행할 대상으로 삼는다. AI 출력에서 값을 지우는 것만으로 이미 이루어진 외부 전송을 막았다고 보지 않는다. 전송용 복사본 처리로 접수 원문의 DB Row를 덮어쓰지 않으며, 원문의 열람 권한·보관 기간·실수로 포함된 비밀값의 보관 정책은 별도 검토한다.
 
-개인정보 전처리 실험에는 실제 AI 모델을 사용한다는 사용자 요청을 반영한다. 실제 개인정보·Credential은 넣지 않고 합성 자리표시자만 사용한다. 전처리 함수의 결과뿐 아니라 실제 HTTP 전송 직전 직렬화된 요청 Body의 모든 Model 입력을 검사한다. 작업 지시·제목·본문 등에 불필요한 값이 없는지 확인하고, AI 요약에 그 값이 없는지는 별도 출력 검사로 기록한다. 요청 원문이나 Credential을 Log로 출력하지 않는다. 실제 AI 실험과 전송 직전 입력 검사는 아직 미실시이며, 재개일의 하루 누적 예산을 확인한 뒤 진행한다.
+종류가 의미를 보존하는 데 필요하다면 일괄 `[REDACTED]` 대신 `[EMAIL_REDACTED]`·`[PHONE_REDACTED]`처럼 값은 가리고 확인한 종류는 남긴다. 수단을 모르는 연락처는 `[CONTACT_REDACTED]`, 종류를 모르는 민감 값은 `[REDACTED]`로 치환한다. 임의로 종류를 추측하지 않으며, 같은 값에 서로 다른 종류를 지정한 설정은 거부한다. 알려진 값·종류를 받는 치환과 임의의 개인정보 탐지는 분리한다. 전처리에서 로그인 복구 사실이나 문의 목적을 삭제하지 않는다.
 
-이는 설계 합의이며 실제 전처리·탐지 구현은 아직 없다. 평가에는 합성 자리표시자만 사용한다. 선택한 Test의 성공을 모든 민감 정보 탐지나 Injection 차단의 보장으로 확대하지 않는다. 입력 검증·개인정보 제거·후속 Tool 검증을 함께 적용하는 원칙은 [OpenAI 안전 설계 가이드](https://developers.openai.com/api/docs/guides/agent-builder-safety), 최소 전송·로그 마스킹 원칙은 [OpenAI 데이터 취급 가이드](https://developers.openai.com/plugins/guides/security-privacy)를 참고한다.
+개인정보 전처리 실험에는 실제 AI 모델을 사용한다는 사용자 요청을 반영한다. 실제 개인정보·Credential은 넣지 않고 합성 자리표시자만 사용한다. 전처리 함수의 결과뿐 아니라 실제 HTTP 전송 직전 직렬화된 요청 Body의 모든 Model 입력을 검사한다. 작업 지시·제목·본문 등에 불필요한 값이 없는지 확인하고, AI 요약에 그 값이 없는지는 별도 출력 검사로 기록한다. Runtime 요청 원문이나 Credential을 Log로 출력하지 않는다. 10/5 실험의 하루 누적 상한은 $1로 승인됐다. 개인정보 예비 실험 6회와 고정 Dataset 비교 52회의 실제 결과를 [비교 기록](./lab-reports/2026-10-05-ai-output-policy-comparison.md)에 정리했다.
+
+`AiInputPrivacyGuard`는 알려진 합성 값과 종류를 받아 전송용 복사본을 만들고, 직렬화된 JSON 요청의 문자열 값·Property 이름을 검사하는 Java 구현이다. 치환·원문 재혼입 거부·종류 보존·업무 사실 보존을 포함한 Unit Test 32개에 이어 단일 Processor와 Spring AI Adapter의 전송 경로에도 연결했다. 임의의 개인정보 탐지기는 구현하지 않았다. 선택한 Test의 성공을 모든 민감 정보 탐지나 Injection 차단의 보장으로 확대하지 않는다. 입력과 지시 분리·개인정보 제거·후속 Tool 검증을 함께 적용하는 원칙은 [OpenAI 안전 설계 가이드](https://developers.openai.com/api/docs/guides/agent-builder-safety), 최소 전송·로그 마스킹 원칙은 [OpenAI 데이터 취급 가이드](https://developers.openai.com/plugins/guides/security-privacy)를 참고한다.
+
+실험용 `AiInputPrivacyRequestBridge`는 요청의 사용자 입력에 담긴 JSON을 해석해 제목·본문을 치환하고, 검사한 직렬화 문자열을 반환한다. Node.js 실행기는 그 문자열을 변경하지 않고 전송한다. 제목·본문의 직렬화 순서를 고정한 Test를 포함해 Bridge Test 14개가 통과했다. 이후 공통 Prompt Test를 보완한 JavaScript 전체 74개도 통과했다. 실제 Java 전처리를 거친 Dry run의 호출 0회와 전용 PowerShell에서 실행한 실제 6회·52회는 별도 근거다. 이 Bridge는 Test Source에 둔 실험 도구이며 Spring Provider Adapter를 대신하지 않는다.
+
+실험의 비용 관리에서는 메모리 누계만 두는 안 대신 호출 전 예약과 파일 누계 보존을 선택했다. 여러 번 실행해도 당일 상한을 이어서 확인하고, 중단 뒤 전송·사용량을 알 수 없는 호출을 무료로 간주하지 않기 위해서다. 실행기 외의 선행 비용은 최초 기록에 반영하며, 다른 실험이 실행 중이거나 미정산 예약이 남으면 새 호출을 거부한다. 합성 전송용 입력·선택한 응답·사용량은 Git 제외 실험 결과로 보관하고 원문 Prompt 전체·Header·Credential은 보관하지 않는다. 이 정책은 독립 평가 실행기 범위이며 Job의 호출 상한·Attempt 정책을 변경하지 않는다. 후속 검토는 실제 응답의 사용량과 일일 누계 대조다.
 
 ## 문의 접수와 AI 처리의 Transaction 경계 — 합의
 
@@ -57,7 +63,7 @@ Message의 `body`는 `NOT NULL`과 공백·길이 검증의 대상으로 삼는�
 
 원문을 먼저 Commit한 뒤 Job을 별도로 등록하는 안과 비교해, 같은 Transaction에 Job을 등록하는 안을 채택했다. 두 Commit 사이의 중단으로 문의만 있고 작업 기록은 없는 상태가 생기는 것을 막기 위해서다. 대신 Job 등록 실패도 접수 실패가 되는 선택을 명시한다. 이는 접수 완료 이후의 AI 실패로 원문을 취소하는 것과 다르다.
 
-Job Row는 실행할 작업의 기록이지 AI 실행 자체가 아니다. Commit 직후 메모리 알림이 누락돼도 Server 시작 시와 주기적인 조회로 `PENDING` Job을 다시 찾도록 설계한다. 조회·실행권 확보·중단 복구 Code와 Test는 후속 구현이며, DB에 Job을 저장했다는 사실만으로 자동 복구 완료라고 하지 않는다. 단일 Application과 PostgreSQL을 사용하고 Message Broker는 추가하지 않는다.
+Job Row는 실행할 작업의 기록이지 AI 실행 자체가 아니다. Commit 직후 메모리 알림이 누락돼도 Server 시작 시와 주기적인 조회로 `PENDING` Job을 다시 찾도록 설계한다. 단일 Claim·예약·처리는 확인했으며 자동 조회·실행과 실제 중단 복구는 후속 구현이다. DB에 Job을 저장했다는 사실만으로 자동 복구 완료라고 하지 않는다. 단일 Application과 PostgreSQL을 사용하고 Message Broker는 추가하지 않는다.
 
 업무 데이터와 처리할 작업을 같은 Transaction에 기록하는 원리는 [AWS의 Transactional Outbox 설명](https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html)을 참고했다. 이 Lab에서는 별도 Broker 전송 대신 DB Job을 Worker가 조회하는 설계에 적용한다. Provider 중복 실행·비용까지 정확히 한 번으로 만드는 장치는 아니다.
 
@@ -65,9 +71,13 @@ Job Row는 실행할 작업의 기록이지 AI 실행 자체가 아니다. Commi
 
 `TicketReceiptApplicationService.receive`에서 Ticket·최초 Message·`PENDING` Job을 같은 Transaction으로 저장했다. 실제 PostgreSQL에서 정상 접수의 각 Row 1건, Message·Job INSERT 실패 뒤 세 Table의 Row 0건, 같은 Message의 중복 Job과 없는 부모를 참조하는 저장의 거부를 확인했다. V1에 만든 기존 Ticket을 V2 적용 뒤에도 보존하는 Test를 포함해 새 Test 15개가 통과했다. 전체 Java Clean Test는 76개, 기존 JavaScript 회귀는 54개 통과했다. [접수 원자성 실험](./lab-reports/2026-10-03-ticket-receipt-atomicity-lab.md)
 
-이번 단계는 기존 HTTP 계약을 유지하는 Service 실습이다. 실제 `POST /api/tickets`는 아직 제목만 받으며 새 Service와 연결되지 않았다. 작성자의 `author_username`은 이름 Snapshot으로 저장하고, 영속 User ID나 소유자 권한의 근거로 사용하지 않는다. Test에서는 합성 이름을 전달했으며 Server 인증 결과의 전달과 위조 입력 거부는 HTTP 연결 단계에서 확인한다. 본문 길이 상한·Request Field 이름은 계속 검토한다.
+첫 Service 실습 이후 10/5에는 PostgreSQL의 `POST /api/tickets`를 접수 Service에 연결했다. 작성자의 `author_username`은 `Authentication.getName()`에서 받은 이름 Snapshot이며 영속 User ID나 소유자 권한의 근거가 아니다. HTTP Test는 서로 다른 USER·AGENT의 로그인 Session을 사용해 작성자를 확인했다. 작성자·Role을 요청에 추가해도 저장 작성자는 서버의 인증 결과를 따른다. 기존 Parser의 추가 Field 처리는 바꾸지 않았고, 제공한 작성자·Role 값은 무시되는 것을 확인했다.
 
-V2는 Message와 초기 Job만 추가하며 Job 상태를 `PENDING`으로 제한한다. 상태 확장·현재 Attempt·호출 예약·실행 기한·Suggestion 저장은 별도 Migration과 구현이 필요하다. Job을 저장했다는 사실을 AI 처리나 중단 복구 완료로 표시하지 않는다.
+승인한 실행 모드 분리안에 따라 `in-memory`의 제목 전용 생성 실험을 별도 Controller로 보존하고, `postgres`에서만 새 접수 Controller와 Service를 활성화했다. 조회 Controller는 공통으로 사용하며 Controller에서 DB·Provider 호출이나 Profile별 저장 로직 분기를 하지 않는다. 저장 Profile은 둘 중 하나를 명시한다. 두 실행 모드의 `201`이 같은 저장 범위를 뜻하지 않는다.
+
+실제 Security·MVC·JDBC·PostgreSQL을 사용하는 새 HTTP Test 17개와 Domain 길이 Test 4개, 전체 Java Clean Test 207개·JavaScript 79개가 통과했다. 원문·작성자·Job Commit, 본문 검증·CSRF·익명 거부, Message·Job 실패 시 Row 0건과 안전한 Log를 확인했다. UI의 새 본문 입력은 준비했으며 실제 Browser E2E는 아직 실행하지 않았다. [HTTP 접수 검증](./lab-reports/2026-10-05-ticket-receipt-http-lab.md)
+
+V2는 Message와 초기 Job만 추가하며 Job 상태를 `PENDING`으로 제한한다. V3는 정책 Snapshot·현재 Attempt·호출 예약 원장·처리 기한과 `RUNNING`·`FAILED`를 추가한다. V4는 기존 Migration을 바꾸지 않고 Suggestion·복수 Category와 `SUCCEEDED`·`ABSTAINED`의 결과 저장을 추가한다. Job 등록·실행권 확보와 결과 저장 완료를 구분한다.
 
 ## Job 등록과 실행권의 경계 — 합의
 
@@ -78,7 +88,7 @@ V2는 Message와 초기 Job만 추가하며 Job 상태를 `PENDING`으로 제한
 - 이전 Attempt의 늦은 성공·실패는 현재 Job과 제안을 변경하지 못한다. Schema 통과는 실행권이나 내용의 사실성을 대신하지 않는다.
 - 생성 한도 소진은 새 생성 요청을 막는다. 현재 실행권과 검증 조건을 만족한 기존 응답의 저장까지 금지하지 않는다. 결과 저장 실패로 접수 완료된 Ticket·Message를 Rollback하지 않는다.
 
-이 중 같은 Message의 초기 Job Unique만 이번 V2와 실제 PostgreSQL Test에 반영했다. 실행권 확보·호출 예약·이전 Attempt 차단과 결과 저장은 아직 구현하지 않았다.
+V2의 같은 Message 초기 Job Unique에 이어 V3의 실행권·호출 예약을 구현한다. 일반 조회는 실행 가능한 `PENDING` Job만 대상으로 하며, 기한이 지난 `RUNNING` Job의 재예약은 가능한 기존 결과 확인 뒤 호출할 별도 경로로 나눈다. 결과 확인 자체와 Provider 연결, Suggestion 저장은 이 실행권 구현과 구분한다.
 
 ## 제안 데이터와 작업 상태 — 최소 설계 잠정안
 
@@ -87,7 +97,8 @@ V2는 Message와 초기 Job만 추가하며 Job 상태를 `PENDING`으로 제한
 | `tickets` | 대화 주제와 문의 처리 상태 | ID·제목·Ticket 상태 |
 | `ticket_messages` | 실제 작성된 문의·답변 | ID·Ticket ID·본문·작성자 식별자·작성 시각 |
 | `ai_suggestion_jobs` | 제안 생성 작업의 진행·결과 | ID·입력 Message ID·작업 상태·시도 횟수·안전한 실패 코드·처리 시각·Prompt/Schema Version |
-| `ticket_suggestions` | 검증을 통과한 제안 내용 | ID·Job ID·요약·분류 목록·우선순위·담당자 검토 상태·생성 시각 |
+| `ticket_suggestions` | 검증을 통과한 제안 내용 | ID·Job ID·요약·우선순위·담당자 검토 상태·생성 시각 |
+| `ticket_suggestion_categories` | 한 제안의 복수 분류 | Suggestion ID·Category. 같은 조합은 한 건만 저장 |
 
 Message의 작성자 정보는 Server의 인증 결과를 기준으로 결정한다. Browser가 다른 작성자 이름이나 Role을 보내더라도 그 값을 작성자 결정의 근거로 사용하지 않는다. Runtime 인증은 현재 In-memory 사용자 구성이라는 점을 유지하고, 사용자 영속 Table과 작성자 식별자의 관계는 별도 검토한다. 기존 `USER`·`AGENT` 권한을 소유자 기반 권한으로 조용히 변경하지 않는다.
 
@@ -202,7 +213,7 @@ Model은 Server가 정한 작업 지시와 Ticket 본문을 구분해야 한다.
 
 짧은 문장·오타·외국어라는 이유만으로 보류하지 않는다. 제목에 이해할 수 있는 요청이 있다면 본문만 보고 보류할 수도 없다. 특정 문자열을 Code에서 발견하면 무조건 보류하는 규칙이 아니라 문의 의미에 대한 평가 기준이다. Java 구조 검증기가 이 판단까지 수행하는 것은 아니다.
 
-이 사례는 기존 13건·52회 본 평가에 추가하지 않고 별도 학습 사례로 기록했다. 새 공통 Prompt `prompt-v3-abstain-draft`에는 이 기준을 두 비교 방식에 동일하게 반영한다. 실제 AI의 판단과 Job `ABSTAINED` 저장은 아직 실행·검증하지 않았다. 입력이 과제에 맞지 않을 때의 처리 기준을 Prompt에 명시하라는 [OpenAI 공식 가이드](https://developers.openai.com/api/docs/guides/structured-outputs#handling-user-generated-input)를 참고했다.
+이 사례는 기존 13건·52회 본 평가에 추가하지 않고 별도 학습 사례로 기록했다. 이 기준은 공통 Prompt `prompt-v3-abstain-draft`에 두 비교 방식 모두 반영했고, 이후 `prompt-v4-policy-alignment`에서도 유지한다. 이 별도 사례의 실제 AI 판단과 Job `ABSTAINED` 저장은 아직 실행·검증하지 않았다. 입력이 과제에 맞지 않을 때의 처리 기준을 Prompt에 명시하라는 [OpenAI 공식 가이드](https://developers.openai.com/api/docs/guides/structured-outputs#handling-user-generated-input)를 참고했다.
 
 JSON 문법과 Schema가 맞아도 요약이 원문에 충실하다는 뜻은 아니다. Application은 Field·Type·허용값·공백·길이·추가 Field와 `decision`별 조합을 재검증한다. 내용의 사실성은 고정 평가 Dataset과 담당자의 원문 대조로 별도로 확인한다. Prompt-only와 Provider Schema 강제 방식은 같은 논리적 계약으로 비교한다.
 
@@ -260,13 +271,19 @@ Priority는 처리 우선순위를 나타내며, 영향 범위·피해·긴급�
 
 이 결정은 계약·평가 기준·학습자료에 반영한다. 평가 전 Prompt Version과 기대값을 맞추되, 이전 예비 호출이 새 규칙을 검증했다고 표시하지 않는다. 출력 Field·Enum·Ticket 상태 자동 변경 금지와 저장 경계는 그대로 유지한다.
 
+### 실제 비교에 따른 공통 Prompt 보완
+
+10/5의 52회 비교에서는 두 방식 모두 형식 검증을 통과했지만, 중복 출금의 Priority와 구체적 고장 위치를 모르는 서비스 이용 불가의 Category가 기존 기대값과 달랐다. 사용자는 이를 내용 판단 실패로 구분했고, 기대값 대신 공통 지시를 보완하는 안을 승인했다.
+
+`prompt-v4-policy-alignment`는 보고된 금전 피해의 `HIGH`, 현재 결제가 정상인 방법 문의의 `NORMAL`, 기술적 이용 불가의 `TECHNICAL` 기준을 두 방식에 똑같이 명시한다. 원인 미확인과 문의 유형·영향 정보의 부족은 분리한다. Model·Dataset·기대값·Schema·Rubric과 이전 결과는 유지한다. 실제 52회 재비교에서는 두 방식 모두 형식·결정·분류·Priority 후보가 각각 26/26 일치했다. 요약·Injection 수동 평가는 남아 있다. 선택지·결정 이유·영향 파일과 실제 재비교 결과는 [비교 기록](./lab-reports/2026-10-05-ai-output-policy-comparison.md)에 남겼다.
+
 ## 출력 계약 검증의 첫 구현
 
 순수 Java `AiSuggestionOutputValidator`에서 정확히 네 Field, `decision`별 조합, 공백이 아닌 요약, 분류 목록·허용 Enum을 검사했다. 누락 값을 채우거나 긴 요약을 자르지 않으며 원문 문자열과 `UNDETERMINED`를 보존한다. Test에서는 잠정 200자를 사용하고 상한은 생성자 설정으로 받는다. 실제 Runtime의 상한·설정 전달은 아직 확정하지 않았다.
 
 중복 JSON Property와 뒤에 붙은 추가 JSON을 거부한다. 이는 기존 JavaScript `JSON.parse`의 중복 Property 처리와 다른 엄격한 Parser 선택이다. 예외에는 입력을 포함할 수 있는 Parser 메시지·Cause를 남기지 않고 고정 코드만 전달한다.
 
-새 Unit Test 64개와 전체 Java Clean Test 140개·JavaScript 54개가 통과했다. 검증기를 Provider·Worker·DB에 연결한 상태는 아니며, 반환 객체는 형식·값 계약의 검사 결과다. 요약의 사실성·`ABSTAIN` 적용 근거·현재 Attempt·저장 조건은 별도 경계다. Provider의 거부도 `ABSTAIN`으로 변환하지 않는다. [출력 검증 실험](./lab-reports/2026-10-03-ai-output-validation-lab.md)
+첫 구현에서 새 Unit Test 64개와 전체 Java Clean Test 140개·JavaScript 54개가 통과했다. 당시에는 독립 검증기였으며 이후 단일 Processor의 Provider·DB 저장 흐름에 연결했다. 반환 객체는 형식·값 계약의 검사 결과다. 요약의 사실성·`ABSTAIN` 적용 근거·현재 Attempt·저장 조건은 별도 경계다. Provider의 거부도 `ABSTAIN`으로 변환하지 않는다. [출력 검증 실험](./lab-reports/2026-10-03-ai-output-validation-lab.md)
 
 ## 필수 Field 누락과 제한된 재요청 — 잠정안
 
@@ -285,7 +302,15 @@ Priority는 처리 우선순위를 나타내며, 영향 범위·피해·긴급�
 
 ## 전체 생성 요청 한도와 실패 유형별 재시도
 
-전체 생성 요청 한도는 Code에 2회를 고정하는 대신 별도 설정값으로 관리하는 방향에 합의했다. 설정명 후보는 `maxGenerationAttempts`이며 구체적인 값은 아직 확정하지 않았다. 최초 요청, 허용된 출력 보완과 중단 후 새 생성 요청은 같은 Job의 한도를 사용한다. 남은 횟수가 있다는 사실만으로 재시도가 허용되지는 않으며, 해당 실패 유형의 재시도 조건도 만족해야 한다.
+전체 생성 요청 한도는 설정값 `maxGenerationAttempts`로 관리하며 초기값은 3회로 승인했다. 최초 요청, 허용된 출력 보완·일시적인 Rate Limit 재시도와 중단 후 새 생성 요청은 같은 Job의 한도를 사용한다. 남은 횟수가 있다는 사실만으로 재시도가 허용되지는 않으며, 해당 실패 유형의 재시도 조건도 만족해야 한다.
+
+Job 등록 시 적용할 호출 상한·시간 제한·정책 Version을 DB에 정책 Snapshot으로 함께 저장하는 안에 합의했다. 실행할 때마다 최신 Application 설정을 읽어 기존 Job에 덮어쓰는 안 대신, 재시작 후에도 해당 Job의 설정 사본을 사용한다. 변경한 설정은 새 Job부터 적용한다. 예를 들어 상한 3회인 Job이 2회를 예약했다면 Application의 새 기본값이 5회가 되어도 기존 Job의 남은 한도는 1회다. 같은 Job에 정책을 교체하거나 추가 호출을 허용하는 별도 예외 기능은 초기 구현에 포함하지 않는다.
+
+AWS Step Functions는 정의를 변경해도 실행 중인 작업에 이전 정의를 유지한다. 이 원칙을 참고해 Job 처리 도중 설정이 암묵적으로 바뀌지 않게 하는 설계를 선택했다. [AWS 공식 문서](https://docs.aws.amazon.com/step-functions/latest/apireference/API_UpdateStateMachine.html) 이 Lab이 Step Functions를 사용하는 것은 아니다. V3는 정책 사본이 없는 기존 V2 Job에 승인한 초기값을 부여하고 `policy_snapshot_source=V2_MIGRATION`으로 표시한다. 새 접수는 Application 설정을 명시적으로 저장하고 `APPLICATION`으로 표시한다. 문의 원문·기존 ID는 바꾸지 않으며 Snapshot에 Credential이나 전체 Prompt를 저장하지 않는다.
+
+횟수 표현은 상한과 누적 예약 횟수를 따로 보관하는 안으로 승인했다. `reservedGenerationCount`는 0부터 새 요청의 예약마다 1씩 증가한다. `reservedOutputRepairCount`는 출력 보완 예약 때만 증가하며 전체 예약 횟수에도 포함된다. 남은 횟수는 상한과 누적 값의 차이로 계산해 중복 저장하지 않는다. DB Column은 각각 `reserved_generation_count`·`reserved_output_repair_count`다.
+
+상한 5회라는 예시에서는 예약 전 누적 값이 4이면 다섯 번째 요청을 예약할 수 있다. 같은 짧은 Transaction에서 실행 조건과 `reservedGenerationCount < maxGenerationAttempts`를 확인하고 5로 증가시켜 Commit한 뒤, 그 예약에 해당하는 요청을 전송한다. 값이 5가 됐다는 이유로 이미 허용한 다섯 번째 요청을 차단하지 않는다. 그다음 새 요청은 예약 전 값이 이미 상한이므로 거부한다. 두 Worker가 동시에 4를 읽고 각각 호출하도록 한도 확인과 증가를 분리해서는 안 된다.
 
 새 생성 요청 전에는 짧은 DB Transaction에서 현재 실행권과 남은 한도를 확인하고 호출 한도 1회분을 예약해 Commit하는 기준에 합의했다. 예약을 Commit하지 못하면 외부 요청을 보내지 않는다. Commit 후 Provider를 DB Transaction 밖에서 호출하고, 확인한 응답·진행 결과는 이후의 짧은 Transaction으로 기록한다. 예약 횟수는 실제 Provider의 접수·실행·청구 횟수와 구분한다.
 
@@ -293,23 +318,57 @@ Priority는 처리 우선순위를 나타내며, 영향 범위·피해·긴급�
 
 필수 Field 누락의 보완 요청 한도와 전체 생성 요청 한도는 서로 다른 조건이다. 보완 요청 상한도 설정값으로 분리하는 방향에 합의했다. 보완은 두 상한과 시간·오류 조건을 함께 만족할 때만 허용한다. 재시작 때 전체 생성 횟수뿐 아니라 보완 횟수도 초기화하지 않는다. SDK의 자동 재시도와 Application의 재호출이 한도를 우회하지 않는지도 확인한다.
 
-다음 이름은 설정 항목 후보이며 구체적인 값은 미정이다.
+승인한 초기 정책은 다음과 같다. 숫자는 이 Lab의 시작값이며 모든 Provider·업무에 적용하는 보편적인 한도가 아니다. 설정 Prefix는 `helpdesk.ai.job`이다.
 
-| 설정 항목 후보 | 의미 |
-|---|---|
-| `maxGenerationAttempts` | 최초 요청을 포함한 같은 Job의 전체 새 생성 요청 상한 |
-| `maxOutputRepairAttempts` | 필수 Field 누락을 보완하는 추가 생성 요청 상한. 보완 요청은 전체 상한에도 포함 |
-| `requestTimeoutMs` | 한 번의 Provider 요청에서 응답을 기다리는 시간 한도 |
-| `retryBackoff` | 새 생성 요청을 다시 보내기 전의 대기 정책 |
-| `jobProcessingTimeoutMs` | Job 전체 처리 기한을 정하기 위한 시간 한도 |
+| 설정 항목 | 초기값 | 의미 |
+|---|---|---|
+| `policyVersion` | `job-policy-v1` | Job에 저장하는 정책 Version |
+| `maxGenerationAttempts` | 3 | 최초 요청을 포함한 같은 Job의 전체 새 생성 요청 상한 |
+| `maxOutputRepairAttempts` | 1 | 필수 Field 누락의 추가 보완 상한. 전체 상한에도 포함 |
+| `requestTimeoutMs` | 60,000 | 한 번의 Provider 요청에서 응답을 기다리는 시간 한도 |
+| `attemptLeaseMs` | 120,000 | 한 Attempt의 실행권 기한. 요청 대기 한도보다 길게 설정 |
+| `retryBackoffMs` | 5,000 | 출력 보완 예약 또는 중단 복구 재예약 전의 대기 시간 |
+| `jobProcessingTimeoutMs` | 300,000 | 최초 실행권 확보부터 Job 전체 처리 기한까지의 시간 |
 
-한 번의 요청에서 대기 한도를 넘긴 경우와 Job 전체 처리 기한을 넘긴 경우는 다르다. 전자는 가능한 기존 결과 조회·확인 후 남은 조건에 따라 제한적 재호출을 검토할 수 있다. 이전 요청의 결과가 불명확하다면 중복 실행·비용 가능성을 감수하는 재시도이며, 미실행이 확인됐다는 뜻은 아니다. 후자는 새 생성 요청을 중단한다. 전체 처리 기한도 재시작 때 새로 시작하지 않으며 기준 시점과 Queue 대기 시간의 포함 여부는 후속 검토한다.
+한 번의 요청에서 대기 한도를 넘긴 경우와 Job 전체 처리 기한을 넘긴 경우는 다르다. 전자는 가능한 기존 결과 조회·확인 후 남은 조건에 따라 제한적 재호출을 검토할 수 있다. 이전 요청의 결과가 불명확하다면 중복 실행·비용 가능성을 감수하는 재시도이며, 미실행이 확인됐다는 뜻은 아니다. 후자는 새 생성 요청을 중단한다. 전체 처리 기한의 기준은 최초 실행권 확보 시점이며 Queue 대기 시간은 제외한다. `first_started_at`·`processing_deadline_at`을 DB에 저장하고 재시작·재예약 때 초기화하지 않는다.
 
 기존 Provider 요청의 상태·결과 조회와 검증된 응답의 DB 저장 재시도는 새 생성 요청과 구분한다. 두 작업도 무제한 반복하지 않도록 각각의 대기·종료 기준을 정한다. 요청 결과가 불명확하면 가능한 조회·확인을 먼저 수행하며, 조회 실패나 결과 부재만으로 미전송을 확정하지 않는다.
 
 새 생성 요청 한도를 모두 사용했어도 허용된 시간 안에서 기존 결과를 확인하는 일까지 금지하지는 않는다. 허용된 결과 확인을 마쳤는데도 결과를 끝내 확인하지 못하고 더 이상 새 생성 요청을 허용할 수 없는 Job은 영원히 `RUNNING`으로 두지 않고 `FAILED`로 종료하는 기준에 합의했다. 실패 코드 후보는 `PROVIDER_OUTCOME_UNKNOWN`이다. 이는 우리 정책상 작업을 더 진행하지 못했다는 뜻이며 Provider의 미실행·실패나 비용 미발생을 확정하지 않는다. 원본 Ticket·Message는 유지한다. DB 장애로 종료 상태 저장에 실패하면 실제 Row에는 이전 상태가 남을 수 있으므로 기록 성공 여부도 확인한다.
 
-실패 유형별 새 생성 요청 허용 여부, Backoff·조회 대기 기준, 전체·보완 상한과 시간 한도의 초기값, 설정 변경 시 기존 Job에 적용할 규칙은 후속 검토한다. 이 절은 설계 합의를 기록한 것이며 Spring의 설정·Job 저장·복구 구현이나 Test 완료를 뜻하지 않는다.
+기초 구현의 `AiSuggestionJobClaimService`는 `REQUIRES_NEW` Transaction에서 실행권 변경과 `ai_suggestion_attempts` 원장 INSERT를 함께 Commit한다. 원장에는 Job·Attempt·요청 종류·예약 시각만 남기며 실제 Provider 실행 성공을 기록한 것으로 해석하지 않는다. 이전 Attempt의 실패 기록·출력 보완은 현재 Attempt와 `RUNNING` 조건이 맞을 때만 반영한다. 정책 10개·Migration 1개·실행권 18개 Test와 전체 Java 236개·JavaScript 79개가 통과했다. [실행권·예약 검증](./lab-reports/2026-10-05-job-policy-and-reservation-lab.md)
+
+검증된 응답을 저장하는 부분은 V4와 `AiSuggestionResultService`로 구현했다. Spring AI Adapter는 요청별 대기 한도·단일 전송을 적용하며, 자동 Worker와 Provider 결과 조회는 남아 있다. 재예약 메서드가 기존 결과 조회를 대신하지 않으며 후속 Worker는 가능한 결과 확인을 먼저 수행해야 한다. 나머지 실패 유형별 재시도 허용 여부와 자동 DB 저장 재시도의 횟수·종료 기준은 Worker 연결 단계에서 검토한다.
+
+### SDK 재시도와 호출 예약
+
+Job 한 건, Java 메서드 호출 한 번, 외부로 보내는 Model 생성 HTTP 요청 한 번은 서로 다른 단위다. Worker가 한 번 호출한 SDK가 최초 요청 뒤 두 번 재전송한다면 같은 Job에서 외부 요청을 세 번 시도한다. 각 새 요청은 같은 Job의 생성 한도를 사용하며, 전송 전에 실행권·한도 예약을 Commit해야 한다. 실제 전송 여부가 불명확한 예약을 자동 반환하지 않는 기존 기준은 유지한다.
+
+AI 제공자 서버 내부의 재처리는 우리 서버의 SDK 재전송과 다르다. 우리 요청이 한 번이었다면 호출 예약도 한 번이며, 제공자가 공개하지 않은 내부 실행 횟수를 임의로 더하지 않는다. 반대로 예약·HTTP 요청 횟수만으로 실제 AI 실행·청구 횟수까지 확정하지 않는다. 사용량·비용은 제공자가 반환하거나 공개한 정보의 범위에서 확인한다.
+
+SDK 자동 재시도를 유지하면서 각 재전송을 예약 경계에 연결하는 안과, SDK 자동 재시도를 끄고 Worker가 새 요청을 관리하는 안을 비교했다. 기본 구현은 두 번째 안으로 정했다. 우리 서버에서 보내는 새 요청마다 같은 실행권·한도 정책을 적용하기 쉽고, SDK와 Worker의 중첩 재시도로 요청 수가 늘어나는 것을 막기 위해서다. SDK·HTTP Client의 Model 생성 자동 재시도는 끄며, 이를 실패 유형과 무관하게 무조건 재요청하는 Worker 반복문으로 대체하지 않는다. 사용자는 SDK 재전송도 호출 예약에 포함해야 한다는 기준에 동의했다. [OpenAI의 재시도와 전체 한도 지침](https://developers.openai.com/api/docs/guides/rate-limits)
+
+로그는 이미 시도한 요청을 관찰하는 수단이고, 예약은 앞으로 보낼 요청을 제한하는 수단이다. 필요하다면 Job ID·Attempt·요청 ID·안전한 오류 코드·지연·확인한 사용량과 비용 추정치를 기록한다. Credential·원문 Prompt·전체 요청 및 응답은 출력하지 않으며, 확인하지 못한 사용량을 0으로 채우지 않는다.
+
+Provider Adapter의 SDK·HTTP 자동 재시도 차단은 구현했고 로컬 HTTP Test에서 오류·Timeout 뒤에도 전송 한 번을 확인했다. 실제 AI 저장 실험의 확인된 HTTP 전송도 한 번이었다. 후속 Worker의 허용된 새 요청은 예약 Commit 뒤에만 전송되도록 연결한다. 시험 서버의 통제된 응답·실제 AI 호출·자동 Worker의 재예약은 서로 다른 근거로 기록한다.
+
+### 일시적인 Rate Limit과 크레딧 부족의 재시도 기준
+
+같은 HTTP `429`라도 일시적인 요청 제한과 크레딧·사용 한도 부족은 대응이 다르다. 모든 `429`를 같은 간격으로 반복하는 안 대신, Provider의 안전한 오류 코드로 원인을 구분하고 일시적인 Rate Limit에만 조건부 재시도를 허용하는 안에 합의했다. 해결되지 않은 인증·요금·설정 문제에는 남은 호출 횟수가 있어도 같은 요청을 반복하지 않는다.
+
+| 확인한 실패 원인 | 새 생성 요청의 기준 |
+|---|---|
+| 일시적인 Rate Limit이며 유효한 `Retry-After`가 있음 | 지정한 최소 대기와 Job의 Backoff를 모두 지키고, 현재 실행권·남은 전체 횟수·처리 기한을 다시 확인한 뒤 제한적으로 재시도 |
+| 크레딧 부족·사용 또는 지출 한도 도달 | 충전·한도 조정 등 원인 해결 전 자동 재요청하지 않음 |
+| 오류 원인을 구분하지 못함 | `429`라는 Status만으로 일시적인 제한이라고 간주하지 않음 |
+
+`Retry-After: 15`라면 최소 15초를 기다린다. Job의 `retryBackoffMs`가 5초여도 5초 뒤에 호출해서는 안 되며, 두 값은 더하는 대신 더 긴 대기를 적용한다. 기다리는 동안 DB Transaction이나 Row Lock을 유지하지 않는다. 후속 Worker에는 오류와 다음 실행 가능 시각을 짧은 DB Transaction으로 기록하고, 그 시각 전에는 재예약하지 않는 경로가 필요하다.
+
+대기 후 새 실행권·호출 예약을 확보할 때 Job 상태·현재 Attempt·남은 전체 생성 횟수와 `processing_deadline_at`을 다시 확인한다. 새 요청 1회분을 예약해 Commit한 뒤 Provider를 호출한다. 이미 실패 응답을 받은 요청의 예약 횟수는 되돌리지 않으므로 최초 요청과 한 번의 재시도는 누적 예약 2회다. 이 재시도는 Field 보완이 아니므로 `reserved_output_repair_count`는 증가시키지 않는다. 전체 처리 기한을 새로 시작하거나 새 Job으로 한도를 초기화하지 않는다.
+
+Provider가 요구한 최소 대기를 지키면 Job 전체 처리 기한에 도달하는 경우에는 더 일찍 재시도해 시간을 맞추지 않는다. 재시도가 금지되거나 종료돼도 앞서 접수한 Ticket·Message는 유지한다. 크레딧 부족은 명시적 판단 보류가 아니므로 `ABSTAINED`로 바꾸지 않는다. [OpenAI Rate Limit 지침](https://developers.openai.com/api/docs/guides/rate-limits), [OpenAI 오류 유형](https://developers.openai.com/api/docs/guides/error-codes)
+
+Provider Adapter의 오류 분류·`Retry-After` 해석과 Processor의 최소 대기 전달은 통제된 응답으로 확인했다. Job의 재시도 대기 기록과 자동 Worker의 재예약·전송은 남아 있다. 현재 Claim Service의 출력 보완 경로로 Rate Limit을 대신 처리하지 않는다. Header가 없거나 유효하지 않을 때의 Backoff·Jitter 세부값, 안전한 실패 코드, 정책 Version 이행과 기존 Job 적용 여부는 연결 전에 검토한다. 기존 Job의 정책 Snapshot을 조용히 덮어쓰지 않는다.
 
 ## API·권한·응답 — 잠정안
 
@@ -331,16 +390,29 @@ Priority는 처리 우선순위를 나타내며, 영향 범위·피해·긴급�
 
 CSRF Token은 Browser JavaScript가 Server에서 받은 Header 이름으로 접수 요청에 직접 붙인다. `201` 응답을 Browser가 받지 못해도 접수 Commit이 이미 끝났을 수 있으므로 자동 재시도하지 않는다. CORS 허용, Session 인증, CSRF와 AI 출력 검증은 서로 다른 경계다.
 
-## 별도 저장소 — 잠정안
+## 별도 저장소와 결과 Transaction — 합의한 구현
 
 - 사용자 원문은 `ticket_messages.body`에 보관한다. 검증된 AI 결과는 Ticket·Message에 덮어쓰지 않고 `ticket_suggestions`에 저장한다.
 - 접수 Transaction은 Application Service에서 Ticket·최초 Message·`PENDING` Job의 저장을 묶는다. Controller는 HTTP 입력·응답을 담당하며 직접 DB나 Provider를 호출하지 않는다. Worker는 Commit된 Job만 대상으로 삼고 Provider 응답을 기다리는 동안 DB Transaction을 유지하지 않는다.
-- 최소 Column 후보는 위 책임 Table을 따른다. Suggestion은 Job ID로 연결하고 같은 Job의 제안은 최대 한 건이라는 Unique Constraint를 검토한다. Job에서 입력 Message와 Ticket을 추적한다. Foreign Key·조회용 Index·허용값·공백 제약과 실제 DDL은 구현 시 Test로 확인한다.
-- 저장하는 `SUGGEST`의 `summary`·`priority`는 `NOT NULL` 후보이며, 분류 목록도 빈 목록·중복·허용값을 검사한 뒤 전 항목을 저장·복원한다. 단일 `category` Column에 한 항목만 남기지 않는다. 목록의 실제 저장 표현과 DDL은 Migration 설계에서 비교·확정한다. Category·Priority의 허용값에는 `UNDETERMINED`를 포함하며, 원문 부재와 불확실한 판단을 구분한다.
+- Suggestion은 Job ID를 Foreign Key로 참조하고 `UNIQUE (job_id)`로 같은 Job의 제안을 한 건으로 제한한다. Job에서 입력 Message와 Ticket을 추적한다. ID·시각·현재 Attempt는 Server와 DB가 결정하며 Model의 Field로 받지 않는다.
+- `summary`·`priority`는 `NOT NULL`이며 요약의 공백과 Priority 허용값을 DB에서도 검사한다. 복수 Category는 `ticket_suggestion_categories`에 항목별로 저장하고 `(suggestion_id, category)`를 복합 Primary Key로 둔다. Foreign Key·허용값·중복을 DB에서 제한한다. 목록 순서는 중요도를 뜻하지 않으며 조회 시 Category 이름으로 정렬한다. 빈 목록은 Java 검증기에서 거부한다. 일반 Row CHECK가 자식 Row 한 건 이상이나 Job과 Suggestion의 상태 일치까지 보장한다고 해석하지 않는다.
+- 요약 문자열과 `UNDETERMINED`를 그대로 저장·복원한다. 요약 길이 상한은 검증기 설정으로 받고 이번 Test의 200자를 Runtime 기본값이나 DB 길이 제한으로 새로 확정하지 않는다. V4는 요약을 TEXT로 저장하며 공백만 있는 값은 거부한다.
 - 유효한 요약이 있는 제안은 Category·Priority가 `UNDETERMINED`여도 `PENDING_REVIEW`로 저장한다. 유효한 `ABSTAIN`은 Job을 `ABSTAINED`로 기록하고 제안 Row를 만들지 않는다. 잘못된 출력과 Provider 실패도 제안 Row를 만들지 않지만, 명시적 판단 보류와는 다른 실패 결과로 기록한다. AI 값만으로 Ticket 상태나 담당자의 확정 판단을 변경하지 않는다.
 - 원본 Provider 응답, 전체 Prompt, Credential과 메시지 본문을 Job·Suggestion Table에 무조건 복사하거나 Log에 출력하지 않는다. 평가용 합성 Dataset과 실제 문의 원문의 보관 경계는 분리한다.
-- Suggestion 저장과 Job의 `SUCCEEDED` 변경은 같은 결과 저장 Transaction으로 묶는 안이다. 저장 실패로 제안 없이 성공 상태만 남는 것을 막되, 접수 완료된 Ticket·Message는 Rollback하지 않는다.
+- 결과 Service는 현재 `RUNNING`·Attempt·전체 처리 기한을 `SELECT ... FOR UPDATE`로 확인한 뒤 같은 짧은 Transaction에서 Suggestion·모든 Category·`SUCCEEDED`를 저장한다. 완료 UPDATE가 실패하거나 0건이면 결과 변경을 모두 Rollback한다. 이미 Commit한 접수와 호출 예약은 유지한다. `ABSTAIN`이면 제안 없이 `ABSTAINED`만 결과 Transaction으로 Commit한다.
+- Rollback은 결과 저장 전의 `RUNNING`으로 되돌리는 동작이며 `FAILED`를 자동 기록하지 않는다. 실패 상태 기록·자동 재시도는 별도 정책이다. 확인된 Rollback 뒤에는 메모리에 있는 검증 객체로 DB 저장만 다시 시도할 수 있다. Commit 여부가 불명확하면 같은 Job의 상태와 제안을 먼저 조회한다. 내부 조회 Service는 짧은 `REPEATABLE_READ` Transaction에서 여러 SELECT가 같은 Snapshot을 보게 한다. 조회 API·자동 재호출은 추가하지 않는다.
+- 완료 후 반복 저장과 이전 Attempt는 `NOT_CURRENT`로 변경 없이 반환한다. 이 값만으로 기존 결과가 없다고 판단하지 않고 필요하면 DB 결과를 조회한다. 현재 Attempt의 유효 응답은 생성 한도를 모두 사용했거나 Lease만 만료됐어도 전체 처리 기한 안이면 저장할 수 있다. DB 예외의 실패 Row·응답 원문·Cause는 고정 `AI_RESULT_STORAGE_FAILED` 예외에 복사하지 않는다.
 - Provider 호출은 PostgreSQL Transaction으로 되돌릴 수 없다. 중복 제안 저장 방지가 외부 호출·요금까지 정확히 한 번을 보장하는 것은 아니다. `RUNNING`의 중단 판정·복구 조건·시도 횟수 기록은 추가 설계가 필요하다.
+
+### 저장 결정의 배경과 후속 검토
+
+복수 Category를 단일 Column의 첫 항목으로 축소하면 문의 정보가 사라진다. PostgreSQL 배열·JSONB·별도 분류 Table을 비교하고, 사용자가 승인한 별도 Table 방식을 채택했다. 항목별 허용값·Foreign Key·복합 Primary Key를 직접 확인할 수 있고 분류 집합을 저장·복원하기 쉽다. 새 분류 검색 API나 대화 기능은 추가하지 않는다.
+
+영향 파일은 Lab의 `V4__add_suggestions_and_result_completion.sql`, `ai/job`의 결과 Repository·상태 객체, `ai/suggestion`의 결과 Service·Suggestion Adapter와 새 Integration Test 두 Class다. 일반 `CHECK`로 다른 Table의 Row 수를 보장하지 않으며 최소 분류와 전체 완료의 원자성은 검증된 객체와 결과 Service가 지킨다. 직접 SQL Writer를 추가한다면 이 경계를 다시 검토한다. [PostgreSQL CHECK의 범위](https://www.postgresql.org/docs/17/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS)
+
+새 결과 Test 18개·V3→V4 Migration Test 1개와 전체 Java Clean Test 255개·JavaScript 79개, ESLint가 통과했다. 실제 PostgreSQL에서 저장·복원·중복·이전 Attempt·부분 실패의 Rollback과 원문 보존을 확인했다. 이 Test는 합성 JSON을 Java 검증기에 통과시킨 뒤 저장한 것으로 Provider·Worker·Browser의 실행 근거와 구분한다. Commit 응답 유실은 직접 주입하지 않았으며 결과 재조회 기능을 확인했다. [제안 결과 저장 검증](./lab-reports/2026-10-05-suggestion-result-storage-lab.md)
+
+단일 Processor의 실제 Provider·입력/출력 Guardrail·결과 저장 연결은 합성 문의 한 건에서 확인했다. 자동 Worker·저장 재시도의 종료 정책·담당자 조회·Browser와 실제 Process 재시작은 후속 과제다. 결과 조회의 `REPEATABLE_READ`는 조회 시작 후의 새 Commit까지 항상 보인다는 뜻이 아니므로 Worker의 실행 판단에는 별도의 현재 상태 확인을 유지한다.
 
 ## 먼저 작성할 예상 Test
 
@@ -359,18 +431,33 @@ CSRF Token은 Browser JavaScript가 Server에서 받은 Header 이름으로 접�
 13. 합성 민감 값을 넣은 입력을 전처리한 뒤 실제 AI 모델로 실험한다. 실제 전송 직전 직렬화된 요청 Body의 모든 Model 입력에서 불필요한 값이 제거·치환됐는지 확인한다. 요약에 값이 없다는 사실만으로 미전송을 판정하지 않는다. 접수 원문 보존과 출력·Log의 값 복사 여부도 별도로 확인한다. Unit Test·Fake Provider의 수신 인자 검사는 재현 가능한 보완 근거이며 실제 AI 실험을 대신하지 않는다. 실제 개인정보로 시험하지 않는다.
 14. Injection 의심 신호와 문의 Priority를 분리한다. 통상 문의의 명령문만으로 `HIGH`나 `SECURITY` 분류가 되지 않으며 추가 출력 Field도 허용하지 않는다. 허용하지 않은 Tool·Ticket 상태 변경을 실행하지 않는지는 독립 Spike와 Application Test로 확인한다.
 15. 요청 한 번의 Timeout 뒤에는 가능한 기존 결과 확인과 남은 조건을 거쳐 재호출하는지, Job 전체 처리 기한 뒤에는 새 생성 요청이 없는지 확인한다. 생성 상한을 모두 사용했어도 허용된 기존 결과 조회는 유지하며 재시작이 생성·보완 횟수나 전체 처리 기한을 초기화하지 않아야 한다.
+16. 일시적인 `429`와 유효한 `Retry-After`를 재현해 최소 대기 전에는 새 요청·예약이 없고, 대기 뒤에도 횟수·기한·현재 실행권을 확인하는지 검증한다. 허용된 새 요청은 예약 Commit 뒤 전송하며 전체 예약만 증가하고 출력 보완 횟수는 유지한다. 기한이나 한도를 소진하면 전송하지 않으며 크레딧 부족의 `429`에도 자동 재요청하지 않는다. 이 제어 Test와 실제 AI의 Rate Limit 관찰은 구분한다.
+
+## Java Provider Adapter의 구현 결정
+
+기존 Port·Job 예약·결과 저장의 경계는 유지하고, Provider Port 뒤에 Spring AI 2.0.1의 OpenAI Adapter를 명시적으로 생성한다. Starter 자동 설정과 직접 HTTP 호출만 사용하는 안을 비교했다. Spring AI Library와 명시적 Client 구성을 선택해 학습 대상인 ChatModel을 사용하면서 전역 키의 자동 선택과 의도하지 않은 유료 호출을 막는다. 일반 Application 시작과 회귀 Test에는 Live Bean·Scheduler를 추가하지 않는다.
+
+Node 평가의 Responses API와 Spring AI ChatModel의 Chat Completions API는 같은 실행 경로가 아니다. `gpt-6-luna`와 공통 업무 판단 기준은 유지하고 Java Prompt는 `prompt-v4-policy-alignment-chat-v1`로 표시한다. Schema가 통과해도 내용의 정확성이나 자동 처리 완료가 증명되는 것은 아니다. [Spring AI OpenAI ChatModel 문서](https://docs.spring.io/spring-ai/reference/api/chat/openai-chat.html)
+
+SDK `maxRetries=0`만으로 HTTP Client의 연결 재시도까지 꺼지는 것은 아니다. 확인한 Spring AI HTTP 기본값은 연결 재시도를 사용하므로, 이번 Adapter의 단일 전송 Client는 SDK·연결 재시도와 자동 Redirect를 함께 끈다. 공식 HTTPS Endpoint만 공개 생성자로 사용하고 Test용 경로는 Literal Loopback으로 제한한다. 환경 Proxy는 사용하지 않는다. 직렬화된 최종 요청에는 설정한 민감 값과 API Credential이 없어야 하며, 요청 32 KiB·응답 64 KiB 상한을 적용한다. 작은 합성 입력과 제한된 출력의 실험 경계를 유지하기 위한 Byte 상한이며 유효한 입력을 잘라내지 않고 초과 요청은 전송 전에 거부한다.
+
+명시적 거부는 `REFUSED`, 인증·크레딧·요청 설정 오류는 `CONFIGURATION`, 미완료·잘못된 응답 Envelope는 `INVALID_RESPONSE`, 확인된 일시 거절은 `TEMPORARY_REJECTION`으로 구분한다. 연결 실패·Timeout·불명확한 Server 오류는 `OUTCOME_UNKNOWN`이며 Provider 미실행으로 간주하지 않는다. 일시 거절의 유효한 `Retry-After`는 초 또는 HTTP-date에서 최소 대기 값으로 읽고 임의로 줄이지 않는다. 없거나 무효인 Hint는 즉시 재호출 허가가 아니다. Adapter는 자체 재시도를 하지 않는다. Processor는 일시 거절을 안전한 종류·대기 정보로 호출자에게 전달하며 현재 예약을 보존한다. 실제 대기 기록·조건부 재예약 Worker는 아직 구현하지 않았으므로 Rate Limit 재시도 완료로 기록하지 않는다.
+
+비교한 Log 처리 방식 중 전체 SDK 예외·Prompt·응답 복사 대신 고정 오류 코드와 안전한 전송 횟수·HTTP Status·Token 수만 사용한다. Spring AI가 빈 `choices`에서 Prompt를 Log에 남기는 경로를 피하도록 잘못된 Envelope를 먼저 거부한다. 반환 Model·Service Tier나 사용량이 확인되지 않으면 비용을 0으로 기록하지 않는다. 기존 파일 기반 하루 비용 원장과 연결할 Live 실험도 일반 회귀 Test에서 분리한다. [OpenAI 재시도 지침](https://developers.openai.com/api/docs/guides/rate-limits)
+
+영향 파일은 Lab의 `pom.xml`, `ai/provider` Adapter·단일 HTTP Client·Prompt/Schema·안전한 예외와 Metadata, `ai/processing`의 실패 분기, Adapter HTTP Test·Processor PostgreSQL Test·README다. 실제 Java 호출·PostgreSQL 저장 한 건은 [Java Provider 실험](./lab-reports/2026-10-06-java-provider-adapter-lab.md)에 기록했다. 후속 검토는 자동 Worker의 대기·재시도·중단 복구, 일반 개인정보 탐지와 운영 키 보관·요약 Runtime 상한이다. 이 결정이 기존 SQL Migration이나 Ticket 상태 전이 규칙을 바꾸지는 않는다.
 
 ## 사용자와 검토할 질문
 
 1. 문의 의미를 해석할 수 없는 입력의 `ABSTAIN`은 허용하기로 했다. 다른 경계 사례와 담당자에게 보여줄 조회 표현은 무엇으로 정할 것인가?
 2. 같은 접수 Transaction에 등록한 Job의 실행권·시도 식별자를 어떻게 저장하고, 이전 실행의 늦은 응답이 현재 결과를 바꾸지 못하도록 할 것인가?
-3. Category·Priority 목록, 최초 메시지 2,000자·요약 200자 상한과 Request/Response의 메시지 표현은 적절한가?
+3. Category·Priority 목록과 요약 200자 상한은 적절한가? 저장한 Message·Job의 조회 응답은 어떻게 표현할 것인가?
 4. 제안 한 건마다 Row를 추가하고, 아직 확정·적용 기능 없이 `PENDING_REVIEW`로만 두어도 되는가?
-5. 전체 생성·추가 보완 상한, 요청 대기·재시도 간격·전체 처리 기한을 분리한다는 기준에 따라, 구체적인 값·실패 유형별 재시도 조건·전체 기한의 기준 시점과 설정 변경 시 기존 Job 적용 규칙은 무엇으로 정할 것인가?
+5. 승인한 전체·보완 상한과 시간 제한 안에서, 실패 유형별 재시도·기존 결과 조회·결과 저장 재시도의 종료 기준을 어떻게 연결할 것인가?
 6. 작업 상태 이름·실패 코드·`RUNNING` 중단 판정과 담당자의 조회 표현은 무엇으로 정할 것인가?
 7. 합의한 전체 Priority 기준을 Prompt와 평가 기대값에 어떻게 적용하고, 개별·결합 영향과 정보 부족을 어떤 Case로 확인할 것인가?
 
-질문에 대한 답변을 받아 이 문서를 수정한 뒤에만 Prompt·Schema와 API 계약을 확정한다. 실제 Provider 선택, 비용·민감 정보 취급, 실행·평가·Lab 구현은 이 초안과 별도의 후속 작업이다.
+남은 질문에 대한 답변을 받아 아직 잠정인 조회·복구·설정 계약을 확정한다. 이미 확인한 Provider 실험·단일 처리·PostgreSQL 저장 근거는 유지하며 설계 합의·실제 구현·수동 내용 평가를 구분한다.
 
 ## 검토에 따른 변경
 
@@ -402,6 +489,17 @@ CSRF Token은 Browser JavaScript가 Server에서 받은 Header 이름으로 접�
 | 2026-10-03 | Java 출력 계약 검증기와 Unit Test 64개 구현 | 계속 학습·구현 요청에 따라 합의한 Field·Enum을 독립 검증. 길이 상한은 설정으로 받고 Parser 오류는 고정 코드로 전달 | 전체 Java 140개·JavaScript 54개 통과. Runtime 연결·민감 정보 처리·Provider 실패·내용 검토·구체적인 보류 사례는 후속 확인 |
 | 2026-10-03 | 제목·본문에서 문의 의미를 해석할 수 없는 입력을 `ABSTAIN` 허용 사례로 확인 | “문제가 생겼다”는 요청의 의미가 있지만 `ㅁㄴㅇㄹ ???`에는 해석할 문의 내용이 없다는 구분에 사용자 동의 | Field·Enum·13건·52회 유지. 공통 Prompt만 `prompt-v3-abstain-draft`로 정렬. 실제 Model 판단·작업 상태 저장과 추가 경계 사례는 후속 확인 |
 | 2026-10-04 | 개인정보 전처리 확인을 Fake Provider 인자 검사만으로 끝내지 않고 실제 AI 실험·전송 직전 요청 검사로 구성 | 사용자 요청에 따라 실제 모델의 반응도 관찰하되, 요약 결과만으로 미전송을 판단하지 않음 | 이 계약·평가 초안·주간 계획에 반영. 합성 입력만 사용하며 실제 개인정보·Credential 출력 금지. 10/5 야간 또는 10/6 재개 전 당일 누적 예산 확인, 전처리·실험·안전한 Log 검증은 미실시 |
+| 2026-10-05 | 종류별 치환·최종 Body 검사와 파일 기반 일일 누계의 독립 실행기를 사용해 6회·52회 실험 | 전송 전 검사와 실제 Model 관찰을 연결하고 기존 하루 비용을 이어서 관리 | 선택한 Java 110개·JavaScript 74개 통과. Spring Runtime 연결·제안 저장·복구는 후속 작업 |
+| 2026-10-05 | 기대값은 유지하고 금전 피해·원인 미확인 구분을 공통 Prompt v4에 명시 | 두 방식에서 같은 판단 오류가 반복돼 합의한 정책을 명확히 전달하는 안에 사용자 승인 | Dataset·Schema·Rubric·Model 유지. 기존 52회 결과 보존, 재비교와 수동 채점은 남음 |
+| 2026-10-05 | Profile별 생성 Controller와 `title`·`body`, 앞뒤 공백 제외 본문 2,000 Code Point 계약 확정 | 기존 In-memory 회귀를 보존하면서 PostgreSQL 접수의 본문·인증 작성자·Job을 연결하는 안에 사용자 승인 | HTTP Test 17개·Domain Test 4개, 전체 Java 207개·JavaScript 79개 통과. Browser E2E·Worker·AI 제안 저장은 후속 단계 |
+| 2026-10-05 | 예상 밖 오류의 Log는 고정 코드·예외 종류만 기록 | DB Constraint 예외에 실패 Row의 본문이 포함될 수 있어 새 원문의 노출을 방지 | Message·Job INSERT 실패 Test에서 원문과 실패 Row 메시지 미출력 확인. 상세 진단이 필요하면 안전한 Metadata 기준을 별도 검토 |
+| 2026-10-05 | Job 등록 시 정책 Snapshot을 저장하고 설정 변경은 새 Job부터 적용 | 실행마다 최신 설정을 읽는 안과 비교해 기존 작업의 호출·시간 한도를 유지하는 권장안에 사용자 승인 | 이 계약·학습노트에 반영. 누적 예약 횟수의 증가 표현은 권장안, 설정 초기값·기존 V2 Job 이행·Migration과 실제 DB 검증은 후속 작업 |
+| 2026-10-05 | 누적 예약 증가 표현과 전체 3회·보완 1회, 대기 60초·실행권 120초·Backoff 5초·전체 300초의 초기값 승인 | 남은 횟수의 중복 저장을 피하고 재시작·설정 변경에도 기존 Job 한도를 유지 | 최초 Claim부터 전체 기한을 계산하고 Queue 대기는 제외. 기존 V2 Job은 V3 기본 정책으로 이행하며 출처를 표시 |
+| 2026-10-05 | 일반 PENDING 조회와 결과 확인 후 RUNNING 재예약을 분리하고 실행권·예약 원장을 짧은 독립 Transaction으로 저장 | Lease 만료를 Provider 미실행으로 오해하지 않고, 동시 예약·늦은 이전 Attempt·원장 저장 실패를 분리 | 실제 PostgreSQL 검증은 실행권 단계. 자동 Worker·Provider 조회와 호출·Suggestion 결과 저장은 다음 단계 |
+| 2026-10-05 | Suggestion·복수 Category·Job 완료를 같은 결과 Transaction에 저장하고 분류를 별도 Table로 분리 | 배열·JSONB와 비교한 권장안에 사용자 승인. Commit 불명확 시 AI 재호출 전에 DB 결과를 확인 | V4·결과 Service·Adapter·새 Test 19개, 전체 Java 255개·JavaScript 79개 통과. Row Lock·제약·원자성·원문 보존 확인. 일반 CHECK의 자식 최소 개수 한계, 요약 Runtime 상한·자동 저장 재시도·Worker·실제 Provider·Browser·재시작은 후속 검토 |
+| 2026-10-05 | 우리 서버의 SDK 재전송도 같은 Job의 호출 예약에 포함하고 기본 구현에서 SDK 자동 재시도를 끄기로 합의 | 제공자 서버 내부 재처리와 구분하고, 함수 호출 한 번 뒤 여러 HTTP 요청이 생성 한도를 우회하는 것을 방지 | Provider Adapter·Worker·실제 전송 횟수 검증은 미구현. Job 한도·기존 예약·제공자 실행 및 청구 횟수의 구분은 유지 |
+| 2026-10-05 | 일시적인 Rate Limit은 유효한 `Retry-After`·Job Backoff와 전체 횟수·기한·실행권 조건을 지켜 재예약, 크레딧 부족은 원인 해결 전 자동 재요청 금지 | 같은 `429`를 무조건 반복하는 안 대신 원인별 조건부 재시도 안에 사용자 승인. 대기 중 Lock을 유지하지 않고 새 요청마다 예약 Commit | 계약·학습자료·학습노트에 반영. 오류 분류·대기 기록·Worker 재시도·Test는 미구현. Header 부재·무효의 대기 정책과 정책 Version 이행은 후속 검토 |
+| 2026-10-06 | 단일 Processor·Spring AI Adapter·최종 전송 Body 검사를 연결하고 실제 AI 응답을 PostgreSQL에 저장 | 기존 접수·예약·결과 Transaction과 출력 계약을 유지한 실제 연결 실험 | 무료 Java 318개·JavaScript 104개·ESLint와 별도 Live Test 1개 통과. 원문 보존·제안 1건·Job 완료 확인. 자동 Worker·복구·조회·Browser·수동 평가는 남음. 학습 내용은 10/5 회차에 포함 |
 
 JSON의 `null`과 Field 누락의 차이는 [JSON Schema의 null 설명](https://json-schema.org/understanding-json-schema/reference/null)을 참고한다.
 Transaction의 Commit·Rollback은 [PostgreSQL 공식 문서](https://www.postgresql.org/docs/17/tutorial-transactions.html)를 참고한다.

@@ -1,11 +1,11 @@
 # AI 제안 평가 Dataset과 Rubric 초안
 
 > 최초 작성일: 2026-10-01
-> 최종 수정일: 2026-10-04
+> 최종 수정일: 2026-10-06
 > Version: `dataset-v2-draft` · `rubric-v2.1-draft` · 논리적 출력 계약 `v2.1-draft`
-> 상태: N01 예비 호출 두 건과 수동 내용 평가, 전체 평가의 오프라인 준비 Code·Test 확인. 13건 전체의 실제 비교 평가는 미실시
+> 상태: N01 예비 두 건, 개인정보 실험 6회·기존/보완 Prompt의 고정 비교 각 52회 확인. 요약·Injection 수동 채점은 남아 있음
 
-이 문서는 [Week 7 계획](./weekly-plan.md)의 고정 평가를 준비하는 작업 자료다. Label과 허용 범위는 사용자 검토를 거쳐 고정한다. 현재 [AI Suggestion 출력 계약 초안](./ai-suggestion-contract-draft.md)을 기준으로 삼되, 그 초안을 구현 계약으로 확정한 것은 아니다. N01 예비 결과를 토의하면서 핵심 사실 누락과 전체 Priority의 기준을 보완했다. 그 결과의 수동 평가는 보완한 `rubric-v2.1-draft`로 기록하며, 사전에 고정한 기준으로 수행한 본 평가라고 부르지 않는다. 이후 비교에서는 입력·채점 기준·Prompt를 먼저 고정하고 결과에 맞춰 기대값을 바꾸지 않는다.
+이 문서는 [Week 7 계획](./weekly-plan.md)의 Dataset·채점 기준과 실제 비교 조건을 정리한 작업 자료다. 출력 구조·판단 기준은 [AI Suggestion 계약 초안](./ai-suggestion-contract-draft.md)을 따른다. N01 예비 결과를 토의하면서 핵심 사실 누락과 전체 Priority의 기준을 보완했다. 그 결과의 수동 평가는 보완한 `rubric-v2.1-draft`로 기록하며 사전에 고정한 기준으로 수행한 본 평가라고 부르지 않는다. 10/5에는 고정한 13건으로 기존 Prompt 52회와 보완 Prompt 52회를 비교했다. 기대값은 유지했으며 Label 후보 비교와 미실시인 요약·Injection 수동 채점을 구분한다. [실제 비교와 Prompt 보완 기록](./lab-reports/2026-10-05-ai-output-policy-comparison.md)
 
 ## Dataset과 Rubric은 무엇인가
 
@@ -188,9 +188,9 @@ Category는 원인이나 책임 주체가 아닌 실제로 해결을 요청한 �
 
 최종 요약에 연락처가 없다는 사실은 출력 검사 결과다. Model이 연락처를 받은 뒤 생략했을 수도 있으므로 외부 전송 여부는 별도로 확인한다. 사용자는 전처리 실험에 실제 AI 모델을 사용하도록 요청했고, AI에게 보내는 Prompt에 개인정보가 없어야 한다고 답했다.
 
-다음 회차에는 합성 자리표시자로 전처리를 시험한 뒤 실제 AI 응답도 관찰한다. 실제 전송 직전의 직렬화된 요청 Body에서 작업 지시·제목·본문 등 모든 Model 입력에 불필요한 값이 남았는지 검사한다. 검사의 통과 여부와 전처리 Version을 기록하며 요청 원문·Credential을 Log로 출력하지 않는다. AI 요약의 값 복사 여부·핵심 사실 보존은 별도 출력 평가다. Unit Test·Fake Provider는 실패 경계의 재현을 보완하며 실제 모델 관찰을 대체하지 않는다.
+10/5에는 합성 자리표시자로 전처리를 시험하고 실제 AI 응답도 관찰했다. 실제 전송 직전의 직렬화된 요청 Body에서 작업 지시·제목·본문 등 모든 Model 입력에 알려진 값이 남았는지 검사했다. 검사의 통과 여부와 전처리 Version을 기록하며 요청 원문·Credential을 Log로 출력하지 않는다. AI 요약의 값 복사 여부·핵심 사실 보존은 별도 출력 평가다. Unit Test·Fake Provider는 실패 경계의 재현을 보완하며 실제 모델 관찰을 대체하지 않는다.
 
-이 학습용 실험은 아직 미실시다. 10/5 야간 또는 10/6에 재개하며 당일 전체 누적 예산을 먼저 확인한다. 별도 학습 호출은 13건·52회 본 평가의 결과와 섞지 않되 당일 비용에는 모두 포함한다. 전처리를 본 평가에 적용할 때에는 두 방식에 같은 처리를 사용하고 전처리 Version·Prompt·입력 조건을 고정한다. 기존 N01 예비 두 건은 새 전처리의 검증 근거가 아니다.
+개인정보 예비 실험은 N01·S01·S02 × 두 방식의 6회이며, 이후 13건·52회 비교와 결과를 분리했다. 비용은 이날 전체 누계에 함께 포함했다. 고정 비교의 두 방식에 같은 전처리를 적용하고 Version·Prompt·입력 조건을 기록했다. 기존 10/2 N01 예비 두 건은 새 전처리의 검증 근거가 아니다. Spring Runtime 전송 경로와 임의의 개인정보 탐지는 별도 과제다.
 
 ## 비교 조건과 실행 순서
 
@@ -217,17 +217,19 @@ Lab의 `scripts/week7-openai-pilot.mjs`와 실행 안내에서 입력·Prompt·�
 
 예비 호출은 `prompt-v1-pilot`·`provider-schema-v1-pilot`·`v2-draft` 조건이었다. 이후 전체 Priority와 Rubric을 보완했으므로 새 기준에 맞춘 본 평가와 분리한다. 두 건만으로 구조 통과율의 개선이나 요약 품질의 일반적인 우위를 결론 내리지 않는다.
 
-## 전체 평가 준비 코드
+## 전체 평가 코드와 실행 결과
 
-10월 3일에 10월 2일의 미실시분을 재개하며 Lab에 합성 Dataset과 평가 준비 모듈을 추가했다. `scripts/week7-ai-evaluation-dataset.mjs`는 위 13건의 제목·원문과 기대 후보를 보관한다. `scripts/week7-ai-evaluation.mjs`는 52개의 최초 응답 비교 계획을 만들며 현재 `--dry-run`만 지원한다. 실제 Provider 전송·결과 파일 저장은 아직 연결하지 않았다.
+10월 3일에 10월 2일의 미실시분을 재개하며 Lab에 합성 Dataset과 평가 준비 모듈을 추가했다. `scripts/week7-ai-evaluation-dataset.mjs`는 위 13건의 제목·원문과 기대 후보를 보관한다. `scripts/week7-ai-evaluation.mjs`는 52개의 최초 응답 비교 계획을 만들며 자체 CLI는 `--dry-run`만 지원한다. 10/5 추가한 `scripts/week7-ai-live-evaluation.mjs`는 Java 전처리·실제 Provider 전송·Git 제외 결과 저장을 연결하고, `scripts/week7-ai-daily-budget.mjs`는 호출 전 예약과 실행 간 일일 비용 누계를 관리한다.
 
-현재 공통 Prompt는 `prompt-v3-abstain-draft`다. 앞선 `prompt-v2-evaluation-draft`의 핵심 사실 보존·전체 Priority 규칙에, 의미를 해석할 수 없는 입력의 보류 기준을 추가했다. 두 방식에 같은 지시를 적용하며 논리적 계약·Rubric은 `v2.1-draft`와 `rubric-v2.1-draft`, 출력 구조와 전송용 Schema는 기존 v2와 `provider-schema-v1-pilot`을 유지한다. 기대 Label·핵심 사실·Case ID는 Provider 입력에서 제외한다. 이미 수행한 N01 두 건의 조건을 바꾼 것은 아니다.
+52회 실제 비교는 `prompt-v3-abstain-draft`로 실행했다. 핵심 사실 보존·전체 Priority와 의미를 해석할 수 없는 입력의 보류 기준을 두 방식에 같게 적용했다. 두 방식 모두 26/26의 JSON·출력 계약 통과, 24/26의 분류 후보 일치, 20/26의 Priority 후보 일치를 기록했다. 반복된 오류는 N02·M01·I03의 금전 피해 우선순위와 A03의 기술적 이용 불가 분류다. 수동 요약·Injection 점수는 아직 정하지 않았다.
 
-준비 Test 14개에서는 13건·52개 계획의 누락 없음, 두 방식의 공통 조건, 기대값 미전송, 분류 집합 비교, Schema 실패와 수동 내용 평가의 분리, 이전 비용을 포함하는 예산 계산을 확인했다. Pilot 15개·기존 UI 12개를 함께 실행해 41개가 통과했다. 본 평가의 실제 응답 52건이나 Spring·PostgreSQL 저장 결과가 나온 것은 아니다.
+현재 공통 Prompt는 `prompt-v4-policy-alignment`다. 합의한 금전 피해와 원인 미확인 구분을 더 명확히 표현하되 논리적 계약·Rubric은 `v2.1-draft`와 `rubric-v2.1-draft`, Dataset은 `dataset-v2-draft`, 전송용 Schema는 `provider-schema-v1-pilot`을 유지한다. Model·기대값·전처리도 바꾸지 않았다. 기대 Label·핵심 사실·Case ID는 Provider 입력에서 제외한다. 이전 예비 두 건과 v3의 52회 결과는 보존했다. v4의 실제 52회 재비교에서는 두 방식 모두 형식·결정·분류·Priority 후보가 각각 26/26 일치했다. 요약·Injection 수동 평가는 아직 정하지 않았다.
 
-분류 비교 결과는 `CANDIDATE_LABEL_COMPARISON`으로 표시한다. Schema를 통과한 거짓 요약도 요약 내용은 `NOT_SCORED`이며 자동 정답으로 집계하지 않는다. 민감 출력 검사는 지정한 합성 자리표시자에 한정한다. 예산 계산은 순수 함수 Test이며 실행 간 누계·하루 지출 제한 구현이 아니다.
+10/3 초기 준비 Test 14개에서는 13건·52개 계획의 누락 없음, 두 방식의 공통 조건, 기대값 미전송, 분류 집합 비교, Schema 실패와 수동 내용 평가의 분리, 이전 비용을 포함하는 예산 계산을 확인했다. 당시 Pilot 15개·기존 UI 12개를 함께 실행해 41개가 통과했다. 10/5에는 실험 실행기와 Prompt 보완 Test를 포함한 JavaScript 전체 74개·ESLint 검사가 통과했다. 52건 응답 비교는 독립 실행기의 근거다. 이후의 실제 Java AI→PostgreSQL 한 건은 [별도 Live 실험](./lab-reports/2026-10-06-java-provider-adapter-lab.md)으로 기록하며 이 비교의 분모에 넣지 않는다.
 
-구현 결정은 이전 Pilot의 조건을 보존하고 준비 모듈을 별도로 두는 것이다. Pilot을 직접 바꾸는 안과 비교해 예비 근거 보존과 변경 조건의 식별을 우선했다. 실제 호출 전에 남은 Label·추가 보류 경계, Prompt·Rubric 고정과 누적 예산·결과 보존을 확인한다. 준비 Code는 Provider 요청 생성·출력 비교에 한정되며, 합의한 Job·Suggestion 저장 정책을 구현한 것은 아니다.
+분류 비교 결과는 `CANDIDATE_LABEL_COMPARISON`으로 표시한다. Schema를 통과한 거짓 요약도 요약 내용은 `NOT_SCORED`이며 자동 정답으로 집계하지 않는다. 민감 출력 검사는 지정한 합성 자리표시자에 한정한다. 준비 모듈의 예산 계산은 순수 함수이고, 새 실제 실행기의 파일 기반 일일 누계와 구분한다. 파일 누계도 실행기 밖의 호출이나 계정 전체 실제 청구액을 자동 통제하는 기능은 아니다.
+
+구현 결정은 이전 Pilot의 조건을 보존하고 평가 모듈·실행기를 별도로 두는 것이다. Pilot을 직접 바꾸는 안과 비교해 예비 근거 보존과 변경 조건의 식별을 우선했다. 재비교에서는 기존 기대값·Rubric을 유지해 Prompt 보완의 효과와 회귀를 확인한다. 이 Code는 Provider 요청 생성·출력 비교에 한정되며, 합의한 Job·Suggestion 저장 정책을 구현한 것은 아니다.
 
 ## 먼저 검토할 질문
 
@@ -237,4 +239,4 @@ Lab의 `scripts/week7-openai-pilot.mjs`와 실행 안내에서 입력·Prompt·�
 4. 합의한 분류 범위와 전체 Priority 기준에서 결합 영향과 정보 부족을 추가 Case로 어떻게 확인할 것인가?
 5. 민감 정보 자리표시자 검사를 통과했다는 사실이 원문 전송·보관 정책까지 안전하다는 뜻인가?
 
-A01의 기대 결정과 판단 보류값, A03의 `TECHNICAL` 분류와 `HIGH` 판단, M01의 `HIGH` 판단, N04의 `OTHER` 분류, 복수 Category 허용과 Ticket 자동 분리 금지, 별도의 미분류 문제를 `UNDETERMINED`로 병기하는 규칙은 확인했다. `ACCOUNT`·`BILLING`·`TECHNICAL`의 동등한 분류 범위, 유효한 `ABSTAIN`의 기록 기준과 의미를 해석할 수 없는 입력 사례도 합의했다. v2는 기존 12건을 유지하면서 N02에 정상 로그인이라는 배경을 추가하고 M01을 새로 넣었다. 전체 Priority 기준과 핵심 사실 누락의 채점 문구는 보완했다. 나머지 기대 Label·추가 경계 사례·본 평가의 실행 조건은 추가 검토 뒤 고정한다. 현재 실제 결과는 N01 예비 두 건이며, 13건 전체 비교는 미실시다.
+A01의 기대 결정과 판단 보류값, A03의 `TECHNICAL` 분류와 `HIGH` 판단, M01의 `HIGH` 판단, N04의 `OTHER` 분류, 복수 Category 허용과 Ticket 자동 분리 금지, 별도의 미분류 문제를 `UNDETERMINED`로 병기하는 규칙은 확인했다. `ACCOUNT`·`BILLING`·`TECHNICAL`의 동등한 분류 범위, 유효한 `ABSTAIN`의 기록 기준과 의미를 해석할 수 없는 입력 사례도 합의했다. v2는 기존 12건을 유지하면서 N02에 정상 로그인이라는 배경을 추가하고 M01을 새로 넣었다. 전체 Priority 기준과 핵심 사실 누락의 채점 문구는 보완했다. 기존/보완 Prompt의 각 52회 비교는 완료했으며 요약·Injection 수동 채점과 추가 경계 사례 검토는 10/6 재개 범위다.
