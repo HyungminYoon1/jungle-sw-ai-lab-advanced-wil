@@ -123,14 +123,49 @@ Spring Context를 새로 만들면 Bean이 새 객체가 되지만, 같은 JVM�
 - 같은 JVM에서 새 Context를 만드는 것과 실제 Java Process를 바꾸는 것은 어떤 점이 다를까?
 - Application의 새 기본 한도가 5회여도 기존 Job의 3회 Snapshot을 유지해야 하는 이유는 무엇일까?
 
+## 조회는 AI 실행을 시작하지 않는다
+
+Job이 `PENDING`이고 제안이 없을 때, 담당자의 단순 조회는 현재 상태만 반환해야 한다고 답했다. 작업 실행은 Worker의 책임이고 조회는 DB에 저장된 진행 상태와 결과를 읽는 책임이다. 조회할 때마다 새 Job·예약·AI 호출을 만들면 화면 확인이나 반복 조회가 실행·비용을 늘리는 원인이 된다.
+
+이 읽기 전용 원칙을 계약에 반영하고 `GET /api/tickets/{id}/ai-suggestion`으로 연결했다. 기존 내부 결과 조회와 HTTP용 조회는 분리했다. 조회 API를 추가한 것과 실제 Browser에서 화면 흐름을 확인한 것은 별도의 근거다.
+
+HTTP 조회 성공과 AI 작업 성공도 다르다. AI 작업이 `FAILED`여도 그 상태를 DB에서 정상적으로 읽었다면 `200`으로 실패 상태를 전달해야 한다고 답했다. 이번 조회가 성공했는지는 HTTP Status로, 앞선 AI 작업의 결과는 응답에 담긴 Job Status로 구분한다. DB 조회 자체가 실패한 경우를 정상 조회나 AI 작업 실패로 바꾸어 표현해서는 안 된다.
+
+Job 미등록을 `FAILED`로 표시하면 Ticket 생성 실패로 오해할 우려가 있다고 답했다. 더 직접적인 문제는 등록되지 않은 작업을 등록 뒤 실패한 작업으로 표현한다는 것이다. Ticket 존재 여부·Job 등록 여부·등록된 Job의 결과는 각각 다른 사실이다. 제안이 없다는 이유만으로 `FAILED`라고 하거나 조회 중 새 Job을 만들지 않는다.
+
+조회 응답은 `ticketId`·`job`·`suggestion`을 나눈다. Job이 없는 정상 조회에서는 `job: null`로 부재를 표현하지만, 등록된 작업의 대기·실패·명시적 보류는 실제 Job 상태를 유지한다. DB 조회 오류를 `null`로 숨기는 것은 정상적으로 부재를 확인한 것과 다르다.
+
+유효한 `ABSTAIN`이라면 Job은 남기고 `status: "ABSTAINED"`·`suggestion: null`로 응답해야 한다고 답했다. 제안이 없다는 사실만으로 작업 미등록·실패·명시적인 제안 생성 보류를 구분할 수는 없다. 등록된 Job의 상태를 함께 읽어야 한다.
+
+### 고객 안내와 담당자용 조회는 구분한다
+
+나는 일반 고객에게 내부 요약 실패의 원인을 바로 공개하기보다, 최종 실패 뒤 담당자가 답변할 예정이라는 안내를 하는 방향을 제안했다. 원문 오류 대신 고정 실패 코드를 전달하는 것도 제안했다. 이번에 만드는 조회 API는 AGENT 전용이므로 고객의 화면 안내와 담당자의 처리 원인 확인은 서로 다른 계약이다.
+
+AI 제안은 공식 답변이 아니다. Ticket 접수·AI Job 처리·담당자의 공식 답변을 한 상태로 표현하면 안 된다. 고객 안내를 마련할 때도 실제 접수 여부와 답변 절차를 기준으로 해야 하며, AI 실패만으로 빠른 답변이 보장된다고 약속하지 않는다.
+
+같은 시점의 조회에서 `SUCCEEDED`와 제안 부재가 함께 나타나면 안전한 `500` 조회 오류로 처리하고, 정상 조회한 `FAILED`는 `200`과 담당자용 고정 실패 코드로 전달하는 권장안을 승인했다. Provider 원문 오류를 공개하거나 조회가 Job을 고치는 방식은 사용하지 않는다. Codex가 이 계약으로 API와 Test를 작성했다. 일반 USER는 `403`이고 고객용 공식 답변·안내 기능을 함께 만든 것은 아니다.
+
+### 조회가 읽은 시점도 맞춰야 한다
+
+Worker가 제안과 Job 완료를 같은 Transaction으로 저장해도, 조회가 두 번의 SELECT 사이에 그 Commit을 만나면 이전 상태와 새 제안이 섞일 수 있다. 이번 HTTP 조회는 최초 Message에 연결된 Job·제안·분류를 한 SELECT로 읽는다. `readOnly`는 상태를 고치지 않는 책임이고, 같은 Snapshot으로 읽는 것은 서로 다른 시점의 값을 섞지 않는 책임이다.
+
+PENDING·RUNNING에 이전 실패 코드가 남아 있더라도 현재 작업이 최종 실패했다는 뜻은 아니다. 응답의 `failureCode`는 FAILED일 때만 담는다. 최초 Message의 Job이 없다면 최근 Message의 Job을 대신 가져오거나 새 Job을 만들지 않는다.
+
+Codex가 반복 조회 전후의 여섯 Table을 비교하고 Provider·Claim·결과 저장 Service 미호출을 확인했다. 결과 저장 Transaction의 Commit 전에는 RUNNING·제안 없음, Commit 뒤에는 SUCCEEDED·모든 분류가 조회되는지도 확인했다. DB 예외는 Test용으로 주입해 응답·Log에 원문이 나오지 않는지 검사했다. 실제 DB 연결을 끊거나 실제 Browser로 이 API를 사용한 결과는 아니다. 새 Test 55개를 포함한 최신 회귀는 Java 444개·JavaScript 104개·ESLint 통과다. 구체적인 조건과 근거는 [AGENT 조회 Lab Report](../lab-reports/2026-10-06-agent-ai-suggestion-query-lab.md)에 모았다.
+
 ## 조회·Browser·평가에서 확인할 질문
 
 - AGENT의 상태·제안 조회가 새 AI 호출을 시작하면 안 되는 이유는 무엇일까?
+- Job이 `FAILED`인데도 상태 조회의 HTTP 응답이 `200`일 수 있는 이유는 무엇일까?
+- Job이 아예 없는 경우와 `ABSTAINED`·`FAILED`라서 제안이 없는 경우를 응답에서 어떻게 구분할까?
+- `SUCCEEDED`인데 제안이 없는 모순된 조회 결과를 정상적인 ‘제안 없음’으로 표현해도 될까?
+- 담당자에게 보여줄 고정 실패 코드와 Provider의 원문 오류는 어떤 점이 다르며, 어느 것을 응답에 담아야 할까?
+- 고정 실패 코드가 원문 오류보다 안전하더라도 고객과 AGENT에게 같은 정보를 공개해야 하는가?
 - Browser가 접수 `201`을 받은 시점과 Job `SUCCEEDED`를 확인한 시점은 무엇이 다를까?
 - Session·Role·CSRF Test와 실제 Browser 흐름은 각각 무엇을 확인할까?
 - 구조·Category·Priority 후보 일치가 요약의 핵심 사실 보존까지 확인해 주지는 않는 이유는 무엇일까?
 - 제안 문자열을 `textContent`로 표시해야 하는 이유와 Source·Log에 남기지 않아야 할 값은 무엇일까?
 
-Week 7의 남은 순서와 완료 기준은 [주간 계획](../weekly-plan.md)을 따른다. 실제 JVM 재시작까지 확인했고, 명시적인 실제 AI 자동 처리·AGENT 조회·Browser·수동 내용 평가와 WIL을 이어서 진행한다.
+Week 7의 남은 순서와 완료 기준은 [주간 계획](../weekly-plan.md)을 따른다. 실제 JVM 재시작과 AGENT 조회 API까지 확인했고, 명시적인 실제 AI 자동 처리·Browser·수동 내용 평가와 WIL을 이어서 진행한다.
 
 관련 개념: [AI 비동기 처리의 생애주기](../study-docs/ai-async-processing-lifecycle.md), [Provider Adapter와 HTTP 재시도](../study-docs/ai-provider-adapter-and-http-retries.md), [HTTP 접수와 인증 작성자](../study-docs/http-receipt-and-authenticated-author.md).

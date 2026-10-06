@@ -1,10 +1,10 @@
 # AI Suggestion 계약 초안
 
-> 상태: 입력·접수·예약·결과 저장과 선택 Worker의 대기·저장 재시도·조건부 복구·실제 JVM 재시작 확인 — 유료 자동 처리·조회·Browser는 남아 있음
+> 상태: 입력·접수·예약·결과 저장과 선택 Worker의 대기·저장 재시도·조건부 복구·실제 JVM 재시작·AGENT 조회 확인 — 유료 자동 처리·Browser·수동 평가 진행 예정
 > 작성일: 2026-09-29
 > 최종 수정일: 2026-10-06
 > 논리적 계약 Version: `v2.1-draft` — v2의 출력 구조를 유지하고 전체 Priority의 의미를 보완
-> 구현 상태: PostgreSQL HTTP 접수·V3 실행권·V4 결과 저장·Spring AI Adapter·V5 대기 예약·V6 저장 재시도·V7 Attempt 결과와 선택 Worker의 조건부 복구 구현. 실제 JVM 재시작 Test를 포함한 전체 무료 Java Clean Test 389개·JavaScript 104개와 ESLint 통과. 실제 Java AI→PostgreSQL 단일 Live 실험은 앞선 한 건이며, 유료 자동 처리·조회·Browser·수동 내용 평가는 후속 과제
+> 구현 상태: PostgreSQL HTTP 접수·V3 실행권·V4 결과 저장·Spring AI Adapter·V5 대기 예약·V6 저장 재시도·V7 Attempt 결과와 선택 Worker의 조건부 복구·AGENT 읽기 전용 조회 구현. 전체 무료 Java Clean Test 444개·JavaScript 104개와 ESLint 통과. 실제 Java AI→PostgreSQL 단일 Live 실험은 앞선 한 건이며, 유료 자동 처리·Browser·수동 내용 평가는 후속 과제
 
 이 문서는 Week 7의 한 수직 흐름에 필요한 입력·출력·권한·저장·실패 계약을 검토하기 위한 초안이다. 출력 구조 v2는 단일 `category` 문자열을 복수 값을 담는 `categories` 목록으로 변경한 **우리 Application의 논리적 Schema 초안**이다. `v2.1-draft`에서는 구조를 바꾸지 않고 개별 문제와 누적·결합 영향을 함께 보는 Priority 기준을 추가했다. OpenAI 최소 비교에는 별도의 전송용 Schema와 이전 계약 `v2-draft`를 사용했다. 그 결과가 전체 논리적 계약이나 Spring 저장 흐름의 Test 통과를 뜻하지는 않는다. [최소 비교 기록](./lab-reports/2026-10-02-openai-structured-output-pilot.md)
 
@@ -428,7 +428,7 @@ Worker는 현재 Process에 검증 객체가 있으면 저장 재시도를 우�
 
 영향 파일은 Lab의 `AiSuggestionWorkerProcessRestartIntegrationTest`·Test 전용 `AiWorkerProcessTestApplication`·README와 WIL의 자료·Note·계획이다. 새 Test 5개와 전체 Java 389개·JavaScript 104개·ESLint가 통과했고 이번 유료 호출은 0회다. 자식 Process에 전역 Credential·JVM 주입 설정을 상속하지 않고 접속 정보·원문·예외 원문을 출력하지 않는다. 유료 자동 처리·AGENT 조회·Browser·수동 평가, Provider 응답 중간 종료와 원격 결과 조회는 별도 검토한다. [실제 JVM 재시작 검증](./lab-reports/2026-10-06-worker-jvm-process-restart-lab.md)
 
-## API·권한·응답 — 잠정안
+## API·권한·응답 — 접수와 AGENT 조회 계약
 
 | 요청·상황 | 예상 결과 | 저장·실행 경계 |
 |---|---|---|
@@ -439,12 +439,42 @@ Worker는 현재 Process에 검증 객체가 있으면 저장 재시도를 우�
 | 권한 있는 `AGENT`의 없는 Ticket ID 조회 | `404` | 조회가 AI 호출을 유발하지 않음 |
 | 최초 메시지가 없는 기존 Ticket | 기존 Ticket 조회 유지 | Provider 호출·제안 저장·임의 원문 생성 없음 |
 | 유효한 요약과 Category·Priority의 `UNDETERMINED` | 제안을 `PENDING_REVIEW`로 저장 | 이미 접수한 Ticket·Message는 변경하지 않음 |
-| 유효한 `ABSTAIN` | Job은 `ABSTAINED`, Suggestion은 0건 | 원본 Ticket·Message 유지. 의미를 해석할 수 없는 입력 사례는 확인했으며 조회 표현과 실제 저장 검증은 후속 작업 |
+| 유효한 `ABSTAIN` | Job은 `ABSTAINED`, Suggestion은 0건. 정상 조회는 `200`과 해당 Job·`suggestion: null` | 원본 Ticket·Message와 Job 유지. 작업 미등록·Provider 실패와 구분 |
 | 완료된 AI 출력에서 필수 Field 누락 | 처음에는 저장하지 않고 설정된 전체·보완 상한과 시간·오류 조건 안에서 전체 재요청 | 재검증 성공 시 제안 한 건 저장. 더 이상 보완할 수 없으면 저장 없이 출력 오류 종료 |
 | Provider Timeout·연결 실패·잘못된 출력·제안 저장 실패 | AI 작업의 실패 표시 | 접수 성공과 분리. 원본 Ticket·Message 유지, 검증되지 않은 제안 저장 없음 |
-| `GET /api/tickets/{id}/ai-suggestion` — URI 후보 | `AGENT`에게 작업 상태와 존재하는 제안을 조회하는 안 | Ticket ID로 조회 가능하게 하되 URI·응답 구조·작업 미등록 표현은 미결정 |
+| `GET /api/tickets/{id}/ai-suggestion` | `AGENT`에게 최초 Message의 Job 상태와 존재하는 제안을 조회 | 읽기 전용. 없는 Ticket은 `404`, 존재하는 Ticket의 Job 부재는 `200`과 `job: null`·`suggestion: null` |
 
 기존 생성 권한 `USER`·`AGENT`와 조회 권한 `AGENT`는 유지한다. 고객의 자기 문의·대화 조회 권한은 이후 대화 기능을 구현할 때 별도 계약으로 정한다. 공식 답변 API와 수동 AI 재생성 API는 이번 범위에 없다.
+
+담당자의 상태·제안 조회는 읽기 전용으로 합의했다. Job이 `PENDING`이고 Suggestion이 없더라도 현재 저장된 상태만 반환한다. 조회에서 Provider 호출·Job 생성·실행권 확보·예약 증가·재시도를 시작하지 않는다. Worker가 작업을 실행하는 경계와 담당자가 진행 상황을 읽는 경계를 분리한다.
+
+HTTP 조회의 성공과 AI 작업의 성공을 구분한다. 권한 있는 담당자가 저장된 Job을 정상적으로 조회했다면 Job이 `FAILED`여도 HTTP `200`으로 그 실패 상태를 전달한다. HTTP Status는 이번 조회 요청의 결과이며 Job Status는 저장된 AI 작업 상태다. DB 조회 자체의 실패는 별도의 조회 오류이고, 이를 AI 작업의 `FAILED`나 정상 조회로 대신 표현하지 않는다.
+
+AI Job 미등록은 등록된 Job의 `FAILED`와 구분한다. Ticket이 존재한다면 Job 부재를 Ticket 생성 실패나 AI 작업 실패로 바꾸어 표현하지 않는다. 기존 Ticket에 없는 원문·Job을 조회 과정에서 만들어 넣지 않는다.
+
+조회 응답은 `ticketId`·`job`·`suggestion` 세 Field로 나눈다. 정상 조회에서 Job이 없으면 `job: null`·`suggestion: null`이다. Job에는 `id`·`status`·`failureCode`만 담고, 실패 코드는 최종 `FAILED`일 때만 제공한다. `PENDING`·`RUNNING`에 남은 이전 실패 코드를 현재의 최종 실패처럼 공개하지 않는다. Suggestion에는 `id`·`summary`·`categories`·`priority`·`reviewStatus`를 담는다. 생성 예약·Provider 응답 원문·Prompt·접수 원문·Credential은 이 응답에 추가하지 않는다. `null`은 정상 조회로 부재를 확인한 경우에만 사용하며 DB 조회 실패를 대신하지 않는다.
+
+유효한 `ABSTAIN`의 조회 표현은 Job을 남기고 `status: "ABSTAINED"`·`suggestion: null`로 응답하는 것으로 합의했다. Job을 없애거나 `job: null`로 바꾸지 않는다. 이는 등록된 작업의 정상적인 제안 생성 보류이며, Job 미등록과 작업 실패의 `FAILED`는 별도로 표현한다.
+
+### 조회 정합성과 역할별 오류 공개 — 승인한 계약
+
+고객에게 내부 AI 오류를 그대로 보여주지 않는 방향과, 담당자에게 처리 원인을 제공하는 요구를 분리한다. 이번 조회 API의 수신자는 `AGENT`이며 익명은 `401`, 일반 `USER`는 `403`이다. 새 조회 URI에 AGENT 규칙을 명시하고 실제 Filter Chain으로 검증한다. `@GetMapping`이 지원하는 HEAD로 USER가 접근하지 않도록 업무 요청의 Method와 무관하게 같은 URI의 권한을 제한한다. 허용된 CORS Preflight는 기존 CORS Filter에서 먼저 처리한다. 고객의 자기 문의 조회·공식 답변 UI는 이번 구현에 추가하지 않는다. [Spring의 HEAD 지원](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-requestmapping.html)
+
+같은 시점의 조회 결과에서 `SUCCEEDED`인데 Suggestion이 없다면 결과 정합성 오류로 처리한다. HTTP `500`과 고정 조회 오류 코드 `AI_RESULT_INCONSISTENT`를 반환한다. 다른 상태에 제안이 있거나 제안의 필수 분류가 없는 경우, 알 수 없는 저장 상태·허용값도 정상 결과로 바꾸지 않는다. 조회에서 Job을 `FAILED`로 바꾸거나 새 AI를 호출해 수리하지 않는다. 이 코드는 조회 오류이며 Job의 실패 코드 Enum에 추가하지 않는다. 이 Status 선택은 우리 API의 계약이다. [HTTP 500의 의미](https://www.rfc-editor.org/rfc/rfc9110.html#section-15.6.1)
+
+이미 최종 `FAILED`인 작업을 정상 조회했다면 HTTP `200`과 저장된 실패 상태, `PROVIDER_REFUSED` 같은 허용된 고정 실패 코드만 담당자에게 전달한다. DB 읽기 예외는 `500`과 `AI_RESULT_QUERY_FAILED`로 처리한다. Provider·SQL 예외 원문·Cause·전체 응답·Prompt·Secret은 응답이나 Log에 복사하지 않는다. 고정 코드로 원인을 구분하는 것과 내부 오류 원문 공개는 다르다. [OWASP 오류 처리 지침](https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html)
+
+고객 안내는 AI 제안 생성의 성공·실패와 문의 접수·사람의 공식 답변을 구분해 설계할 후속 범위다. 실제 접수 Commit이 확인되면 ‘문의가 접수되었습니다’처럼 확인한 사실을 안내할 수 있다. ‘빠른 시간 내 답변 예정’은 담당자 배정·응답 절차가 실제로 뒷받침할 때만 약속하며, AI 실패만으로 담당자 답변이 보장된다고 표현하지 않는다. 사용자가 위 권장안을 승인해 AGENT 전용 조회 API에 반영했다.
+
+### 조회 구현의 선택과 후속 검토
+
+HTTP용 조회 Service·Port·JDBC Adapter와 응답 DTO를 별도로 추가했다. 기존 Worker의 내부 결과 조회나 결과 저장 Transaction은 변경하지 않는다. `postgres` Profile에서만 이 API의 Controller·Service·Adapter를 등록하고 `in-memory`의 기존 실험 경로는 유지한다.
+
+Ticket의 최초 Message는 해당 Ticket에 저장된 Message 중 가장 작은 ID로 식별한다. 그 Message에 고정한 Job을 조회하며 최근 Message·최근 Job으로 대상을 바꾸지 않는다. 최초 Message나 그 Job이 없으면 없는 상태를 반환한다. 후속 대화·메시지별 조회·공식 답변 확장 시에는 이 조회 계약도 별도로 검토한다.
+
+여러 SELECT를 `REPEATABLE_READ`로 묶는 안과 단일 SELECT로 읽는 안을 비교했다. 이번 HTTP 응답은 한 번의 Parameterized SELECT로 Ticket·최초 Message·Job·제안·분류를 읽고, 읽기 전용 Transaction에서 검증한다. PostgreSQL의 한 SELECT는 같은 Statement Snapshot을 보므로 완료 Commit 전후의 값을 섞지 않는다. 기존 Ticket FK Index·Job Unique·Suggestion Unique·Category Primary Key를 이용하는 구조이며 새 Index·Migration·Row Lock을 추가하지 않는다. 처리 기한이 지난 Job도 조회가 실패 상태로 변경하지 않는다. [PostgreSQL의 SELECT Snapshot](https://www.postgresql.org/docs/17/transaction-iso.html#XACT-READ-COMMITTED)
+
+ID가 숫자가 아니거나 양수가 아니면 `400`, 없는 Ticket은 `404`다. 정상 응답에는 `Cache-Control: no-store`를 적용한다. 새 API의 Test와 남은 실제 Browser·AI 연결 검증은 [AGENT 조회 Lab Report](./lab-reports/2026-10-06-agent-ai-suggestion-query-lab.md)에 구분해 기록한다.
 
 CSRF Token은 Browser JavaScript가 Server에서 받은 Header 이름으로 접수 요청에 직접 붙인다. `201` 응답을 Browser가 받지 못해도 접수 Commit이 이미 끝났을 수 있으므로 자동 재시도하지 않는다. CORS 허용, Session 인증, CSRF와 AI 출력 검증은 서로 다른 경계다.
 
@@ -561,6 +591,7 @@ SDK `maxRetries=0`만으로 HTTP Client의 연결 재시도까지 꺼지는 것�
 | 2026-10-06 | DB의 다음 실행 시각과 별도 TEMPORARY_RETRY로 조건부 재시도를 연결하고 Worker는 기본 꺼짐·명시적 의존성으로 활성화 | Backoff·최소 대기·전체 기한과 최종 FAILED 경계 설명 후 구현 진행 승인. 기존 한도·원문 보존·짧은 Transaction 유지 | V5·Worker·설정·Scheduler·Context의 새 Test 31개, 전체 Java 349개·JavaScript 104개·ESLint 통과. 유료 호출 0회. 결과 불명 자동 복구·실제 JVM·Browser·내용 평가는 후속 과제 |
 | 2026-10-06 | 메모리의 검증 객체로 DB 저장만 총 3회·최소 5초 재시도하고 상한 뒤 현재 실행만 종료 | 현재 Attempt·기존 결과·기한 확인과 제한된 객체 재사용에 사용자 승인. 즉시 AI 재생성·무제한 저장은 채택하지 않음 | V6·Worker·Processor·설정, 새 Test 15개와 전체 Java 364개·JavaScript 104개·ESLint 통과. 원문·생성 예약 유지, 대기 중 DB Lock 없음. Process 종료 후 객체 복구·결과 불명 새 생성은 후속 검토 |
 | 2026-10-06 | 별도 Java Process와 같은 PostgreSQL로 중단 후 재개를 검증, 기존 예약·기한·금지 유지 | 같은 JVM Context와 비교한 실제 Process 검증에 진행 승인. Test 전용 진입점·격리 환경으로 외부 호출과 사용자 Process 영향 방지 | 새 Test 5개·Java 389개·JavaScript 104개·ESLint 통과, 유료 호출 0회. 운영 계약·Source·Migration 유지. 유료 Worker·조회·Browser·평가는 후속 과제 |
+| 2026-10-06 | AGENT 전용 읽기 API, 최초 Message의 고정 Job·제안과 상태별 null·고정 코드 공개 | 사용자 승인. 읽기 중 AI 실행·복구를 시작하는 안과 고객용 공개는 제외. 단일 SELECT로 같은 Snapshot을 읽고 조회 오류와 작업 실패를 구분 | 영향: Lab의 `ai/query`·`ai/web`·Security·오류 Handler·Test·README, WIL 계약·자료·Note·Report·계획. 새 Test 55개·Java 444개·JavaScript 104개·ESLint 통과. 기존 Worker·Migration 유지. 실제 Browser·유료 Worker·수동 평가와 고객용 조회는 후속 검토 |
 
 JSON의 `null`과 Field 누락의 차이는 [JSON Schema의 null 설명](https://json-schema.org/understanding-json-schema/reference/null)을 참고한다.
 Transaction의 Commit·Rollback은 [PostgreSQL 공식 문서](https://www.postgresql.org/docs/17/tutorial-transactions.html)를 참고한다.

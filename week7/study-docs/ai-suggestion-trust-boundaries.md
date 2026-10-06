@@ -15,11 +15,11 @@ AI Suggestion은 담당자에게 보여줄 제안이지 고객에게 게시된 �
   → Browser 요청
   → Spring Security: Session·Role·상태 변경 요청의 CSRF 검사
   → Controller: 요청을 Application Service에 전달
-  → 접수 Transaction: Ticket·최초 Message 저장과 Commit
+  → 접수 Transaction: Ticket·최초 Message·PENDING Job 저장과 Commit
   → Browser에 접수 성공 응답
 
 별도 AI 처리
-  → 작업 기록과 입력 Message 조회
+  → Commit된 Job과 고정된 입력 Message 조회
   → 전송용 복사본: 불필요한 민감 정보 제거·치환
   → AI Provider Adapter: 외부 호출과 응답 수신, 접수 Transaction 밖에서 실행
   → 응답 검증: JSON·필드·값 계약 확인
@@ -174,6 +174,34 @@ AI 작업 상태: SUCCEEDED
 비동기 실행과 재시작 복구도 별개다. 원문 Commit과 작업 등록 사이에 Process가 종료되면 작업이 누락될 수 있다. 작업을 함께 영속화하거나 누락을 찾아 복구할 규칙이 필요하다. 실행 중이라는 기록이 오래 남았다고 실제 작업이 계속 실행 중인 것은 아니므로 중단 판정 조건도 정한다. 같은 Job의 제안 중복 저장을 막아도 외부 호출·비용까지 정확히 한 번을 보장하지는 않는다.
 
 작업 상태, Timeout, 재시도와 중단 후 복구의 관계는 [AI 비동기 처리의 생애주기](./ai-async-processing-lifecycle.md)에서 설명한다.
+
+### 조회 성공·결과 정합성·오류 공개 대상
+
+작업 상태 조회의 HTTP 결과와 조회한 AI 작업의 결과는 다르다. 저장된 `FAILED`를 정상적으로 읽었다면 조회는 성공할 수 있다. 반대로 DB를 읽지 못했거나 결과가 서로 모순된다면 정상적인 ‘제안 없음’으로 대신 응답하지 않는다.
+
+예를 들어 제안 저장과 `SUCCEEDED` 기록을 같은 Transaction으로 처리하는 설계에서, 같은 시점의 조회가 `SUCCEEDED`와 제안 부재를 함께 반환했다면 내부 정합성 문제다. `ABSTAINED`의 정상적인 제안 부재와 구분한다. 읽기 전용 조회가 상태를 실패로 덮어쓰거나 새 생성으로 수리하는 것은 별도의 변경 작업이다.
+
+동시에 Worker가 결과를 저장할 수 있으므로 ‘같은 시점’도 구현으로 지켜야 한다. Job을 한 번 읽고 별도 SELECT로 제안을 읽으면 두 문장 사이에 완료 Commit이 발생할 수 있다. 하나의 SELECT에서 JOIN해 읽거나, 여러 SELECT를 같은 `REPEATABLE_READ` Transaction에서 실행하면 서로 다른 시점의 결과를 섞는 문제를 피할 수 있다. `readOnly = true`라는 표시만으로 여러 SELECT의 Snapshot이 같아지는 것은 아니다. [PostgreSQL의 Transaction Isolation](https://www.postgresql.org/docs/17/transaction-iso.html)
+
+우리 API의 조회 표현은 다음처럼 구분한다. 작업 상태를 읽는 GET은 실행권 확보·새 Job·예약·Provider 호출을 하지 않는다.
+
+| 조회한 사실 | HTTP와 응답 |
+|---|---|
+| Ticket 자체가 없음 | `404` |
+| Ticket은 있고 최초 Message의 Job이 없음 | `200`, `job: null`·`suggestion: null` |
+| Job이 PENDING·RUNNING | `200`, 해당 Job·`suggestion: null` |
+| Job이 FAILED | `200`, 해당 Job·허용된 고정 실패 코드·`suggestion: null` |
+| 유효한 제안 생성 보류인 ABSTAINED | `200`, 해당 Job·`suggestion: null` |
+| SUCCEEDED와 저장된 제안 | `200`, 해당 Job·제안·검토 상태 |
+| 저장 결과가 서로 모순됨 / DB 읽기 실패 | `500`, 각각 고정 조회 오류 코드 |
+
+PENDING·RUNNING Row에 앞선 시도의 실패 코드가 남아 있어도 현재 작업이 최종 FAILED라는 뜻은 아니다. 실패 코드의 공개 여부도 Job 상태를 기준으로 결정한다.
+
+담당자용 제안 조회와 고객의 문의 상태 안내도 수신자가 다르다. AI 요약은 내부 업무 보조이고 고객에게 게시한 공식 답변이 아니다. 내부 AI 실패가 고객 문의의 접수 실패를 의미하거나 담당자 답변을 보장하는 것도 아니다. 안내는 실제로 확인한 접수·응답 상태와 운영 절차를 기준으로 한다.
+
+권한 규칙은 Framework가 자동 연결하는 요청 Method도 고려한다. Spring의 `@GetMapping`은 HEAD를 함께 지원하므로 GET에만 Role 제한을 붙이면 HEAD가 더 느슨한 다른 규칙으로 넘어갈 수 있다. 조회 URI의 업무 요청에 같은 Role을 요구하는 것과 CORS Filter가 처리하는 사전 OPTIONS는 별도로 설계한다. [Spring의 HEAD·OPTIONS Mapping](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-requestmapping.html)
+
+필요한 원인 구분은 허용된 고정 코드로 제공하고 Provider 원문 오류·Prompt·응답 전체·비밀값은 내보내지 않는다. 어떤 코드가 비밀값을 포함하지 않더라도 공개할 대상과 목적을 별도로 정한다. 서버 측 조사 기록에도 필요한 식별자·고정 코드 등 안전한 정보만 남긴다. 예상하지 못한 오류에는 내부 구현을 노출하지 않는 응답을 제공한다. [OWASP 오류 처리 지침](https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html)
 
 ## Test가 증명하는 범위
 
