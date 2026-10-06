@@ -1,16 +1,16 @@
 # AI Suggestion 계약 초안
 
-> 상태: 입력·접수·예약·결과 저장 합의와 단일 Provider 연결 확인 — 자동 Worker·복구·조회·Browser는 남아 있음
+> 상태: 입력·접수·예약·결과 저장과 선택 Worker의 대기 Job 처리 확인 — 결과 불명 복구·조회·Browser는 남아 있음
 > 작성일: 2026-09-29
 > 최종 수정일: 2026-10-06
 > 논리적 계약 Version: `v2.1-draft` — v2의 출력 구조를 유지하고 전체 Priority의 의미를 보완
-> 구현 상태: PostgreSQL HTTP 접수·V3 실행권·V4 결과 저장·단일 Processor·Spring AI Adapter 구현. 전체 무료 Java Clean Test 318개·JavaScript 104개와 ESLint 통과, 실제 Java AI→PostgreSQL 별도 Live Test 1개 통과. 자동 Worker·복구·조회·Browser·수동 내용 평가는 후속 과제
+> 구현 상태: PostgreSQL HTTP 접수·V3 실행권·V4 결과 저장·Spring AI Adapter·V5 대기 예약·선택 Worker 구현. 전체 무료 Java Clean Test 349개·JavaScript 104개와 ESLint 통과. 실제 Java AI→PostgreSQL 단일 Live 실험은 앞선 한 건이며, 결과 불명 자동 복구·실제 JVM 재시작·조회·Browser·수동 내용 평가는 후속 과제
 
 이 문서는 Week 7의 한 수직 흐름에 필요한 입력·출력·권한·저장·실패 계약을 검토하기 위한 초안이다. 출력 구조 v2는 단일 `category` 문자열을 복수 값을 담는 `categories` 목록으로 변경한 **우리 Application의 논리적 Schema 초안**이다. `v2.1-draft`에서는 구조를 바꾸지 않고 개별 문제와 누적·결합 영향을 함께 보는 Priority 기준을 추가했다. OpenAI 최소 비교에는 별도의 전송용 Schema와 이전 계약 `v2-draft`를 사용했다. 그 결과가 전체 논리적 계약이나 Spring 저장 흐름의 Test 통과를 뜻하지는 않는다. [최소 비교 기록](./lab-reports/2026-10-02-openai-structured-output-pilot.md)
 
 ## 현재 기준과 합의한 Ticket·Message 모델
 
-- 현재 Lab의 `POST /api/tickets`는 `in-memory`에서 제목만, `postgres`에서는 제목·본문을 받아 `USER`·`AGENT`가 접수할 수 있다. `GET /api/tickets/{id}`는 `AGENT`만 읽는다. 자동 AI 처리 연결은 아직 없다.
+- 현재 Lab의 `POST /api/tickets`는 `in-memory`에서 제목만, `postgres`에서는 제목·본문을 받아 `USER`·`AGENT`가 접수할 수 있다. `GET /api/tickets/{id}`는 `AGENT`만 읽는다. Worker는 선택 활성화 설정이며 유료 Provider의 Runtime 자동 조립은 아직 추가하지 않았다.
 - Ticket은 한 주제의 대화와 처리 상태를 관리하는 묶음이다. 고객 문의와 고객에게 게시한 응대팀 답변은 각각 `ticket_messages`의 Row로 두고 Ticket을 참조한다. Ticket과 Message의 관계는 1:N이다.
 - 최초 문의도 Message 한 건이다. `tickets.description`에 같은 본문을 중복 저장하지 않는다. 앞서 검토한 nullable `description` Column 추가안은 이 모델로 대체한다. 해당 Column은 아직 구현되지 않았다.
 - PostgreSQL의 새 접수 Request Field는 `title`·`body`로 확정했다. 제목과 공백이 아닌 최초 메시지 본문을 함께 받으며, 응답은 기존 `id`·`title`·`status`를 유지한다. 최초 Message·Job은 접수 Transaction으로 저장하고 응답을 AI 완료로 해석하지 않는다.
@@ -368,7 +368,17 @@ Provider Adapter의 SDK·HTTP 자동 재시도 차단은 구현했고 로컬 HTT
 
 Provider가 요구한 최소 대기를 지키면 Job 전체 처리 기한에 도달하는 경우에는 더 일찍 재시도해 시간을 맞추지 않는다. 재시도가 금지되거나 종료돼도 앞서 접수한 Ticket·Message는 유지한다. 크레딧 부족은 명시적 판단 보류가 아니므로 `ABSTAINED`로 바꾸지 않는다. [OpenAI Rate Limit 지침](https://developers.openai.com/api/docs/guides/rate-limits), [OpenAI 오류 유형](https://developers.openai.com/api/docs/guides/error-codes)
 
-Provider Adapter의 오류 분류·`Retry-After` 해석과 Processor의 최소 대기 전달은 통제된 응답으로 확인했다. Job의 재시도 대기 기록과 자동 Worker의 재예약·전송은 남아 있다. 현재 Claim Service의 출력 보완 경로로 Rate Limit을 대신 처리하지 않는다. Header가 없거나 유효하지 않을 때의 Backoff·Jitter 세부값, 안전한 실패 코드, 정책 Version 이행과 기존 Job 적용 여부는 연결 전에 검토한다. 기존 Job의 정책 Snapshot을 조용히 덮어쓰지 않는다.
+Provider Adapter의 오류 분류·`Retry-After` 해석과 Processor의 최소 대기 전달에 이어, V5와 선택 Worker로 확인된 Rate Limit의 대기 기록·다음 예약·통제된 Provider 호출을 연결했다. `TEMPORARY_RETRY`를 출력 보완·결과 불명 `RECOVERY`와 분리하며 `PROVIDER_RATE_LIMITED`를 기록한다. 새 요청은 원래 정책 Snapshot·누적 한도·기한을 유지한다. [Worker 검증](./lab-reports/2026-10-06-worker-rate-limit-and-context-restart-lab.md)
+
+Header가 없거나 유효하지 않은 경우와 다른 일시적 거절은 이번 Worker가 자동 재호출하지 않는다. 현재 `RUNNING`을 유지하고 전체 기한 종료 규칙을 적용한다. 이 경우의 별도 Backoff·Jitter와 결과 확인·복구 정책은 이어서 검토한다. 유효한 최소 대기가 기한보다 길면 그 시각을 그대로 저장하고, 새 Claim의 기한 조건과 만료 정리가 새 요청을 막는다.
+
+### 선택 Worker의 활성화·최종 실패 경계
+
+자동 활성화와 기본 꺼짐을 비교해, 기존 Application 실행이 외부 유료 호출을 시작하지 않도록 선택 활성화로 연결했다. `postgres`와 `helpdesk.ai.worker.enabled=true`가 필요하며 기본 확인 간격은 1초다. 확인 간격은 개별 Job의 재시도 대기를 대체하지 않는다. Provider·개인정보 Guard·출력 검증기를 명시적으로 제공하며 전역 Key·일반 개인정보 탐지·요약 Runtime 기본값을 새로 정하지 않았다.
+
+최종 `FAILED`는 일반 Polling·대기 예약으로 다시 열지 않는다. 관리자 재개는 초기 구현에 포함하지 않으며, 이후에는 원인 해결·승인된 추가 조건을 별도로 정해야 한다. 새 Job·설정 변경으로 기존 한도와 기한을 초기화하지 않는 기준은 유지한다. 한 Tick 전체를 Transaction으로 묶는 대신 예약·상태 기록·결과 저장만 짧게 Commit한다.
+
+영향 파일은 Lab의 `ai/job`·`ai/processing`·V5·관련 Test·README다. 새 Test 31개와 전체 Java 349개·JavaScript 104개·ESLint가 통과했다. 같은 JVM의 새 Spring Context에서 미실행·대기 Job의 자동 처리를 확인했고, 결과 불명 `RUNNING`은 Lease 만료만으로 재실행하지 않았다. 후속 검토는 결과 확인 후 복구·저장 재시도·실제 JVM Process·유료 Worker·AGENT 조회와 Browser다.
 
 ## API·권한·응답 — 잠정안
 
@@ -500,6 +510,7 @@ SDK `maxRetries=0`만으로 HTTP Client의 연결 재시도까지 꺼지는 것�
 | 2026-10-05 | 우리 서버의 SDK 재전송도 같은 Job의 호출 예약에 포함하고 기본 구현에서 SDK 자동 재시도를 끄기로 합의 | 제공자 서버 내부 재처리와 구분하고, 함수 호출 한 번 뒤 여러 HTTP 요청이 생성 한도를 우회하는 것을 방지 | Provider Adapter·Worker·실제 전송 횟수 검증은 미구현. Job 한도·기존 예약·제공자 실행 및 청구 횟수의 구분은 유지 |
 | 2026-10-05 | 일시적인 Rate Limit은 유효한 `Retry-After`·Job Backoff와 전체 횟수·기한·실행권 조건을 지켜 재예약, 크레딧 부족은 원인 해결 전 자동 재요청 금지 | 같은 `429`를 무조건 반복하는 안 대신 원인별 조건부 재시도 안에 사용자 승인. 대기 중 Lock을 유지하지 않고 새 요청마다 예약 Commit | 계약·학습자료·학습노트에 반영. 오류 분류·대기 기록·Worker 재시도·Test는 미구현. Header 부재·무효의 대기 정책과 정책 Version 이행은 후속 검토 |
 | 2026-10-06 | 단일 Processor·Spring AI Adapter·최종 전송 Body 검사를 연결하고 실제 AI 응답을 PostgreSQL에 저장 | 기존 접수·예약·결과 Transaction과 출력 계약을 유지한 실제 연결 실험 | 무료 Java 318개·JavaScript 104개·ESLint와 별도 Live Test 1개 통과. 원문 보존·제안 1건·Job 완료 확인. 자동 Worker·복구·조회·Browser·수동 평가는 남음. 학습 내용은 10/5 회차에 포함 |
+| 2026-10-06 | DB의 다음 실행 시각과 별도 TEMPORARY_RETRY로 조건부 재시도를 연결하고 Worker는 기본 꺼짐·명시적 의존성으로 활성화 | Backoff·최소 대기·전체 기한과 최종 FAILED 경계 설명 후 구현 진행 승인. 기존 한도·원문 보존·짧은 Transaction 유지 | V5·Worker·설정·Scheduler·Context의 새 Test 31개, 전체 Java 349개·JavaScript 104개·ESLint 통과. 유료 호출 0회. 결과 불명 자동 복구·실제 JVM·Browser·내용 평가는 후속 과제 |
 
 JSON의 `null`과 Field 누락의 차이는 [JSON Schema의 null 설명](https://json-schema.org/understanding-json-schema/reference/null)을 참고한다.
 Transaction의 Commit·Rollback은 [PostgreSQL 공식 문서](https://www.postgresql.org/docs/17/tutorial-transactions.html)를 참고한다.

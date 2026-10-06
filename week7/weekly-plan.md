@@ -2,7 +2,7 @@
 
 > 작성일: 2026-09-29
 > 최종 수정일: 2026-10-06
-> 상태: In Progress — 10/5 학습 회차 마감, 실제 Java AI→PostgreSQL 한 건 확인. 남은 Worker·복구·Browser·수동 채점은 10/6에 재개
+> 상태: In Progress — 실제 Java AI 저장 한 건과 선택 Worker의 대기 Job 처리·Context 재시작 확인. 결과 불명 복구·조회·Browser·수동 채점은 진행 예정
 > 초기 기간: 2026-09-29 ~ 2026-10-03
 > 이월 재개: 2026-10-06 — 10/5 회차의 연장 실험은 해당 Study Note에 포함하고 Lab Report는 실제 실행일 유지
 > 학습 제외일: 2026-10-04 일요일
@@ -14,7 +14,7 @@
 
 Week 6에는 최소 Browser UI에서 Session·CSRF를 유지하며 Ticket을 실제 PostgreSQL에 생성·조회했다. 9월 29일 기록상 Java Test 61개와 JavaScript Test 12개가 통과했고, 실제 Browser와 Database Row를 함께 확인했다. 이 결과는 AI 기능의 근거가 아니다.
 
-PostgreSQL의 HTTP 접수는 `title`·`body`를 받아 인증 작성자와 최초 Message·`PENDING` Job까지 저장한다. 기존 In-memory 제목 전용 실험은 별도로 보존했다. 검증된 출력의 제안·복수 Category·Job 완료는 별도 결과 Transaction으로 저장한다. Processor를 한 번 직접 실행한 실제 Java Provider·PostgreSQL 연결은 확인했고, 자동 Worker의 실행·복구는 남아 있다. 독립 Provider 비교와 이 저장 실험을 구분한다. Week 7에는 최초 문의 Message를 입력으로 삼아 AI 제안 한 가지만 더한다. Ticket은 대화 묶음, Message는 원문, Job은 AI 처리 상태, Suggestion은 검증된 결과로 구분한다. AI가 Ticket 상태를 자동 변경하거나 공식 답변을 게시하지 않는다.
+PostgreSQL의 HTTP 접수는 `title`·`body`를 받아 인증 작성자와 최초 Message·`PENDING` Job까지 저장한다. 기존 In-memory 제목 전용 실험은 별도로 보존했다. 검증된 출력의 제안·복수 Category·Job 완료는 별도 결과 Transaction으로 저장한다. Processor를 한 번 직접 실행한 실제 Java Provider·PostgreSQL 연결과 통제된 Provider의 선택 Worker·대기 예약·Context 재시작을 확인했다. 결과 불명 복구·실제 JVM 재시작·새 Browser 흐름은 이어서 검증한다. 독립 Provider 비교와 이 저장 실험을 구분한다. Week 7에는 최초 문의 Message를 입력으로 삼아 AI 제안 한 가지만 더한다. Ticket은 대화 묶음, Message는 원문, Job은 AI 처리 상태, Suggestion은 검증된 결과로 구분한다. AI가 Ticket 상태를 자동 변경하거나 공식 답변을 게시하지 않는다.
 
 ## 이번 주 목표
 
@@ -182,6 +182,14 @@ Prompt·Schema·Dataset은 Version을 붙여 변경 전후를 비교한다. 원�
 4. 평가·독립 설명: v3/v4 비교 결과의 요약·Injection 수동 채점을 진행한다. 형식·후보 Label 개선과 요약 충실도를 구분하고 Tool Calling·Transaction·실행권의 핵심 개념을 자료 없이 설명한다.
 5. 회귀·공개 마감: 남은 구현 뒤 전체 회귀·정적 검사·Secret·Log 점검을 다시 실행하고 WIL을 작성한다. 블로그 게시·포럼 등록은 확인된 뒤 완료로 처리한다.
 
+### 10/6 선택 Worker와 대기 Job 재개
+
+Backoff·`Retry-After`·전체 기한을 구분하고, 최종 `FAILED` 이후의 일반 자동 재시도가 없다는 경계를 확인했다. V5·선택 Worker가 유효한 Rate Limit의 다음 시각을 DB에 기록하며, 다음 Claim이 새 예약을 Commit한 뒤 호출한다. 기본 자동 실행은 꺼짐이다.
+
+새 Test 31개와 전체 Java Clean Test 349개·JavaScript 104개·ESLint가 통과했다. 같은 JVM의 새 Spring Context에서 PENDING·미래 대기를 이어가고, 최종 FAILED와 Lease 만료만으로 결과 불명 RUNNING을 다시 실행하지 않는 것을 확인했다. 이번 Provider는 통제된 응답이며 유료 AI 호출은 0회다. [검증 기록](./lab-reports/2026-10-06-worker-rate-limit-and-context-restart-lab.md)
+
+다음 순서는 가능한 결과 확인 후 RUNNING 복구·검증 객체의 저장 재시도·실제 JVM 재시작이다. 이어서 명시적인 유료 Worker 연결·AGENT 조회·Browser·수동 평가·독립 설명과 WIL을 진행한다. 관리자 재개·미승인 실패의 자동 재호출은 이번 기본 Worker에 추가하지 않았으며, Week 7 전체 완료 Gate는 유지한다.
+
 현재 논리적 출력 초안으로 평가 자료를 준비하는 것과 그 초안을 Lab 구현 계약으로 확정하는 것은 다르다. 추가 보류 경계나 아직 검토하지 않은 기대값을 임의로 확정하지 않는다. Job 등록의 접수 Transaction 포함은 합의했으며, 실행권·재시도·복구 세부 계약은 구현 전에 검토한다. 이 검토를 평가 준비와 독립적인 최소 AI 비교까지 모두 막는 선행 조건으로 확대하지 않는다.
 
 평가 준비와 독립적인 최소 비교 이후 Lab 수직 적용은 다음 순서로 진행한다. 후속 대화 기능을 추가하거나 기존 AI 평가·Guardrail 범위를 줄이지 않는다.
@@ -269,7 +277,7 @@ GitHub Project에는 다음 다섯 Card를 계획한다. 첫 Card만 `Ready`, �
 10월 5일에 시작한 과업은 WIL 작성·게시만 남은 상태가 아니다. 접수·예약·검증·결과 저장과 Java Provider Adapter의 Test에 이어 실제 AI 저장 한 건을 확인했다. 자동 실행·복구·학습 확인은 계속 진행한다.
 
 1. 완료: 합성 문의 한 건의 실제 Java AI 호출·제안 저장·원문 보존을 확인했다. Processor를 직접 한 번 실행한 선택 실험이며 자동 Worker·Browser E2E는 별도 검증한다.
-2. 자동 Worker에 대기·실패 유형별 재시도·현재 Attempt·횟수·전체 기한을 연결하고 같은 DB를 유지한 Application 중단 복구를 검증한다.
+2. 부분 완료: 선택 Worker의 PENDING·대기 예약·최종 실패 제외와 같은 DB의 Spring Context 재시작을 확인했다. 결과 불명 RUNNING·저장 재시도·실제 JVM 중단 복구·유료 자동 처리 검증은 남아 있다.
 3. AGENT의 작업 상태·제안 조회와 Session·Role·CSRF를 유지하는 최소 Browser 흐름을 확인한다.
 4. 고정 비교 결과의 요약·Injection 수동 평가, 핵심 개념 복습과 최종 회귀·노출 점검 뒤 WIL을 작성하고 게시·포럼 등록을 확인한다.
 
@@ -316,6 +324,7 @@ GitHub Project에는 다음 다섯 Card를 계획한다. 첫 Card만 `Ready`, �
 | 2026-10-05 | 제안·분류·Job 완료 결과 저장 미구현 | 별도 분류 Table·V4·현재 Attempt를 보호하는 결과 Transaction과 내부 조회 구현 | 분리 저장 권장안에 사용자 승인, Rollback과 Commit 불명확의 차이 확인 | 새 Test 19개·Java 255개·JavaScript 79개·ESLint 통과. 실제 Provider·Worker·조회 API·Browser·Process 복구 Gate와 기존 학습 범위 유지 |
 | 2026-10-06 | 실제 Java AI 호출·PostgreSQL 저장 미확인 | 합성 문의 한 건의 실제 응답·제안 저장·원문 보존과 별도 Live Test 1개 통과 확인 | 수정된 실행기의 사용자 실행 결과와 로컬 결과·JUnit Report 대조 | 자동 Worker·복구·조회 API·Browser·수동 내용 평가·복습·WIL 범위 유지 |
 | 2026-10-06 | 10/5 연장 학습의 내용이 10/6 Note와 분산됨, 재개일 미분리 | 현재까지를 10/5 회차로 마감하고 남은 과업을 10/6에 재개 | 사용자의 회차 마감·문서 갱신·Commit 요청 | 실제 실행일의 Lab Report·기존 근거는 유지. 자동 Worker·복구·조회·Browser·수동 평가·복습·WIL과 Week 8 Cloud·HTTPS 범위를 줄이지 않음 |
+| 2026-10-06 | 자동 Worker·대기 기록 미연결 | 선택 Worker·V5·조건부 대기 예약과 같은 DB의 Context 재시작 검증 | 재시도·최종 실패 경계 확인 후 사용자 진행 승인 | Java 349개·JavaScript 104개·ESLint 통과, 유료 호출 0회. 결과 불명·저장·실제 JVM 복구와 조회·Browser·평가·WIL을 이어가며 학습 범위 유지 |
 
 ## 관련 기준
 
