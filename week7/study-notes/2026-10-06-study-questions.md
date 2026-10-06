@@ -1,6 +1,6 @@
 # 2026-10-06 핵심 질문과 Worker 실행·복구
 
-> 상태: 진행 중 — 재시도 시간·현재 Attempt·최종 실패 경계 확인, 대기 Job 처리와 검증 객체의 저장 재시도 검증
+> 상태: 진행 중 — 재시도 시간·현재 Attempt·최종 실패 경계 확인, 대기·저장 재시도와 Attempt별 결과 불명 복구 구현
 > 주제: 자동 Worker, 실패 유형별 재시도, 현재 Attempt, 중단 복구, 제안 조회와 Browser 흐름
 
 10월 5일 학습 회차의 연장 실험까지는 [10월 5일 학습 노트](./2026-10-05-study-questions.md)에 모았다. 실제 실행일이 10월 6일인 Java AI→PostgreSQL 실험은 해당 날짜의 [Lab Report](../lab-reports/2026-10-06-java-provider-adapter-lab.md)에 남겼다. 이번에는 그 단일 처리기를 자동으로 실행하는 Worker와 재시도 조건을 살펴봤다.
@@ -56,11 +56,33 @@ Codex가 Java Worker·선택 활성화 설정과 Test를 작성·실행했다. �
 
 실제 PostgreSQL과 통제된 Provider 응답으로 재시도 전 추가 예약 없음, 한도·기한 준수, 원문 보존, 최종 실패 제외와 경쟁 실행을 확인했다. 같은 DB를 유지한 새 Spring Context에서 대기 중 Job을 처리하고 재시도 시각·누적 횟수·원래 기한을 이어가는 것도 검증했다.
 
-이는 같은 JVM에서 Spring Context를 새로 만든 Test다. 실제 JVM Process 중단·재시작, 결과 불명 `RUNNING`의 자동 복구와 새 Worker의 실제 AI 호출은 다음 단계에서 따로 확인한다. 앞선 실제 AI 저장 한 건의 근거는 그대로 유지한다.
+앞선 Worker 검증은 같은 JVM에서 Spring Context를 새로 만든 Test다. 이어서 조건부 결과 불명 `RUNNING` 복구를 아래와 같이 연결했다. 실제 JVM Process 중단·재시작과 새 Worker의 실제 AI 호출은 따로 확인할 과제로 남는다. 앞선 실제 AI 저장 한 건의 근거는 그대로 유지한다.
 
 첫 Worker 단계에서는 새 Test 31개와 Java 349개·JavaScript 104개·ESLint가 통과했다. 이어서 저장 재시도 Test 12개·Migration 1개·설정 추가 2개를 더해 최신 회귀는 Java 364개·JavaScript 104개·ESLint 통과다. 두 검증 모두 유료 AI 호출은 0회다.
 
 저장 재시도 Test는 실제 PostgreSQL에서 Rollback 뒤 같은 객체 재사용, 기존 Commit 확인, 조회 실패·이전 Attempt·기한·상한을 확인했다. 응답 유실은 Test용으로 주입하고 5초 경계는 통제된 Clock으로 검사했다. 실제 Process 중단으로 사라진 객체를 복원한 것은 아니다. 조건과 Row Assertion은 [Worker Lab Report](../lab-reports/2026-10-06-worker-rate-limit-and-context-restart-lab.md)와 [저장 재시도 Lab Report](../lab-reports/2026-10-06-validated-output-storage-retry-lab.md)에 모았다.
+
+## Process가 끝나면 메모리의 요약도 사라진다
+
+처음에는 DB 상태로 새 객체를 만들면 저장을 다시 할 수 있다고 생각했다. Job·원문 객체는 DB에서 복원할 수 있지만, 저장되지 않은 AI 요약은 다르다. 메모리에만 있던 `summary`·`categories`·`priority`는 Process 종료 후 Job 상태만으로 다시 만들 수 없다.
+
+기존 제안이 Commit됐는지 먼저 조회하고, 없더라도 조회 실패와 구분해야 한다. 응답 객체가 사라진 상태에서 새 생성이 필요하다면 같은 Job의 복구 정책·예약·한도·기한을 적용한다. 새 Job이나 새 객체를 만든다고 한도가 다시 생기지는 않는다.
+
+## 예약 원장은 실행 완료 로그가 아니다
+
+예약 Row는 앞으로 보낼 생성 요청이 한도 1회를 사용했다는 기록이다. 실제 전송·AI 실행·청구까지 끝났다는 증거는 아니다. 예약 Commit 뒤 전송 전에 중단될 수도 있고, 전송 뒤 결과를 받지 못할 수도 있다.
+
+Attempt 1을 2로 바꾼 뒤 예약 INSERT가 실패하는 예에서는 처음에 Attempt 변경을 되돌릴 필요가 없다고 답했다. 두 작업이 같은 Transaction이라는 설명을 듣고, **현재 Attempt와 예약 증가도 함께 Rollback돼야 한다**고 정리했다. 이후 DB에 남는 값은 `current_attempt=1`, `reserved_generation_count=1`이라고 답했다. 원장도 Attempt 1 한 건만 남고 Provider를 호출하면 안 된다.
+
+## Lease 만료는 재시도 허가가 아니다
+
+Rate Limit 응답을 받았지만 유효한 `Retry-After`가 없는 경우에는 자동 재호출하지 않는 기존 계약을 다시 확인했다. Lease가 끝났다는 사실은 시간 조건일 뿐, 금지된 요청을 허용하는 이유가 아니라고 이해했다.
+
+그래서 예약 원장에 Attempt별 결과 분류를 남기는 방향을 승인했다. `UNCONFIRMED`는 분류가 아직 Commit되지 않은 상태, `OUTCOME_UNKNOWN`은 결과 불명이라는 관찰, `AUTO_RETRY_BLOCKED`는 결과 불명 경로로 자동 재호출하지 않는 상태다. 코드만 보고 실제 AI 실행 횟수를 확정하지 않는다.
+
+복구 후보를 읽은 뒤에도 성공이나 금지 기록이 새로 Commit될 수 있다. 실제 Claim에서 같은 Job을 잠그고 조건을 다시 확인해야 한다. 반면 검증 객체가 아직 남아 있으면 새 생성보다 저장 재시도를 먼저 한다.
+
+Codex가 V7·조건부 복구와 PostgreSQL Test를 추가했다. 새로운 결과 분류는 원문 응답이나 Secret을 보관하지 않는다. 새 Test 20개와 최신 전체 Java 384개·JavaScript 104개·ESLint가 통과했고 유료 호출은 0회다. 같은 JVM의 새 Context에서 조건부 복구와 재시도 미승인 유지를 확인했다. 조건과 Row Assertion은 [Attempt별 결과·복구 Lab Report](../lab-reports/2026-10-06-attempt-results-and-running-recovery-lab.md)에 모았다. 새로운 정책을 승인한 것과 흐름을 자료 없이 설명할 수 있는지는 구분하며 이어서 복습한다.
 
 ## 핵심 질문
 
@@ -82,6 +104,10 @@ Codex가 Java Worker·선택 활성화 설정과 Test를 작성·실행했다. �
 - 메모리에 검증된 객체가 남은 저장 재시도와 Process 종료 후 복구는 어떤 점이 다를까?
 - 저장 직후 응답을 잃었을 때, 같은 객체를 다시 저장하기 전에 무엇을 확인해야 할까?
 - 세 번의 저장 실패와 DB 조회 실패는 왜 서로 다른 판정일까?
+- 예약 Row 한 건이 Provider 실제 실행 한 번을 뜻하지 않는 이유는 무엇일까?
+- Attempt 2로 바꾼 뒤 원장 INSERT가 실패하면 현재 Attempt·누적 예약·원장에는 무엇이 남아야 할까?
+- Lease가 만료됐어도 `AUTO_RETRY_BLOCKED`인 Job을 다시 호출하면 안 되는 이유는 무엇일까?
+- Provider 거절을 DB에 기록하기 전에 중단됐다면 재시작한 Worker가 확정할 수 없는 것은 무엇일까?
 
 ## 조회·Browser·평가에서 확인할 질문
 
@@ -91,6 +117,6 @@ Codex가 Java Worker·선택 활성화 설정과 Test를 작성·실행했다. �
 - 구조·Category·Priority 후보 일치가 요약의 핵심 사실 보존까지 확인해 주지는 않는 이유는 무엇일까?
 - 제안 문자열을 `textContent`로 표시해야 하는 이유와 Source·Log에 남기지 않아야 할 값은 무엇일까?
 
-Week 7의 남은 순서와 완료 기준은 [주간 계획](../weekly-plan.md)을 따른다. 결과 불명 복구·AGENT 조회·Browser·수동 내용 평가와 WIL은 이어서 진행한다.
+Week 7의 남은 순서와 완료 기준은 [주간 계획](../weekly-plan.md)을 따른다. 조건부 복구를 연결한 뒤 실제 JVM 중단·재시작·AGENT 조회·Browser·수동 내용 평가와 WIL을 이어서 진행한다.
 
 관련 개념: [AI 비동기 처리의 생애주기](../study-docs/ai-async-processing-lifecycle.md), [Provider Adapter와 HTTP 재시도](../study-docs/ai-provider-adapter-and-http-retries.md), [HTTP 접수와 인증 작성자](../study-docs/http-receipt-and-authenticated-author.md).

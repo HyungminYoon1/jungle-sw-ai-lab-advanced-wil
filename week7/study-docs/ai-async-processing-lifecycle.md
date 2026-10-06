@@ -287,6 +287,40 @@ Spring의 `@Async`는 호출자의 흐름과 별도로 작업을 실행하도록
 
 오래된 `RUNNING`을 모두 새 호출로 바꾸면 아직 실행 중인 요청을 중복 호출할 수 있다. 반대로 영원히 건드리지 않으면 중단된 작업이 남는다. 경과 시간은 판단 조건 중 하나로 사용할 수 있지만, 그것만으로 이전 실행이 끝났음을 증명하지는 않는다.
 
+## 예약 원장과 Attempt별 결과를 구분한다
+
+`ai_suggestion_attempts`의 한 Row는 같은 Job에서 새 생성 요청 한 번을 예약했다는 기록이다. `job_id`·`attempt_number`·`request_kind`·`reserved_at`으로 어떤 시도가 한도를 사용했는지 식별한다. 예약과 실제 Provider 실행은 같은 사실이 아니다. 예약 Commit 뒤 요청을 보내기 전에 Process가 종료될 수도 있다.
+
+현재 Attempt 증가와 예약 Row INSERT는 같은 Transaction이다. Attempt 1에서 2로 바꾼 뒤 예약 INSERT가 실패하면 두 변경을 함께 Rollback한다. DB에는 여전히 `current_attempt=1`·누적 예약 1·원장 1건이 남으며, 이 실패한 Attempt 2로 Provider를 호출하지 않는다.
+
+예약에 결과 코드를 함께 남기면 재시작 뒤 서로 다른 상황을 구분할 수 있다.
+
+- `UNCONFIRMED`: 이 Attempt에 대해 결과 분류가 Commit되지 않았다. 미전송·미실행을 뜻하지 않는다.
+- `OUTCOME_UNKNOWN`: Timeout·연결 오류 등으로 결과가 불명확하다는 관찰을 기록했다. 성공·실패나 청구 여부를 확정한 것은 아니다.
+- `AUTO_RETRY_BLOCKED`: 이 Attempt를 결과 불명 복구 경로로 자동 재호출하지 않는다. 확인한 거절의 재시도 조건이 없거나, 이전 기록의 결과를 복구 허가로 해석할 수 없는 경우다.
+
+Job의 `last_failure_code`만 읽으면 이전 Attempt의 실패를 현재 Attempt에 잘못 적용할 수 있다. 예를 들어 Attempt 1의 Rate Limit 뒤 승인된 대기를 마치고 Attempt 2를 예약했다면, Job에 이전 오류 코드가 남아 있어도 Attempt 2는 자신의 결과 기록을 가진다.
+
+`AUTO_RETRY_BLOCKED`는 모든 종류의 후속 작업을 영구 금지한다는 뜻은 아니다. 유효한 Rate Limit 대기나 필수 Field 보완을 별도로 `PENDING`에 Commit했다면 그 승인된 경로로 새 예약을 할 수 있다. 그 기록 없이 Lease 만료만으로 새 요청을 보내는 것을 막는 코드다.
+
+## 복구 후보를 찾는 것과 실행권을 얻는 것은 다르다
+
+복구 후보는 결과 미확인·결과 불명인 현재 `RUNNING` 중 Lease와 Backoff가 끝나고, 원래 전체 기한과 생성 한도가 남은 Job이다. 먼저 DB의 기존 Job·제안을 조회한다. 조회 실패를 ‘제안 없음’으로 바꾸지 않으며, `ABSTAINED`처럼 제안 없이 정상 종료한 상태도 구분한다.
+
+후보 조회 뒤에도 다른 Worker가 완료하거나 재시도 금지를 기록할 수 있다. 따라서 실제 Claim Transaction에서 Job Row를 잠그고 현재 Attempt·상태·결과 코드·기한·한도·기존 제안을 다시 확인한다. 결과 분류도 같은 Job Row Lock을 사용한다. `READ COMMITTED`에서는 Lock을 얻은 뒤의 별도 SQL 문장이 새 Snapshot으로 결과 코드를 읽게 한다.
+
+조건을 만족하면 새 Attempt와 예약을 함께 Commit하고, 그 뒤 Transaction 밖에서 Provider를 호출한다. 이전 Attempt의 응답은 새 제안을 저장하거나 현재 Job을 실패로 바꿀 수 없다. Row가 잠겨 있으면 `SKIP LOCKED`로 그 선점을 건너뛸 수 있다.
+
+메모리에 유효한 객체가 남아 있으면 저장 재시도를 우선한다. Process 종료로 객체가 사라졌다면 원문과 Job Metadata를 복원하는 것만으로 AI 요약까지 복원되지는 않는다. DB의 기존 제안이나 Provider의 조회 가능한 결과가 필요하며, 그런 결과가 없으면 새 생성은 위 복구 정책 안에서만 허용한다. 생성 예약을 반환하거나 새 Job으로 한도를 초기화하지 않는다.
+
+## 결과 기록 전의 중단은 여전히 불확실하다
+
+Provider 응답과 DB 결과 기록은 서로 다른 시스템의 작업이다. 거절을 받았더라도 이를 DB에 Commit하기 전에 Process가 종료되면 재시작한 Worker는 그 거절을 알 수 없다. DB에는 마지막 Commit 상태인 `UNCONFIRMED`가 남을 수 있다. 이것을 이미 확인한 거절이라고도, 미실행이라고도 단정할 수 없다.
+
+현재 Adapter에 원격 결과 조회 기능이 없다면 DB에서 확인할 수 있는 결과부터 확인한다. 그 뒤의 새 생성도 중복 실행 가능성을 없애는 것이 아니라 정한 한도·기한 안에서 복구를 허용하는 선택이다. ‘제안 최대 한 건’과 ‘Provider 정확히 한 번 실행’은 계속 구분해야 한다.
+
+이전 원장에 결과 분류가 없던 Schema를 이행할 때도 과거 기록을 자동으로 복구 허가로 바꾸지 않는다. 보수적으로 재호출을 보류하는 정책을 선택할 수 있으며, 이 보류가 과거 Provider의 실제 거절을 증명하는 것은 아니다.
+
 ## Test에서 구분할 근거
 
 다음은 실패 실험에서 확인할 항목이다. 실제 결과는 Test나 Database 관찰로 확인한다.
@@ -333,5 +367,10 @@ Test Double의 호출 횟수는 실제 Provider의 실행·요금 근거가 아�
 29. Worker가 매초 DB를 확인해도 재시도 시각 전에는 새 Provider 요청이 없는 이유는 무엇인가?
 30. 최종 `FAILED`를 일반 자동 처리 대상에서 제외하는 것과 한 번의 요청 실패를 재시도하는 것은 어떻게 다른가?
 31. 저장 여부의 조회가 실패했을 때 저장 시도를 늘리거나 곧바로 INSERT를 다시 보내면 안 되는 이유는 무엇인가?
+32. 예약 Row 1건이 실제 Provider 실행 1회를 증명하지 못하는 이유는 무엇인가?
+33. Attempt 증가 뒤 예약 INSERT가 실패했다면 어떤 값과 Row가 함께 Rollback돼야 하는가?
+34. Lease가 만료됐어도 결과 코드가 `AUTO_RETRY_BLOCKED`이면 자동 복구하면 안 되는 이유는 무엇인가?
+35. 후보 조회 뒤 거절이나 성공 결과가 Commit됐을 때 실제 Claim이 이를 다시 확인해야 하는 이유는 무엇인가?
+36. Provider 응답을 DB에 기록하기 전에 Process가 종료되면 어떤 불확실성이 남는가?
 
 입력·출력·권한·화면 표시의 검증은 [AI 제안의 신뢰 경계와 검증 근거](./ai-suggestion-trust-boundaries.md)를 참고한다.

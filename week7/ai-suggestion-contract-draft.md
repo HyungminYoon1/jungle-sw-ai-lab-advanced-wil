@@ -1,10 +1,10 @@
 # AI Suggestion 계약 초안
 
-> 상태: 입력·접수·예약·결과 저장과 선택 Worker의 대기·저장 재시도 확인 — 결과 불명 복구·조회·Browser는 남아 있음
+> 상태: 입력·접수·예약·결과 저장과 선택 Worker의 대기·저장 재시도·조건부 결과 불명 복구 확인 — 실제 JVM 재시작·조회·Browser는 남아 있음
 > 작성일: 2026-09-29
 > 최종 수정일: 2026-10-06
 > 논리적 계약 Version: `v2.1-draft` — v2의 출력 구조를 유지하고 전체 Priority의 의미를 보완
-> 구현 상태: PostgreSQL HTTP 접수·V3 실행권·V4 결과 저장·Spring AI Adapter·V5 대기 예약·V6 저장 재시도와 선택 Worker 구현. 전체 무료 Java Clean Test 364개·JavaScript 104개와 ESLint 통과. 실제 Java AI→PostgreSQL 단일 Live 실험은 앞선 한 건이며, 결과 불명 자동 복구·실제 JVM 재시작·조회·Browser·수동 내용 평가는 후속 과제
+> 구현 상태: PostgreSQL HTTP 접수·V3 실행권·V4 결과 저장·Spring AI Adapter·V5 대기 예약·V6 저장 재시도·V7 Attempt 결과와 선택 Worker의 조건부 복구 구현. 전체 무료 Java Clean Test 384개·JavaScript 104개와 ESLint 통과. 실제 Java AI→PostgreSQL 단일 Live 실험은 앞선 한 건이며, 실제 JVM 재시작·조회·Browser·수동 내용 평가는 후속 과제
 
 이 문서는 Week 7의 한 수직 흐름에 필요한 입력·출력·권한·저장·실패 계약을 검토하기 위한 초안이다. 출력 구조 v2는 단일 `category` 문자열을 복수 값을 담는 `categories` 목록으로 변경한 **우리 Application의 논리적 Schema 초안**이다. `v2.1-draft`에서는 구조를 바꾸지 않고 개별 문제와 누적·결합 영향을 함께 보는 Priority 기준을 추가했다. OpenAI 최소 비교에는 별도의 전송용 Schema와 이전 계약 `v2-draft`를 사용했다. 그 결과가 전체 논리적 계약이나 Spring 저장 흐름의 Test 통과를 뜻하지는 않는다. [최소 비교 기록](./lab-reports/2026-10-02-openai-structured-output-pilot.md)
 
@@ -338,7 +338,7 @@ AWS Step Functions는 정의를 변경해도 실행 중인 작업에 이전 정�
 
 기초 구현의 `AiSuggestionJobClaimService`는 `REQUIRES_NEW` Transaction에서 실행권 변경과 `ai_suggestion_attempts` 원장 INSERT를 함께 Commit한다. 원장에는 Job·Attempt·요청 종류·예약 시각만 남기며 실제 Provider 실행 성공을 기록한 것으로 해석하지 않는다. 이전 Attempt의 실패 기록·출력 보완은 현재 Attempt와 `RUNNING` 조건이 맞을 때만 반영한다. 정책 10개·Migration 1개·실행권 18개 Test와 전체 Java 236개·JavaScript 79개가 통과했다. [실행권·예약 검증](./lab-reports/2026-10-05-job-policy-and-reservation-lab.md)
 
-검증된 응답을 저장하는 부분은 V4와 `AiSuggestionResultService`로 구현했다. Spring AI Adapter는 요청별 대기 한도·단일 전송을 적용하며, 선택 Worker에 Rate Limit 대기와 현재 검증 객체의 DB 저장 재시도를 연결했다. Provider 결과 조회·결과 불명 RUNNING 복구는 남아 있다. 재예약 메서드가 기존 결과 조회를 대신하지 않으며 후속 Worker는 가능한 결과 확인을 먼저 수행해야 한다. 다른 실패 유형의 재시도 허용 여부는 별도로 검토한다.
+검증된 응답을 저장하는 부분은 V4와 `AiSuggestionResultService`로 구현했다. Spring AI Adapter는 요청별 대기 한도·단일 전송을 적용하며, 선택 Worker에 Rate Limit 대기·현재 검증 객체의 DB 저장 재시도·DB 결과 확인 후의 조건부 RUNNING 복구를 연결했다. 원격 Provider 결과 조회는 아직 없다. 재예약 메서드가 기존 결과 조회를 대신하지 않으며 복구 Worker는 DB의 기존 결과 확인을 먼저 수행한다. 다른 실패 유형의 재시도 허용 여부는 별도로 검토한다.
 
 ### SDK 재시도와 호출 예약
 
@@ -370,7 +370,7 @@ Provider가 요구한 최소 대기를 지키면 Job 전체 처리 기한에 도
 
 Provider Adapter의 오류 분류·`Retry-After` 해석과 Processor의 최소 대기 전달에 이어, V5와 선택 Worker로 확인된 Rate Limit의 대기 기록·다음 예약·통제된 Provider 호출을 연결했다. `TEMPORARY_RETRY`를 출력 보완·결과 불명 `RECOVERY`와 분리하며 `PROVIDER_RATE_LIMITED`를 기록한다. 새 요청은 원래 정책 Snapshot·누적 한도·기한을 유지한다. [Worker 검증](./lab-reports/2026-10-06-worker-rate-limit-and-context-restart-lab.md)
 
-Header가 없거나 유효하지 않은 경우와 다른 일시적 거절은 이번 Worker가 자동 재호출하지 않는다. 현재 `RUNNING`을 유지하고 전체 기한 종료 규칙을 적용한다. 이 경우의 별도 Backoff·Jitter와 결과 확인·복구 정책은 이어서 검토한다. 유효한 최소 대기가 기한보다 길면 그 시각을 그대로 저장하고, 새 Claim의 기한 조건과 만료 정리가 새 요청을 막는다.
+Header가 없거나 유효하지 않은 경우와 다른 미승인 일시적 거절은 자동 재호출하지 않는다. 해당 Attempt에 `AUTO_RETRY_BLOCKED`를 Commit하고 현재 `RUNNING`을 유지하며 전체 기한 종료 규칙을 적용한다. Lease 만료나 Application 재시작으로 이 금지를 해제하지 않는다. 별도 Backoff·Jitter 허용안은 추가하지 않았다. 유효한 최소 대기가 기한보다 길면 그 시각을 그대로 저장하고, 새 Claim의 기한 조건과 만료 정리가 새 요청을 막는다.
 
 ### 선택 Worker의 활성화·최종 실패 경계
 
@@ -393,6 +393,32 @@ Header가 없거나 유효하지 않은 경우와 다른 일시적 거절은 이
 단일 Worker는 저장 대기 객체를 한 건만 보관하고 그 처리를 마친 뒤 다음 Job을 처리한다. 무제한 메모리 Queue나 원본 Provider 응답의 영속 보관은 추가하지 않는다. 대기 중에는 Thread를 재우거나 DB Transaction을 유지하지 않고 다음 Tick에서 시각을 확인한다. 전체 기한에 도달하면 메모리 객체를 해제하며, DB 결과 확인이 실패했다면 미확인 상태를 반환한다. 향후 Process 복구·병렬 처리에서는 객체 보관과 종료 기록의 경계를 다시 검토한다.
 
 영향 파일은 Lab의 `ai/processing`·실패 코드·V6·관련 Test와 README다. 저장 재시도 Test 12개·Migration 1개·설정 추가 2개와 전체 Java 364개·JavaScript 104개·ESLint가 통과했다. 기존 Commit 확인, 실제 Rollback 뒤 같은 객체 재저장, 조회 실패의 재저장 금지, 상한·5초 경계·현재 Attempt·기한과 원문 보존을 확인했다. 이번 유료 호출은 0회다. 응답 유실은 Test용 주입, 시간 경계는 통제된 Clock으로 검사했으며 실제 Process 중단 후 복구는 별도다. [저장 재시도 검증](./lab-reports/2026-10-06-validated-output-storage-retry-lab.md)
+
+### Attempt별 결과 분류와 조건부 복구 — 승인
+
+재시작 후 `RUNNING`·Lease 만료만으로 재호출하면, 결과 불명과 이미 확인한 미승인 거절을 혼동할 수 있다. Job의 마지막 오류 코드만 사용하는 안, 모든 만료 실행을 다시 호출하는 안, 예약 원장에 Attempt별 결과를 남기는 안을 비교해 세 번째 안으로 정했다. 현재 Attempt의 판단 근거를 이전 시도와 분리하고 재시도 금지를 재시작 뒤에도 유지하기 위해서다.
+
+V7은 `ai_suggestion_attempts.result_code`에 안전한 코드만 추가한다.
+
+| 코드 | 의미 | 만료 뒤의 결과 불명 복구 |
+|---|---|---|
+| `UNCONFIRMED` | 이 Attempt의 결과 분류가 아직 Commit되지 않음. 실제 미전송·미실행은 확정하지 않음 | 기존 결과 확인·Lease와 Backoff·전체 기한·남은 한도를 만족한 경우에만 후보 |
+| `OUTCOME_UNKNOWN` | 결과 불명이라는 관찰을 Commit함 | 위 조건을 동일하게 적용 |
+| `AUTO_RETRY_BLOCKED` | 결과 불명 복구를 통한 자동 재호출 미승인 | Lease가 만료돼도 복구 후보에서 제외 |
+
+새 예약은 `UNCONFIRMED`다. Provider의 명시적 실패·거절이나 구조 검증 실패를 확인한 시도는 먼저 `AUTO_RETRY_BLOCKED`를 기록한다. 알려진 실패를 결과 불명 경로로 우회하지 않도록 하기 위해서다. 유효한 Rate Limit 대기나 필수 Field 보완은 그 다음 별도의 승인된 `PENDING` 예약 경로를 Commit하며, 새 Claim은 자신의 결과 코드로 시작한다. `OUTCOME_UNKNOWN`은 Timeout·연결 실패 등 불명 결과에 적용한다. 코드가 실제 AI 실행·사용량·청구를 증명하지는 않는다.
+
+V7 이전 원장의 결과는 분류되지 않았다. 이를 모두 새 `UNCONFIRMED`로 바꿔 복구 후보를 확대하는 안 대신, 기존 예약은 `AUTO_RETRY_BLOCKED`로 보수적으로 이행한다. 이 값은 과거 거절을 관찰했다는 주장이 아니라 이전 기록에 자동 재호출 권한을 부여하지 않는 결정이다. 기존 문의·정책·횟수·기한·예약 식별자·제안은 유지한다. 미실행 `PENDING`이나 이미 승인해 저장한 대기 실행은 기존 경로로 새 예약을 만들 수 있다.
+
+Worker는 현재 Process에 검증 객체가 있으면 저장 재시도를 우선한다. 그렇지 않고 처리할 PENDING이 없을 때 복구 후보를 찾는다. DB의 Job·제안을 조회한 뒤 현재 RUNNING·Attempt·결과 부재를 확인하며 조회 실패는 `RECOVERY_STATE_UNCONFIRMED`다. `ABSTAINED`는 제안이 없더라도 완료된 상태이므로 재생성하지 않는다. 현재 Adapter에는 원격 Provider 결과 조회가 없어 이를 수행했다고 기록하지 않는다.
+
+후보 조회는 실행권이 아니다. 실제 복구 Claim은 짧은 `READ COMMITTED` Transaction에서 Job Row를 `FOR UPDATE SKIP LOCKED`로 확보한 다음, 별도 SQL의 새 Snapshot으로 결과 코드·현재 Attempt·RUNNING·Lease+Backoff·원래 전체 기한·남은 생성 한도·기존 제안 부재를 다시 확인한다. 결과 분류도 같은 Job Row를 잠근다. 경쟁 실행이 결과를 저장하거나 금지를 Commit했다면 새 예약을 만들지 않는다.
+
+조건을 만족한 경우 새 Attempt 증가와 원장 INSERT를 함께 Commit한 뒤 Provider를 Transaction 밖에서 호출한다. 원장 INSERT 실패는 Attempt·누적 예약 증가도 Rollback하며 외부 호출은 하지 않는다. 이전 Attempt는 현재 결과·실패·결과 코드를 바꾸지 못하고, 금지된 Attempt를 불명 상태로 되돌려 재호출을 허용하지 않는다. 한도 소진은 새 요청을 막지만 여전히 현재인 유효한 응답의 저장을 막지는 않는다.
+
+응답 관찰과 DB 기록 사이에는 여전히 중단 가능성이 있다. 거절을 받았더라도 결과 코드 Commit 전에 Process가 종료되거나 기록이 실패했다면 DB에는 `UNCONFIRMED`가 남을 수 있다. 확인 기록이 실패한 Tick은 즉시 재호출하지 않으며, 후속 복구에서도 미실행으로 단정하거나 예약을 반환하지 않는다. 이 구현은 외부 실행의 정확히 한 번을 보장하지 않는다. 결과 코드에는 Prompt·원본 응답·Secret을 보관하지 않고 검증 응답 객체의 영속 저장도 추가하지 않았다.
+
+영향 파일은 Lab의 `ai/job`·`ai/processing`·V7·복구/Context/Migration Test와 README다. 새 Test 20개와 전체 Java Clean Test 384개·JavaScript 104개·ESLint가 통과했다. 같은 JVM의 새 Context에서 조건부 복구와 재시도 미승인 유지를 확인했으며 유료 호출은 0회다. 실제 JVM Process 중단·유료 Worker·AGENT 조회·Browser·수동 내용 평가가 후속 범위다. 새 실패 유형 허용이나 원격 결과 조회·응답 영속 보관을 추가할 때 이 경계를 다시 검토한다. [복구 검증 기록](./lab-reports/2026-10-06-attempt-results-and-running-recovery-lab.md)
 
 ## API·권한·응답 — 잠정안
 

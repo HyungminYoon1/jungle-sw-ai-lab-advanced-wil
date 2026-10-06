@@ -2,7 +2,7 @@
 
 > 작성일: 2026-09-29
 > 최종 수정일: 2026-10-06
-> 상태: In Progress — 실제 Java AI 저장 한 건과 선택 Worker의 대기·저장 재시도·Context 재시작 확인. 결과 불명 복구·조회·Browser·수동 채점은 진행 예정
+> 상태: In Progress — 실제 Java AI 저장 한 건과 선택 Worker의 대기·저장 재시도·조건부 복구·Context 재시작 확인. 실제 JVM 재시작·조회·Browser·수동 채점은 진행 예정
 > 초기 기간: 2026-09-29 ~ 2026-10-03
 > 이월 재개: 2026-10-06 — 10/5 회차의 연장 실험은 해당 Study Note에 포함하고 Lab Report는 실제 실행일 유지
 > 학습 제외일: 2026-10-04 일요일
@@ -14,7 +14,7 @@
 
 Week 6에는 최소 Browser UI에서 Session·CSRF를 유지하며 Ticket을 실제 PostgreSQL에 생성·조회했다. 9월 29일 기록상 Java Test 61개와 JavaScript Test 12개가 통과했고, 실제 Browser와 Database Row를 함께 확인했다. 이 결과는 AI 기능의 근거가 아니다.
 
-PostgreSQL의 HTTP 접수는 `title`·`body`를 받아 인증 작성자와 최초 Message·`PENDING` Job까지 저장한다. 기존 In-memory 제목 전용 실험은 별도로 보존했다. 검증된 출력의 제안·복수 Category·Job 완료는 별도 결과 Transaction으로 저장한다. Processor를 한 번 직접 실행한 실제 Java Provider·PostgreSQL 연결과 통제된 Provider의 선택 Worker·대기 예약·Context 재시작을 확인했다. 결과 불명 복구·실제 JVM 재시작·새 Browser 흐름은 이어서 검증한다. 독립 Provider 비교와 이 저장 실험을 구분한다. Week 7에는 최초 문의 Message를 입력으로 삼아 AI 제안 한 가지만 더한다. Ticket은 대화 묶음, Message는 원문, Job은 AI 처리 상태, Suggestion은 검증된 결과로 구분한다. AI가 Ticket 상태를 자동 변경하거나 공식 답변을 게시하지 않는다.
+PostgreSQL의 HTTP 접수는 `title`·`body`를 받아 인증 작성자와 최초 Message·`PENDING` Job까지 저장한다. 기존 In-memory 제목 전용 실험은 별도로 보존했다. 검증된 출력의 제안·복수 Category·Job 완료는 별도 결과 Transaction으로 저장한다. Processor를 한 번 직접 실행한 실제 Java Provider·PostgreSQL 연결과 통제된 Provider의 선택 Worker·대기 예약·조건부 결과 불명 복구·Context 재시작을 확인했다. 실제 JVM 재시작·새 Browser 흐름은 이어서 검증한다. 독립 Provider 비교와 이 저장 실험을 구분한다. Week 7에는 최초 문의 Message를 입력으로 삼아 AI 제안 한 가지만 더한다. Ticket은 대화 묶음, Message는 원문, Job은 AI 처리 상태, Suggestion은 검증된 결과로 구분한다. AI가 Ticket 상태를 자동 변경하거나 공식 답변을 게시하지 않는다.
 
 ## 이번 주 목표
 
@@ -115,7 +115,7 @@ Prompt·Schema·Dataset은 Version을 붙여 변경 전후를 비교한다. 원�
 - 접수 원자성 합의: Ticket·최초 Message·`PENDING` Job을 같은 Transaction으로 Commit. Job 등록 실패도 접수 실패이며, Commit된 문의는 이후 AI 실패로 취소하지 않음. Provider 호출은 Transaction 밖에서 하고 Worker는 DB의 실행 대상 Job을 다시 조회.
 - 재시도 원칙 합의: 전체 생성 요청과 추가 보완 요청의 상한을 설정값으로 분리하고 실패 유형별 조건을 함께 확인. 요청 한 번의 대기 한도·재시도 간격·Job 전체 처리 기한을 구분하며 재시작으로 횟수나 전체 기한을 초기화하지 않음. 결과 확인을 마쳐도 복구할 수 없는 결과 불명 Job은 사유를 남겨 `FAILED`로 종료.
 - 정책 초기값 승인: Job별 설정 Snapshot, 전체 생성 3회·추가 보완 1회, 요청 대기 60초·실행권 120초·Backoff 5초·최초 Claim부터 전체 300초. 누적 예약은 0부터 증가하고 재시작·설정 변경으로 초기화하지 않음.
-- 남은 계약: 다른 Provider 실패 유형별 재시도·결과 불명 확인·Process 종료 후 복구, 추가 `ABSTAIN` 경계·요약 길이·조회 표현, 전처리·탐지·원문 보관의 세부 정책. 메모리 객체의 저장 재시도는 총 3회·최소 5초로 승인하고 아래 단계에서 검증했다.
+- 남은 계약: 추가 Provider 실패 유형별 재시도 허용·원격 결과 조회, 추가 `ABSTAIN` 경계·요약 길이·조회 표현, 전처리·탐지·원문 보관의 세부 정책. 메모리 객체의 저장 재시도와 DB 결과 확인 뒤 조건부 복구는 아래 단계에서 승인·검증했으며 실제 JVM 중단·재시작은 이어서 확인한다.
 - 실제 확인: N01의 예비 두 건과 10/5 개인정보 6회·고정 비교 52회. [최소 비교 기록](./lab-reports/2026-10-02-openai-structured-output-pilot.md), [고정 비교와 Prompt 보완](./lab-reports/2026-10-05-ai-output-policy-comparison.md).
 - 실제 접수 저장: Message·초기 Job의 V2와 별도 PostgreSQL 접수 Service 구현. 새 Integration Test 15개, 전체 Java Clean Test 76개·기존 JavaScript 54개 통과. [접수 원자성 실험](./lab-reports/2026-10-03-ticket-receipt-atomicity-lab.md).
 - 출력 계약 검증: 독립 Java 검증기 Unit Test 64개, 이후 전체 Java Clean Test 140개·JavaScript 54개 통과. 누락·추가·공백·길이·Enum과 `SUGGEST`/`ABSTAIN` 조합을 확인. [출력 검증 실험](./lab-reports/2026-10-03-ai-output-validation-lab.md).
@@ -190,7 +190,9 @@ Backoff·`Retry-After`·전체 기한을 구분하고, 최종 `FAILED` 이후의
 
 검증 객체가 현재 Process에 남은 경우의 저장 재시도도 연결했다. 최초 저장을 포함한 총 3회·최소 5초로 제한하고 기존 결과·현재 Attempt·원래 기한을 확인한다. 새 Test 15개와 최신 전체 Java 364개·JavaScript 104개·ESLint가 통과했으며 유료 호출은 0회다. DB 장애로 확인되지 않은 종료 상태는 완료로 기록하지 않는다. [저장 재시도 검증](./lab-reports/2026-10-06-validated-output-storage-retry-lab.md)
 
-다음 순서는 가능한 결과 확인 후 RUNNING 복구·Process 종료 후 객체가 사라진 경우의 처리·실제 JVM 재시작이다. 이어서 명시적인 유료 Worker 연결·AGENT 조회·Browser·수동 평가·독립 설명과 WIL을 진행한다. 관리자 재개·미승인 실패의 자동 재호출은 이번 기본 Worker에 추가하지 않았으며, Week 7 전체 완료 Gate는 유지한다.
+V7로 Attempt별 결과 분류와 DB 결과 확인 뒤의 조건부 RUNNING 복구를 연결했다. 결과 코드·현재 Attempt·Lease+Backoff·원래 기한·남은 한도·기존 제안을 실제 Claim에서 다시 확인한다. 재시도 미승인은 Lease 만료·재시작으로 해제하지 않고, 기존 분류 없는 원장도 보수적으로 재호출을 보류한다. 새 Test 20개와 최신 Java 384개·JavaScript 104개·ESLint가 통과했으며 유료 호출은 0회다. [Attempt별 결과·복구 검증](./lab-reports/2026-10-06-attempt-results-and-running-recovery-lab.md)
+
+다음 순서는 실제 JVM Process 중단·재시작이다. 검증 객체가 사라진 경우 DB의 원문·Job만으로 응답을 복원할 수는 없으며, 기존 결과 확인 뒤 승인한 조건 안에서만 새 생성한다. 이어서 명시적인 유료 Worker 연결·AGENT 조회·Browser·수동 평가·독립 설명과 WIL을 진행한다. 관리자 재개·미승인 실패의 자동 재호출·원격 Provider 결과 조회는 추가하지 않았으며, Week 7 전체 완료 Gate는 유지한다.
 
 현재 논리적 출력 초안으로 평가 자료를 준비하는 것과 그 초안을 Lab 구현 계약으로 확정하는 것은 다르다. 추가 보류 경계나 아직 검토하지 않은 기대값을 임의로 확정하지 않는다. Job 등록의 접수 Transaction 포함은 합의했으며, 실행권·재시도·복구 세부 계약은 구현 전에 검토한다. 이 검토를 평가 준비와 독립적인 최소 AI 비교까지 모두 막는 선행 조건으로 확대하지 않는다.
 
@@ -279,7 +281,7 @@ GitHub Project에는 다음 다섯 Card를 계획한다. 첫 Card만 `Ready`, �
 10월 5일에 시작한 과업은 WIL 작성·게시만 남은 상태가 아니다. 접수·예약·검증·결과 저장과 Java Provider Adapter의 Test에 이어 실제 AI 저장 한 건을 확인했다. 자동 실행·복구·학습 확인은 계속 진행한다.
 
 1. 완료: 합성 문의 한 건의 실제 Java AI 호출·제안 저장·원문 보존을 확인했다. Processor를 직접 한 번 실행한 선택 실험이며 자동 Worker·Browser E2E는 별도 검증한다.
-2. 부분 완료: 선택 Worker의 PENDING·대기 예약·최종 실패 제외와 같은 DB의 Spring Context 재시작을 확인했다. 결과 불명 RUNNING·저장 재시도·실제 JVM 중단 복구·유료 자동 처리 검증은 남아 있다.
+2. 부분 완료: 선택 Worker의 PENDING·대기 예약·제한된 저장 재시도·Attempt별 결과와 조건부 RUNNING 복구·같은 DB의 Spring Context 재시작을 확인했다. 실제 JVM 중단 복구·유료 자동 처리 검증은 남아 있다.
 3. AGENT의 작업 상태·제안 조회와 Session·Role·CSRF를 유지하는 최소 Browser 흐름을 확인한다.
 4. 고정 비교 결과의 요약·Injection 수동 평가, 핵심 개념 복습과 최종 회귀·노출 점검 뒤 WIL을 작성하고 게시·포럼 등록을 확인한다.
 
@@ -327,6 +329,7 @@ GitHub Project에는 다음 다섯 Card를 계획한다. 첫 Card만 `Ready`, �
 | 2026-10-06 | 실제 Java AI 호출·PostgreSQL 저장 미확인 | 합성 문의 한 건의 실제 응답·제안 저장·원문 보존과 별도 Live Test 1개 통과 확인 | 수정된 실행기의 사용자 실행 결과와 로컬 결과·JUnit Report 대조 | 자동 Worker·복구·조회 API·Browser·수동 내용 평가·복습·WIL 범위 유지 |
 | 2026-10-06 | 10/5 연장 학습의 내용이 10/6 Note와 분산됨, 재개일 미분리 | 현재까지를 10/5 회차로 마감하고 남은 과업을 10/6에 재개 | 사용자의 회차 마감·문서 갱신·Commit 요청 | 실제 실행일의 Lab Report·기존 근거는 유지. 자동 Worker·복구·조회·Browser·수동 평가·복습·WIL과 Week 8 Cloud·HTTPS 범위를 줄이지 않음 |
 | 2026-10-06 | 자동 Worker·대기 기록 미연결 | 선택 Worker·V5·조건부 대기 예약과 같은 DB의 Context 재시작 검증 | 재시도·최종 실패 경계 확인 후 사용자 진행 승인 | Java 349개·JavaScript 104개·ESLint 통과, 유료 호출 0회. 결과 불명·저장·실제 JVM 복구와 조회·Browser·평가·WIL을 이어가며 학습 범위 유지 |
+| 2026-10-06 | Lease 만료만으로 결과 불명과 미승인 거절을 구분할 수 없음 | V7 Attempt별 결과 코드·기존 결과 확인 뒤의 조건부 복구, 과거 미분류 원장의 보수적 보류 | 결과 기록·복구 방향 사용자 승인 | 새 Test 20개·Java 384개·JavaScript 104개·ESLint 통과, 유료 호출 0회. 실제 JVM 재시작·유료 Worker·조회·Browser·수동 평가·WIL과 Week 8 범위 유지 |
 
 ## 관련 기준
 
