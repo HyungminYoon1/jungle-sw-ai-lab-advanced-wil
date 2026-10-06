@@ -1,10 +1,10 @@
 # AI Suggestion 계약 초안
 
-> 상태: 입력·접수·예약·결과 저장과 선택 Worker의 대기·저장 재시도·조건부 복구·실제 JVM 재시작·AGENT 조회 확인 — 유료 자동 처리·Browser·수동 평가 진행 예정
+> 상태: 입력·접수·예약·결과 저장과 선택 Worker·실제 JVM 재시작·AGENT 조회·통제된 Provider의 실제 Browser 확인 — 유료 자동 처리·수동 평가 진행 예정
 > 작성일: 2026-09-29
 > 최종 수정일: 2026-10-06
 > 논리적 계약 Version: `v2.1-draft` — v2의 출력 구조를 유지하고 전체 Priority의 의미를 보완
-> 구현 상태: PostgreSQL HTTP 접수·V3 실행권·V4 결과 저장·Spring AI Adapter·V5 대기 예약·V6 저장 재시도·V7 Attempt 결과와 선택 Worker의 조건부 복구·AGENT 읽기 전용 조회 구현. 전체 무료 Java Clean Test 444개·JavaScript 104개와 ESLint 통과. 실제 Java AI→PostgreSQL 단일 Live 실험은 앞선 한 건이며, 유료 자동 처리·Browser·수동 내용 평가는 후속 과제
+> 구현 상태: PostgreSQL HTTP 접수·V3 실행권·V4 결과 저장·Spring AI Adapter·V5 대기 예약·V6 저장 재시도·V7 Attempt 결과와 선택 Worker·AGENT 조회·최소 화면 구현. 전체 무료 Java Clean Test 449개·JavaScript 145개와 ESLint 통과. 통제된 Provider의 실제 Browser 실험은 별도 한 건이며, 유료 자동 Worker·수동 내용 평가는 후속 과제
 
 이 문서는 Week 7의 한 수직 흐름에 필요한 입력·출력·권한·저장·실패 계약을 검토하기 위한 초안이다. 출력 구조 v2는 단일 `category` 문자열을 복수 값을 담는 `categories` 목록으로 변경한 **우리 Application의 논리적 Schema 초안**이다. `v2.1-draft`에서는 구조를 바꾸지 않고 개별 문제와 누적·결합 영향을 함께 보는 Priority 기준을 추가했다. OpenAI 최소 비교에는 별도의 전송용 Schema와 이전 계약 `v2-draft`를 사용했다. 그 결과가 전체 논리적 계약이나 Spring 저장 흐름의 Test 통과를 뜻하지는 않는다. [최소 비교 기록](./lab-reports/2026-10-02-openai-structured-output-pilot.md)
 
@@ -490,6 +490,18 @@ HTTP `200`의 실패 Job에서도 `response.ok`는 `true`이며, `SUCCEEDED`·`P
 
 영향 파일은 Lab의 정적 HTML·조회 Client·Page 연결·JavaScript Test·정적 Resource MockMvc Test·README와 WIL의 자료·Note·Report·계획이다. Controller·조회 SQL·Worker·Migration·호출 정책은 유지한다. 실제 Browser의 Session·PostgreSQL 조회와 실제 유료 Worker 연결은 후속 수직 검증이며, 이번 합성 응답·DOM Test Double로 대체하지 않는다.
 
+### Browser·자동 Worker 연결 실험의 조립과 비용 승인
+
+앞선 실제 AI 실험은 접수 Service 뒤 Processor를 직접 한 번 호출했다. 자동 실행과 화면까지 연결하기 위해 일반 Application에 유료 Provider를 자동 등록하는 안과 Test 전용 조립을 비교하고, 후자를 선택했다. 기존 Application의 동작·설정·Job 재시도 정책은 유지하면서 새 PostgreSQL·Loopback Server·임시 USER·AGENT·Browser Session에서 고정 합성 문의 한 건만 처리한다.
+
+USER는 실제 접수 화면의 제목·본문을 입력하고 생성 버튼을 누른다. 같은 Session에서 CSRF 없는 대조 POST도 확인한다. 접수 Commit 후 Scheduler가 Job을 처리하고, AGENT는 기존 조회 화면에서 결과를 읽는다. 출력 상한 200자·생성 한도 1회·보완 0회는 이 실험의 명시적 주입값과 Snapshot이다. 일반 Job의 정책 초기값을 변경하지 않았으며, 실패를 자동으로 새 문의로 바꾸어 재실행하지 않는다.
+
+2026-10-06 사용자가 당일 총비용 제한 없이 추가 호출을 승인했다. 기존 $1 상한을 계속 적용하거나 원장을 삭제하는 대신, 같은 날짜 원장에 `costLimitWaiver`로 새 승인을 기록한다. 이전 비용 미확인·보류 예약·사용량·횟수는 남기고 현재 Report에는 `costLimitEnforced: false`를 표시한다. 진행 중인 미정산 예약은 지우지 않는다. 다른 실행기에 대한 묵시적 승계와 다른 날짜로의 자동 승인은 허용하지 않는다. 이는 실험의 지출 승인 변경이며 Job의 호출·Attempt·기한 계약과 별개다.
+
+AI Key는 전용 PowerShell에서 Java Process까지만 전달한다. Browser 실행 자식 Process에는 OS 필수 변수와 일회용 인증 Fixture만 제공한다. Session·CSRF 값과 Header는 메모리에서 존재 여부만 확인하고 출력하지 않는다. 화면 Screenshot만 Git 제외 경로에 남기며 일회용 Session 기록·Container는 종료 시 정리한다. 전송 경로의 `store=false`는 유지한다. 이 설정을 Provider 전체의 무보관 보장으로 설명하지 않는다. [OpenAI Chat Completions 저장 옵션](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create), [데이터 보관 조건](https://developers.openai.com/api/docs/guides/your-data)
+
+영향 파일은 Lab의 별도 Node 실행기·공유 비용 원장·PowerShell Browser 도구·Test 전용 Java 조립·선택 Experiment·실행기 Test·README와 WIL 계약·Note·계획·Report다. Production Controller·Service·Repository·Migration·Worker는 변경하지 않는다. 통제된 Provider의 Browser 검증은 실제 유료 Worker의 근거와 구분한다. 후속 확인은 실제 AI 응답의 저장·화면 일치, 요약의 수동 내용 평가와 WIL 마감이다. [연결 실험 준비·무료 검증](./lab-reports/2026-10-06-worker-browser-experiment-lab.md)
+
 ## 별도 저장소와 결과 Transaction — 합의한 구현
 
 - 사용자 원문은 `ticket_messages.body`에 보관한다. 검증된 AI 결과는 Ticket·Message에 덮어쓰지 않고 `ticket_suggestions`에 저장한다.
@@ -605,6 +617,7 @@ SDK `maxRetries=0`만으로 HTTP Client의 연결 재시도까지 꺼지는 것�
 | 2026-10-06 | 별도 Java Process와 같은 PostgreSQL로 중단 후 재개를 검증, 기존 예약·기한·금지 유지 | 같은 JVM Context와 비교한 실제 Process 검증에 진행 승인. Test 전용 진입점·격리 환경으로 외부 호출과 사용자 Process 영향 방지 | 새 Test 5개·Java 389개·JavaScript 104개·ESLint 통과, 유료 호출 0회. 운영 계약·Source·Migration 유지. 유료 Worker·조회·Browser·평가는 후속 과제 |
 | 2026-10-06 | AGENT 전용 읽기 API, 최초 Message의 고정 Job·제안과 상태별 null·고정 코드 공개 | 사용자 승인. 읽기 중 AI 실행·복구를 시작하는 안과 고객용 공개는 제외. 단일 SELECT로 같은 Snapshot을 읽고 조회 오류와 작업 실패를 구분 | 영향: Lab의 `ai/query`·`ai/web`·Security·오류 Handler·Test·README, WIL 계약·자료·Note·Report·계획. 새 Test 55개·Java 444개·JavaScript 104개·ESLint 통과. 기존 Worker·Migration 유지. 실제 Browser·유료 Worker·수동 평가와 고객용 조회는 후속 검토 |
 | 2026-10-06 | 별도 최소 담당자 화면에서 HTTP 조회·Job 결과·검토 대기를 구분 | 사용자 답변으로 HTTP 200의 FAILED와 SUCCEEDED·PENDING_REVIEW의 표시 확인. 기존 Ticket 화면과 혼합하는 안 대신 조회만 하는 별도 화면 선택 | 영향: Lab 정적 HTML·Client·View·Page·Node/Resource Test·README, WIL 계약·자료·Note·Report·계획. 새 Node Test 29개·MockMvc 5개, 전체 Java 449개·JavaScript 133개·ESLint 통과. 실행·재시도·조회 SQL·Worker·Migration 유지. 실제 Browser·유료 Worker와 수동 평가는 후속 검토 |
+| 2026-10-06 | Test 전용 조립으로 Browser·접수·예약된 Worker·DB·AGENT 화면 연결, 당일 비용 상한 해제 승인 기록 | 일반 실행의 유료 자동 구성 대신 격리 실험을 선택. 사용자는 총비용 제한 없이 추가 호출 승인; 원장 초기화 대신 이전 미확인 이력과 새 승인을 함께 보존 | 영향: Lab 실행기·비용 원장·Browser 도구·Java 실험·Test·README, WIL 계약·Note·계획·Report. Java 449개·JavaScript 145개·ESLint, 통제된 Provider의 별도 Browser Experiment 확인. Job 정책·운영 Source 유지. 유료 Worker·수동 평가·WIL은 후속 확인 |
 
 JSON의 `null`과 Field 누락의 차이는 [JSON Schema의 null 설명](https://json-schema.org/understanding-json-schema/reference/null)을 참고한다.
 Transaction의 Commit·Rollback은 [PostgreSQL 공식 문서](https://www.postgresql.org/docs/17/tutorial-transactions.html)를 참고한다.

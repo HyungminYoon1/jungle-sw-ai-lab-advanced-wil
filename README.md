@@ -88,6 +88,7 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [검증 객체의 저장 재시도](./week7/lab-reports/2026-10-06-validated-output-storage-retry-lab.md): 총 3회·최소 5초, 기존 Commit·현재 Attempt·기한·원문 보존과 Java 364개 회귀
 - [실제 JVM 재시작 검증](./week7/lab-reports/2026-10-06-worker-jvm-process-restart-lab.md): 서로 다른 PID·같은 PostgreSQL, 예약·정책·기한·재시도 금지 유지와 Java 389개 회귀
 - [AGENT의 AI 상태·제안 조회](./week7/lab-reports/2026-10-06-agent-ai-suggestion-query-lab.md): 읽기 전용·최초 Message의 Job, 권한·상태별 응답·안전한 오류와 Java 444개 회귀
+- [Browser·자동 Worker 연결 실험](./week7/lab-reports/2026-10-06-worker-browser-experiment-lab.md): 실제 접수·조회 화면, 통제된 Provider의 Worker·DB 일치와 유료 모드 준비
 - [담당자 최소 조회 화면](./week7/lab-reports/2026-10-06-agent-ai-suggestion-ui-lab.md): HTTP 조회와 Job 상태의 구분, Text·Race·Page 연결과 Java 449개·JavaScript 133개 회귀
 - [깊은 수직 학습과 AI 보조 수평 확장 Decision](./plan/decisions/0002-depth-first-ai-assisted-expansion.md): Week 1~8과 Week 9~12의 구현 모드
 - [AgentOps Lab 보류 안내](./plan/agentops-lab-12-week-plan.md): 과정 이후 별도로 검토할 장기 프로젝트
