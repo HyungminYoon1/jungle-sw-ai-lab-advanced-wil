@@ -100,3 +100,5 @@ Process가 응답 기록 전에 종료돼도 같은 불확실성이 남을 수 �
 코드·범위·후속 검토는 [계약](../ai-suggestion-contract-draft.md)에 기록했다. 실제 JVM 중단·재시작, 명시적 유료 Worker 연결, AGENT 조회·Browser·수동 내용 평가와 WIL이 다음 과제다.
 
 관련 자료: [AI 비동기 처리의 생애주기](../study-docs/ai-async-processing-lifecycle.md), [10월 6일 핵심 질문](../study-notes/2026-10-06-study-questions.md), [메모리 객체 저장 재시도](./2026-10-06-validated-output-storage-retry-lab.md).
+
+후속 실험에서는 [서로 다른 JVM Process의 종료·재시작](./2026-10-06-worker-jvm-process-restart-lab.md)을 확인했다. 위 384개 회귀와 Context 결과는 이 단계의 기록으로 유지하며, 추가된 Process Test와 최신 회귀는 후속 보고서에서 구분한다.

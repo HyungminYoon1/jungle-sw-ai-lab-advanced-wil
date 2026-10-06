@@ -287,6 +287,16 @@ Spring의 `@Async`는 호출자의 흐름과 별도로 작업을 실행하도록
 
 오래된 `RUNNING`을 모두 새 호출로 바꾸면 아직 실행 중인 요청을 중복 호출할 수 있다. 반대로 영원히 건드리지 않으면 중단된 작업이 남는다. 경과 시간은 판단 조건 중 하나로 사용할 수 있지만, 그것만으로 이전 실행이 끝났음을 증명하지는 않는다.
 
+### Spring Context 재생성과 JVM Process 재시작
+
+같은 JVM에서 Spring Context를 닫고 새로 만들면 Repository·Service Bean은 새 객체가 된다. 하지만 Java Process 자체는 계속 실행된다. Test가 바깥에서 보관한 객체나 `static` 값은 남을 수 있어, 이것만으로 Process 종료 후 복구를 확인한 것은 아니다.
+
+실제 Process 재시작에서는 첫 Java Process의 종료를 확인한 뒤 다른 Process를 시작한다. 이전 Worker의 메모리 객체·Thread·검증된 AI 응답을 공유하지 않는다. 두 Process의 PID와 DB Row를 함께 확인하면 ‘새 Bean을 만들었다’와 ‘Process가 바뀌었다’를 구분할 수 있다.
+
+이때 PostgreSQL은 계속 실행해 같은 데이터를 제공한다. 새 Application은 원문·Job·예약·정책을 DB에서 읽는다. 재시작은 호출 한도를 반환하거나 원래 처리 기한을 연장하는 사건이 아니다. 재시도 미승인도 DB에 남아 있다면 그대로 적용한다.
+
+PostgreSQL까지 종료하고 새 빈 Container를 만드는 것은 다른 실험이다. Application 복구와 Database의 저장 장치·Volume 복구는 각각 검증해야 한다.
+
 ## 예약 원장과 Attempt별 결과를 구분한다
 
 `ai_suggestion_attempts`의 한 Row는 같은 Job에서 새 생성 요청 한 번을 예약했다는 기록이다. `job_id`·`attempt_number`·`request_kind`·`reserved_at`으로 어떤 시도가 한도를 사용했는지 식별한다. 예약과 실제 Provider 실행은 같은 사실이 아니다. 예약 Commit 뒤 요청을 보내기 전에 Process가 종료될 수도 있다.
@@ -372,5 +382,7 @@ Test Double의 호출 횟수는 실제 Provider의 실행·요금 근거가 아�
 34. Lease가 만료됐어도 결과 코드가 `AUTO_RETRY_BLOCKED`이면 자동 복구하면 안 되는 이유는 무엇인가?
 35. 후보 조회 뒤 거절이나 성공 결과가 Commit됐을 때 실제 Claim이 이를 다시 확인해야 하는 이유는 무엇인가?
 36. Provider 응답을 DB에 기록하기 전에 Process가 종료되면 어떤 불확실성이 남는가?
+37. 같은 JVM의 새 Spring Context와 서로 다른 JVM Process는 어떤 메모리 상태를 공유할 수 있는가?
+38. 같은 PostgreSQL을 유지한 Process 재시작에서 PID와 DB Row를 함께 확인하는 이유는 무엇인가?
 
 입력·출력·권한·화면 표시의 검증은 [AI 제안의 신뢰 경계와 검증 근거](./ai-suggestion-trust-boundaries.md)를 참고한다.

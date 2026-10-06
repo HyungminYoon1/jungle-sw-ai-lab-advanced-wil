@@ -1,10 +1,10 @@
 # AI Suggestion 계약 초안
 
-> 상태: 입력·접수·예약·결과 저장과 선택 Worker의 대기·저장 재시도·조건부 결과 불명 복구 확인 — 실제 JVM 재시작·조회·Browser는 남아 있음
+> 상태: 입력·접수·예약·결과 저장과 선택 Worker의 대기·저장 재시도·조건부 복구·실제 JVM 재시작 확인 — 유료 자동 처리·조회·Browser는 남아 있음
 > 작성일: 2026-09-29
 > 최종 수정일: 2026-10-06
 > 논리적 계약 Version: `v2.1-draft` — v2의 출력 구조를 유지하고 전체 Priority의 의미를 보완
-> 구현 상태: PostgreSQL HTTP 접수·V3 실행권·V4 결과 저장·Spring AI Adapter·V5 대기 예약·V6 저장 재시도·V7 Attempt 결과와 선택 Worker의 조건부 복구 구현. 전체 무료 Java Clean Test 384개·JavaScript 104개와 ESLint 통과. 실제 Java AI→PostgreSQL 단일 Live 실험은 앞선 한 건이며, 실제 JVM 재시작·조회·Browser·수동 내용 평가는 후속 과제
+> 구현 상태: PostgreSQL HTTP 접수·V3 실행권·V4 결과 저장·Spring AI Adapter·V5 대기 예약·V6 저장 재시도·V7 Attempt 결과와 선택 Worker의 조건부 복구 구현. 실제 JVM 재시작 Test를 포함한 전체 무료 Java Clean Test 389개·JavaScript 104개와 ESLint 통과. 실제 Java AI→PostgreSQL 단일 Live 실험은 앞선 한 건이며, 유료 자동 처리·조회·Browser·수동 내용 평가는 후속 과제
 
 이 문서는 Week 7의 한 수직 흐름에 필요한 입력·출력·권한·저장·실패 계약을 검토하기 위한 초안이다. 출력 구조 v2는 단일 `category` 문자열을 복수 값을 담는 `categories` 목록으로 변경한 **우리 Application의 논리적 Schema 초안**이다. `v2.1-draft`에서는 구조를 바꾸지 않고 개별 문제와 누적·결합 영향을 함께 보는 Priority 기준을 추가했다. OpenAI 최소 비교에는 별도의 전송용 Schema와 이전 계약 `v2-draft`를 사용했다. 그 결과가 전체 논리적 계약이나 Spring 저장 흐름의 Test 통과를 뜻하지는 않는다. [최소 비교 기록](./lab-reports/2026-10-02-openai-structured-output-pilot.md)
 
@@ -420,6 +420,14 @@ Worker는 현재 Process에 검증 객체가 있으면 저장 재시도를 우�
 
 영향 파일은 Lab의 `ai/job`·`ai/processing`·V7·복구/Context/Migration Test와 README다. 새 Test 20개와 전체 Java Clean Test 384개·JavaScript 104개·ESLint가 통과했다. 같은 JVM의 새 Context에서 조건부 복구와 재시도 미승인 유지를 확인했으며 유료 호출은 0회다. 실제 JVM Process 중단·유료 Worker·AGENT 조회·Browser·수동 내용 평가가 후속 범위다. 새 실패 유형 허용이나 원격 결과 조회·응답 영속 보관을 추가할 때 이 경계를 다시 검토한다. [복구 검증 기록](./lab-reports/2026-10-06-attempt-results-and-running-recovery-lab.md)
 
+### 실제 JVM 재시작 검증 — 기존 계약 유지
+
+같은 JVM의 새 Context만 사용하는 안과 별도 Java Process를 종료·재시작하는 안을 비교해, 후자를 추가했다. Process가 끝났을 때 메모리 객체를 공유하지 않고 DB 기록으로 재개하는지를 확인하기 위해서다. 부모 Test가 같은 PostgreSQL을 유지하고 자신이 만든 첫 자식 Process의 종료를 확인한 뒤 다른 PID를 시작한다. 운영 Worker·실패 정책·Migration은 변경하지 않는다.
+
+미실행 PENDING, 호출 전 UNCONFIRMED, 관찰한 OUTCOME_UNKNOWN, 유효한 대기 Hint 없는 Rate Limit, 승인된 미래 대기의 다섯 사례를 확인했다. 기존 Job의 Snapshot·예약·첫 처리 기한·원문을 유지한다. 미래 시각 전에는 실행하지 않고 재시도 금지도 해제하지 않는다. 긴 대기는 격리된 Test Row의 시각만 이동해 검사한다.
+
+영향 파일은 Lab의 `AiSuggestionWorkerProcessRestartIntegrationTest`·Test 전용 `AiWorkerProcessTestApplication`·README와 WIL의 자료·Note·계획이다. 새 Test 5개와 전체 Java 389개·JavaScript 104개·ESLint가 통과했고 이번 유료 호출은 0회다. 자식 Process에 전역 Credential·JVM 주입 설정을 상속하지 않고 접속 정보·원문·예외 원문을 출력하지 않는다. 유료 자동 처리·AGENT 조회·Browser·수동 평가, Provider 응답 중간 종료와 원격 결과 조회는 별도 검토한다. [실제 JVM 재시작 검증](./lab-reports/2026-10-06-worker-jvm-process-restart-lab.md)
+
 ## API·권한·응답 — 잠정안
 
 | 요청·상황 | 예상 결과 | 저장·실행 경계 |
@@ -552,6 +560,7 @@ SDK `maxRetries=0`만으로 HTTP Client의 연결 재시도까지 꺼지는 것�
 | 2026-10-06 | 단일 Processor·Spring AI Adapter·최종 전송 Body 검사를 연결하고 실제 AI 응답을 PostgreSQL에 저장 | 기존 접수·예약·결과 Transaction과 출력 계약을 유지한 실제 연결 실험 | 무료 Java 318개·JavaScript 104개·ESLint와 별도 Live Test 1개 통과. 원문 보존·제안 1건·Job 완료 확인. 자동 Worker·복구·조회·Browser·수동 평가는 남음. 학습 내용은 10/5 회차에 포함 |
 | 2026-10-06 | DB의 다음 실행 시각과 별도 TEMPORARY_RETRY로 조건부 재시도를 연결하고 Worker는 기본 꺼짐·명시적 의존성으로 활성화 | Backoff·최소 대기·전체 기한과 최종 FAILED 경계 설명 후 구현 진행 승인. 기존 한도·원문 보존·짧은 Transaction 유지 | V5·Worker·설정·Scheduler·Context의 새 Test 31개, 전체 Java 349개·JavaScript 104개·ESLint 통과. 유료 호출 0회. 결과 불명 자동 복구·실제 JVM·Browser·내용 평가는 후속 과제 |
 | 2026-10-06 | 메모리의 검증 객체로 DB 저장만 총 3회·최소 5초 재시도하고 상한 뒤 현재 실행만 종료 | 현재 Attempt·기존 결과·기한 확인과 제한된 객체 재사용에 사용자 승인. 즉시 AI 재생성·무제한 저장은 채택하지 않음 | V6·Worker·Processor·설정, 새 Test 15개와 전체 Java 364개·JavaScript 104개·ESLint 통과. 원문·생성 예약 유지, 대기 중 DB Lock 없음. Process 종료 후 객체 복구·결과 불명 새 생성은 후속 검토 |
+| 2026-10-06 | 별도 Java Process와 같은 PostgreSQL로 중단 후 재개를 검증, 기존 예약·기한·금지 유지 | 같은 JVM Context와 비교한 실제 Process 검증에 진행 승인. Test 전용 진입점·격리 환경으로 외부 호출과 사용자 Process 영향 방지 | 새 Test 5개·Java 389개·JavaScript 104개·ESLint 통과, 유료 호출 0회. 운영 계약·Source·Migration 유지. 유료 Worker·조회·Browser·평가는 후속 과제 |
 
 JSON의 `null`과 Field 누락의 차이는 [JSON Schema의 null 설명](https://json-schema.org/understanding-json-schema/reference/null)을 참고한다.
 Transaction의 Commit·Rollback은 [PostgreSQL 공식 문서](https://www.postgresql.org/docs/17/tutorial-transactions.html)를 참고한다.

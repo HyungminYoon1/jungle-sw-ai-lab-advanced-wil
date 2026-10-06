@@ -1,6 +1,6 @@
 # 2026-10-06 핵심 질문과 Worker 실행·복구
 
-> 상태: 진행 중 — 재시도 시간·현재 Attempt·최종 실패 경계 확인, 대기·저장 재시도와 Attempt별 결과 불명 복구 구현
+> 상태: 진행 중 — 재시도·저장·조건부 복구 구현과 실제 JVM Process 재시작 검증, 유료 자동 처리·조회·Browser·평가는 남음
 > 주제: 자동 Worker, 실패 유형별 재시도, 현재 Attempt, 중단 복구, 제안 조회와 Browser 흐름
 
 10월 5일 학습 회차의 연장 실험까지는 [10월 5일 학습 노트](./2026-10-05-study-questions.md)에 모았다. 실제 실행일이 10월 6일인 Java AI→PostgreSQL 실험은 해당 날짜의 [Lab Report](../lab-reports/2026-10-06-java-provider-adapter-lab.md)에 남겼다. 이번에는 그 단일 처리기를 자동으로 실행하는 Worker와 재시도 조건을 살펴봤다.
@@ -56,7 +56,7 @@ Codex가 Java Worker·선택 활성화 설정과 Test를 작성·실행했다. �
 
 실제 PostgreSQL과 통제된 Provider 응답으로 재시도 전 추가 예약 없음, 한도·기한 준수, 원문 보존, 최종 실패 제외와 경쟁 실행을 확인했다. 같은 DB를 유지한 새 Spring Context에서 대기 중 Job을 처리하고 재시도 시각·누적 횟수·원래 기한을 이어가는 것도 검증했다.
 
-앞선 Worker 검증은 같은 JVM에서 Spring Context를 새로 만든 Test다. 이어서 조건부 결과 불명 `RUNNING` 복구를 아래와 같이 연결했다. 실제 JVM Process 중단·재시작과 새 Worker의 실제 AI 호출은 따로 확인할 과제로 남는다. 앞선 실제 AI 저장 한 건의 근거는 그대로 유지한다.
+앞선 Worker 검증은 같은 JVM에서 Spring Context를 새로 만든 Test다. 이어서 조건부 결과 불명 `RUNNING` 복구와 아래의 실제 JVM Process 재시작을 연결했다. 새 Worker의 실제 AI 호출은 따로 확인할 과제로 남는다. 앞선 실제 AI 저장 한 건의 근거는 그대로 유지한다.
 
 첫 Worker 단계에서는 새 Test 31개와 Java 349개·JavaScript 104개·ESLint가 통과했다. 이어서 저장 재시도 Test 12개·Migration 1개·설정 추가 2개를 더해 최신 회귀는 Java 364개·JavaScript 104개·ESLint 통과다. 두 검증 모두 유료 AI 호출은 0회다.
 
@@ -84,6 +84,18 @@ Rate Limit 응답을 받았지만 유효한 `Retry-After`가 없는 경우에는
 
 Codex가 V7·조건부 복구와 PostgreSQL Test를 추가했다. 새로운 결과 분류는 원문 응답이나 Secret을 보관하지 않는다. 새 Test 20개와 최신 전체 Java 384개·JavaScript 104개·ESLint가 통과했고 유료 호출은 0회다. 같은 JVM의 새 Context에서 조건부 복구와 재시도 미승인 유지를 확인했다. 조건과 Row Assertion은 [Attempt별 결과·복구 Lab Report](../lab-reports/2026-10-06-attempt-results-and-running-recovery-lab.md)에 모았다. 새로운 정책을 승인한 것과 흐름을 자료 없이 설명할 수 있는지는 구분하며 이어서 복습한다.
 
+## 새 Context와 새 Java Process의 차이
+
+Spring Context를 새로 만들면 Bean이 새 객체가 되지만, 같은 JVM에서 Test가 들고 있는 객체는 남을 수 있다. 실제 Process를 종료하면 Worker의 메모리 객체와 Thread도 사라진다. 재시작한 Application이 이어서 처리하려면 원문·Job·예약·정책을 DB에서 다시 읽어야 한다.
+
+이번에는 Codex가 실제 자식 Java Process를 띄우고 첫 Process의 종료를 확인한 뒤 다른 PID의 Process를 시작하는 Test를 작성·실행했다. PostgreSQL은 계속 실행했다. 미실행 PENDING, 호출 전 예약, 관찰한 결과 불명, 재시도 미승인과 미래 대기의 다섯 사례를 확인했다.
+
+중요한 비교는 **재시작이 호출 횟수를 0으로 만들거나 전체 기한을 새로 시작하지 않는다는 것**이다. 새 Application의 기본 생성 한도를 5회로 바꿔도 기존 Job은 등록 당시의 3회 Snapshot을 유지했다. `Retry-After` 없는 Rate Limit은 새 Worker에서도 추가 호출하지 않았다.
+
+호출 전 중단 사례에서는 첫 Process의 호출이 0회이고 두 번째는 1회지만 예약은 총 2건이었다. 첫 예약을 실제 미전송으로 확인한 Test 조건에서도 운영 Worker가 예약을 자동 반환하지 않는 기존 계약을 적용했다. 예약 횟수와 Provider 호출 횟수의 차이를 이 사례에서 볼 수 있다.
+
+새 Test 5개와 전체 Java 389개·JavaScript 104개·ESLint가 통과했다. Provider는 통제된 합성 응답이며 이번 유료 호출은 0회다. Lease와 대기 시각은 Test Row의 경계만 이동했다. 상세한 Row 비교는 [실제 JVM 재시작 Lab Report](../lab-reports/2026-10-06-worker-jvm-process-restart-lab.md)에 모았다. 실제 AI 자동 처리와 Browser는 다음 흐름에서 확인한다.
+
 ## 핵심 질문
 
 1. 내부 Backoff가 5초이고 Provider의 `Retry-After`가 15초라면, 최소 몇 초 뒤 새 요청을 시도할 수 있을까?
@@ -108,6 +120,8 @@ Codex가 V7·조건부 복구와 PostgreSQL Test를 추가했다. 새로운 결�
 - Attempt 2로 바꾼 뒤 원장 INSERT가 실패하면 현재 Attempt·누적 예약·원장에는 무엇이 남아야 할까?
 - Lease가 만료됐어도 `AUTO_RETRY_BLOCKED`인 Job을 다시 호출하면 안 되는 이유는 무엇일까?
 - Provider 거절을 DB에 기록하기 전에 중단됐다면 재시작한 Worker가 확정할 수 없는 것은 무엇일까?
+- 같은 JVM에서 새 Context를 만드는 것과 실제 Java Process를 바꾸는 것은 어떤 점이 다를까?
+- Application의 새 기본 한도가 5회여도 기존 Job의 3회 Snapshot을 유지해야 하는 이유는 무엇일까?
 
 ## 조회·Browser·평가에서 확인할 질문
 
@@ -117,6 +131,6 @@ Codex가 V7·조건부 복구와 PostgreSQL Test를 추가했다. 새로운 결�
 - 구조·Category·Priority 후보 일치가 요약의 핵심 사실 보존까지 확인해 주지는 않는 이유는 무엇일까?
 - 제안 문자열을 `textContent`로 표시해야 하는 이유와 Source·Log에 남기지 않아야 할 값은 무엇일까?
 
-Week 7의 남은 순서와 완료 기준은 [주간 계획](../weekly-plan.md)을 따른다. 조건부 복구를 연결한 뒤 실제 JVM 중단·재시작·AGENT 조회·Browser·수동 내용 평가와 WIL을 이어서 진행한다.
+Week 7의 남은 순서와 완료 기준은 [주간 계획](../weekly-plan.md)을 따른다. 실제 JVM 재시작까지 확인했고, 명시적인 실제 AI 자동 처리·AGENT 조회·Browser·수동 내용 평가와 WIL을 이어서 진행한다.
 
 관련 개념: [AI 비동기 처리의 생애주기](../study-docs/ai-async-processing-lifecycle.md), [Provider Adapter와 HTTP 재시도](../study-docs/ai-provider-adapter-and-http-retries.md), [HTTP 접수와 인증 작성자](../study-docs/http-receipt-and-authenticated-author.md).

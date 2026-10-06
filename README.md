@@ -58,7 +58,7 @@ Week 9~12에는 취업 활동을 우선하면서 검증된 기반 위에 AI를 �
 | 4 | 인증·인가·Session·Web Security | Completed | [Week 4](./week4/README.md) · [WIL](./week4/wil.md) |
 | 5 | Browser JavaScript·Frontend·E2E·품질 기초 | Partially Completed | [Week 5 학습 계획](./week5/weekly-plan.md) · [WIL](./week5/wil.md) |
 | 6 | Browser·PostgreSQL·Test 수직 마감 | Completed — Local 수직 검증, 독립 재설명, 블로그·포럼 게시 완료 | [Week 6 학습 계획](./week6/weekly-plan.md) · [WIL](./week6/wil.md) |
-| 7 | LLM Structured Output·평가·Guardrail | In Progress — 실제 AI 비교·Java AI 저장 한 건·선택 Worker의 대기·저장 재시도·조건부 복구 확인. 실제 JVM 재시작·조회·Browser·수동 평가 진행 예정 | [Week 7 학습 계획](./week7/weekly-plan.md) · [10/6 학습 노트](./week7/study-notes/2026-10-06-study-questions.md) |
+| 7 | LLM Structured Output·평가·Guardrail | In Progress — 실제 AI 비교·Java AI 저장 한 건·선택 Worker의 대기·저장 재시도·조건부 복구·실제 JVM 재시작 확인. 유료 자동 처리·조회·Browser·수동 평가 진행 예정 | [Week 7 학습 계획](./week7/weekly-plan.md) · [10/6 학습 노트](./week7/study-notes/2026-10-06-study-questions.md) |
 | 8 | Docker·CI·System·AWS Cloud·HTTPS | Not Started | 주차 시작 시 추가 |
 | 9 | 취업 Baseline·Portfolio 근거 정리 | Not Started | 주차 시작 시 추가 |
 | 10 | 맞춤 지원·기술 면접 보완 | Not Started | 주차 시작 시 추가 |
@@ -86,6 +86,7 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [10월 6일 학습 노트](./week7/study-notes/2026-10-06-study-questions.md): 재시도 대기·현재 Attempt·최종 실패, 선택 Worker와 제한된 DB 저장 재시도
 - [Worker 대기·Context 재시작 검증](./week7/lab-reports/2026-10-06-worker-rate-limit-and-context-restart-lab.md): 실제 PostgreSQL·통제된 Provider, Java 349개·JavaScript 104개 회귀와 남은 복구 경계
 - [검증 객체의 저장 재시도](./week7/lab-reports/2026-10-06-validated-output-storage-retry-lab.md): 총 3회·최소 5초, 기존 Commit·현재 Attempt·기한·원문 보존과 Java 364개 회귀
+- [실제 JVM 재시작 검증](./week7/lab-reports/2026-10-06-worker-jvm-process-restart-lab.md): 서로 다른 PID·같은 PostgreSQL, 예약·정책·기한·재시도 금지 유지와 Java 389개 회귀
 - [깊은 수직 학습과 AI 보조 수평 확장 Decision](./plan/decisions/0002-depth-first-ai-assisted-expansion.md): Week 1~8과 Week 9~12의 구현 모드
 - [AgentOps Lab 보류 안내](./plan/agentops-lab-12-week-plan.md): 과정 이후 별도로 검토할 장기 프로젝트
 - [계획 문서 안내](./plan/README.md): 현재 기준 문서와 Archive
