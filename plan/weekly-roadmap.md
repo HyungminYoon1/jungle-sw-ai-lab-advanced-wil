@@ -314,7 +314,7 @@ Week 5는 Event Loop·Rendering·Promise의 일부 실행 근거를 확보했지
 
 최초 Message와 자동 처리의 설계·확인 순서는 [Week 7 계획](../week7/weekly-plan.md)과 [계약 초안](../week7/ai-suggestion-contract-draft.md)에서 관리한다. 상태·재시도·복구 세부 계약은 질문을 통해 검토하며, 설계 합의를 구현 완료로 표시하지 않는다.
 
-10/5 학습 회차는 연장 실험을 포함해 마감했다. 개인정보 6회·기존/보완 Prompt 비교 각 52회, HTTP 접수·Job 실행권·결과 저장과 실제 Java AI→PostgreSQL 한 건을 확인했다. 10/6에는 선택 Worker의 대기·검증 객체의 제한된 DB 재저장·Attempt별 결과 분류·조건부 RUNNING 복구를 검증했다. 같은 DB의 Spring Context 재생성에 이어 서로 다른 JVM Process에서도 예약·정책·기한·재시도 금지를 유지했다. AGENT 읽기 전용 조회는 실제 PostgreSQL·Security·MockMvc로 확인했고, 최신 회귀는 Java 444개·JavaScript 104개·ESLint 통과다. Week 7은 진행 중이며 명시적인 유료 자동 Worker·새 Browser 흐름·요약과 Injection 수동 평가·독립 설명·WIL을 이어간다. 실험 보고서는 실제 실행일을 유지한다. 10/4 학습 제외는 유지하며 Week 8의 Cloud·HTTPS 범위를 줄이거나 미완료 학습을 Week 9로 자동 이월하지 않는다.
+10/5 학습 회차는 연장 실험을 포함해 마감했다. 개인정보 6회·기존/보완 Prompt 비교 각 52회, HTTP 접수·Job 실행권·결과 저장과 실제 Java AI→PostgreSQL 한 건을 확인했다. 10/6에는 선택 Worker의 대기·검증 객체의 제한된 DB 재저장·Attempt별 결과 분류·조건부 RUNNING 복구를 검증했다. 같은 DB의 Spring Context 재생성에 이어 서로 다른 JVM Process에서도 예약·정책·기한·재시도 금지를 유지했다. AGENT 읽기 전용 조회는 실제 PostgreSQL·Security·MockMvc로, 최소 화면의 응답 분기·Text·Page 연결은 합성 응답과 정적 Resource Test로 확인했다. 최신 회귀는 Java 449개·JavaScript 133개·ESLint 통과다. Week 7은 진행 중이며 명시적인 유료 자동 Worker·실제 Browser 수직 흐름·요약과 Injection 수동 평가·독립 설명·WIL을 이어간다. 실험 보고서는 실제 실행일을 유지한다. 10/4 학습 제외는 유지하며 Week 8의 Cloud·HTTPS 범위를 줄이거나 미완료 학습을 Week 9로 자동 이월하지 않는다.
 
 ## 8주차 — DevOps·System·AWS Cloud·HTTPS 수직 배포
 

@@ -1,6 +1,6 @@
 # 2026-10-06 핵심 질문과 Worker 실행·복구
 
-> 상태: 진행 중 — 재시도·저장·조건부 복구 구현과 실제 JVM Process 재시작 검증, 유료 자동 처리·조회·Browser·평가는 남음
+> 상태: 진행 중 — 재시도·복구·실제 JVM Process 재시작·AGENT 조회와 최소 화면 Test 확인, 유료 자동 처리·실제 Browser·수동 평가는 남음
 > 주제: 자동 Worker, 실패 유형별 재시도, 현재 Attempt, 중단 복구, 제안 조회와 Browser 흐름
 
 10월 5일 학습 회차의 연장 실험까지는 [10월 5일 학습 노트](./2026-10-05-study-questions.md)에 모았다. 실제 실행일이 10월 6일인 Java AI→PostgreSQL 실험은 해당 날짜의 [Lab Report](../lab-reports/2026-10-06-java-provider-adapter-lab.md)에 남겼다. 이번에는 그 단일 처리기를 자동으로 실행하는 Worker와 재시도 조건을 살펴봤다.
@@ -153,7 +153,19 @@ PENDING·RUNNING에 이전 실패 코드가 남아 있더라도 현재 작업이
 
 Codex가 반복 조회 전후의 여섯 Table을 비교하고 Provider·Claim·결과 저장 Service 미호출을 확인했다. 결과 저장 Transaction의 Commit 전에는 RUNNING·제안 없음, Commit 뒤에는 SUCCEEDED·모든 분류가 조회되는지도 확인했다. DB 예외는 Test용으로 주입해 응답·Log에 원문이 나오지 않는지 검사했다. 실제 DB 연결을 끊거나 실제 Browser로 이 API를 사용한 결과는 아니다. 새 Test 55개를 포함한 최신 회귀는 Java 444개·JavaScript 104개·ESLint 통과다. 구체적인 조건과 근거는 [AGENT 조회 Lab Report](../lab-reports/2026-10-06-agent-ai-suggestion-query-lab.md)에 모았다.
 
+## 화면에 표시할 성공의 의미
+
+Job이 `FAILED`여도 조회 HTTP가 `200`이면 `response.ok`는 `true`이며, 화면에 ‘AI 제안 성공’을 표시하면 안 된다고 답했다. 이번 요청으로 상태를 읽은 것과 앞선 AI 작업의 성공을 구분해야 한다.
+
+`job.status: SUCCEEDED`·`reviewStatus: PENDING_REVIEW`에는 ‘AI 제안 생성 완료·담당자 검토 대기’가 맞다고 답했다. 제안 저장 완료는 요약의 사실성 검토나 고객 문의 해결까지 뜻하지 않는다. Ticket·Job·제안 검토 상태를 화면에서도 따로 표현한다.
+
+Codex가 기존 Ticket 화면과 별도의 최소 담당자 조회 화면을 작성했다. 조회 버튼은 GET만 보내고 AI 실행·재시도는 시작하지 않는다. HTTP 오류와 작업 실패를 나누고, JSON·응답 구조 확인 뒤 Job 상태를 표시하며 요약은 `textContent`로 넣는다. 새 조회에서는 이전 결과를 지우고 늦은 응답이 최신 화면을 덮지 않게 현재 요청 번호도 확인한다.
+
+새 Node Test 29개는 합성 Response·DOM Test Double과 Page 연결을 확인했고, 정적 Resource MockMvc Test 5개도 통과했다. 전체 Java 449개·JavaScript 133개·ESLint가 통과했다. 실제 Browser의 Session·PostgreSQL·자동 Worker를 함께 관찰한 결과는 다음 수직 검증에서 기록한다. [최소 화면 Lab Report](../lab-reports/2026-10-06-agent-ai-suggestion-ui-lab.md)
+
 ## 조회·Browser·평가에서 확인할 질문
+
+아래 질문은 다음 수직 검증과 복습에서 이어서 확인한다.
 
 - AGENT의 상태·제안 조회가 새 AI 호출을 시작하면 안 되는 이유는 무엇일까?
 - Job이 `FAILED`인데도 상태 조회의 HTTP 응답이 `200`일 수 있는 이유는 무엇일까?
@@ -166,6 +178,6 @@ Codex가 반복 조회 전후의 여섯 Table을 비교하고 Provider·Claim·�
 - 구조·Category·Priority 후보 일치가 요약의 핵심 사실 보존까지 확인해 주지는 않는 이유는 무엇일까?
 - 제안 문자열을 `textContent`로 표시해야 하는 이유와 Source·Log에 남기지 않아야 할 값은 무엇일까?
 
-Week 7의 남은 순서와 완료 기준은 [주간 계획](../weekly-plan.md)을 따른다. 실제 JVM 재시작과 AGENT 조회 API까지 확인했고, 명시적인 실제 AI 자동 처리·Browser·수동 내용 평가와 WIL을 이어서 진행한다.
+Week 7의 남은 순서와 완료 기준은 [주간 계획](../weekly-plan.md)을 따른다. 실제 JVM 재시작·AGENT 조회 API와 최소 화면 Test까지 확인했고, 명시적인 실제 AI 자동 처리·Browser·수동 내용 평가와 WIL을 이어서 진행한다.
 
 관련 개념: [AI 비동기 처리의 생애주기](../study-docs/ai-async-processing-lifecycle.md), [Provider Adapter와 HTTP 재시도](../study-docs/ai-provider-adapter-and-http-retries.md), [HTTP 접수와 인증 작성자](../study-docs/http-receipt-and-authenticated-author.md).

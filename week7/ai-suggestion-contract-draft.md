@@ -478,6 +478,18 @@ ID가 숫자가 아니거나 양수가 아니면 `400`, 없는 Ticket은 `404`�
 
 CSRF Token은 Browser JavaScript가 Server에서 받은 Header 이름으로 접수 요청에 직접 붙인다. `201` 응답을 Browser가 받지 못해도 접수 Commit이 이미 끝났을 수 있으므로 자동 재시도하지 않는다. CORS 허용, Session 인증, CSRF와 AI 출력 검증은 서로 다른 경계다.
 
+### 최소 담당자 화면 — 조회와 결과 표시의 분리
+
+HTTP `200`의 실패 Job에서도 `response.ok`는 `true`이며, `SUCCEEDED`·`PENDING_REVIEW`는 ‘AI 제안 생성 완료·담당자 검토 대기’로 표시한다는 설명을 사용자 답변으로 확인했다. 제안 생성·담당자 검토·Ticket 해결을 한 성공 표시로 합치지 않는다.
+
+기존 Ticket 결과 영역에 AI 결과까지 섞는 안과 별도 최소 조회 화면을 비교하고, `/ai-suggestions.html`로 분리했다. 접수 성공을 AI 완료로 오해하지 않게 하고 기존 접수·조회 Client를 변경하지 않기 위한 선택이다. 기존 정적 파일 정책은 유지한다. 빈 화면·Module은 공개 정적 파일이고, 실제 데이터 GET은 기존 Server의 익명 `401`·USER `403`·AGENT 허용 규칙을 따른다.
+
+사용자가 조회 버튼을 누를 때만 같은 Origin의 GET을 한 번 보낸다. 자동 Polling·재생성·실패 재시도·공식 답변 게시 기능은 추가하지 않는다. Job 부재와 다섯 작업 상태를 구분하고, HTTP 조회 오류·JSON 오류·계약에 맞지 않는 결과를 작업의 `FAILED`로 대신 표시하지 않는다. 응답의 Ticket ID·명시적 null·필드 집합·허용값·Job과 제안의 관계를 확인하며, 누락 값을 `UNDETERMINED`로 채우지 않는다.
+
+요약은 `textContent`로 원문 문자열을 표시한다. UI에 별도 요약 길이 정책을 새로 만들지 않고, Runtime 출력 상한은 기존 검증기의 명시적 주입 계약을 유지한다. ID는 기존 Ticket UI처럼 JavaScript Safe Integer 범위에서 검증하며 Server의 Long 계약을 변경하지 않는다. 새 조회에서는 이전 요약·실패 코드를 지우고, 취소와 현재 요청 번호 확인을 함께 적용해 오래된 결과가 최신 화면을 덮지 않게 한다.
+
+영향 파일은 Lab의 정적 HTML·조회 Client·Page 연결·JavaScript Test·정적 Resource MockMvc Test·README와 WIL의 자료·Note·Report·계획이다. Controller·조회 SQL·Worker·Migration·호출 정책은 유지한다. 실제 Browser의 Session·PostgreSQL 조회와 실제 유료 Worker 연결은 후속 수직 검증이며, 이번 합성 응답·DOM Test Double로 대체하지 않는다.
+
 ## 별도 저장소와 결과 Transaction — 합의한 구현
 
 - 사용자 원문은 `ticket_messages.body`에 보관한다. 검증된 AI 결과는 Ticket·Message에 덮어쓰지 않고 `ticket_suggestions`에 저장한다.
@@ -592,6 +604,7 @@ SDK `maxRetries=0`만으로 HTTP Client의 연결 재시도까지 꺼지는 것�
 | 2026-10-06 | 메모리의 검증 객체로 DB 저장만 총 3회·최소 5초 재시도하고 상한 뒤 현재 실행만 종료 | 현재 Attempt·기존 결과·기한 확인과 제한된 객체 재사용에 사용자 승인. 즉시 AI 재생성·무제한 저장은 채택하지 않음 | V6·Worker·Processor·설정, 새 Test 15개와 전체 Java 364개·JavaScript 104개·ESLint 통과. 원문·생성 예약 유지, 대기 중 DB Lock 없음. Process 종료 후 객체 복구·결과 불명 새 생성은 후속 검토 |
 | 2026-10-06 | 별도 Java Process와 같은 PostgreSQL로 중단 후 재개를 검증, 기존 예약·기한·금지 유지 | 같은 JVM Context와 비교한 실제 Process 검증에 진행 승인. Test 전용 진입점·격리 환경으로 외부 호출과 사용자 Process 영향 방지 | 새 Test 5개·Java 389개·JavaScript 104개·ESLint 통과, 유료 호출 0회. 운영 계약·Source·Migration 유지. 유료 Worker·조회·Browser·평가는 후속 과제 |
 | 2026-10-06 | AGENT 전용 읽기 API, 최초 Message의 고정 Job·제안과 상태별 null·고정 코드 공개 | 사용자 승인. 읽기 중 AI 실행·복구를 시작하는 안과 고객용 공개는 제외. 단일 SELECT로 같은 Snapshot을 읽고 조회 오류와 작업 실패를 구분 | 영향: Lab의 `ai/query`·`ai/web`·Security·오류 Handler·Test·README, WIL 계약·자료·Note·Report·계획. 새 Test 55개·Java 444개·JavaScript 104개·ESLint 통과. 기존 Worker·Migration 유지. 실제 Browser·유료 Worker·수동 평가와 고객용 조회는 후속 검토 |
+| 2026-10-06 | 별도 최소 담당자 화면에서 HTTP 조회·Job 결과·검토 대기를 구분 | 사용자 답변으로 HTTP 200의 FAILED와 SUCCEEDED·PENDING_REVIEW의 표시 확인. 기존 Ticket 화면과 혼합하는 안 대신 조회만 하는 별도 화면 선택 | 영향: Lab 정적 HTML·Client·View·Page·Node/Resource Test·README, WIL 계약·자료·Note·Report·계획. 새 Node Test 29개·MockMvc 5개, 전체 Java 449개·JavaScript 133개·ESLint 통과. 실행·재시도·조회 SQL·Worker·Migration 유지. 실제 Browser·유료 Worker와 수동 평가는 후속 검토 |
 
 JSON의 `null`과 Field 누락의 차이는 [JSON Schema의 null 설명](https://json-schema.org/understanding-json-schema/reference/null)을 참고한다.
 Transaction의 Commit·Rollback은 [PostgreSQL 공식 문서](https://www.postgresql.org/docs/17/tutorial-transactions.html)를 참고한다.

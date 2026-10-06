@@ -197,6 +197,24 @@ AI 작업 상태: SUCCEEDED
 
 PENDING·RUNNING Row에 앞선 시도의 실패 코드가 남아 있어도 현재 작업이 최종 FAILED라는 뜻은 아니다. 실패 코드의 공개 여부도 Job 상태를 기준으로 결정한다.
 
+### 화면은 조회 성공과 AI 작업 결과를 따로 표시한다
+
+`response.ok`는 HTTP Status가 2xx인지 알려준다. `200`으로 조회한 Job이 `FAILED`일 때도 이 값은 `true`다. UI는 HTTP 조회 성공만 보고 제안 생성 성공을 표시하지 않고, JSON 해석·응답 구조 확인 뒤 `job.status`를 읽어야 한다.
+
+```text
+HTTP 조회 결과 확인
+  → JSON 해석
+  → 요청한 Ticket ID·필드·Job과 Suggestion의 정합성 확인
+  → Job 미등록·대기·실행·실패·생성 보류·저장 완료로 표시
+  → 제안이 있으면 일반 Text로 표시
+```
+
+`SUCCEEDED`·`PENDING_REVIEW`는 ‘AI 제안 생성 완료·담당자 검토 대기’다. 요약의 사실성이 확인됐거나 고객 문의가 해결됐다는 뜻이 아니다. `ABSTAINED`는 정상적인 제안 생성 보류이며 처리 오류의 `FAILED`와 구분한다. 조회 HTTP `500`이나 읽을 수 없는 Response는 AI Job의 실패 상태를 확인한 결과가 아니다.
+
+새 조회를 시작하면 이전 제안과 실패 코드를 지운다. 이전 요청을 취소하더라도 이미 진행된 응답이나 JSON 해석이 늦게 끝날 수 있으므로, 현재 요청 식별자인지도 확인한 뒤 화면을 갱신한다. 상태를 읽는 GET의 취소는 Worker 중단이나 DB Rollback이 아니다.
+
+페이지의 빈 HTML·Script를 열 수 있다는 것과 제안 데이터에 접근할 수 있다는 것도 다르다. 데이터 API의 인증·AGENT 인가를 Server에서 검사하며, Client의 응답 검증은 그 권한 검사를 대신하지 않는다. 단순 조회 화면은 AI 실행·재시도·공식 답변 게시를 실행하지 않는다.
+
 담당자용 제안 조회와 고객의 문의 상태 안내도 수신자가 다르다. AI 요약은 내부 업무 보조이고 고객에게 게시한 공식 답변이 아니다. 내부 AI 실패가 고객 문의의 접수 실패를 의미하거나 담당자 답변을 보장하는 것도 아니다. 안내는 실제로 확인한 접수·응답 상태와 운영 절차를 기준으로 한다.
 
 권한 규칙은 Framework가 자동 연결하는 요청 Method도 고려한다. Spring의 `@GetMapping`은 HEAD를 함께 지원하므로 GET에만 Role 제한을 붙이면 HEAD가 더 느슨한 다른 규칙으로 넘어갈 수 있다. 조회 URI의 업무 요청에 같은 Role을 요구하는 것과 CORS Filter가 처리하는 사전 OPTIONS는 별도로 설계한다. [Spring의 HEAD·OPTIONS Mapping](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-requestmapping.html)
