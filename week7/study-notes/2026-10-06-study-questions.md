@@ -1,6 +1,6 @@
 # 2026-10-06 핵심 질문과 Worker 실행·복구
 
-> 상태: 진행 중 — 재시도·복구·실제 JVM Process 재시작·AGENT 조회와 최소 화면 Test 확인, 유료 자동 처리·실제 Browser·수동 평가는 남음
+> 상태: 진행 중 — 재시도·복구·실제 JVM Process 재시작과 실제 AI의 Browser·자동 Worker·PostgreSQL 흐름 확인, 수동 내용 평가·독립 복습·WIL은 남음
 > 주제: 자동 Worker, 실패 유형별 재시도, 현재 Attempt, 중단 복구, 제안 조회와 Browser 흐름
 
 10월 5일 학습 회차의 연장 실험까지는 [10월 5일 학습 노트](./2026-10-05-study-questions.md)에 모았다. 실제 실행일이 10월 6일인 Java AI→PostgreSQL 실험은 해당 날짜의 [Lab Report](../lab-reports/2026-10-06-java-provider-adapter-lab.md)에 남겼다. 이번에는 그 단일 처리기를 자동으로 실행하는 Worker와 재시도 조건을 살펴봤다.
@@ -182,9 +182,21 @@ Codex가 기존 Ticket 화면과 별도의 최소 담당자 조회 화면을 작
 
 접수 `201`은 Ticket·최초 Message·Job의 저장 완료를 뜻한다. AI 제안이 준비됐다는 뜻은 아니다. 이후 Scheduler가 Commit된 Job의 실행권과 호출 예약을 확보하고 Provider를 호출한다. AGENT 화면은 그 결과를 읽을 뿐이며, 조회 버튼을 눌러 AI를 실행하지 않는다.
 
-Codex가 고정 합성 문의 한 건의 연결 실험을 준비했다. 실제 Browser의 USER 로그인, CSRF 없는 대조 POST `403`, 접수 화면의 정상 `201`, 자동 Worker·PostgreSQL 저장과 AGENT 조회 화면을 확인한다. 통제된 Provider로 먼저 실행 도구를 점검한 결과와 실제 유료 AI 결과는 별도로 기록한다. 화면에 `SUCCEEDED`가 보이더라도 Ticket은 `OPEN`, 제안은 `PENDING_REVIEW`다.
+Codex가 고정 합성 문의 한 건의 연결 실험을 작성하고 통제된 Provider로 먼저 실행 도구를 점검했다. 이후 Helpdesk 전용 PowerShell에서 실제 AI 모드를 실행했다. 실제 Browser의 USER 로그인, CSRF 없는 대조 POST `403`, 접수 화면의 정상 `201`, 자동 Worker·PostgreSQL 저장과 AGENT 조회 `200`을 확인했다. 원문과 인증 작성자는 그대로 보존됐고, 예약·제안·분류는 각각 1건이었다. 화면에 `SUCCEEDED`가 보이더라도 Ticket은 `OPEN`, 제안은 `PENDING_REVIEW`다.
 
-비용 제한 없이 추가 실험을 진행하도록 승인했다. 이전 비용이 미확인이라는 사실이나 보류 기록까지 사라지는 것은 아니다. 일일 실험 비용 승인을 바꾼 것과 개별 Job의 생성 한도·현재 Attempt·기한은 다른 정책이다. 이번 고정 입력은 전용 키로 실제 AI에 연결한 뒤 원문과 요약을 대조한다.
+비용 제한 없이 추가 실험을 진행하도록 승인했다. 이전 비용이 미확인이라는 사실이나 보류 기록까지 사라지는 것은 아니다. 일일 실험 비용 승인을 바꾼 것과 개별 Job의 생성 한도·현재 Attempt·기한은 다른 정책이다. 이번 생성 HTTP 요청은 1회였고 AGENT의 조회가 추가 AI 호출을 만들지는 않았다.
+
+### 화면에 나온 요약과 내용 평가는 구분한다
+
+이번 문의는 링크가 만료됐지만 새 링크로 로그인에는 성공했고, 급하지 않으며 만료 이유를 알고 싶다는 내용이다. 화면에는 ‘로그인 링크가 만료됐지만 새 링크로 로그인에 성공했으며, 만료 이유를 문의합니다. 급한 문의는 아닙니다.’라는 실제 AI 요약과 `ACCOUNT`·`NORMAL`이 표시됐다.
+
+전달받은 실행 결과와 Codex의 화면 대조에서는 값이 DB와 일치했다. 원문과 화면이 일치하는지 확인한 것만으로 모든 요약이 정확하다고 할 수는 없다. 이번 원문에 기존 Rubric을 적용하는 수동 채점은 아직 진행하지 않았으며 실행기의 `NOT_SCORED`도 유지한다. 로그인 복구 사실·문의 목적이 보존됐는지, 원문에 없는 만료 원인이 추가됐는지를 이어서 살펴본다.
+
+### 실행 환경에서 구분한 두 오류
+
+전용 키를 설정한 환경 변수는 그 PowerShell Process와 자식 Process에만 적용된다. 새 창에서는 Helpdesk 키를 다시 설정해야 하며 논문용 `OPENAI_API_KEY`를 대신 가져오지 않는다. 키를 설정할 때는 가려진 입력을 사용하고 값은 화면에 출력하지 않는다.
+
+`node .\scripts\...`의 상대 경로는 현재 작업 폴더를 기준으로 해석한다. `System32`에서 실행하면 Lab의 스크립트를 찾지 못하므로 Lab 폴더로 이동해야 한다. 키 누락과 파일 경로 오류로 중단된 두 실행에서는 AI가 호출되지 않았다. 성공한 실행에서는 실제 AI 호출 1회와 제안 저장을 별도로 확인했다.
 
 ### 연결 실험에서 다시 설명할 질문
 
@@ -193,6 +205,6 @@ Codex가 고정 합성 문의 한 건의 연결 실험을 준비했다. 실제 B
 - 화면과 DB가 일치해도 요약의 사실성 검토가 별도로 필요한 이유는 무엇일까?
 - 비용 상한 해제가 같은 Job의 생성 예약 횟수를 초기화하거나 무제한 재시도를 허용하지 않는 이유는 무엇일까?
 
-[연결 실험 Report](../lab-reports/2026-10-06-worker-browser-experiment-lab.md)와 [주간 계획](../weekly-plan.md)을 기준으로 실제 유료 Worker·수동 내용 평가·복습과 WIL을 이어서 진행한다.
+[연결 실험 Report](../lab-reports/2026-10-06-worker-browser-experiment-lab.md)와 [주간 계획](../weekly-plan.md)을 기준으로 수동 내용 평가·복습과 WIL을 이어서 진행한다. 실제 연결이 완료됐다는 실행 근거와 자료 없이 설명할 수 있다는 학습 근거는 구분한다.
 
 관련 개념: [AI 비동기 처리의 생애주기](../study-docs/ai-async-processing-lifecycle.md), [Provider Adapter와 HTTP 재시도](../study-docs/ai-provider-adapter-and-http-retries.md), [HTTP 접수와 인증 작성자](../study-docs/http-receipt-and-authenticated-author.md).

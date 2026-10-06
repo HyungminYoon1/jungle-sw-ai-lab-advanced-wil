@@ -2,7 +2,7 @@
 
 > 작성일: 2026-09-29
 > 최종 수정일: 2026-10-06
-> 상태: In Progress — 실제 Java AI 저장 한 건·선택 Worker·실제 JVM 재시작·AGENT 조회·통제된 Provider의 실제 Browser 확인. 유료 자동 Worker·수동 채점은 진행 예정
+> 상태: In Progress — 실제 AI의 Browser 접수·자동 Worker·PostgreSQL 저장·AGENT 화면 연결 확인. 수동 채점·독립 복습·WIL은 남음
 > 초기 기간: 2026-09-29 ~ 2026-10-03
 > 이월 재개: 2026-10-06 — 10/5 회차의 연장 실험은 해당 Study Note에 포함하고 Lab Report는 실제 실행일 유지
 > 학습 제외일: 2026-10-04 일요일
@@ -14,7 +14,7 @@
 
 Week 6에는 최소 Browser UI에서 Session·CSRF를 유지하며 Ticket을 실제 PostgreSQL에 생성·조회했다. 9월 29일 기록상 Java Test 61개와 JavaScript Test 12개가 통과했고, 실제 Browser와 Database Row를 함께 확인했다. 이 결과는 AI 기능의 근거가 아니다.
 
-PostgreSQL의 HTTP 접수는 `title`·`body`를 받아 인증 작성자와 최초 Message·`PENDING` Job까지 저장한다. 기존 In-memory 제목 전용 실험은 별도로 보존했다. 검증된 출력의 제안·복수 Category·Job 완료는 별도 결과 Transaction으로 저장한다. Processor를 한 번 직접 실행한 실제 Java Provider·PostgreSQL 연결과 통제된 Provider의 선택 Worker·대기 예약·조건부 결과 불명 복구·Context/JVM 재시작을 확인했다. 유료 자동 Worker·새 Browser 흐름은 이어서 검증한다. 독립 Provider 비교와 이 저장 실험을 구분한다. Week 7에는 최초 문의 Message를 입력으로 삼아 AI 제안 한 가지만 더한다. Ticket은 대화 묶음, Message는 원문, Job은 AI 처리 상태, Suggestion은 검증된 결과로 구분한다. AI가 Ticket 상태를 자동 변경하거나 공식 답변을 게시하지 않는다.
+PostgreSQL의 HTTP 접수는 `title`·`body`를 받아 인증 작성자와 최초 Message·`PENDING` Job까지 저장한다. 기존 In-memory 제목 전용 실험은 별도로 보존했다. 검증된 출력의 제안·복수 Category·Job 완료는 별도 결과 Transaction으로 저장한다. Processor를 한 번 직접 실행한 실제 Java Provider·PostgreSQL 연결과 통제된 Provider의 선택 Worker·대기 예약·조건부 결과 불명 복구·Context/JVM 재시작을 확인했다. 이어서 실제 Browser 접수·자동 Worker의 실제 AI 호출·PostgreSQL 저장·AGENT 화면을 연결했다. 독립 Provider 비교와 이 수직 실험을 구분한다. Week 7에는 최초 문의 Message를 입력으로 삼아 AI 제안 한 가지만 더한다. Ticket은 대화 묶음, Message는 원문, Job은 AI 처리 상태, Suggestion은 검증된 결과로 구분한다. AI가 Ticket 상태를 자동 변경하거나 공식 답변을 게시하지 않는다.
 
 ## 이번 주 목표
 
@@ -198,9 +198,9 @@ AGENT 전용 `GET /api/tickets/{id}/ai-suggestion`도 연결했다. 새 Test 55�
 
 최소 담당자 화면의 응답 분기도 연결했다. `response.ok`와 Job 결과를 구분하고 저장된 제안은 검토 대기로 표시한다. Text 표시·이전 결과 제거·늦은 응답 차단·Page 연결의 새 Node Test 29개와 정적 Resource MockMvc Test 5개가 통과했다. 이 단계의 전체 회귀는 Java 449개·JavaScript 133개·ESLint 통과다. 유료 호출은 0회였으며 실제 Browser·PostgreSQL·Worker를 함께 실행한 근거는 별도다. [최소 화면 검증](./lab-reports/2026-10-06-agent-ai-suggestion-ui-lab.md)
 
-이어서 통제된 Provider로 실제 Browser의 접수 화면·Session·CSRF·자동 Worker·PostgreSQL·AGENT 조회 화면을 연결했다. 별도 Experiment 한 건에서 정상 접수 `201`, 누락 CSRF `403`, 익명 `401`·USER `403`·AGENT `200`, 원문 보존·화면과 DB 일치·조회 무변경을 확인했다. 최신 회귀는 Java 449개·JavaScript 145개·ESLint 통과다. 전용 키를 사용하는 실제 AI 모드는 준비했으며 실행 결과와 수동 평가는 이어서 기록한다. 당일 비용 상한 해제 승인은 기존 이력을 유지한 원장에 반영하고 Job의 생성·기한 정책은 바꾸지 않는다. [Worker·Browser 실험](./lab-reports/2026-10-06-worker-browser-experiment-lab.md)
+이어서 통제된 Provider로 실제 Browser의 접수 화면·Session·CSRF·자동 Worker·PostgreSQL·AGENT 조회 화면을 연결한 뒤 같은 흐름을 실제 AI로 실행했다. 두 실행에서 정상 접수 `201`, 누락 CSRF `403`, 익명 `401`·USER `403`·AGENT `200`, 원문 보존·화면과 DB 일치·조회 무변경을 확인했다. 실제 AI 실행은 생성 HTTP 요청 1회·Provider `200`, 예약·제안·분류 각 1건, Ticket `OPEN`·Job `SUCCEEDED`·제안 `PENDING_REVIEW`다. 최신 무료 회귀는 Java 449개·JavaScript 145개·ESLint 통과이며 무료·실제 AI Experiment 각 한 건은 별도다. 요약의 수동 평가는 아직 `NOT_SCORED`다. 당일 비용 상한 해제 승인은 기존 이력을 유지한 원장에 반영하고 Job의 생성·기한 정책은 바꾸지 않는다. [Worker·Browser 실험](./lab-reports/2026-10-06-worker-browser-experiment-lab.md)
 
-다음은 명시적인 유료 Worker 연결·Browser·수동 평가·독립 설명과 WIL이다. 검증 객체가 사라진 경우 DB의 원문·Job만으로 응답을 복원할 수는 없으며, 기존 결과 확인 뒤 승인한 조건 안에서만 새 생성한다. 관리자 재개·미승인 실패의 자동 재호출·원격 Provider 결과 조회는 추가하지 않았으며, Week 7 전체 완료 Gate는 유지한다.
+다음은 수동 평가·독립 설명과 WIL이다. 검증 객체가 사라진 경우 DB의 원문·Job만으로 응답을 복원할 수는 없으며, 기존 결과 확인 뒤 승인한 조건 안에서만 새 생성한다. 관리자 재개·미승인 실패의 자동 재호출·원격 Provider 결과 조회는 추가하지 않았으며, Week 7 전체 완료 Gate는 유지한다.
 
 현재 논리적 출력 초안으로 평가 자료를 준비하는 것과 그 초안을 Lab 구현 계약으로 확정하는 것은 다르다. 추가 보류 경계나 아직 검토하지 않은 기대값을 임의로 확정하지 않는다. Job 등록의 접수 Transaction 포함은 합의했으며, 실행권·재시도·복구 세부 계약은 구현 전에 검토한다. 이 검토를 평가 준비와 독립적인 최소 AI 비교까지 모두 막는 선행 조건으로 확대하지 않는다.
 
@@ -289,8 +289,8 @@ GitHub Project에는 다음 다섯 Card를 계획한다. 첫 Card만 `Ready`, �
 10월 5일에 시작한 과업은 WIL 작성·게시만 남은 상태가 아니다. 접수·예약·검증·결과 저장과 Java Provider Adapter의 Test에 이어 실제 AI 저장 한 건을 확인했다. 자동 실행·복구·학습 확인은 계속 진행한다.
 
 1. 완료: 합성 문의 한 건의 실제 Java AI 호출·제안 저장·원문 보존을 확인했다. Processor를 직접 한 번 실행한 선택 실험이며 자동 Worker·Browser E2E는 별도 검증한다.
-2. 부분 완료: 선택 Worker의 PENDING·대기 예약·제한된 저장 재시도·Attempt별 결과와 조건부 RUNNING 복구를 확인했다. 같은 DB를 유지한 Spring Context 재생성과 실제 JVM 종료·재시작은 검증했고, 유료 자동 처리 검증은 남아 있다.
-3. 부분 완료: AGENT 읽기 전용 조회 API·최소 화면 Test에 이어, 통제된 Provider로 Session·Role·CSRF를 유지한 실제 Browser 접수·자동 Worker·DB·상태와 제안 표시를 확인했다. 같은 흐름의 실제 AI 연결과 요약 수동 평가는 남아 있다.
+2. 구현·실행 확인: 선택 Worker의 PENDING·대기 예약·제한된 저장 재시도·Attempt별 결과와 조건부 RUNNING 복구, 같은 DB의 Context/JVM 재시작을 통제된 Provider로 검증했다. 정상 수직 흐름은 별도 실제 AI 실행으로 확인했다. 핵심 정책의 독립 설명은 이어서 확인한다.
+3. 구현·실행 확인: AGENT 읽기 전용 조회 API·최소 화면 Test 뒤 실제 Browser 접수·자동 Worker·실제 AI·PostgreSQL·AGENT 화면을 연결했다. Session·Role·CSRF, 원문 보존·화면과 DB 일치·조회 무변경을 확인했다. 요약 수동 평가는 남아 있다.
 4. 고정 비교 결과의 요약·Injection 수동 평가, 핵심 개념 복습과 최종 회귀·노출 점검 뒤 WIL을 작성하고 게시·포럼 등록을 확인한다.
 
 ### 완료 체크
@@ -301,8 +301,8 @@ GitHub Project에는 다음 다섯 Card를 계획한다. 첫 Card만 `Ready`, �
 - [ ] 대표 Injection·민감 출력·Provider 실패를 재현하고 제한한 경계를 설명했다.
 - [ ] 검증된 제안만 실제 PostgreSQL에 별도 저장하며 AI 실패 시 접수 완료된 Ticket·최초 Message가 보존된다.
 - [ ] 기존 Ticket의 Message 부재를 보존하며 조회하고, 새 요청의 공백 본문·최초 Message 저장 실패와 입력 없는 AI 미호출 Test가 있다.
-- [ ] 접수 응답과 AI 완료를 분리하고, 최소 작업 상태·중단 복구·같은 Job의 중복 제안 방지를 실제 근거로 확인했다.
-- [ ] Security·CSRF와 최소 Browser 흐름을 실제 Test·Trace로 확인했다.
+- [x] 접수 응답과 AI 완료를 분리하고, 최소 작업 상태·중단 복구·같은 Job의 중복 제안 방지를 실제 근거로 확인했다. 복구·경쟁은 통제된 Provider의 PostgreSQL Test, 정상 수직 연결은 실제 AI·Browser 실험이다.
+- [x] Security·CSRF와 최소 Browser 흐름을 실제 Test·Trace로 확인했다. 익명 `401`·USER 조회 `403`·AGENT 조회 `200`, 접수 `201`·CSRF 없는 대조 요청 `403`을 확인했다.
 - [ ] Side Effect 없는 Tool Calling Spike의 허용 목록·인자 검증을 설명했다.
 - [ ] 전체 회귀와 Secret·Log·공개 문서 점검 결과를 기록했다.
 - [ ] AI가 작성한 부분과 직접 판단·수정·검증한 부분을 WIL에서 구분했다.
@@ -342,6 +342,7 @@ GitHub Project에는 다음 다섯 Card를 계획한다. 첫 Card만 `Ready`, �
 | 2026-10-06 | AGENT 조회의 URI·응답·정합성 오류·코드 공개 검토 중 | 최초 Message의 Job·제안 읽기 API와 상태별 200·null·안전한 500, 익명 401·USER 403 연결 | 사용자의 AGENT 전용·읽기 전용 계약 승인 | 새 Test 55개·Java 444개·JavaScript 104개·ESLint 통과, 유료 호출 0회. 유료 Worker·실제 Browser·수동 평가·복습·WIL과 Week 8 범위 유지 |
 | 2026-10-06 | AI 상태를 표시하는 최소 담당자 화면 미구현 | 별도 조회 화면·상태 분기·Text 표시·Race 방어·Page 연결 구현 | 사용자 문답에서 HTTP 조회 성공과 Job 완료·검토 대기를 구분 | 새 Node Test 29개·정적 MockMvc Test 5개, 전체 Java 449개·JavaScript 133개·ESLint 통과. 유료 호출 0회, 실제 Browser·Worker·평가·WIL Gate와 Week 8 범위 유지 |
 | 2026-10-06 | Browser·자동 Worker 수직 연결은 각각의 Test 근거만 있음 | 격리 실험 조립과 통제된 Provider의 실제 Browser·접수·Worker·DB·AGENT 화면 확인 | 실제 AI 연결 전 실행 도구를 무료로 점검. 사용자는 당일 비용 상한 해제를 승인했고 이전 원장 이력은 유지 | Java 449개·JavaScript 145개·ESLint, 별도 Browser Experiment 1개 통과. 이번 유료 호출 0회. 실제 유료 Worker·수동 평가·복습·WIL과 Week 8 범위 유지 |
+| 2026-10-06 | 실제 AI의 자동 Worker·Browser 연결은 실행 전 | 같은 격리 흐름의 실제 AI 요청 1회·제안 저장·AGENT 화면 확인 | 사용자 실행 결과와 Local Report·Live JUnit·Screenshot 대조 | 실제 AI Live Experiment 1개 통과. 원문·인증 작성자 유지, 예약·제안·분류 각 1건, Ticket OPEN·제안 검토 대기. 수동 평가·독립 복습·WIL과 Week 8 범위 유지 |
 
 ## 관련 기준
 

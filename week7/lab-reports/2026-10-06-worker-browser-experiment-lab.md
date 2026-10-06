@@ -1,9 +1,9 @@
 # Browser 접수·자동 Worker·담당자 조회의 연결 실험
 
 > 실행일: 2026-10-06
-> 상태: 통제된 Provider의 실제 Browser Experiment 통과, 실제 AI 모드 준비
+> 상태: 통제된 Provider 사전 검증과 실제 AI의 Browser·자동 Worker·PostgreSQL 연결 완료, 수동 내용 평가 진행 전
 > 범위: 일회용 PostgreSQL·Loopback Server·USER/AGENT Session·접수 화면·자동 Worker·제안 조회 화면
-> Provider: 무료 검증은 고정 합성 응답. 같은 흐름의 실제 유료 Provider는 NOT_RUN
+> Provider: 무료 사전 검증은 고정 합성 응답, 실제 실행은 Spring AI·OpenAI `gpt-6-luna`의 Chat Completions
 > Lab Commit: `cb0781d` — `test(ai): connect isolated browser flow to scheduled worker`
 
 ## 연결한 흐름
@@ -27,7 +27,7 @@ Lab의 `scripts/week7-worker-browser-live.mjs`가 Java Experiment를 선택한�
 
 AI Key는 Browser 자식 Process에 전달하지 않는다. Cookie·CSRF 값·Header·전체 Prompt는 출력하지 않는다. Screenshot만 Git 제외 `output/playwright/`에 남기고 일회용 Session 기록·Container를 종료 후 정리했다. 다른 Browser Session이나 DB를 정리하지 않았다.
 
-## 관찰한 결과
+## 무료 사전 검증에서 관찰한 결과
 
 | 확인 | 실제 결과 |
 |---|---|
@@ -52,15 +52,53 @@ AI Key는 Browser 자식 Process에 전달하지 않는다. Cookie·CSRF 값·He
 - ESLint 10.11.0: 오류 0.
 - 무료 사전 실행에서 CORS 필수 설정 누락과 Windows Browser 실행 구성을 보완했다. 수정 후 실제 접수·조회 Form을 포함한 흐름을 다시 통과했다. 유료 호출은 없었다.
 
-실제 Browser·PostgreSQL·자동 Worker는 실행했다. Provider 응답만 통제된 값이다. 실제 AI와 같은 구성의 실행, 요약의 원문 대조·수동 채점과 Week 7 WIL은 이어서 수행한다.
+무료 사전 검증에서는 실제 Browser·PostgreSQL·자동 Worker를 실행하고 Provider 응답만 통제했다. 이후 같은 연결을 실제 AI로 실행한 결과는 아래에 따로 기록한다. 기존 Java 449개·JavaScript 145개의 무료 회귀와 별도 Live Experiment 한 건을 합쳐 회귀 Test 수로 표시하지 않는다.
+
+## 실제 AI를 연결한 실행 결과
+
+사용자가 Helpdesk 전용 PowerShell에서 `--live --confirm-helpdesk-key --confirm-synthetic --confirm-cost-limit-waiver --day 2026-10-06`으로 실행했다. 전달받은 결과를 Git 제외 Local Report와 별도 JUnit XML, AGENT 화면 Screenshot에 대조했다. `LIVE_WORKER_BROWSER_POSTGRES`·`COMPLETED`·`completed: true`이며 Live JUnit은 1개 통과, 실패·오류·건너뜀 0이다.
+
+| 확인 | 실제 AI 실행 결과 |
+|---|---|
+| 접수 / CSRF 없는 대조 요청 | `201` / `403` |
+| 익명 / USER / AGENT의 제안 조회 | `401` / `403` / `200` |
+| 자동 처리 | 기존 Scheduler로 Worker 실행, Provider 호출 1회·생성 HTTP 요청 1회·Provider HTTP `200` |
+| 원문·작성자 | 원문 보존, 인증 USER를 작성자로 저장 |
+| DB 저장 | 생성 예약 1회, Suggestion 1건, Category 1건 |
+| 상태 | Ticket `OPEN`, Job `SUCCEEDED`, 제안 `PENDING_REVIEW` |
+| Browser 요청 | Session Cookie·CSRF Header 존재 확인, 값은 출력하지 않음 |
+| 화면·DB·조회 | 저장된 값과 화면 일치, 조회 전후 여섯 Table 변화 없음 |
+| 사용량 | 입력 1,169·출력 57 Token |
+| 해당 호출 비용 추정 | `$0.000174625`, 기존 실행기의 보수적 단가 기준. 실제 청구액·하루 총액과 다름 |
+| 내용 평가 | 실행기의 `manualContentReview: NOT_SCORED` 유지, 사용자 원문 대조·채점은 다음 학습 |
+
+앞선 Java Live 실험은 Processor를 직접 한 번 호출했다. 이번에는 USER의 실제 접수 화면부터 자동 Worker와 실제 AI, PostgreSQL 저장, AGENT의 조회 화면까지 이어졌다. 기존 Source·운영 설정·일반 Job 정책을 변경하거나 유료 실행을 다시 반복하지 않았다.
+
+### 원문과 실제 화면의 요약
+
+합성 문의 제목은 ‘로그인 링크 만료 이유 문의’다. 본문은 다음과 같다. 이메일 표식은 실제 개인정보가 아닌 실험용 값이며 Provider에는 Guard가 만든 치환 복사본을 전달했다.
+
+> 제 계정에서 로그인 링크가 만료됐습니다. 새 링크로 로그인에는 성공했습니다. 급한 문의는 아니며 만료 이유를 알고 싶습니다. 이메일 <합성_이메일>.
+
+실제 AGENT 화면의 요약은 다음과 같다.
+
+> 로그인 링크가 만료됐지만 새 링크로 로그인에 성공했으며, 만료 이유를 문의합니다. 급한 문의는 아닙니다.
+
+분류는 `ACCOUNT`, 우선순위는 `NORMAL`이다. Codex의 사전 대조에서는 로그인 복구·문의 목적·급하지 않다는 사실이 보존됐고, 원문에 없는 만료 원인이 추가되지 않은 것을 확인했다. 합성 이메일 표식도 요약에 없다. 이 확인을 사용자의 수동 채점이나 전체 Dataset의 요약 품질 평가로 대신하지 않는다. 출력 형식과 내용 평가는 나눠 진행한다. [OpenAI Structured Outputs의 오류 처리 설명](https://developers.openai.com/api/docs/guides/structured-outputs#handling-mistakes)
+
+원문을 DB에 보존하고 제안을 따로 저장했다는 사실과 그 요약이 옳다는 판단은 다르다. Ticket은 여전히 `OPEN`이고 제안도 담당자 검토 대기다. 이어서 이 원문·요약에 기존 Rubric을 적용하고, 고정 Dataset의 요약·Injection 평가와 핵심 개념 복습, Week 7 WIL을 마무리한다.
 
 ## 비용 승인과 원장
 
 사용자는 당일 총비용 제한 없이 추가 호출을 승인했다. 실행기는 기존 원장에 `costLimitWaiver`를 기록하고 이전 비용 미확인·사용량·보류 금액·횟수를 유지한다. 기존 `limitUsd`는 이전 승인 기록이고 현재 Report는 `costLimitEnforced: false`다. 진행 중 예약을 지우거나 다른 날짜에 승인을 자동 적용하지 않는다. 비용 승인과 Job의 생성 예약·Attempt·기한은 구분한다.
 
+이번 실제 실행 뒤 진행 중 예약은 없고 원장은 차단 상태가 아니다. 기존 비용 미확인은 유지하므로 `dailyEstimateComplete: false`·`dailyEstimatedTotalUsd: null`을 그대로 기록한다. 이전 `heldEstimatedUsd`도 지우지 않았다. 원장의 누적 예약 3건은 앞선 기동 복구·실제 Java 호출을 포함한 이력이며, 이번 Job의 Provider 호출 3회를 뜻하지 않는다.
+
 ## 점검한 Source 범위
 
 - VERIFIED: 새 실행기·Browser 도구·Java 실험 조립·선택 Experiment·실행기 Test, 공유 비용 원장과 자식 환경 전달, 접수·조회 HTML/Page, Profile Security·CORS·Worker 설정·Scheduler·Policy·Guard·Provider 조립과 결과 Service.
 - PARTIAL: 기존 Ticket Client는 접수·CSRF 경로를 중심으로 대조하고 전체 JavaScript Test를 실행했다. 기존 전체 기능·운영 배포를 새로 Audit한 것은 아니다. WIL 계약·계획·노트는 이번 연결·승인·현재 상태 구간을 선택해 갱신했다.
+
+실제 실행 결과 추가 점검은 Local Report·Live JUnit XML·Screenshot, 실행기와 Java 실험의 판정 코드를 VERIFIED로 기록한다. 일회용 Container는 실험 종료 시 정리됐으며 운영 DB·전체 Dataset 수동 채점·운영 배포를 새로 검증한 것은 아니다.
 
 관련 기록: [최소 AI 화면](./2026-10-06-agent-ai-suggestion-ui-lab.md), [앞선 실제 Java Provider 한 건](./2026-10-06-java-provider-adapter-lab.md), [10월 6일 학습노트](../study-notes/2026-10-06-study-questions.md).

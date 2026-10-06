@@ -1,10 +1,10 @@
 # AI Suggestion 계약 초안
 
-> 상태: 입력·접수·예약·결과 저장과 선택 Worker·실제 JVM 재시작·AGENT 조회·통제된 Provider의 실제 Browser 확인 — 유료 자동 처리·수동 평가 진행 예정
+> 상태: 입력·접수·예약·결과 저장·복구 검증과 실제 AI의 Browser·자동 Worker·PostgreSQL 연결 확인 — 수동 평가·독립 복습·WIL은 남음
 > 작성일: 2026-09-29
 > 최종 수정일: 2026-10-06
 > 논리적 계약 Version: `v2.1-draft` — v2의 출력 구조를 유지하고 전체 Priority의 의미를 보완
-> 구현 상태: PostgreSQL HTTP 접수·V3 실행권·V4 결과 저장·Spring AI Adapter·V5 대기 예약·V6 저장 재시도·V7 Attempt 결과와 선택 Worker·AGENT 조회·최소 화면 구현. 전체 무료 Java Clean Test 449개·JavaScript 145개와 ESLint 통과. 통제된 Provider의 실제 Browser 실험은 별도 한 건이며, 유료 자동 Worker·수동 내용 평가는 후속 과제
+> 구현 상태: PostgreSQL HTTP 접수·V3 실행권·V4 결과 저장·Spring AI Adapter·V5 대기 예약·V6 저장 재시도·V7 Attempt 결과와 선택 Worker·AGENT 조회·최소 화면 구현. 전체 무료 Java Clean Test 449개·JavaScript 145개와 ESLint 통과. 통제된 Provider와 실제 AI의 Browser·자동 Worker 실험은 각각 별도 한 건이며, 수동 내용 평가·독립 복습은 후속 과제
 
 이 문서는 Week 7의 한 수직 흐름에 필요한 입력·출력·권한·저장·실패 계약을 검토하기 위한 초안이다. 출력 구조 v2는 단일 `category` 문자열을 복수 값을 담는 `categories` 목록으로 변경한 **우리 Application의 논리적 Schema 초안**이다. `v2.1-draft`에서는 구조를 바꾸지 않고 개별 문제와 누적·결합 영향을 함께 보는 Priority 기준을 추가했다. OpenAI 최소 비교에는 별도의 전송용 Schema와 이전 계약 `v2-draft`를 사용했다. 그 결과가 전체 논리적 계약이나 Spring 저장 흐름의 Test 통과를 뜻하지는 않는다. [최소 비교 기록](./lab-reports/2026-10-02-openai-structured-output-pilot.md)
 
@@ -500,7 +500,7 @@ USER는 실제 접수 화면의 제목·본문을 입력하고 생성 버튼을 
 
 AI Key는 전용 PowerShell에서 Java Process까지만 전달한다. Browser 실행 자식 Process에는 OS 필수 변수와 일회용 인증 Fixture만 제공한다. Session·CSRF 값과 Header는 메모리에서 존재 여부만 확인하고 출력하지 않는다. 화면 Screenshot만 Git 제외 경로에 남기며 일회용 Session 기록·Container는 종료 시 정리한다. 전송 경로의 `store=false`는 유지한다. 이 설정을 Provider 전체의 무보관 보장으로 설명하지 않는다. [OpenAI Chat Completions 저장 옵션](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create), [데이터 보관 조건](https://developers.openai.com/api/docs/guides/your-data)
 
-영향 파일은 Lab의 별도 Node 실행기·공유 비용 원장·PowerShell Browser 도구·Test 전용 Java 조립·선택 Experiment·실행기 Test·README와 WIL 계약·Note·계획·Report다. Production Controller·Service·Repository·Migration·Worker는 변경하지 않는다. 통제된 Provider의 Browser 검증은 실제 유료 Worker의 근거와 구분한다. 후속 확인은 실제 AI 응답의 저장·화면 일치, 요약의 수동 내용 평가와 WIL 마감이다. [연결 실험 준비·무료 검증](./lab-reports/2026-10-06-worker-browser-experiment-lab.md)
+영향 파일은 Lab의 별도 Node 실행기·공유 비용 원장·PowerShell Browser 도구·Test 전용 Java 조립·선택 Experiment·실행기 Test·README와 WIL 계약·Note·계획·Report다. Production Controller·Service·Repository·Migration·Worker는 변경하지 않는다. 통제된 Provider의 Browser 검증 뒤 사용자가 같은 흐름의 실제 AI 실행을 완료했다. 생성 HTTP 요청 1회·Provider `200`, Job `SUCCEEDED`, 제안·분류 각 1건, 원문·인증 작성자 보존과 AGENT 화면·DB 일치·조회 무변경을 확인했다. Ticket은 `OPEN`, 제안은 `PENDING_REVIEW`이며 내용 평가는 `NOT_SCORED`다. 수동 내용 평가·독립 복습과 WIL 마감을 이어간다. [연결 실험의 무료·실제 AI 결과](./lab-reports/2026-10-06-worker-browser-experiment-lab.md)
 
 ## 별도 저장소와 결과 Transaction — 합의한 구현
 
