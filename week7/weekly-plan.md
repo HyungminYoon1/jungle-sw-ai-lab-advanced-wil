@@ -2,7 +2,7 @@
 
 > 작성일: 2026-09-29
 > 최종 수정일: 2026-10-06
-> 상태: In Progress — 실제 Java AI 저장 한 건과 선택 Worker의 대기 Job 처리·Context 재시작 확인. 결과 불명 복구·조회·Browser·수동 채점은 진행 예정
+> 상태: In Progress — 실제 Java AI 저장 한 건과 선택 Worker의 대기·저장 재시도·Context 재시작 확인. 결과 불명 복구·조회·Browser·수동 채점은 진행 예정
 > 초기 기간: 2026-09-29 ~ 2026-10-03
 > 이월 재개: 2026-10-06 — 10/5 회차의 연장 실험은 해당 Study Note에 포함하고 Lab Report는 실제 실행일 유지
 > 학습 제외일: 2026-10-04 일요일
@@ -115,7 +115,7 @@ Prompt·Schema·Dataset은 Version을 붙여 변경 전후를 비교한다. 원�
 - 접수 원자성 합의: Ticket·최초 Message·`PENDING` Job을 같은 Transaction으로 Commit. Job 등록 실패도 접수 실패이며, Commit된 문의는 이후 AI 실패로 취소하지 않음. Provider 호출은 Transaction 밖에서 하고 Worker는 DB의 실행 대상 Job을 다시 조회.
 - 재시도 원칙 합의: 전체 생성 요청과 추가 보완 요청의 상한을 설정값으로 분리하고 실패 유형별 조건을 함께 확인. 요청 한 번의 대기 한도·재시도 간격·Job 전체 처리 기한을 구분하며 재시작으로 횟수나 전체 기한을 초기화하지 않음. 결과 확인을 마쳐도 복구할 수 없는 결과 불명 Job은 사유를 남겨 `FAILED`로 종료.
 - 정책 초기값 승인: Job별 설정 Snapshot, 전체 생성 3회·추가 보완 1회, 요청 대기 60초·실행권 120초·Backoff 5초·최초 Claim부터 전체 300초. 누적 예약은 0부터 증가하고 재시작·설정 변경으로 초기화하지 않음.
-- 남은 계약: Provider 실패 유형별 재시도·기존 결과 조회와 결과 저장 재시도의 종료 기준, 추가 `ABSTAIN` 경계·요약 길이·조회 표현, 전처리·탐지·원문 보관의 세부 정책.
+- 남은 계약: 다른 Provider 실패 유형별 재시도·결과 불명 확인·Process 종료 후 복구, 추가 `ABSTAIN` 경계·요약 길이·조회 표현, 전처리·탐지·원문 보관의 세부 정책. 메모리 객체의 저장 재시도는 총 3회·최소 5초로 승인하고 아래 단계에서 검증했다.
 - 실제 확인: N01의 예비 두 건과 10/5 개인정보 6회·고정 비교 52회. [최소 비교 기록](./lab-reports/2026-10-02-openai-structured-output-pilot.md), [고정 비교와 Prompt 보완](./lab-reports/2026-10-05-ai-output-policy-comparison.md).
 - 실제 접수 저장: Message·초기 Job의 V2와 별도 PostgreSQL 접수 Service 구현. 새 Integration Test 15개, 전체 Java Clean Test 76개·기존 JavaScript 54개 통과. [접수 원자성 실험](./lab-reports/2026-10-03-ticket-receipt-atomicity-lab.md).
 - 출력 계약 검증: 독립 Java 검증기 Unit Test 64개, 이후 전체 Java Clean Test 140개·JavaScript 54개 통과. 누락·추가·공백·길이·Enum과 `SUGGEST`/`ABSTAIN` 조합을 확인. [출력 검증 실험](./lab-reports/2026-10-03-ai-output-validation-lab.md).
@@ -188,7 +188,9 @@ Backoff·`Retry-After`·전체 기한을 구분하고, 최종 `FAILED` 이후의
 
 새 Test 31개와 전체 Java Clean Test 349개·JavaScript 104개·ESLint가 통과했다. 같은 JVM의 새 Spring Context에서 PENDING·미래 대기를 이어가고, 최종 FAILED와 Lease 만료만으로 결과 불명 RUNNING을 다시 실행하지 않는 것을 확인했다. 이번 Provider는 통제된 응답이며 유료 AI 호출은 0회다. [검증 기록](./lab-reports/2026-10-06-worker-rate-limit-and-context-restart-lab.md)
 
-다음 순서는 가능한 결과 확인 후 RUNNING 복구·검증 객체의 저장 재시도·실제 JVM 재시작이다. 이어서 명시적인 유료 Worker 연결·AGENT 조회·Browser·수동 평가·독립 설명과 WIL을 진행한다. 관리자 재개·미승인 실패의 자동 재호출은 이번 기본 Worker에 추가하지 않았으며, Week 7 전체 완료 Gate는 유지한다.
+검증 객체가 현재 Process에 남은 경우의 저장 재시도도 연결했다. 최초 저장을 포함한 총 3회·최소 5초로 제한하고 기존 결과·현재 Attempt·원래 기한을 확인한다. 새 Test 15개와 최신 전체 Java 364개·JavaScript 104개·ESLint가 통과했으며 유료 호출은 0회다. DB 장애로 확인되지 않은 종료 상태는 완료로 기록하지 않는다. [저장 재시도 검증](./lab-reports/2026-10-06-validated-output-storage-retry-lab.md)
+
+다음 순서는 가능한 결과 확인 후 RUNNING 복구·Process 종료 후 객체가 사라진 경우의 처리·실제 JVM 재시작이다. 이어서 명시적인 유료 Worker 연결·AGENT 조회·Browser·수동 평가·독립 설명과 WIL을 진행한다. 관리자 재개·미승인 실패의 자동 재호출은 이번 기본 Worker에 추가하지 않았으며, Week 7 전체 완료 Gate는 유지한다.
 
 현재 논리적 출력 초안으로 평가 자료를 준비하는 것과 그 초안을 Lab 구현 계약으로 확정하는 것은 다르다. 추가 보류 경계나 아직 검토하지 않은 기대값을 임의로 확정하지 않는다. Job 등록의 접수 Transaction 포함은 합의했으며, 실행권·재시도·복구 세부 계약은 구현 전에 검토한다. 이 검토를 평가 준비와 독립적인 최소 AI 비교까지 모두 막는 선행 조건으로 확대하지 않는다.
 

@@ -1,10 +1,10 @@
 # AI Suggestion 계약 초안
 
-> 상태: 입력·접수·예약·결과 저장과 선택 Worker의 대기 Job 처리 확인 — 결과 불명 복구·조회·Browser는 남아 있음
+> 상태: 입력·접수·예약·결과 저장과 선택 Worker의 대기·저장 재시도 확인 — 결과 불명 복구·조회·Browser는 남아 있음
 > 작성일: 2026-09-29
 > 최종 수정일: 2026-10-06
 > 논리적 계약 Version: `v2.1-draft` — v2의 출력 구조를 유지하고 전체 Priority의 의미를 보완
-> 구현 상태: PostgreSQL HTTP 접수·V3 실행권·V4 결과 저장·Spring AI Adapter·V5 대기 예약·선택 Worker 구현. 전체 무료 Java Clean Test 349개·JavaScript 104개와 ESLint 통과. 실제 Java AI→PostgreSQL 단일 Live 실험은 앞선 한 건이며, 결과 불명 자동 복구·실제 JVM 재시작·조회·Browser·수동 내용 평가는 후속 과제
+> 구현 상태: PostgreSQL HTTP 접수·V3 실행권·V4 결과 저장·Spring AI Adapter·V5 대기 예약·V6 저장 재시도와 선택 Worker 구현. 전체 무료 Java Clean Test 364개·JavaScript 104개와 ESLint 통과. 실제 Java AI→PostgreSQL 단일 Live 실험은 앞선 한 건이며, 결과 불명 자동 복구·실제 JVM 재시작·조회·Browser·수동 내용 평가는 후속 과제
 
 이 문서는 Week 7의 한 수직 흐름에 필요한 입력·출력·권한·저장·실패 계약을 검토하기 위한 초안이다. 출력 구조 v2는 단일 `category` 문자열을 복수 값을 담는 `categories` 목록으로 변경한 **우리 Application의 논리적 Schema 초안**이다. `v2.1-draft`에서는 구조를 바꾸지 않고 개별 문제와 누적·결합 영향을 함께 보는 Priority 기준을 추가했다. OpenAI 최소 비교에는 별도의 전송용 Schema와 이전 계약 `v2-draft`를 사용했다. 그 결과가 전체 논리적 계약이나 Spring 저장 흐름의 Test 통과를 뜻하지는 않는다. [최소 비교 기록](./lab-reports/2026-10-02-openai-structured-output-pilot.md)
 
@@ -338,7 +338,7 @@ AWS Step Functions는 정의를 변경해도 실행 중인 작업에 이전 정�
 
 기초 구현의 `AiSuggestionJobClaimService`는 `REQUIRES_NEW` Transaction에서 실행권 변경과 `ai_suggestion_attempts` 원장 INSERT를 함께 Commit한다. 원장에는 Job·Attempt·요청 종류·예약 시각만 남기며 실제 Provider 실행 성공을 기록한 것으로 해석하지 않는다. 이전 Attempt의 실패 기록·출력 보완은 현재 Attempt와 `RUNNING` 조건이 맞을 때만 반영한다. 정책 10개·Migration 1개·실행권 18개 Test와 전체 Java 236개·JavaScript 79개가 통과했다. [실행권·예약 검증](./lab-reports/2026-10-05-job-policy-and-reservation-lab.md)
 
-검증된 응답을 저장하는 부분은 V4와 `AiSuggestionResultService`로 구현했다. Spring AI Adapter는 요청별 대기 한도·단일 전송을 적용하며, 자동 Worker와 Provider 결과 조회는 남아 있다. 재예약 메서드가 기존 결과 조회를 대신하지 않으며 후속 Worker는 가능한 결과 확인을 먼저 수행해야 한다. 나머지 실패 유형별 재시도 허용 여부와 자동 DB 저장 재시도의 횟수·종료 기준은 Worker 연결 단계에서 검토한다.
+검증된 응답을 저장하는 부분은 V4와 `AiSuggestionResultService`로 구현했다. Spring AI Adapter는 요청별 대기 한도·단일 전송을 적용하며, 선택 Worker에 Rate Limit 대기와 현재 검증 객체의 DB 저장 재시도를 연결했다. Provider 결과 조회·결과 불명 RUNNING 복구는 남아 있다. 재예약 메서드가 기존 결과 조회를 대신하지 않으며 후속 Worker는 가능한 결과 확인을 먼저 수행해야 한다. 다른 실패 유형의 재시도 허용 여부는 별도로 검토한다.
 
 ### SDK 재시도와 호출 예약
 
@@ -378,7 +378,21 @@ Header가 없거나 유효하지 않은 경우와 다른 일시적 거절은 이
 
 최종 `FAILED`는 일반 Polling·대기 예약으로 다시 열지 않는다. 관리자 재개는 초기 구현에 포함하지 않으며, 이후에는 원인 해결·승인된 추가 조건을 별도로 정해야 한다. 새 Job·설정 변경으로 기존 한도와 기한을 초기화하지 않는 기준은 유지한다. 한 Tick 전체를 Transaction으로 묶는 대신 예약·상태 기록·결과 저장만 짧게 Commit한다.
 
-영향 파일은 Lab의 `ai/job`·`ai/processing`·V5·관련 Test·README다. 새 Test 31개와 전체 Java 349개·JavaScript 104개·ESLint가 통과했다. 같은 JVM의 새 Spring Context에서 미실행·대기 Job의 자동 처리를 확인했고, 결과 불명 `RUNNING`은 Lease 만료만으로 재실행하지 않았다. 후속 검토는 결과 확인 후 복구·저장 재시도·실제 JVM Process·유료 Worker·AGENT 조회와 Browser다.
+영향 파일은 Lab의 `ai/job`·`ai/processing`·V5·관련 Test·README다. 이 단계의 새 Test 31개와 전체 Java 349개·JavaScript 104개·ESLint가 통과했다. 같은 JVM의 새 Spring Context에서 미실행·대기 Job의 자동 처리를 확인했고, 결과 불명 `RUNNING`은 Lease 만료만으로 재실행하지 않았다. 저장 재시도는 다음 절에서 연결했으며 결과 확인 후 복구·실제 JVM Process·유료 Worker·AGENT 조회와 Browser는 남아 있다.
+
+### 검증된 객체의 저장 재시도 — 승인
+
+검증을 통과한 응답이 현재 Process 메모리에 남아 있을 때에는 Provider를 다시 호출하지 않고 같은 객체의 DB 저장만 재시도한다. 최초 결과 저장을 포함한 총 상한은 3회, 추가 저장 사이의 최소 간격은 5초로 승인했다. 생성 호출 예약과 저장 시도는 별도 단위이며, 저장 재시도로 Attempt·생성 예약·출력 보완 횟수나 원래 처리 기한을 바꾸지 않는다.
+
+매번 저장 전에 같은 Job의 현재 Attempt·상태와 기존 제안을 조회한다. 이미 Commit된 정상 결과는 그대로 사용하고, 이전 Attempt나 종료된 Job의 객체는 반영하지 않는다. 조회 실패와 결과 부재는 다르므로 조회 실패를 재저장 허가로 바꾸지 않는다. 일반 조회 뒤에도 실행권이 바뀔 수 있어 실제 결과 Transaction의 현재 Attempt 검사는 유지한다.
+
+세 번의 저장 시도를 소진한 뒤에도 Commit 결과를 먼저 확인한다. 저장되지 않은 현재 RUNNING이면 안전한 저장 재시도 소진 코드로 종료하며, 이미 저장된 성공·보류나 교체된 Attempt를 덮어쓰지 않는다. 전체 기한이 먼저 끝나면 더 저장하지 않는다. DB 장애로 확인·종료 기록을 하지 못한 경우 성공·실패를 확정했다고 기록하지 않으며, 실제 Row는 마지막 Commit 상태일 수 있다.
+
+선택지는 즉시 AI 재생성, 무제한 DB 재저장, 검증 객체를 재사용하는 제한된 재저장이다. 승인한 세 번째 안은 이미 얻은 결과를 보존하면서 불필요한 외부 호출과 반복 저장을 막는다. Worker 설정으로 상한·간격을 분리하되 이 단계에서는 현재 Process가 보관한 한 객체의 저장 주기에 적용한다. Process 종료 후 객체·저장 시도 이력을 복구하는 정책과 영속 보관은 별도 단계이며 기존 Job의 생성 정책 Snapshot은 유지한다.
+
+단일 Worker는 저장 대기 객체를 한 건만 보관하고 그 처리를 마친 뒤 다음 Job을 처리한다. 무제한 메모리 Queue나 원본 Provider 응답의 영속 보관은 추가하지 않는다. 대기 중에는 Thread를 재우거나 DB Transaction을 유지하지 않고 다음 Tick에서 시각을 확인한다. 전체 기한에 도달하면 메모리 객체를 해제하며, DB 결과 확인이 실패했다면 미확인 상태를 반환한다. 향후 Process 복구·병렬 처리에서는 객체 보관과 종료 기록의 경계를 다시 검토한다.
+
+영향 파일은 Lab의 `ai/processing`·실패 코드·V6·관련 Test와 README다. 저장 재시도 Test 12개·Migration 1개·설정 추가 2개와 전체 Java 364개·JavaScript 104개·ESLint가 통과했다. 기존 Commit 확인, 실제 Rollback 뒤 같은 객체 재저장, 조회 실패의 재저장 금지, 상한·5초 경계·현재 Attempt·기한과 원문 보존을 확인했다. 이번 유료 호출은 0회다. 응답 유실은 Test용 주입, 시간 경계는 통제된 Clock으로 검사했으며 실제 Process 중단 후 복구는 별도다. [저장 재시도 검증](./lab-reports/2026-10-06-validated-output-storage-retry-lab.md)
 
 ## API·권한·응답 — 잠정안
 
@@ -422,7 +436,7 @@ CSRF Token은 Browser JavaScript가 Server에서 받은 Header 이름으로 접�
 
 새 결과 Test 18개·V3→V4 Migration Test 1개와 전체 Java Clean Test 255개·JavaScript 79개, ESLint가 통과했다. 실제 PostgreSQL에서 저장·복원·중복·이전 Attempt·부분 실패의 Rollback과 원문 보존을 확인했다. 이 Test는 합성 JSON을 Java 검증기에 통과시킨 뒤 저장한 것으로 Provider·Worker·Browser의 실행 근거와 구분한다. Commit 응답 유실은 직접 주입하지 않았으며 결과 재조회 기능을 확인했다. [제안 결과 저장 검증](./lab-reports/2026-10-05-suggestion-result-storage-lab.md)
 
-단일 Processor의 실제 Provider·입력/출력 Guardrail·결과 저장 연결은 합성 문의 한 건에서 확인했다. 자동 Worker·저장 재시도의 종료 정책·담당자 조회·Browser와 실제 Process 재시작은 후속 과제다. 결과 조회의 `REPEATABLE_READ`는 조회 시작 후의 새 Commit까지 항상 보인다는 뜻이 아니므로 Worker의 실행 판단에는 별도의 현재 상태 확인을 유지한다.
+단일 Processor의 실제 Provider·입력/출력 Guardrail·결과 저장 연결은 합성 문의 한 건에서 확인했다. 선택 Worker·제한된 저장 재시도는 통제된 Provider와 실제 PostgreSQL에서 검증했고, 담당자 조회·Browser와 실제 Process 재시작은 후속 과제다. 결과 조회의 `REPEATABLE_READ`는 조회 시작 후의 새 Commit까지 항상 보인다는 뜻이 아니므로 실제 저장 Transaction의 현재 상태 확인을 유지한다.
 
 ## 먼저 작성할 예상 Test
 
@@ -451,7 +465,7 @@ Node 평가의 Responses API와 Spring AI ChatModel의 Chat Completions API는 �
 
 SDK `maxRetries=0`만으로 HTTP Client의 연결 재시도까지 꺼지는 것은 아니다. 확인한 Spring AI HTTP 기본값은 연결 재시도를 사용하므로, 이번 Adapter의 단일 전송 Client는 SDK·연결 재시도와 자동 Redirect를 함께 끈다. 공식 HTTPS Endpoint만 공개 생성자로 사용하고 Test용 경로는 Literal Loopback으로 제한한다. 환경 Proxy는 사용하지 않는다. 직렬화된 최종 요청에는 설정한 민감 값과 API Credential이 없어야 하며, 요청 32 KiB·응답 64 KiB 상한을 적용한다. 작은 합성 입력과 제한된 출력의 실험 경계를 유지하기 위한 Byte 상한이며 유효한 입력을 잘라내지 않고 초과 요청은 전송 전에 거부한다.
 
-명시적 거부는 `REFUSED`, 인증·크레딧·요청 설정 오류는 `CONFIGURATION`, 미완료·잘못된 응답 Envelope는 `INVALID_RESPONSE`, 확인된 일시 거절은 `TEMPORARY_REJECTION`으로 구분한다. 연결 실패·Timeout·불명확한 Server 오류는 `OUTCOME_UNKNOWN`이며 Provider 미실행으로 간주하지 않는다. 일시 거절의 유효한 `Retry-After`는 초 또는 HTTP-date에서 최소 대기 값으로 읽고 임의로 줄이지 않는다. 없거나 무효인 Hint는 즉시 재호출 허가가 아니다. Adapter는 자체 재시도를 하지 않는다. Processor는 일시 거절을 안전한 종류·대기 정보로 호출자에게 전달하며 현재 예약을 보존한다. 실제 대기 기록·조건부 재예약 Worker는 아직 구현하지 않았으므로 Rate Limit 재시도 완료로 기록하지 않는다.
+명시적 거부는 `REFUSED`, 인증·크레딧·요청 설정 오류는 `CONFIGURATION`, 미완료·잘못된 응답 Envelope는 `INVALID_RESPONSE`, 확인된 일시 거절은 `TEMPORARY_REJECTION`으로 구분한다. 연결 실패·Timeout·불명확한 Server 오류는 `OUTCOME_UNKNOWN`이며 Provider 미실행으로 간주하지 않는다. 일시 거절의 유효한 `Retry-After`는 초 또는 HTTP-date에서 최소 대기 값으로 읽고 임의로 줄이지 않는다. 없거나 무효인 Hint는 즉시 재호출 허가가 아니다. Adapter는 자체 재시도를 하지 않는다. Processor는 일시 거절을 안전한 종류·대기 정보로 호출자에게 전달하며 현재 예약을 보존한다. 이후 선택 Worker에서 대기 기록·조건부 재예약을 연결한 근거는 위의 Worker 검증에 기록했다.
 
 비교한 Log 처리 방식 중 전체 SDK 예외·Prompt·응답 복사 대신 고정 오류 코드와 안전한 전송 횟수·HTTP Status·Token 수만 사용한다. Spring AI가 빈 `choices`에서 Prompt를 Log에 남기는 경로를 피하도록 잘못된 Envelope를 먼저 거부한다. 반환 Model·Service Tier나 사용량이 확인되지 않으면 비용을 0으로 기록하지 않는다. 기존 파일 기반 하루 비용 원장과 연결할 Live 실험도 일반 회귀 Test에서 분리한다. [OpenAI 재시도 지침](https://developers.openai.com/api/docs/guides/rate-limits)
 
@@ -511,6 +525,7 @@ SDK `maxRetries=0`만으로 HTTP Client의 연결 재시도까지 꺼지는 것�
 | 2026-10-05 | 일시적인 Rate Limit은 유효한 `Retry-After`·Job Backoff와 전체 횟수·기한·실행권 조건을 지켜 재예약, 크레딧 부족은 원인 해결 전 자동 재요청 금지 | 같은 `429`를 무조건 반복하는 안 대신 원인별 조건부 재시도 안에 사용자 승인. 대기 중 Lock을 유지하지 않고 새 요청마다 예약 Commit | 계약·학습자료·학습노트에 반영. 오류 분류·대기 기록·Worker 재시도·Test는 미구현. Header 부재·무효의 대기 정책과 정책 Version 이행은 후속 검토 |
 | 2026-10-06 | 단일 Processor·Spring AI Adapter·최종 전송 Body 검사를 연결하고 실제 AI 응답을 PostgreSQL에 저장 | 기존 접수·예약·결과 Transaction과 출력 계약을 유지한 실제 연결 실험 | 무료 Java 318개·JavaScript 104개·ESLint와 별도 Live Test 1개 통과. 원문 보존·제안 1건·Job 완료 확인. 자동 Worker·복구·조회·Browser·수동 평가는 남음. 학습 내용은 10/5 회차에 포함 |
 | 2026-10-06 | DB의 다음 실행 시각과 별도 TEMPORARY_RETRY로 조건부 재시도를 연결하고 Worker는 기본 꺼짐·명시적 의존성으로 활성화 | Backoff·최소 대기·전체 기한과 최종 FAILED 경계 설명 후 구현 진행 승인. 기존 한도·원문 보존·짧은 Transaction 유지 | V5·Worker·설정·Scheduler·Context의 새 Test 31개, 전체 Java 349개·JavaScript 104개·ESLint 통과. 유료 호출 0회. 결과 불명 자동 복구·실제 JVM·Browser·내용 평가는 후속 과제 |
+| 2026-10-06 | 메모리의 검증 객체로 DB 저장만 총 3회·최소 5초 재시도하고 상한 뒤 현재 실행만 종료 | 현재 Attempt·기존 결과·기한 확인과 제한된 객체 재사용에 사용자 승인. 즉시 AI 재생성·무제한 저장은 채택하지 않음 | V6·Worker·Processor·설정, 새 Test 15개와 전체 Java 364개·JavaScript 104개·ESLint 통과. 원문·생성 예약 유지, 대기 중 DB Lock 없음. Process 종료 후 객체 복구·결과 불명 새 생성은 후속 검토 |
 
 JSON의 `null`과 Field 누락의 차이는 [JSON Schema의 null 설명](https://json-schema.org/understanding-json-schema/reference/null)을 참고한다.
 Transaction의 Commit·Rollback은 [PostgreSQL 공식 문서](https://www.postgresql.org/docs/17/tutorial-transactions.html)를 참고한다.

@@ -314,7 +314,7 @@ Week 5는 Event Loop·Rendering·Promise의 일부 실행 근거를 확보했지
 
 최초 Message와 자동 처리의 설계·확인 순서는 [Week 7 계획](../week7/weekly-plan.md)과 [계약 초안](../week7/ai-suggestion-contract-draft.md)에서 관리한다. 상태·재시도·복구 세부 계약은 질문을 통해 검토하며, 설계 합의를 구현 완료로 표시하지 않는다.
 
-10/5 학습 회차는 연장 실험을 포함해 마감했다. 개인정보 6회·기존/보완 Prompt 비교 각 52회, HTTP 접수·Job 실행권·결과 저장과 실제 Java AI→PostgreSQL 한 건을 확인했다. 10/6에는 선택 Worker의 대기 Job 처리·조건부 재시도와 같은 DB의 Spring Context 재시작을 검증했다. 최신 회귀는 Java 349개·JavaScript 104개·ESLint 통과다. Week 7은 진행 중이며 결과 불명·저장·실제 JVM 복구·AGENT 조회·Browser·요약과 Injection 수동 평가·독립 설명·WIL을 이어간다. 실험 보고서는 실제 실행일을 유지한다. 10/4 학습 제외는 유지하며 Week 8의 Cloud·HTTPS 범위를 줄이거나 미완료 학습을 Week 9로 자동 이월하지 않는다.
+10/5 학습 회차는 연장 실험을 포함해 마감했다. 개인정보 6회·기존/보완 Prompt 비교 각 52회, HTTP 접수·Job 실행권·결과 저장과 실제 Java AI→PostgreSQL 한 건을 확인했다. 10/6에는 선택 Worker의 대기·조건부 재시도·검증 객체의 제한된 DB 재저장과 같은 DB의 Spring Context 재시작을 검증했다. 최신 회귀는 Java 364개·JavaScript 104개·ESLint 통과다. Week 7은 진행 중이며 결과 불명·Process 종료 후 복구·실제 JVM 재시작·AGENT 조회·Browser·요약과 Injection 수동 평가·독립 설명·WIL을 이어간다. 실험 보고서는 실제 실행일을 유지한다. 10/4 학습 제외는 유지하며 Week 8의 Cloud·HTTPS 범위를 줄이거나 미완료 학습을 Week 9로 자동 이월하지 않는다.
 
 ## 8주차 — DevOps·System·AWS Cloud·HTTPS 수직 배포
 
