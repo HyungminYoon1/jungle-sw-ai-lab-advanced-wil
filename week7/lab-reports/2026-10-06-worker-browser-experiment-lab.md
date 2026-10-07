@@ -1,7 +1,7 @@
 # Browser 접수·자동 Worker·담당자 조회의 연결 실험
 
 > 실행일: 2026-10-06
-> 상태: 통제된 Provider 사전 검증과 실제 AI의 Browser·자동 Worker·PostgreSQL 연결 완료, 수동 내용 평가 진행 전
+> 상태: 통제된 Provider 사전 검증과 실제 AI의 Browser·자동 Worker·PostgreSQL 연결 완료, 해당 요약의 원문 대조 2점 확인. 고정 Dataset의 후속 평가는 별도 Report에 기록
 > 범위: 일회용 PostgreSQL·Loopback Server·USER/AGENT Session·접수 화면·자동 Worker·제안 조회 화면
 > Provider: 무료 사전 검증은 고정 합성 응답, 실제 실행은 Spring AI·OpenAI `gpt-6-luna`의 Chat Completions
 > Lab Commit: `cb0781d` — `test(ai): connect isolated browser flow to scheduled worker`
@@ -70,7 +70,7 @@ AI Key는 Browser 자식 Process에 전달하지 않는다. Cookie·CSRF 값·He
 | 화면·DB·조회 | 저장된 값과 화면 일치, 조회 전후 여섯 Table 변화 없음 |
 | 사용량 | 입력 1,169·출력 57 Token |
 | 해당 호출 비용 추정 | `$0.000174625`, 기존 실행기의 보수적 단가 기준. 실제 청구액·하루 총액과 다름 |
-| 내용 평가 | 실행기의 `manualContentReview: NOT_SCORED` 유지, 사용자 원문 대조·채점은 다음 학습 |
+| 내용 평가 | 사용자가 원문 대조에서 핵심 누락·추측이 없다고 확인해 기존 Rubric으로 요약 2점. 실행 당시 Report의 `manualContentReview: NOT_SCORED`는 원본 그대로 유지 |
 
 앞선 Java Live 실험은 Processor를 직접 한 번 호출했다. 이번에는 USER의 실제 접수 화면부터 자동 Worker와 실제 AI, PostgreSQL 저장, AGENT의 조회 화면까지 이어졌다. 기존 Source·운영 설정·일반 Job 정책을 변경하거나 유료 실행을 다시 반복하지 않았다.
 
@@ -84,9 +84,9 @@ AI Key는 Browser 자식 Process에 전달하지 않는다. Cookie·CSRF 값·He
 
 > 로그인 링크가 만료됐지만 새 링크로 로그인에 성공했으며, 만료 이유를 문의합니다. 급한 문의는 아닙니다.
 
-분류는 `ACCOUNT`, 우선순위는 `NORMAL`이다. Codex의 사전 대조에서는 로그인 복구·문의 목적·급하지 않다는 사실이 보존됐고, 원문에 없는 만료 원인이 추가되지 않은 것을 확인했다. 합성 이메일 표식도 요약에 없다. 이 확인을 사용자의 수동 채점이나 전체 Dataset의 요약 품질 평가로 대신하지 않는다. 출력 형식과 내용 평가는 나눠 진행한다. [OpenAI Structured Outputs의 오류 처리 설명](https://developers.openai.com/api/docs/guides/structured-outputs#handling-mistakes)
+분류는 `ACCOUNT`, 우선순위는 `NORMAL`이다. Codex의 사전 대조에서는 로그인 복구·문의 목적·급하지 않다는 사실이 보존됐고, 원문에 없는 만료 원인이 추가되지 않은 것을 확인했다. 합성 이메일 표식도 요약에 없다. 이어서 사용자가 원문과 실제 요약을 대조하고 핵심 사실 누락이나 근거 없는 추측이 없다고 답했다. 기존 Rubric의 2점 조건에 해당하므로 이 요약은 2점으로 기록한다. 10월 7일 문답에서는 로그인 관련 내용이 `ACCOUNT`의 근거라는 답변을 확인했다. `NORMAL`은 로그인 복구뿐 아니라 ‘급한 문의는 아니다’라는 명시적 정보도 근거로 삼는다고 보완했다. [후속 복습 노트](../study-notes/2026-10-07-study-questions.md)에 구분을 남겼다. 출력 형식과 내용 평가는 나눠 진행한다. [OpenAI Structured Outputs의 오류 처리 설명](https://developers.openai.com/api/docs/guides/structured-outputs#handling-mistakes)
 
-원문을 DB에 보존하고 제안을 따로 저장했다는 사실과 그 요약이 옳다는 판단은 다르다. Ticket은 여전히 `OPEN`이고 제안도 담당자 검토 대기다. 이어서 이 원문·요약에 기존 Rubric을 적용하고, 고정 Dataset의 요약·Injection 평가와 핵심 개념 복습, Week 7 WIL을 마무리한다.
+이번 학습에서 한 요약을 평가한 것과 Application의 담당자 검토 상태는 구분한다. Ticket은 여전히 `OPEN`이고 제안도 `PENDING_REVIEW`이며 이번 문답으로 DB 상태를 변경하지 않았다. 실행 당시 Local Report는 수정하지 않고 후속 수동 평가를 이 문서에 남긴다. 이 한 건은 고정 Dataset의 두 방식 비교와 별도이며 그 평가 분모에 합치지 않는다. 이후 분류·우선순위 확인, 고정 Dataset의 요약·Injection 평가와 핵심 문답, [Week 7 WIL](../wil.md)을 10/7에 마무리했다.
 
 ## 비용 승인과 원장
 
