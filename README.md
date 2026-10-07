@@ -3,7 +3,7 @@
 > 상태: Active
 > 시작일: 2026-08-18
 > 전체 기간: 기술 심화 8주 + 취업 심화 4주
-> 현재 단계: Week 1·2·3·4·6 완료 — Week 5 부분 완료·공개 제출 완료, Week 7 진행 중·실제 AI의 Browser·자동 Worker·PostgreSQL 연결 확인
+> 현재 단계: Week 1·2·3·4·6·7 완료 — Week 5 부분 완료·공개 제출 완료. Week 7은 추가 학습 2일을 반영해 10/7 마감했고 블로그 게시·포럼 등록을 완료했다. Week 8 시작 전
 
 이 저장소는 SW AI Lab 심화과정에서 선택한 기술을 학습하고, 이해가 바뀐 과정과 재현 가능한 근거를 주차별로 기록한다. 목표는 큰 제품을 기간 안에 완성하는 것이 아니라 AI/AX·Java Backend 직무에 필요한 개념을 직접 설명하고, 작은 실험과 Test로 검증하며, 필요한 범위만 서비스에 적용할 수 있는 역량을 만드는 것이다.
 
@@ -58,7 +58,7 @@ Week 9~12에는 취업 활동을 우선하면서 검증된 기반 위에 AI를 �
 | 4 | 인증·인가·Session·Web Security | Completed | [Week 4](./week4/README.md) · [WIL](./week4/wil.md) |
 | 5 | Browser JavaScript·Frontend·E2E·품질 기초 | Partially Completed | [Week 5 학습 계획](./week5/weekly-plan.md) · [WIL](./week5/wil.md) |
 | 6 | Browser·PostgreSQL·Test 수직 마감 | Completed — Local 수직 검증, 독립 재설명, 블로그·포럼 게시 완료 | [Week 6 학습 계획](./week6/weekly-plan.md) · [WIL](./week6/wil.md) |
-| 7 | LLM Structured Output·평가·Guardrail | In Progress — 실제 AI 비교·Browser 접수·자동 Worker·PostgreSQL 저장·AGENT 화면 연결 확인. 수동 내용 평가·독립 복습·WIL은 남음 | [Week 7 학습 계획](./week7/weekly-plan.md) · [10/6 학습 노트](./week7/study-notes/2026-10-06-study-questions.md) |
+| 7 | LLM Structured Output·평가·Guardrail | Completed — 10/7 학습·평가·회귀 확인과 블로그 게시·포럼 등록 완료. 10/5 회차 이후 2일 추가 진행 | [Week 7 학습 계획](./week7/weekly-plan.md) · [WIL](./week7/wil.md) · [10/7 학습 노트](./week7/study-notes/2026-10-07-study-questions.md) |
 | 8 | Docker·CI·System·AWS Cloud·HTTPS | Not Started | 주차 시작 시 추가 |
 | 9 | 취업 Baseline·Portfolio 근거 정리 | Not Started | 주차 시작 시 추가 |
 | 10 | 맞춤 지원·기술 면접 보완 | Not Started | 주차 시작 시 추가 |
@@ -81,6 +81,7 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [Week 6 Browser·PostgreSQL 수직 마감 계획](./week6/weekly-plan.md): 실제 영속성, 최소 UI와 계층별 Test를 연결하는 일정
 - [Week 6 WIL](./week6/wil.md): Browser·Session·CSRF·PostgreSQL 수직 흐름과 블로그·포럼 게시 기록
 - [Week 7 AI Native 학습 계획](./week7/weekly-plan.md): Structured Output·평가·Guardrail과 Suggestion 영속성 일정
+- [Week 7 WIL](./week7/wil.md): AI 출력의 형식·내용 평가, 문의 보존과 비동기 처리의 이해 변화. 10/7 블로그 게시·포럼 등록 완료 확인
 - [9월 30일 학습 노트](./week7/study-notes/2026-09-30-study-questions.md): 판단 보류 표현, 문의 보존, Ticket·Message와 AI 처리 상태의 구분
 - [10월 5일 학습 노트](./week7/study-notes/2026-10-05-study-questions.md): AI 입력·판단, 접수·예약·결과 Transaction과 실제 Java AI 저장, 10/6 재개 경계
 - [10월 6일 학습 노트](./week7/study-notes/2026-10-06-study-questions.md): 재시도 대기·현재 Attempt·최종 실패, 선택 Worker와 제한된 DB 저장 재시도
@@ -89,6 +90,7 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [실제 JVM 재시작 검증](./week7/lab-reports/2026-10-06-worker-jvm-process-restart-lab.md): 서로 다른 PID·같은 PostgreSQL, 예약·정책·기한·재시도 금지 유지와 Java 389개 회귀
 - [AGENT의 AI 상태·제안 조회](./week7/lab-reports/2026-10-06-agent-ai-suggestion-query-lab.md): 읽기 전용·최초 Message의 Job, 권한·상태별 응답·안전한 오류와 Java 444개 회귀
 - [Browser·자동 Worker 연결 실험](./week7/lab-reports/2026-10-06-worker-browser-experiment-lab.md): 실제 접수·자동 Worker·실제 AI·PostgreSQL·AGENT 화면의 연결과 원문·제안 대조
+- [공격성 입력·응답의 저장 경계](./week7/lab-reports/2026-10-07-ai-injection-boundary-integration-lab.md): 실제 Java·PostgreSQL 사례 12개와 전체 Java 461개 통과, 원문·Ticket 상태 유지
 - [담당자 최소 조회 화면](./week7/lab-reports/2026-10-06-agent-ai-suggestion-ui-lab.md): HTTP 조회와 Job 상태의 구분, Text·Race·Page 연결과 Java 449개·JavaScript 133개 회귀
 - [깊은 수직 학습과 AI 보조 수평 확장 Decision](./plan/decisions/0002-depth-first-ai-assisted-expansion.md): Week 1~8과 Week 9~12의 구현 모드
 - [AgentOps Lab 보류 안내](./plan/agentops-lab-12-week-plan.md): 과정 이후 별도로 검토할 장기 프로젝트

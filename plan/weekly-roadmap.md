@@ -1,7 +1,7 @@
 # SW AI Lab 심화과정 12주 주차별 Roadmap
 
 > 작성일: 2026-08-18
-> 최종 수정일: 2026-10-06
+> 최종 수정일: 2026-10-07
 > 상태: Active
 > 전체 기간: 기술 심화 8주 + 취업 심화 4주
 > 공통 실습: AI Helpdesk Learning Lab
@@ -314,7 +314,11 @@ Week 5는 Event Loop·Rendering·Promise의 일부 실행 근거를 확보했지
 
 최초 Message와 자동 처리의 설계·확인 순서는 [Week 7 계획](../week7/weekly-plan.md)과 [계약 초안](../week7/ai-suggestion-contract-draft.md)에서 관리한다. 상태·재시도·복구 세부 계약은 질문을 통해 검토하며, 설계 합의를 구현 완료로 표시하지 않는다.
 
-10/5 학습 회차는 연장 실험을 포함해 마감했다. 개인정보 6회·기존/보완 Prompt 비교 각 52회, HTTP 접수·Job 실행권·결과 저장과 실제 Java AI→PostgreSQL 한 건을 확인했다. 10/6에는 선택 Worker의 대기·검증 객체의 제한된 DB 재저장·Attempt별 결과 분류·조건부 RUNNING 복구를 검증했다. 같은 DB의 Spring Context 재생성에 이어 서로 다른 JVM Process에서도 예약·정책·기한·재시도 금지를 유지했다. AGENT 조회·최소 화면 Test 뒤 통제된 Provider로 Browser 연결을 점검하고, 같은 흐름을 실제 AI로 실행했다. USER의 접수 `201`·Session·CSRF, 자동 Worker의 실제 AI 요청 1회, PostgreSQL 제안 저장과 AGENT 화면·DB 일치·조회 무변경을 확인했다. 최신 무료 회귀는 Java 449개·JavaScript 145개·ESLint 통과이며 무료 Browser Experiment와 실제 AI Live Experiment 각 한 건은 별도다. Week 7은 진행 중이며 요약과 Injection 수동 평가·독립 설명·WIL을 이어간다. 실험 보고서는 실제 실행일을 유지한다. 10/4 학습 제외는 유지하며 Week 8의 Cloud·HTTPS 범위를 줄이거나 미완료 학습을 Week 9로 자동 이월하지 않는다.
+10/5 학습 회차는 연장 실험을 포함해 마감했다. 개인정보 6회·기존/보완 Prompt 비교 각 52회, HTTP 접수·Job 실행권·결과 저장과 실제 Java AI→PostgreSQL 한 건을 확인했다. 10/6에는 선택 Worker의 대기·검증 객체의 제한된 DB 재저장·Attempt별 결과 분류·조건부 RUNNING 복구를 검증했다. 같은 DB의 Spring Context 재생성에 이어 서로 다른 JVM Process에서도 예약·정책·기한·재시도 금지를 유지했다. AGENT 조회·최소 화면 Test 뒤 통제된 Provider로 Browser 연결을 점검하고, 같은 흐름을 실제 AI로 실행했다. USER의 접수 `201`·Session·CSRF, 자동 Worker의 실제 AI 요청 1회, PostgreSQL 제안 저장과 AGENT 화면·DB 일치·조회 무변경을 확인했다. 당시 회귀는 Java 449개·JavaScript 145개·ESLint 통과였으며 통제된 Provider의 Browser Experiment와 실제 AI Live Experiment 각 한 건은 별도다. 이때 남아 있던 내용 평가·핵심 설명·WIL은 10/7에 마무리했다. 실험 보고서는 실제 실행일을 유지한다.
+
+10/7에는 보완 Prompt 52건의 원문 대조·수동 평가, 기존 Prompt 52건의 Codex 예비 검토와 대표 응답 문답, 핵심 개념 재설명을 마쳤다. 판정 출처는 구분해 기록했다. 전체 회귀 테스트는 Java 449개·JavaScript 145개·ESLint 통과였고 새 실제 AI 호출은 없었다. 이어서 실제 Java·PostgreSQL의 [공격 사례 통합 Test](../week7/lab-reports/2026-10-07-ai-injection-boundary-integration-lab.md) 12개를 추가하고 전체 Java 461개 통과를 확인했다. 계약 위반의 저장 거부·원문 보존·Ticket 상태 유지와 형식상 유효한 제안의 검토 대기를 구분했다. [Week 7 WIL](../week7/wil.md)의 작성자 검토와 블로그 게시·포럼 등록 완료를 확인하고 Week 7을 마감했다.
+
+일정은 초기 9/29~10/3 계획과 10/4 학습 제외를 보존하고, 10/5 회차 이후 추가로 사용한 10/6·10/7의 2일을 반영했다. 실제 Week 7 기간은 9/29~10/7이다. Week 8은 아직 시작하지 않았으며 줄어든 가용시간에 맞춰 세부 일정·시간 배분을 다시 정한다. Cloud·HTTPS를 포함한 선택 범위는 유지하고 Week 9로 자동 이월하지 않는다.
 
 ## 8주차 — DevOps·System·AWS Cloud·HTTPS 수직 배포
 
@@ -455,3 +459,5 @@ Weekly Plan의 Baseline 이후 학습 항목을 조용히 추가하거나 완료
 | 2026-09-30 | Week 7 입력을 Ticket의 최초 Message로 분리하고 접수 성공 뒤 자동 AI 처리·최소 복구를 단계적으로 연결 | 문의 원문은 AI 실패와 독립적으로 보존하고, 기본 흐름부터 검증한다는 설계 합의 | 평가·Guardrail 학습은 유지하며 후속 대화·공식 답변과 분산 운영은 제외. 세부 계약·구현·평가는 아직 미완료 |
 | 2026-10-04 | 10/3 회차를 마감하고 Week 7 잔여 과업을 10/5 야간 또는 10/6에 재개 | 사용자의 종료·재개 일정 요청 | 학습 범위와 10/4 제외 유지. 실제 AI 개인정보 실험·전송 직전 입력 검사를 포함하고 재개일 누적 예산 확인. Week 8 시간 배분은 재점검하며 Week 9 자동 이월 없음 |
 | 2026-10-06 | 10/5 회차의 실제 AI 비교·접수·예약·결과 저장·Java Live 근거를 반영하고 남은 과업을 10/6에 재개 | 사용자의 학습 회차 마감·기록·Commit 요청 | 실제 실행일과 학습 회차를 구분. 자동 Worker·복구·조회·Browser·수동 평가·복습·WIL을 유지하고 Week 8 Cloud·HTTPS 축소·Week 9 자동 이월은 하지 않음 |
+| 2026-10-07 | 후속 내용 평가·대표 응답 확인·핵심 문답과 최종 회귀 결과를 반영하고 Week 7 WIL 초안 작성 | Schema 통과와 내용 검증·담당자 판단의 차이를 정리하고 Week 7 마감 진행 | 평가 출처를 구분하고 사용자 WIL 검토·블로그 게시·포럼 등록은 미완료로 유지. Week 8 범위 변경 없음 |
+| 2026-10-07 | Week 7 실제 마감과 공개 제출 완료 반영. 10/5 회차 이후 10/6·10/7의 추가 2일 기록 | 작성자의 블로그 게시·포럼 등록 완료 확인과 추가 지연 반영 요청 | 초기 9/29~10/3 계획·10/4 제외는 보존. Week 7 Completed, Week 8 세부 일정 재조정 필요·Cloud·HTTPS 범위 유지 |
