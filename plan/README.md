@@ -13,9 +13,11 @@
 
 공지 Source와 실제 학습 근거의 상세 대조표는 Git에서 제외되는 로컬 검토 자료로 관리한다. 공개 계획에는 승인된 범위 결정과 필요한 요약만 남기며, `Planned`는 완료 근거로 계산하지 않는다.
 
-## 다음 학습 일정
+## 현재 학습 일정
 
-[Week 8 학습 계획](../week8/weekly-plan.md)은 2026-10-08~2026-10-12 중 일요일 10/11을 제외한 4일에 우선 집중한다. Docker·CI·System·AWS Cloud·HTTPS·복구 전 범위를 순학습 40시간으로 배분했으며, 세부 실험·복습 질문과 완료 기준을 함께 정했다. 시간이 부족하면 내용을 줄이지 않고 같은 Week 8 기간을 연장한다. 현재는 계획 수립 단계이고 학습·구현·배포는 시작하지 않았다.
+[Week 8 학습 계획](../week8/weekly-plan.md)은 2026-10-08~2026-10-12 중 일요일 10/11을 제외한 4일에 우선 집중한다. Docker·CI·System·AWS Cloud·HTTPS·복구 전 범위의 초기 배분은 순학습 40시간이며, 시간이 부족하면 내용을 줄이지 않고 같은 Week 8 기간을 연장한다.
+
+[10월 8일 학습 노트](../week8/study-notes/2026-10-08-study-questions.md)에 Docker의 실행·저장·설정 수명과 이해 변화를 정리했다. Build Cache와 [Compose의 실제 HTTP·PostgreSQL 실험](../week8/lab-reports/2026-10-08-compose-http-postgresql-baseline.md)에서는 DB 교체 후 Row·App Session 유지, App 재시작 뒤 Row 보존·재로그인, 같은 Image의 설정 변경을 확인했다. 필수 값 누락·빈 문자열 검사와 기존 Worker 설정 Test도 확인했다. 다음 학습은 미완료 배포용 Provider·Secret 연결과 Cloud 조건 확인부터 시작한다. 이어 Process·CI·IAM·ECR·Cloud를 진행하며, 선행 작업이 지연되면 뒤의 날짜를 옮기되 HTTPS·복구·회귀·WIL 범위는 유지한다.
 
 ## 범위 결정
 
