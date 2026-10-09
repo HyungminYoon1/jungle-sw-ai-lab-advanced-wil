@@ -455,6 +455,8 @@ Secret 파일을 Container에서 읽을 수 있다는 것과 Application이 그 
 
 Secret 파일 방식도 모든 접근을 차단하는 것은 아니다. 필요한 Service에만 읽기를 허용하고 Host의 원본 파일·Docker 관리 권한·Application Log를 함께 관리해야 한다. 파일 내용이나 이를 읽은 Property의 값은 출력하지 않는다.
 
+파일 읽기·설정값·Provider Bean 등록의 차이와 작은 설정 Test는 [Spring 설정과 Bean으로 Provider 연결하기](./spring-settings-bean-and-secret-wiring.md)에서 이어서 다룬다.
+
 ## 핵심 질문
 
 1. App Image가 만들어졌지만 App을 실행하지 않았다면 Controller와 Worker는 HTTP 요청을 처리하거나 Job을 처리하고 있는가?
