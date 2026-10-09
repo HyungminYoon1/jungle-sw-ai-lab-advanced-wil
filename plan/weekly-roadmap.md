@@ -1,7 +1,7 @@
 # SW AI Lab 심화과정 12주 주차별 Roadmap
 
 > 작성일: 2026-08-18
-> 최종 수정일: 2026-10-09
+> 최종 수정일: 2026-10-10
 > 상태: Active
 > 전체 기간: 기술 심화 8주 + 취업 심화 4주
 > 공통 실습: AI Helpdesk Learning Lab
@@ -324,7 +324,9 @@ Week 5는 Event Loop·Rendering·Promise의 일부 실행 근거를 확보했지
 
 > 2026-10-07 초기 일정: 10/8 목요일~10/12 월요일, 10/11 일요일 제외. 우선 4일·순학습 40시간에 전체 내용을 배치하고, 부족하면 Week 8 기간을 연장한다. [Week 8 세부 계획](../week8/weekly-plan.md)의 세부 실험·복습 질문·완료 기준을 따른다.
 
-2026-10-09 조정: [10/8 학습 회차](../week8/study-notes/2026-10-08-study-questions.md)의 Build Cache·Compose 영속성·Session 수명·설정 변경과 필수 값 검사를 정리했다. 다음은 미완료 배포용 Provider·Secret 연결과 Cloud 조건 확인이며, 그 뒤 Process·관측·CI·IAM·ECR을 진행한다. 10/10은 남은 CI·Image 전달을 마친 뒤 첫 HTTPS 연결을 목표로 하고, 미완료 배포는 10/12에 이어간다. 복구·회귀·WIL을 줄이지 않으며 필요하면 같은 Week 8을 연장한다. 상태는 In Progress이고 실제 Cloud 리소스·과금·DNS 변경은 실행 전에 별도로 확인한다.
+2026-10-09 회차: [10/8 학습](../week8/study-notes/2026-10-08-study-questions.md)의 로컬 기준선에 이어 합성 Secret Mount·Provider 등록, 개인정보 범위 치환, 최소 Health·HTTP Metric·종료 Signal을 확인했다. 실제 GitHub Actions에서 운영체제 의존 Test를 보완하고 별도 Branch의 오류·복구를 비교했다. main의 Java 551개·JavaScript 146개·ESLint·Image Build가 통과했다. 개념과 오해 수정은 [10/9 학습 노트](../week8/study-notes/2026-10-09-study-questions.md)에 정리했다.
+
+회차를 이어 실제 10/10에는 승인된 OIDC Provider·서울 Private ECR·main 전용 업로드 Role을 생성하고 저장된 정책을 확인했다. [AWS 초기 설정 보고서](../week8/lab-reports/2026-10-10-aws-oidc-ecr-baseline.md)에 실행일과 권한 범위를 구분했다. STS 인증·Image Push·권한 거부 실험, 기본 App의 개인정보 처리·Secret·Worker 조립과 ECS·RDS·HTTPS·복구는 남아 있다. 서울·월 3만 원·최대 12개월·실습 시 실행, `helpdesk.hmyoon.com`·Cloudflare 조건은 [배포 계획](../week8/deployment-plan.md)을 따른다. 10/10은 OIDC·Image 전달부터 이어가고 미완료 배포는 10/12에 진행한다. 10/11 제외, 복구·회귀·WIL과 전 학습 범위 유지, 필요 시 같은 Week 8 연장 원칙은 그대로다. 초기 설정 승인을 나머지 생성·과금·DNS 변경 승인으로 확대하지 않는다.
 
 ### 핵심 질문
 
@@ -339,7 +341,7 @@ Week 5는 Event Loop·Rendering·Promise의 일부 실행 근거를 확보했지
 - 구조화된 Log, Health Check와 최소 Request·Error·Latency Metric
 - IAM User·Role·Policy와 최소 권한
 - ECS·ECR Container 실행 책임과 RDS 관리형 Database 책임
-- Route 53 DNS, ACM Certificate, TLS 신뢰 사슬과 HTTPS
+- DNS·Route 53 Hosted Zone·NS·Alias, 기존 Cloudflare DNS와 ACM Certificate, TLS 신뢰 사슬과 HTTPS
 - 환경별 Secret 분리, RDS Backup과 Application Rollback 경계
 
 ### 실험과 적용
@@ -350,7 +352,7 @@ Week 5는 Event Loop·Rendering·Promise의 일부 실행 근거를 확보했지
 - SIGTERM과 강제 종료에서 요청·Connection·Exit Code와 남은 Process 비교
 - ECR Image를 ECS에 배포하고 IAM 권한 부족과 최소 권한 추가 과정을 관찰
 - Application이 RDS PostgreSQL에 연결되고 재배포 뒤에도 Ticket이 유지되는지 확인
-- Route 53과 ACM으로 DNS 검증·HTTPS 연결·HTTP Redirect와 Certificate를 관찰
+- 기존 Cloudflare DNS와 ACM으로 실제 학습 주소의 DNS 검증·HTTPS 연결·HTTP Redirect와 Certificate를 관찰하고, Route 53은 별도 Zone·직접 DNS 조회 실습으로 비교
 - CloudWatch Log·Metric에서 의도적으로 발생시킨 오류 Request를 추적
 - 잘못된 Application Version을 이전 Image로 되돌리고 RDS Backup·복구 책임을 문서화
 
@@ -468,3 +470,4 @@ Weekly Plan의 Baseline 이후 학습 항목을 조용히 추가하거나 완료
 | 2026-10-07 | Week 8을 10/8~10/12 중 10/11 제외, 4일·순학습 40시간 기준으로 편성 | 사용자의 다음 날부터 다음 주 월요일까지 일정 지정 | 기존 Docker·CI·System·AWS·HTTPS·복구 범위 유지. Cloud 준비를 첫날, 첫 HTTPS 연결을 토요일에 배치하고 일요일 보충 작업은 배정하지 않음 |
 | 2026-10-07 | Week 8을 우선 4일에 집중하고 미완료 시 같은 주차의 기간을 연장하도록 구체화 | 사용자의 4일 우선 진행·필요 시 연장·학습 내용 유지 요청 | 세부 키워드·정상/실패 실험·복습 질문·일일 점검 기준 추가. 10/12는 첫 목표일이며 복구·회귀·WIL을 생략하지 않음 |
 | 2026-10-09 | Week 8의 10/8 학습 회차 기록과 로컬 실험 근거를 반영하고 남은 Provider·Secret·Cloud 조건을 다음 학습 앞에 배치 | 사용자 학습노트·주간 계획 갱신 요청 | 10/10은 잔여 CI·IAM·ECR부터, 10/12는 잔여 배포부터 진행. 10/11 제외·선택 범위 유지, 복구·회귀·WIL 미완료 시 Week 8 기간 연장 |
+| 2026-10-10 | 10/9 회차의 설정·마스킹·Process·실제 CI 실패·복구와 연장 구간의 OIDC·ECR 초기 설정 반영 | 사용자 학습노트·진행 문서·Commit 요청 | 10/10은 실제 OIDC 인증·Image 전달부터 계속. Cloud AI 조립·배포·HTTPS·관측·복구는 미완료로 유지하며 10/11 제외·내용 유지 원칙 보존 |

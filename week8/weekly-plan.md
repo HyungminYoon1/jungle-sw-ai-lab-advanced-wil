@@ -1,8 +1,8 @@
 # Week 8 학습 계획 Docker와 CI에서 AWS HTTPS 배포까지
 
 > 작성일: 2026-10-07
-> 최종 수정일: 2026-10-09
-> 상태: In Progress — 10/8 회차의 Docker·Compose·설정 학습과 노트 정리. 배포용 Provider·Secret 연결과 Cloud 선행 조건을 다음 학습의 앞부분에 배치
+> 최종 수정일: 2026-10-10
+> 상태: In Progress — 로컬 설정·마스킹·관측·종료 검증, 실제 CI 실패·복구와 AWS OIDC·ECR·업로드 Role 초기 설정 완료. 실제 Image 전달·ECS·RDS·HTTPS·복구는 남아 있음
 > 1차 목표 기간: 2026-10-08 목요일 ~ 2026-10-12 월요일. 미완료 항목이 남으면 Week 8 기간 연장
 > 학습일: 10/8·10/9·10/10·10/12, 총 4일
 > 제외일: 2026-10-11 일요일, 0시간
@@ -53,7 +53,7 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 | 실제 AI 실행 | 격리된 실험에서 Spring AI와 자동 Worker 연결 확인 | Test 전용 구성이 아닌 배포용 Provider·개인정보 처리·검증기·Worker 설정 연결 |
 | 사용자와 Session | `local-browser`의 In-memory 사용자와 서버 메모리 Session | 학습용 배포 계정·Secret 주입을 분리하고 재시작 후 재로그인 확인 |
 | 데이터 | PostgreSQL Adapter·Flyway와 같은 DB를 유지한 Process 재시작 검증 | Compose Container 재생성·Volume 유지, 같은 RDS를 유지한 Application 재배포와 Backup 확인 |
-| 배포·관측 | Dockerfile·Compose·Actions Workflow와 배포용 Health·Metric은 준비 대상 | 최소 설정·Test·실제 실행을 단계별로 추가 |
+| 배포·관측 | Dockerfile·Compose, 최소 Health·HTTP Metric·종료 설정과 로컬 Test 확인. 실제 Actions 실패·복구·Image Build와 AWS 초기 설정 확인 | OIDC 인증·ECR 전달·Cloud 관측과 HTTPS 실행을 이어간다 |
 
 현재 Worker는 활성화 설정 외에 Provider·개인정보 처리기·출력 검증기를 명시적으로 제공해야 한다. Image만 만들거나 Worker 설정값만 켜는 것으로 실제 AI 배포가 끝나지는 않는다. 배포용 설정의 누락·잘못된 조합을 안전하게 거부하고, 기본 실행이나 일반 CI가 유료 호출을 시작하지 않도록 Test를 둔다.
 
@@ -68,7 +68,9 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 
 ### 배포 구성 초안
 
-기존에 선택한 AWS 서비스를 사용하는 한 환경을 구성한다. ECR에 Image를 저장하고 ECS Fargate에서 Application 한 개를 실행하며, RDS PostgreSQL에 데이터를 둔다. Browser는 Route 53의 DNS와 ACM 인증서를 사용하는 ALB를 거쳐 HTTPS로 접근한다. ALB는 요청을 Application으로 전달하는 진입점이며 이번에 여러 Application으로 부하를 분산하는 기능을 학습 범위에 추가하지 않는다.
+기존에 선택한 AWS 서비스를 사용하는 한 환경을 구성한다. ECR에 Image를 저장하고 ECS Fargate에서 Application 한 개를 실행하며, RDS PostgreSQL에 데이터를 둔다. 사용자가 확인한 `helpdesk.hmyoon.com`의 DNS는 기존 Cloudflare에 유지하고, ACM 인증서를 사용하는 ALB로 직접 HTTPS 접속하는 DNS-only 구성을 우선 검토한다. Route 53의 Hosted Zone·NS·Alias 비교와 별도 DNS 조회 실습은 유지한다. ALB는 요청을 Application으로 전달하는 진입점이며 이번에 여러 Application으로 부하를 분산하는 기능을 학습 범위에 추가하지 않는다.
+
+서울 `ap-northeast-2`, 최대 12개월 보관·월 3만 원 이내·실습할 때만 실행하는 조건을 확인했다. [AWS 배포·비용 초안](./deployment-plan.md)에 실행과 보관의 구분, 월 60시간의 초기 비용 계산과 생성 전 확인 순서를 정리했다. 사용량·실제 환율·세금·접근 권한·DNS 변경 범위와 생성 범위는 실행 전에 확정한다.
 
 실제 리소스 생성 전에는 다음 조건을 검토해 배포 기록에 확정한다.
 
@@ -78,7 +80,7 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 - **외부 연결:** ECR·Log·Secret·AI Provider로 나가는 경로도 필요하다. Public IP와 제한된 Inbound를 쓰는 구성, Private Subnet과 NAT 등을 쓰는 구성의 비용·노출 차이를 비교하고 리소스 생성 전에 선택한다.
 - **권한 분리:** Image·Log·Secret 주입에 쓰는 Task Execution Role과 앱 코드의 AWS 접근에 쓰는 Task Role을 구분한다. 필요한 리소스·Action만 허용한다. [AWS ECS 실행 역할](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_execution_IAM_role.html)
 
-이 초안은 리소스 생성·과금·DNS 변경·외부 공개를 승인한 기록이 아니다. 사용할 계정·Region·도메인·예산·공개 범위를 확인한 뒤 실행한다.
+OIDC Provider·ECR·업로드 Role은 초기 설정 승인을 받아 생성했다. 이 승인은 나머지 ECS·RDS·ALB·Secret·DNS·HTTPS 구성이나 삭제·외부 공개까지 포함하지 않는다. 사용할 수량·권한·예산·공개 범위를 확인한 뒤 남은 생성 범위를 따로 확정한다.
 
 ### 이번 주에 추가하지 않을 것
 
@@ -88,6 +90,8 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 
 [10월 8일 학습 노트](./study-notes/2026-10-08-study-questions.md)에 이번 회차의 개념과 이해 변화를 정리했다. 학습 회차는 10/8로 묶고, 실제 실험의 실행일은 각 보고서의 10/8~10/9 기록을 유지한다.
 
+[10월 9일 학습 노트](./study-notes/2026-10-09-study-questions.md)는 설정·Bean, 개인정보 탐지·치환, 종료 Signal·Health·CI와 AWS 권한의 이해 변화를 개념별로 정리했다. 자정을 넘긴 AWS 설정은 같은 학습 회차에 포함하되 실제 실행일 10/10을 별도 보고서에 남긴다.
+
 2026-10-08에는 Image·Container·Process, 쓰기 계층·Volume·Network, Build Context·Cache와 시작 준비 조건을 학습했다. [Docker·Compose·Volume 학습자료](./study-docs/docker-image-container-compose-volume.md)에 JAR와 Maven의 역할, Multi-stage Build, 두 Maven 명령의 Cache 조건과 핵심 질문·해설을 보완했다. Docker Desktop의 Linux Engine에서 첫 Helpdesk Image Build와 입력 무변경 재Build, 최종 Image와 JAR의 구성을 확인했다. 별도 복사본에서는 Source만 변경할 때 의존성 준비는 재사용되고 패키징은 다시 실행됐으며, POM의 의존성을 변경하면 두 단계가 모두 다시 실행됐다. 실제 Source와 POM은 변경하지 않았다. 결과는 [Image Build와 변경 입력별 Cache 실험](./lab-reports/2026-10-08-docker-image-build-and-cache-baseline.md)에 기록한다.
 
 복사 순서 비교에서는 Source를 의존성 준비 앞에 두어도 Build는 성공했고, 그 순서에서 Source를 바꾸면 두 Maven 명령이 모두 다시 실행됐다. 의존성 준비를 앞에 두는 이유가 오류 방지가 아니라 Cache 재사용이라는 점을 구분했다. Image 패키징은 Test를 생략했다.
@@ -96,38 +100,65 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 
 두 번째 독립 실행에서는 DB Container만 교체해 ID 변경과 같은 Volume·Migration 이력·Row 보존을 확인했다. App의 Container ID와 실행 시작 시각은 같았으며, 기존 AGENT Session으로 같은 Ticket을 재조회해 `200`을 받았다. PostgreSQL 프로그램은 Image, DB 데이터 파일은 Volume, Session은 App JVM에 있다는 구분을 자료에 보완했다.
 
-세 번째 독립 실행에서는 같은 DB를 유지하고 App만 Stop 후 Start했다. App Container ID는 같고 실행 시작 시각은 달랐으며 DB·Volume·Migration과 Ticket·Message·Job Row는 그대로였다. 기존 Cookie를 보관한 Client는 조회 `401`, AGENT 재로그인 뒤 같은 Ticket 조회 `200`을 받았다. 메모리 Session의 수명과 Session 수에 따른 메모리 사용도 학습자료에 보완했다. 각 실행의 Container는 검증 뒤 중지하고 Volume은 보존했다. Compose Browser E2E와 이번 변경 뒤 전체 회귀는 아직 `NOT_RUN`이다.
+세 번째 독립 실행에서는 같은 DB를 유지하고 App만 Stop 후 Start했다. App Container ID는 같고 실행 시작 시각은 달랐으며 DB·Volume·Migration과 Ticket·Message·Job Row는 그대로였다. 기존 Cookie를 보관한 Client는 조회 `401`, AGENT 재로그인 뒤 같은 Ticket 조회 `200`을 받았다. 메모리 Session의 수명과 Session 수에 따른 메모리 사용도 학습자료에 보완했다. 각 실행의 Container는 검증 뒤 중지하고 Volume은 보존했다. 이 Compose 실험에서는 Browser E2E와 전체 회귀를 실행하지 않았다. 이후 10/9의 회귀·CI 결과는 아래에 별도로 기록한다.
 
 10/8 학습에 이어 10/9에는 같은 Image에서 실행 설정을 바꾸는 비교와 공통 검증 함수의 회귀를 확인했다. Host의 CORS 허용 Origin을 바꿔도 같은 Container의 Stop·Start는 이전 설정을 유지했고, App을 재생성하면 새 설정을 적용했다. 서버의 OPTIONS 응답·허용 Header, 동일 Image ID와 DB·Volume·Row 보존으로 비교했으며, 기존 App 재시작 옵션과 설정 변경 옵션을 함께 실행해 통과했다. Java Source·JAR·Image는 수정하지 않았고 실제 AI와 Browser JavaScript는 실행하지 않았다.
 
 별도의 Compose 설정 검사에서는 필수 변수 6개를 각각 미설정·빈 문자열로 바꾼 12개 Case가 모두 거부됐다. 기존 Worker 설정 Test 7개도 재실행해 기본 비활성과 Provider 객체 없는 활성 구성의 기동 실패 등을 확인했다. 이 검사는 Container·PostgreSQL·실제 AI를 실행하지 않았다. 문의 접수에 필요한 설정과 비활성 AI 기능의 설정을 구분하는 내용을 학습자료에 보완했다. 배포용 Provider·개인정보 처리기·검증기·Worker 연결과 Cloud Secret 전달 검증은 남아 있다.
 
-AWS 계정과 도메인 보유는 작성자가 확인했다. 실제 접근 권한·DNS 수정 권한·Region·리소스 구성·비용 범위는 실행 전에 확인한다. Cloud 리소스 생성과 DNS 변경은 아직 수행하지 않았다.
+10/9에는 [Spring 설정과 Bean의 연결 자료](./study-docs/spring-settings-bean-and-secret-wiring.md)를 추가하고, 임시 파일의 Config Tree 읽기·Provider 객체 전달·설정 누락·공백·Bean 미등록·기능 비활성을 비교하는 학습용 Test 5개를 확인했다. 기존 Worker 설정 7개와 함께 통과했다. 학습용 Provider는 요청 메서드 호출을 금지하며 실제 Key·DB·외부 AI를 사용하지 않는다. 이 결과는 작은 Context의 설정·객체 조립 근거이며, 배포용 Provider 구성이나 Compose Secret Mount의 완료 근거는 아니다.
 
-### 10월 8일 회차 마감에 따른 일정 조정
+이어서 Main의 Provider 등록 설정을 추가했다. 별도 활성화 값·필수 Helpdesk Key·명시적 요약 상한을 사용하고, 기존 개인정보 처리기를 주입받는다. Provider 등록과 Worker 실행은 별개이며 기본 비활성은 유지한다. 새 설정 Test 18개와 관련 기존 Test를 합쳐 170개가 통과했고 실제 AI 호출은 0회였다.
 
-Docker·Compose의 기초와 저장·재시작·설정 비교까지 진행했다. 초기 첫날에 함께 배정했던 배포용 Provider·Secret 조립과 Cloud 실행 조건 확인은 마치지 못했으므로 다음 학습의 앞부분으로 옮긴다. Secret 파일 제공, Spring의 설정 읽기, Provider 객체 등록을 구분하는 개념까지는 학습했지만 실제 파일 기반 연결은 아직 구현·검증하지 않았다.
+별도 Compose의 [합성 Secret Mount 실험](./lab-reports/2026-10-09-synthetic-secret-mount-and-provider-wiring.md)에서는 같은 Image에 다른 합성 파일을 연결한 두 Case, 필수 값 누락·공백, 기능 비활성의 총 5개 Case가 통과했다. 비특권 사용자의 파일 읽기·읽기 전용 Mount·Config Tree 값 일치·실제 Main Provider 등록과 주입을 확인했다. 네트워크를 차단하고 Worker를 껐으며 DB·실제 AI는 사용하지 않았다. 관련 Test 170개도 다시 통과했다. 실험 Container와 임시 파일은 정리했다. 기본 App Compose의 실행용 Secret·개인정보 처리기·Worker·DB 연결은 남아 있다.
+
+개인정보 처리에서는 알려진 문자열 치환과 임의의 개인정보 탐지가 다르다는 점을 확인했다. 검사기가 문의 전체를 다시 쓰는 대신 위치·종류를 반환하고 Java가 해당 부분만 치환하는 설계 방향을 선택했다. [개인정보 탐지와 마스킹 자료](./study-docs/privacy-detection-and-minimal-masking.md)에 범위 검증·위치 단위·원문 보존을 정리했다.
+
+10/9 문답에서는 본문 밖의 위치를 임의로 보정하지 않고 전송을 중단하는 이유, 치환 뒤 위치가 밀리는 문제, 형식 검사와 탐지 정확도의 차이, Code Point 위치를 Java 인덱스로 변환하는 이유를 확인했다. 작성자는 탐지 위치 목록의 초기 중복·겹침 정책을 승인했다. 같은 입력 필드의 위치·종류가 모두 같으면 중복을 제거하고 한 번 치환하며, 서로 다른 범위의 겹침·포함 관계나 같은 범위의 종류 충돌은 외부 전송을 중단한다. 범위를 임의로 합치거나 종류를 추측해 문의 내용을 바꾸지 않기 위한 선택이다. 이미 접수한 Ticket·Message는 유지한다.
+
+이어서 로컬 검사기의 Timeout과 외부 Provider 응답의 Timeout을 같은 실패로 기록하면 원인을 구분할 수 없다는 점을 확인했다. 작성자는 `PRIVACY_SCAN_TIMEOUT`·`PRIVACY_SCAN_INVALID_RESULT`의 초기 실패 처리 정책을 승인했다. 두 경우 모두 외부 전송을 중단하고 접수한 Ticket·Message를 유지하며, 현재 Attempt의 Job을 `FAILED`로 기록한다. 자동 재시도는 하지 않는다. 검사 재시도는 외부 AI 재호출과 별도 정책으로 다루며, 읽기 전용 조회도 이를 시작하지 않는다.
+
+범위 위치는 원문 기준 Unicode Code Point로 정하고, 별도 Main 클래스 `AiInputSpanMasker`와 Unit Test를 구현했다. 시작·끝을 Java 인덱스로 변환하고, 필드별 중복 제거·겹침 거부·원문 구간 조립을 적용한다. 새 Test 47개와 기존 개인정보 Guard Test 32개, 총 79개가 실패·오류·건너뜀 없이 통과했다. 결과는 [개인정보 범위 검증과 치환 Test](./lab-reports/2026-10-09-ai-input-span-masking-unit-tests.md)에 기록한다.
+
+기존 `AiInputPrivacyGuard`와 Worker의 실행 동작은 변경하지 않았다. 새 치환기는 감지된 위치를 적용하는 함수이며 개인정보 탐지 모델이나 검사 실패의 Job 저장까지 구현한 것은 아니다. 새 실패 코드의 Java Enum·DB 제약·조회와 UI 허용값, 현재 Attempt 확인과 자동 복구 차단은 구현·검증할 대상이다. 기존 예약과 정책 Snapshot을 유지한다. 한국어 탐지 모델 선정·검사 결과의 JSON 검증·실행용 연결은 후속 검토·구현 대상이며, 추가 검사 재시도 정책은 확정하지 않았다.
+
+AWS 계정·도메인 보유, 서울 Region과 월 3만 원·최대 12개월·실습 시 실행 조건, `helpdesk.hmyoon.com`·Cloudflare를 확인했다. Console 접근과 OIDC·ECR·업로드 Role의 초기 생성 승인을 확인했다. DNS 수정 권한과 나머지 배포 리소스의 구성·생성 범위는 아직 확정하지 않았다.
+
+배포 학습을 우선하기 위해 개인정보 탐지 모델의 추가 연결과 별개로 Process·관측·CI를 진행했다. [Process·Health·CI 자료](./study-docs/process-health-and-ci.md)를 추가하고, Main에 최소 Health·AGENT 전용 HTTP Metric과 HTTP 종료 유예를 설정했다. 실제 HTTP에서 Security가 거부한 `401` 요청도 Metric에 기록됐다. 관리 상세·환경 변수·Dump는 공개하지 않았다.
+
+[로컬 관측·종료 보고서](./lab-reports/2026-10-09-process-health-and-ci-baseline.md)에 Java 회귀 551개·JavaScript 145개·ESLint·Image Build와 3개 종료 Case를 기록했다. 충분한 종료 대기에서는 합성 요청이 `200`으로 완료됐고, 1초 대기와 SIGKILL에서는 연결이 끊겼다. SIGTERM의 Exit Code `143`을 잘못된 실패로 보지 않도록 기대값을 고쳤다. 이 실험은 실제 Container·JVM·HTTP의 근거이며 DB·Job의 전체 종료 결과는 아직 확인 전이다.
+
+Lab의 Workflow와 관련 변경은 Commit·Push했고 실제 GitHub Actions에서 정상·실패·복구를 비교했다. 최초에는 Ubuntu Runner에서 Windows Shell 선택에 의존한 Test 두 개가 실패했다. Shell 선택을 Test에서 주입하도록 분리한 뒤 Java 551개·JavaScript 146개·ESLint·Image Build가 통과했다. 별도 Branch에서 공백 제목 거부 조건을 제거해 UI Test 세 개 실패·Image Build Skipped를 관찰하고, 조건 복원 뒤 성공했다. main에 오류·복구 실험 Commit은 합치지 않았다. 마지막 main 검증 `0908f81`도 성공했으며 실행 링크는 [CI 보고서](./lab-reports/2026-10-09-process-health-and-ci-baseline.md)에 남겼다. 현재 Workflow에는 AI Key·AWS 인증·ECR Push·ECS 배포가 없다.
+
+회차를 이어 실제 10/10에는 Private ECR `ai-helpdesk-learning-lab`, GitHub OIDC Provider와 `helpdesk-github-ecr-push` Role을 생성했다. Trust Policy는 조회한 실제 Repository의 ID 포함 Subject·main·Audience로, Permission Policy는 해당 ECR의 Push 작업으로 제한했다. Immutable Tag·AES-256·Basic Scanning을 사용하고 장기 Key·신규 KMS·Enhanced Scanning은 추가하지 않았다. 저장된 정책을 다시 읽어 대조한 결과는 [AWS 초기 설정 보고서](./lab-reports/2026-10-10-aws-oidc-ecr-baseline.md)에 기록했다. 실제 STS 인증·Image 업로드·권한 거부 검증, ECS·RDS·ALB·DNS·ACM 구성은 아직 미수행이다.
+
+### 회차 마감에 따른 일정 조정
+
+Docker·Compose의 기초와 저장·재시작·설정 비교까지 진행했다. 초기 첫날에 함께 배정했던 배포용 Provider·Secret 조립과 Cloud 실행 조건 확인은 마치지 못했으므로 다음 학습의 앞부분으로 옮긴다. 10/9에는 설정 읽기·Main Provider 등록과 별도 Compose의 합성 파일 제공까지 검증했다. 기본 App의 개인정보 처리기·실행용 Secret·Worker·DB를 함께 연결하는 실험은 남아 있다.
+
+10/9 회차에서 실제 CI 실패·복구와 AWS 초기 설정까지 진행했다. 다음 학습은 같은 기본 실험을 반복하기보다 OIDC 인증·ECR Image 전달, 배포용 전체 조립과 Cloud Network·Database·HTTPS 연결로 이어간다. Process의 DB·Job 종료 상태, Log 연결·Cloud 관측·Rollback·Backup 복원도 남은 분량으로 유지한다.
 
 | 과업 | 현재 상태 | 다음 배치 |
 |---|---|---|
 | Image·Cache·Compose·Volume·Session 수명 | 로컬 Build·실제 HTTP·PostgreSQL 실험과 문답 확인 | 같은 실험을 처음부터 반복하지 않고 Process·배포 실험의 기준으로 사용 |
 | 필수 값·Worker 기본 비활성 | Compose 누락·빈 문자열 12개 거부, 기존 Spring 설정 Test 7개 통과 | 배포용 정상 조립·Secret 누락·실제 실행의 추가 Test와 구분 |
-| 배포용 Provider·개인정보 처리기·검증기·Worker·Secret | 개념 학습, 연결 구현은 미완료 | 10/9 첫 구현. 통제된 Provider와 설정 Test를 먼저 진행 |
-| Cloud 권한·DNS·Region·구성·비용 조건 | 계정·도메인 보유만 확인 | 10/9에 확인. 승인된 범위가 정해지기 전 리소스 생성·DNS 변경 없음 |
-| Process·관측·CI·IAM·ECR | 미수행 | 위 선행 작업 뒤 순서대로 진행. 10/9 잔여는 10/10의 Cloud 작업보다 먼저 배치 |
+| 배포용 Provider·개인정보 처리기·검증기·Worker·Secret | Provider·검증기 등록과 합성 파일 Mount·Main 조립 확인. 기본 App의 개인정보 처리기·실행용 Secret·전체 연결 미완료 | Process·CI와 Cloud 설정 준비를 병행. 실제 AI 수직 흐름 전에는 남은 조립을 완료하고 별도 호출 승인 |
+| 개인정보 탐지 위치의 범위 검증과 치환 | 별도 치환기의 Code Point 변환·중복 제거·충돌 거부·원문 구간 보존 Test 47개 통과 | 학습 범위는 유지하되 배포 설명·CI를 멈추고 탐지 모델만 계속 확장하지 않는다. JSON 계약·실패 저장·실행용 연결을 병행 |
+| Cloud 권한·DNS·Region·구성·비용 조건 | 서울·월 3만 원·실습 시 실행·Cloudflare 조건, Console 접근과 초기 세 항목의 생성 승인·실행 확인 | 나머지 Network·DNS Record·정리 방식·생성 범위 확정. DNS 변경·ECS·RDS·ALB 생성은 미수행 |
+| Process·관측·CI·IAM·ECR | 최소 Health·HTTP Metric·종료 로컬 비교와 실제 CI 실패·복구 통과. OIDC·ECR·main 업로드 Role 초기 설정 완료 | 실제 STS 인증·ECR Push·권한 거부 실험, DB·Job 종료 상태와 Log 연결을 이어간다 |
 | Cloud·HTTPS·복구·회귀·WIL | 미수행 | 10/10 첫 연결 목표 유지. 남은 배포는 10/12에 이어가고, 뒤의 복구·마감은 필요 시 Week 8 연장 |
 
 이월한 시간을 기존 하루 배정에 무조건 더해 끝내는 일정으로 보지 않는다. 아래 주제별 시간은 초기 예상 분량을 유지한 것이며, 실제 날짜별 배치는 선행 조건과 하루 종료 때의 잔여량을 기준으로 조정한다. 설정 구현이 길어지면 Process·CI의 시작이 밀리고, CI가 미완료면 Cloud 시작도 밀린다. 뒤의 학습을 삭제하거나 복구·WIL 시간을 줄이지 않는다.
 
 ## 날짜별 학습 일정
 
-하루 10시간은 초기 배분 기준이다. 아래 표는 10/8 회차 마감 뒤 조정한 시작 순서이며, 상세 주제의 실험표는 별도 추가 과제로 다시 계산하지 않는다. 전날 미완료 항목은 다음 학습일의 앞부분에 두고 그만큼 뒤의 시작을 옮긴다. 외부 리소스 생성·인증서 검증 대기 중에는 독립적인 개념 학습과 문서 정리를 진행하되, 대기 시간을 실제 학습 시간으로 세지 않는다.
+하루 10시간은 초기 배분 기준이다. 아래 표는 10/8·10/9 회차 마감 뒤 조정한 시작 순서이며, 상세 주제의 실험표는 별도 추가 과제로 다시 계산하지 않는다. 전날 미완료 항목은 다음 학습일의 앞부분에 두고 그만큼 뒤의 시작을 옮긴다. 외부 리소스 생성·인증서 검증 대기 중에는 독립적인 개념 학습과 문서 정리를 진행하되, 대기 시간을 실제 학습 시간으로 세지 않는다.
 
 | 날짜 | 시간 | 중심 학습과 실험 | 하루 종료 기준 |
 |---|---:|---|---|
 | 10/8 목 회차 | 초기 10시간 | Docker·Build Cache·Compose·Volume·Session·설정 비교와 필수 값 검사 | 해당 로컬 실험과 학습 노트 정리. 배포용 조립·Cloud 선행 조건은 미완료로 이월 |
-| 10/9 금 | 10시간 기준 | 이월한 Provider·Secret 연결과 Cloud 조건 확인 → Linux Process·Signal·Health·Log·Metric → CI 착수 | 정상·누락 설정 Test, 종료 차이 설명. CI·IAM·ECR의 미완료 분량을 명시 |
-| 10/10 토 | 10시간 기준 | 남은 CI·IAM·ECR부터 마감 → ECS·RDS·Network·DNS·HTTPS → 가능한 Browser 검증 | 선행 조건이 충족되면 첫 HTTPS 수직 연결. 진행한 리소스는 일요일 전 중지·보관 상태 확인 |
+| 10/9 금 회차 | 10시간 기준 | Provider·합성 Secret·범위 치환 → Process·Health·Metric → 실제 CI 실패·복구 → OIDC·ECR 초기 설정 | 해당 근거와 노트 정리. AWS 생성의 실제 실행일은 10/10. 전체 AI 조립·실제 Push·DB·Job 종료 검증은 남음 |
+| 10/10 토 | 10시간 기준 | 실제 OIDC 인증·ECR Image 전달부터 → 배포용 조립·Network·ECS·RDS·DNS·HTTPS → 가능한 Browser 검증 | 선행 조건이 충족되면 첫 HTTPS 수직 연결. 남은 과업과 실행·보관 리소스를 일요일 전 구분 |
 | 10/11 일 | 0시간 | 학습·구현·수동 점검·배포 작업 없음 | 보충 일정이나 WIL 작성도 배정하지 않음 |
 | 10/12 월 | 10시간 기준 | 남은 Cloud·Browser 연결 → 장애 추적·재배포·Rollback·Backup → 회귀·설명·WIL | 필수 근거 판정. 배포 지연으로 복구·마감이 남으면 같은 Week 8의 추가 일정 산정 |
 
@@ -160,7 +191,7 @@ Compose의 시작 순서와 Database의 준비 완료를 구분한다. Health Ch
 
 ### 10월 9일 금요일 Process와 CI
 
-**먼저 할 이월 과업:** 배포용 설정 연결의 초기 배정 2.5시간과 Cloud 선행 조건의 초기 배정 1시간을 앞부분에 둔다. 실제 필요한 시간은 구현·검증 후 기록한다. 아래 Process·관측·CI·IAM·기록의 초기 분량은 유지하되, 하루 안에 남은 항목은 10/10 Cloud 작업 전에 이어간다.
+**이월 과업과 배포 우선순위:** 배포용 설정 연결의 초기 배정 2.5시간과 Cloud 선행 조건의 초기 배정 1시간을 유지한다. Provider 등록·합성 Secret·위치 치환 이후에는 Process·관측·CI와 Cloud 준비를 먼저 병행한다. 개인정보 탐지 모델의 추가 검토 때문에 배포 학습 전체를 멈추지 않는다. 핵심 질문은 2~3개씩 묶고 통상적인 구현은 바로 진행한다. 전체 AI 수직 흐름 전에 남은 실행용 조립을 끝내며, 잔여 과업은 10/10 Cloud 작업보다 먼저 배치한다.
 
 1. **Process 실험 2.5시간:** Linux 환경에서 `ps`·`/proc/<pid>/status`·Exit Code·표준 출력을 관찰한다. SIGTERM과 강제 종료를 비교하고, 진행 중 요청·Job과 DB Connection이 어떻게 되는지 설명한다. Graceful Shutdown과 대기 시간을 실행 환경에 맞춰 설정·기록한다. Secret이 들어갈 수 있는 Process 환경 변수나 전체 실행 인자는 출력하지 않는다.
 2. **관측 2시간:** 구조화된 Log와 최소 Health·Request 수·오류·응답시간을 확인한다. CLI Pipeline으로 합성 요청의 Log를 필터링·집계하고, Request ID·Job ID로 요청과 비동기 처리를 연결한다. Credential·Cookie·CSRF·원문은 Log에 넣지 않는다. Health 상세·환경 변수·Heap Dump·관리 기능을 공개하지 않는다.
@@ -188,7 +219,7 @@ Actions는 장기 AWS Key 저장 대신 OIDC의 단기 자격 증명을 사용�
 
 ### 10월 10일 토요일 Cloud와 HTTPS 수직 연결
 
-CI 실패·복구와 IAM·ECR이 남았다면 그것부터 완료한다. 검증한 Commit·Image를 식별하고 배포 설정·접근·비용 조건을 확정한 뒤 아래 Cloud 실험을 시작한다. 첫 연결 목표는 유지하지만 선행 검증을 건너뛰어 날짜를 맞추지는 않는다.
+실제 CI 실패·복구와 AWS 초기 설정은 확인했으므로 OIDC 인증·ECR Push·권한 거부와 Commit·Digest 대응부터 이어간다. 전체 배포용 조립·접근·비용 조건을 확정한 뒤 아래 Cloud 실험을 시작한다. 첫 연결 목표는 유지하지만 선행 검증을 건너뛰어 날짜를 맞추지는 않는다.
 
 1. **Network와 IAM 1시간:** Browser→ALB→Application→RDS, Application→AI의 경로를 그린다. IAM 거부와 Security Group·DNS·DB 인증 실패를 구분한다.
 2. **ECS와 RDS 3시간:** 승인한 구성으로 학습용 RDS·ECS를 연결한다. Migration 상태와 실제 DB 연결을 확인하고 ECR의 검증된 Digest를 배포한다. 필요한 Secret만 주입하며 배포 설정이나 Log에서 값을 출력하지 않는다.
@@ -247,9 +278,9 @@ CI 실패·복구와 IAM·ECR이 남았다면 그것부터 완료한다. 검증�
 
 | 확인 항목 | 결정할 내용 |
 |---|---|
-| AWS 계정과 권한 | 학습용 계정·Region, 기존 리소스와의 구분, 필요한 Role·Action과 승인자 |
-| 도메인 | 기존 도메인의 학습용 Subdomain을 우선 검토. 신규 구매·Hosted Zone·DNS 변경은 별도 확인 |
-| 과금 | ECS·RDS·ALB·IPv4·NAT 또는 Endpoint·Log·Secret·DNS·Backup의 예상 비용과 보존 기간 |
+| AWS 계정과 권한 | Console 접근·Root MFA·활성 Root Key 부재와 초기 세 항목의 생성 확인. 일상용 비Root 신원·Execution/Task Role·나머지 생성 범위는 별도 확정 |
+| 도메인 | `helpdesk.hmyoon.com`·Cloudflare 확인. DNS-only·ACM 검증을 우선 검토하며 기존 Record·DNS 변경과 Route 53 별도 학습 Zone 생성은 승인 전 확인 |
+| 과금 | 최대 12개월 보관·월 3만 원·실습 시 실행 조건 확인. 배포 초안의 ECS·RDS·ALB·IPv4·보관량·잔여 비용을 실제 사용 조건으로 갱신 |
 | AI 호출 | Helpdesk 전용 Key의 존재만 확인. 배포 실험의 입력·횟수·당일 비용 조건 확인 |
 | 자료 공개 | 합성 문의만 사용하고 Credential·Cookie·Token·실사용자 원문·내부 주소가 근거 파일에 섞이지 않는지 확인 |
 
@@ -261,22 +292,30 @@ CI 실패·복구와 IAM·ECR이 남았다면 그것부터 완료한다. 검증�
 
 학습을 시작할 때 기본 개념부터 설명한다. 낯선 설정을 먼저 맞히게 하기보다, 흐름 설명→작은 예측→실행→자기 말로 설명하는 순서로 진행한다.
 
+질문은 핵심 개념·정책 2~3개를 묶어 진행한다. 반복적인 실행 요청을 요구하지 않고, 학습 범위 안의 통상적인 구현·Test는 바로 이어간다. 리소스 생성·과금·DNS 변경·삭제와 Secret 위험은 별도 확인한다.
+
 - `study-docs/`: Docker·Compose, Process·Signal, CI·IAM, DNS·TLS·Cloud 복구 자료를 해당 주제 시작 전에 준비한다. 날짜·진도는 넣지 않고 기존 자료와 겹치는 내용은 링크한다.
+
+  - [IAM OIDC ECR 권한과 배포 Role](./study-docs/iam-oidc-ecr-and-deployment-roles.md): Trust Policy·Permission Policy, 임시 Credential 발급과 Image 업로드·실행 권한을 구분한다.
 - `study-notes/`: 10/8·10/9·10/10·10/12의 핵심 질문과 오해를 수정한 내용을 1인칭으로 정리한다. 대화 전체를 옮긴 로그는 남기지 않는다.
 
   - [10월 8일 노트](./study-notes/2026-10-08-study-questions.md): 실행·저장·설정의 수명, Cache와 Secret 전달의 이해 변화와 핵심 질문
+  - [10월 9일 노트](./study-notes/2026-10-09-study-questions.md): 설정·마스킹·종료·Health·CI와 AWS 권한, 오해 수정과 핵심 질문
 - `lab-reports/`: 실행 환경·명령·예상·결과·실패 원인과 재현 방법을 묶는다. 로컬·CI·Cloud 근거는 구분한다.
+  - [실제 CI 실패·복구](./lab-reports/2026-10-09-process-health-and-ci-baseline.md): 최초 운영체제 의존 실패와 별도 Branch의 UI 오류·복구, main 검증
+  - [AWS OIDC·ECR 초기 설정](./lab-reports/2026-10-10-aws-oidc-ecr-baseline.md): 실제 10/10 생성·정책 대조, 미수행 STS·Push·배포 경계
 - `wil.md`: 주간 결과와 이해 변화, 직접 판단한 부분과 AI 도움을 받은 부분을 정리한다. 실제 결과가 생긴 뒤 작성한다.
 - Lab Repository: Dockerfile·Compose·Workflow·배포 설정·관련 Test·실행/복구 안내를 관리한다. WIL과 구현 변경은 별도 Commit으로 나눈다.
 
 ## 완료 체크
 
-각 핵심 주제는 설명·예측/실패 재현·Test/Trace 등 최소 세 가지를 충족하고, 그중 하나는 실제 실행 근거여야 한다. 아래 항목은 계획일 뿐 현재 완료를 뜻하지 않는다.
+각 핵심 주제는 설명·예측/실패 재현·Test/Trace 등 최소 세 가지를 충족하고, 그중 하나는 실제 실행 근거여야 한다. 부분 검증만 한 묶음은 완료로 체크하지 않는다.
 
-- [ ] Image·Container·Layer·Volume·Network를 설명하고 Layer 순서에 따른 Cache 비교와 Compose 재생성 후 DB 보존을 확인했다.
+- [x] Image·Container·Layer·Volume·Network를 설명하고 Layer 순서에 따른 Cache 비교와 Compose 재생성 후 DB 보존을 확인했다.
 - [ ] 배포용 사용자·Provider·Worker·Secret 설정과 누락·기본 비활성 조건을 검증했다.
 - [ ] Process·`/proc`·SIGTERM·강제 종료·Exit Code·Graceful Shutdown을 관찰하고 CLI Log Pipeline과 DB·Session·Job의 결과를 설명했다.
-- [ ] 실제 GitHub Actions의 Build·Test·정적 검사 실패와 복구, ECR Digest를 확인했다.
+- [x] 실제 GitHub Actions의 Build·Test·정적 검사·Image Build와 Test 실패·복구를 확인했다.
+- [ ] 실제 OIDC 인증·ECR Image 업로드와 Commit·Tag·Digest 대응을 확인했다.
 - [ ] IAM User·Role·Policy·최소 권한과 Network 접근 경계를 설명하고, 권한 거부·복구와 같은 Image의 ECS 실행을 확인했다.
 - [ ] 실제 RDS Migration·저장·조회와 Application 재배포 뒤 Row 보존을 확인했다.
 - [ ] DNS·ACM·HTTPS·Redirect와 안전한 Cookie·Session·Role·CSRF를 실제 Browser에서 확인했다.
@@ -293,7 +332,7 @@ CI 실패·복구와 IAM·ECR이 남았다면 그것부터 완료한다. 검증�
 | 점검 시점 | 확인할 것 | 부족할 때 조정 |
 |---|---|---|
 | 10/8 회차 마감 | Compose 실행·영속성·설정 비교는 확인. 배포용 Provider·Secret과 Cloud 선행 조건은 미완료 | 10/9 첫 순서로 배치 완료. 그 뒤 Process·CI·Cloud도 선행 조건에 따라 이동하며 범위는 유지 |
-| 10/9 종료 | Process·관측 실험, 실제 CI 실패·복구, 배포할 Image | CI만 성공한 상태를 배포 완료로 보지 않음. 토요일 Cloud 실험의 선행 조건과 남은 시간을 재산정 |
+| 10/9 회차 마감 | 설정·마스킹·Process·실제 CI 실패·복구, AWS OIDC·ECR 초기 설정 확인 | 실제 Image 전달·전체 AI 조립·DB·Job 종료 상태는 남음. 10/10은 OIDC 인증·ECR 전달부터 시작하고 뒤의 배포·복구 시간을 재산정 |
 | 10/10 종료 | 실제 HTTPS 수직 흐름, 일요일 중지·보관 상태 | 미완료 배포를 월요일 앞부분에 이어서 배치. 뒤의 복구·회귀·WIL은 없애지 않고 연장 대상으로 기록 |
 | 10/12 종료 | 전체 완료 체크와 직접 설명, 복구·회귀·공개 제출 | 필수 항목이 남으면 Week 8을 계속 진행. 남은 항목별 예상 시간과 실제 가용일을 바탕으로 추가 일정을 정함 |
 
@@ -310,6 +349,10 @@ CI 실패·복구와 IAM·ECR이 남았다면 그것부터 완료한다. 검증�
 | 2026-10-07 | Week 7의 10/7 마감 후 Week 8 세부 일정 미정 | 10/8~10/12 중 10/11 제외, 4일·순학습 40시간 기준 | 사용자 기간 지정. 기존 DevOps·System·Cloud·HTTPS 범위 유지, 첫 Cloud 연결은 10/10 목표, 10/12 복구·최종 검증·WIL 마감 |
 | 2026-10-07 | 기간을 미리 늘리는 대안과 4일 집중안 검토 | 우선 4일에 전체 내용을 배치하고, 부족하면 같은 Week 8 기간을 연장 | 사용자가 4일 우선 진행·필요 시 연장·내용 유지 요청. 세부 키워드·실험·복습 질문을 추가하고 일일 점검·연장 기준 명시 |
 | 2026-10-09 | 10/8에 배포용 조립·Cloud 준비까지 마치고 10/9부터 Process·CI 진행 | 10/8 회차의 로컬 근거·노트 정리, 미완료 Provider·Secret·Cloud 조건을 10/9 앞부분으로 이동 | 사용자 회차 마감·계획 갱신 요청. 10/10은 잔여 CI·IAM·ECR부터, 10/12는 잔여 배포부터 진행. 10/11 제외와 전 학습 범위 유지, 복구·회귀·WIL 미완료 시 Week 8 연장 |
+| 2026-10-09 | 개인정보 처리기 연결을 마친 뒤 Process·관측·CI 진행 | 배포를 우선해 독립적으로 검증 가능한 Process·관측·CI를 병행, 질문 2~3개 묶음 | 사용자 배포 중심 지도 요청. Main Health·Metric·종료 설정, 로컬 회귀·종료 비교와 Workflow 작성. 전체 AI 연결·Cloud·복구 학습 범위는 유지 |
+| 2026-10-09 | Region·예산·실행 기간 미확정 | 서울·월 3만 원·최대 12개월 보관·실습 시 실행 조건으로 비용 초안 작성 | 사용자가 실행 조건 확인. 상시 가동 대신 실행과 보관 비용을 나누며 생성·DNS 변경·리소스 삭제 승인은 별도로 확인 |
+| 2026-10-09 | DNS 서비스·학습 주소 미확정, 실제 배포도 Route 53을 사용한다는 초안 | `helpdesk.hmyoon.com`·기존 Cloudflare DNS 유지 후보, Route 53 비교·별도 조회 실습 유지 | 사용자 DNS 정보 확인. 메인 도메인 이전 없이 DNS·ACM·ALB 학습, Proxy 기능은 첫 배포 경로에 추가하지 않음. Record 변경·Zone 생성은 별도 승인 |
+| 2026-10-10 | 실제 Actions·IAM·ECR 모두 미수행으로 표시 | 10/9 회차의 CI 정상·실패·복구와 실제 10/10 OIDC·ECR·업로드 Role 생성 반영. 다음은 STS 인증·Image 전달부터 | 사용자 회차 기록·문서·Commit 요청. 초기 생성 승인과 나머지 배포 승인을 구분하며, 개인정보 실행용 연결·종료 중 DB·Job·Cloud·HTTPS·복구 범위 유지 |
 
 ## 관련 기준
 
