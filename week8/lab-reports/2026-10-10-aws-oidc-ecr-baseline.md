@@ -66,7 +66,7 @@ ECS·RDS·ALB·NAT Gateway·새 Public IP를 만들지 않았고, DNS Record나 
 2. 실제 STS 인증·ECR Push를 실행하고 Commit·Tag·Digest를 대조한다. 허용되지 않은 조건의 거부도 별도로 확인한다.
 3. ECS Execution Role과 Application Task Role을 구분하고, Network·RDS·Secret·ALB·DNS·HTTPS의 구성과 비용을 확정한 뒤 생성 범위를 확인한다.
 
-관련 구현 파일은 Lab의 `.github/workflows/verify.yml`이다. 이 파일은 현재 Java·JavaScript·ESLint·Image Build만 실행하며 AWS 인증·Image 업로드·배포는 포함하지 않는다.
+관련 구현 파일은 Lab의 `.github/workflows/verify.yml`이다. 초기 설정 당시에는 Java·JavaScript·ESLint·Image Build만 실행했다. 같은 날 뒤이어 진행한 실제 OIDC 인증·Image 업로드 결과는 [검증한 Image의 ECR 업로드 보고서](./2026-10-10-verified-image-ecr-publish.md)에 분리해 기록한다.
 
 - [IAM·OIDC·ECR 학습자료](../study-docs/iam-oidc-ecr-and-deployment-roles.md)
 - [Process·Health·실제 CI 보고서](./2026-10-09-process-health-and-ci-baseline.md)
