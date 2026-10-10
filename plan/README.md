@@ -15,9 +15,11 @@
 
 ## 현재 학습 일정
 
-[Week 8 학습 계획](../week8/weekly-plan.md)은 2026-10-08~2026-10-12 중 일요일 10/11을 제외한 4일에 우선 집중한다. Docker·CI·System·AWS Cloud·HTTPS·복구 전 범위의 초기 배분은 순학습 40시간이며, 시간이 부족하면 내용을 줄이지 않고 같은 Week 8 기간을 연장한다.
+[Week 8 학습 계획](../week8/weekly-plan.md)의 초기 배분은 2026-10-08~2026-10-12 중 일요일을 제외한 4일·순학습 40시간이다. 10/10 학습은 마감했고 남은 내용은 10/11 일요일 야간 또는 10/12 월요일에 재개한다. 일요일 낮에는 과업을 배정하지 않는다. Docker·CI·System·AWS Cloud·HTTPS·복구 전 범위는 유지하고, 시간이 부족하면 내용을 줄이지 않고 같은 Week 8 기간을 연장한다.
 
-[10월 8일 학습 노트](../week8/study-notes/2026-10-08-study-questions.md)에 Docker의 실행·저장·설정 수명과 이해 변화를 정리했다. Build Cache와 [Compose의 실제 HTTP·PostgreSQL 실험](../week8/lab-reports/2026-10-08-compose-http-postgresql-baseline.md)에서는 DB 교체 후 Row·App Session 유지, App 재시작 뒤 Row 보존·재로그인, 같은 Image의 설정 변경을 확인했다. 필수 값 누락·빈 문자열 검사와 기존 Worker 설정 Test도 확인했다. 다음 학습은 미완료 배포용 Provider·Secret 연결과 Cloud 조건 확인부터 시작한다. 이어 Process·CI·IAM·ECR·Cloud를 진행하며, 선행 작업이 지연되면 뒤의 날짜를 옮기되 HTTPS·복구·회귀·WIL 범위는 유지한다.
+[10월 8일 학습 노트](../week8/study-notes/2026-10-08-study-questions.md)에 Docker의 실행·저장·설정 수명과 이해 변화를 정리했다. Build Cache와 [Compose의 실제 HTTP·PostgreSQL 실험](../week8/lab-reports/2026-10-08-compose-http-postgresql-baseline.md)에서는 DB 교체 후 Row·App Session 유지, App 재시작 뒤 Row 보존·재로그인, 같은 Image의 설정 변경을 확인했다. 필수 값 누락·빈 문자열 검사와 기존 Worker 설정 Test도 확인했다.
+
+10/9의 설정·마스킹·Process·실제 CI 실패·복구에 이어 10/10에는 OIDC 인증과 검증한 Image의 ECR 1회 업로드·Digest 확인을 마쳤다. 개념과 오해 수정은 [10월 10일 노트](../week8/study-notes/2026-10-10-study-questions.md), 실행 근거는 [ECR 업로드 보고서](../week8/lab-reports/2026-10-10-verified-image-ecr-publish.md)에 정리했다. 다음에는 배포용 전체 조립·남은 권한 실험·Cloud 구성 승인부터 이어간다. ECS·RDS·HTTPS·Cloud 관측·복구·최종 회귀·WIL은 아직 미완료다.
 
 ## 범위 결정
 

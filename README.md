@@ -3,7 +3,7 @@
 > 상태: Active
 > 시작일: 2026-08-18
 > 전체 기간: 기술 심화 8주 + 취업 심화 4주
-> 현재 단계: Week 1·2·3·4·6·7 완료 — Week 5 부분 완료·공개 제출 완료. Week 8은 Docker·Compose·설정·관측·종료의 로컬 검증, 실제 CI 실패·복구와 AWS OIDC·ECR 초기 설정 완료. Image 업로드·Cloud Application·HTTPS·복구는 남아 있음. 10/11 제외·내용 유지·필요 시 기간 연장
+> 현재 단계: Week 1·2·3·4·6·7 완료 — Week 5 부분 완료·공개 제출 완료. Week 8은 로컬 실행·설정·관측·종료, 실제 CI 실패·복구와 OIDC 인증·검증 Image의 ECR 업로드 완료. Cloud Application·HTTPS·복구는 남아 있음. 10/11 야간 또는 10/12 재개·내용 유지·필요 시 기간 연장
 
 이 저장소는 SW AI Lab 심화과정에서 선택한 기술을 학습하고, 이해가 바뀐 과정과 재현 가능한 근거를 주차별로 기록한다. 목표는 큰 제품을 기간 안에 완성하는 것이 아니라 AI/AX·Java Backend 직무에 필요한 개념을 직접 설명하고, 작은 실험과 Test로 검증하며, 필요한 범위만 서비스에 적용할 수 있는 역량을 만드는 것이다.
 
@@ -59,7 +59,7 @@ Week 9~12에는 취업 활동을 우선하면서 검증된 기반 위에 AI를 �
 | 5 | Browser JavaScript·Frontend·E2E·품질 기초 | Partially Completed | [Week 5 학습 계획](./week5/weekly-plan.md) · [WIL](./week5/wil.md) |
 | 6 | Browser·PostgreSQL·Test 수직 마감 | Completed — Local 수직 검증, 독립 재설명, 블로그·포럼 게시 완료 | [Week 6 학습 계획](./week6/weekly-plan.md) · [WIL](./week6/wil.md) |
 | 7 | LLM Structured Output·평가·Guardrail | Completed — 10/7 학습·평가·회귀 확인과 블로그 게시·포럼 등록 완료. 10/5 회차 이후 2일 추가 진행 | [Week 7 학습 계획](./week7/weekly-plan.md) · [WIL](./week7/wil.md) · [10/7 학습 노트](./week7/study-notes/2026-10-07-study-questions.md) |
-| 8 | Docker·CI·System·AWS Cloud·HTTPS | In Progress — 로컬 실행·설정·관측·종료 검증, 실제 Actions 정상·실패·복구와 OIDC·ECR·업로드 Role 초기 설정 완료. 실제 Image 전달·Cloud·HTTPS·복구는 남아 있음. 10/11 제외, 미완료 시 기간 연장 | [Week 8 학습 계획](./week8/weekly-plan.md) · [10/9 학습 노트](./week8/study-notes/2026-10-09-study-questions.md) · [실제 CI 근거](./week8/lab-reports/2026-10-09-process-health-and-ci-baseline.md) · [AWS 초기 설정](./week8/lab-reports/2026-10-10-aws-oidc-ecr-baseline.md) · [배포·비용 계획](./week8/deployment-plan.md) |
+| 8 | Docker·CI·System·AWS Cloud·HTTPS | In Progress — 로컬 실행·실제 CI 실패·복구, OIDC 인증·검증 Image의 ECR 1회 업로드와 Digest 확인 완료. Cloud·HTTPS·복구는 남아 있음. 10/11 야간 또는 10/12 재개, 미완료 시 기간 연장 | [Week 8 학습 계획](./week8/weekly-plan.md) · [10/10 학습 노트](./week8/study-notes/2026-10-10-study-questions.md) · [실제 CI 근거](./week8/lab-reports/2026-10-09-process-health-and-ci-baseline.md) · [ECR 업로드](./week8/lab-reports/2026-10-10-verified-image-ecr-publish.md) · [배포·비용 계획](./week8/deployment-plan.md) |
 | 9 | 취업 Baseline·Portfolio 근거 정리 | Not Started | 주차 시작 시 추가 |
 | 10 | 맞춤 지원·기술 면접 보완 | Not Started | 주차 시작 시 추가 |
 | 11 | 면접·과제 대응과 취약 개념 재학습 | Not Started | 주차 시작 시 추가 |
@@ -82,11 +82,13 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [Week 6 WIL](./week6/wil.md): Browser·Session·CSRF·PostgreSQL 수직 흐름과 블로그·포럼 게시 기록
 - [Week 7 AI Native 학습 계획](./week7/weekly-plan.md): Structured Output·평가·Guardrail과 Suggestion 영속성 일정
 - [Week 7 WIL](./week7/wil.md): AI 출력의 형식·내용 평가, 문의 보존과 비동기 처리의 이해 변화. 10/7 블로그 게시·포럼 등록 완료 확인
-- [Week 8 배포 학습 계획](./week8/weekly-plan.md): 10/8~10/12의 4일간 Docker·CI·System·AWS·HTTPS와 복구, 일요일 제외
+- [Week 8 배포 학습 계획](./week8/weekly-plan.md): Docker·CI·System·AWS·HTTPS와 복구 전 범위 유지. 10/10 마감 후 10/11 야간 또는 10/12 재개, 필요 시 기간 연장
 - [10월 8일 학습 노트](./week8/study-notes/2026-10-08-study-questions.md): JAR·Container·Volume·Session과 설정의 수명, Cache·Secret 전달의 이해 변화와 핵심 질문
 - [10월 9일 학습 노트](./week8/study-notes/2026-10-09-study-questions.md): 설정·Bean 조립, 개인정보 탐지·치환, 종료·Health·CI와 AWS 권한의 이해 변화와 핵심 질문
+- [10월 10일 학습 노트](./week8/study-notes/2026-10-10-study-questions.md): ECR·Task·Role·Network·TLS와 Cookie, Health·HttpOnly의 오해 수정과 실제 Image 업로드
 - [Process·Health·CI 자료](./week8/study-docs/process-health-and-ci.md): 종료 Signal과 요청 완료, Health·Job 상태, HTTP Metric과 CI의 역할
-- [AWS OIDC·ECR 초기 설정](./week8/lab-reports/2026-10-10-aws-oidc-ecr-baseline.md): 실제 Repository Subject·main 제한, 한 ECR의 Push 권한과 생성·미실행 범위
+- [AWS OIDC·ECR 초기 설정](./week8/lab-reports/2026-10-10-aws-oidc-ecr-baseline.md): 초기 생성·main 제한·한 ECR의 Push 권한 대조, 후속 업로드 보고서 연결
+- [검증 Image의 ECR 업로드](./week8/lab-reports/2026-10-10-verified-image-ecr-publish.md): 수동 Publish·실제 OIDC 인증, CI Image 전달과 ECR Tag·Digest 대조
 - [Week 8 AWS 배포·비용 계획](./week8/deployment-plan.md): 서울·월 3만 원·실습 시 실행 조건, 완료한 초기 설정과 남은 생성 범위·실행·보관 비용
 - [9월 30일 학습 노트](./week7/study-notes/2026-09-30-study-questions.md): 판단 보류 표현, 문의 보존, Ticket·Message와 AI 처리 상태의 구분
 - [10월 5일 학습 노트](./week7/study-notes/2026-10-05-study-questions.md): AI 입력·판단, 접수·예약·결과 Transaction과 실제 Java AI 저장, 10/6 재개 경계

@@ -318,7 +318,7 @@ Week 5는 Event Loop·Rendering·Promise의 일부 실행 근거를 확보했지
 
 10/7에는 보완 Prompt 52건의 원문 대조·수동 평가, 기존 Prompt 52건의 Codex 예비 검토와 대표 응답 문답, 핵심 개념 재설명을 마쳤다. 판정 출처는 구분해 기록했다. 전체 회귀 테스트는 Java 449개·JavaScript 145개·ESLint 통과였고 새 실제 AI 호출은 없었다. 이어서 실제 Java·PostgreSQL의 [공격 사례 통합 Test](../week7/lab-reports/2026-10-07-ai-injection-boundary-integration-lab.md) 12개를 추가하고 전체 Java 461개 통과를 확인했다. 계약 위반의 저장 거부·원문 보존·Ticket 상태 유지와 형식상 유효한 제안의 검토 대기를 구분했다. [Week 7 WIL](../week7/wil.md)의 작성자 검토와 블로그 게시·포럼 등록 완료를 확인하고 Week 7을 마감했다.
 
-일정은 초기 9/29~10/3 계획과 10/4 학습 제외를 보존하고, 10/5 회차 이후 추가로 사용한 10/6·10/7의 2일을 반영했다. 실제 Week 7 기간은 9/29~10/7이다. 이후 Week 8은 10/8~10/12 중 일요일을 제외한 4일로 우선 진행한다. 시간이 부족하면 Cloud·HTTPS를 포함한 선택 범위를 줄이지 않고 Week 8 기간을 연장하며, Week 9로 자동 이월하지 않는다.
+일정은 초기 9/29~10/3 계획과 10/4 학습 제외를 보존하고, 10/5 회차 이후 추가로 사용한 10/6·10/7의 2일을 반영했다. 실제 Week 7 기간은 9/29~10/7이다. 이후 Week 8은 10/8~10/12 중 일요일을 제외한 4일을 초기 배분으로 시작했다. 10/10 마감 뒤 재개 요청에 따라 10/11 야간 또는 10/12에 남은 내용을 이어가며 일요일 낮은 제외한다. 시간이 부족하면 Cloud·HTTPS를 포함한 선택 범위를 줄이지 않고 Week 8 기간을 연장하며, Week 9로 자동 이월하지 않는다.
 
 ## 8주차 — DevOps·System·AWS Cloud·HTTPS 수직 배포
 
@@ -326,7 +326,9 @@ Week 5는 Event Loop·Rendering·Promise의 일부 실행 근거를 확보했지
 
 2026-10-09 회차: [10/8 학습](../week8/study-notes/2026-10-08-study-questions.md)의 로컬 기준선에 이어 합성 Secret Mount·Provider 등록, 개인정보 범위 치환, 최소 Health·HTTP Metric·종료 Signal을 확인했다. 실제 GitHub Actions에서 운영체제 의존 Test를 보완하고 별도 Branch의 오류·복구를 비교했다. main의 Java 551개·JavaScript 146개·ESLint·Image Build가 통과했다. 개념과 오해 수정은 [10/9 학습 노트](../week8/study-notes/2026-10-09-study-questions.md)에 정리했다.
 
-회차를 이어 실제 10/10에는 승인된 OIDC Provider·서울 Private ECR·main 전용 업로드 Role을 생성하고 저장된 정책을 확인했다. [AWS 초기 설정 보고서](../week8/lab-reports/2026-10-10-aws-oidc-ecr-baseline.md)에 실행일과 권한 범위를 구분했다. STS 인증·Image Push·권한 거부 실험, 기본 App의 개인정보 처리·Secret·Worker 조립과 ECS·RDS·HTTPS·복구는 남아 있다. 서울·월 3만 원·최대 12개월·실습 시 실행, `helpdesk.hmyoon.com`·Cloudflare 조건은 [배포 계획](../week8/deployment-plan.md)을 따른다. 10/10은 OIDC·Image 전달부터 이어가고 미완료 배포는 10/12에 진행한다. 10/11 제외, 복구·회귀·WIL과 전 학습 범위 유지, 필요 시 같은 Week 8 연장 원칙은 그대로다. 초기 설정 승인을 나머지 생성·과금·DNS 변경 승인으로 확대하지 않는다.
+회차를 이어 실제 10/10에는 승인된 OIDC Provider·서울 Private ECR·main 전용 업로드 Role을 생성하고 저장된 정책을 확인했다. [AWS 초기 설정 보고서](../week8/lab-reports/2026-10-10-aws-oidc-ecr-baseline.md)에 실행일과 권한 범위를 구분했다. 이후 수동 Actions에서 Java 551개·JavaScript 146개·ESLint·Image Build가 통과했고, 검증한 Image를 재Build하지 않고 실제 OIDC 인증으로 ECR에 1회 업로드했다. Commit·Tag·Manifest Digest와 일반 Push의 Publish Skipped는 [업로드 보고서](../week8/lab-reports/2026-10-10-verified-image-ecr-publish.md), 개념과 오해 수정은 [10/10 노트](../week8/study-notes/2026-10-10-study-questions.md)에 정리했다.
+
+10/10 학습은 여기서 마감했다. 권한 거부 실험, 기본 App의 개인정보 처리·Secret·Worker 조립과 ECS·RDS·HTTPS·관측·복구·최종 회귀·WIL은 10/11 야간 또는 10/12부터 이어간다. 서울·월 3만 원·최대 12개월·실습 시 실행, `helpdesk.hmyoon.com`·Cloudflare 조건은 [배포 계획](../week8/deployment-plan.md)을 따른다. 일요일 낮 제외·야간 선택적 재개로 일정을 조정하고 전 학습 범위 유지·필요 시 같은 Week 8 연장 원칙은 그대로 둔다. ECR 업로드 승인을 나머지 생성·과금·DNS 변경 승인으로 확대하지 않는다.
 
 ### 핵심 질문
 
@@ -471,3 +473,4 @@ Weekly Plan의 Baseline 이후 학습 항목을 조용히 추가하거나 완료
 | 2026-10-07 | Week 8을 우선 4일에 집중하고 미완료 시 같은 주차의 기간을 연장하도록 구체화 | 사용자의 4일 우선 진행·필요 시 연장·학습 내용 유지 요청 | 세부 키워드·정상/실패 실험·복습 질문·일일 점검 기준 추가. 10/12는 첫 목표일이며 복구·회귀·WIL을 생략하지 않음 |
 | 2026-10-09 | Week 8의 10/8 학습 회차 기록과 로컬 실험 근거를 반영하고 남은 Provider·Secret·Cloud 조건을 다음 학습 앞에 배치 | 사용자 학습노트·주간 계획 갱신 요청 | 10/10은 잔여 CI·IAM·ECR부터, 10/12는 잔여 배포부터 진행. 10/11 제외·선택 범위 유지, 복구·회귀·WIL 미완료 시 Week 8 기간 연장 |
 | 2026-10-10 | 10/9 회차의 설정·마스킹·Process·실제 CI 실패·복구와 연장 구간의 OIDC·ECR 초기 설정 반영 | 사용자 학습노트·진행 문서·Commit 요청 | 10/10은 실제 OIDC 인증·Image 전달부터 계속. Cloud AI 조립·배포·HTTPS·관측·복구는 미완료로 유지하며 10/11 제외·내용 유지 원칙 보존 |
+| 2026-10-10 | 실제 OIDC 인증·ECR 1회 업로드·Digest 대조와 개념 학습을 반영하고 10/10 마감. 잔여 과업은 10/11 야간 또는 10/12 재개 | 사용자의 종료·재개 및 문서·Commit 요청 | 일요일 낮 제외·야간 선택적 재개로 변경. 전체 조립·권한·Cloud·HTTPS·관측·복구·회귀·WIL 유지. 부족하면 Week 8 기간 연장, 나머지 생성·DNS 변경은 별도 승인 |
