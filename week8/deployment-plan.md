@@ -3,7 +3,7 @@
 > 상태: 일부 실행 — 배포 준비 변경의 CI 통과·검증 Image 추가, SSM·Execution Role·1년 보존 Log Group 구성 완료. 기존 Image 유지, App·RDS·ALB 실행과 DNS·HTTPS 연결은 남아 있음
 > 요금 확인일: 2026-10-12
 > 진행 반영일: 2026-10-13 — 두 저장소 Commit·Push, Java 578개·JavaScript 173개 CI 통과와 새 Image 추가 포함
-> 계획 수정일: 2026-10-13 — 최소 비용·Log 365일 보존 유지, 새/기존 Image 식별과 App·RDS·ALB 별도 실행 승인 반영
+> 계획 수정일: 2026-10-13 — 10/12 회차 마감·10/13 재개, AI 비활성 첫 실행 뒤 전체 AI·HTTPS·복구 검증. 최소 비용·Log 365일 보존과 별도 실행 승인 유지
 
 ## 확인한 조건
 
@@ -46,7 +46,13 @@ ECR·ECS Fargate·RDS·ALB·DNS·HTTPS·Backup 복원은 [주간 계획](./weekl
 
 10/13에는 배포 준비 변경을 두 저장소에 목적별로 Commit·Push했다. Lab `2e2cc40`의 일반 CI 성공 뒤 수동 검증·업로드를 한 번 실행했고, 두 실행의 Java 578개·JavaScript 173개·ESLint·Image Build가 통과했다. 수동 실행의 검증 Image를 그대로 ECR에 한 개 추가했으며 Console에서 기존 `77ce72c`와 새 `2e2cc40`의 Tag·Digest가 함께 남아 있는 두 Image를 확인했다. [새 Image 업로드 보고서](./lab-reports/2026-10-13-deployment-image-ecr-publish.md)에 실행 링크와 Digest를 기록했다. App·RDS·ALB 실행은 이번 승인에서 제외했고 DNS·IAM 설정과 기존 Image는 변경하지 않았다.
 
-10/10에는 Image 보관까지 진행하고 마감했다. ECS·RDS·ALB·NAT Gateway·DNS Record·ACM 인증서는 생성하거나 변경하지 않았다. 자동 Image 삭제 정책도 만들지 않았다. ECR 보관 비용은 남으며 아래 2 GB 비용 가정은 실제 청구량이 아닌 초기 계산 기준이다. 남은 과업은 10/11 야간 또는 10/12에 재개하고, 업로드 승인을 나머지 배포 리소스의 생성·과금·DNS 변경·삭제 승인으로 확대하지 않는다.
+10/10에는 Image 보관까지 진행하고 마감했다. ECS·RDS·ALB·NAT Gateway·DNS Record·ACM 인증서는 생성하거나 변경하지 않았다. 자동 Image 삭제 정책도 만들지 않았다. ECR 보관 비용은 남으며 아래 2 GB 비용 가정은 실제 청구량이 아닌 초기 계산 기준이다. 당시 재개 후보는 10/11 야간 또는 10/12였고, 10/12 회차의 배포 준비·후속 검증을 마친 현재 남은 학습은 10/13에 재개한다. 업로드 승인을 나머지 배포 리소스의 생성·과금·DNS 변경·삭제 승인으로 확대하지 않는다.
+
+### 10월 13일에 이어갈 배포 단계
+
+먼저 검증 Digest와 Task Definition의 설정·최소 사양·Network·DB 계정·비용·중단 절차를 확정하고 실행 범위를 별도 승인받는다. 그 뒤 AI를 끈 App·RDS 연결에서 실제 Parameter 전달·Log·TLS·Migration·로그인·접수를 확인하고, DNS·ACM·ALB·HTTPS와 Browser 보안 계약을 검증한다.
+
+개인정보 탐지기·실패 코드의 DB/조회/UI 반영·Provider·Worker 조립과 전체 AI 자원 측정은 이어서 진행한다. 관측·종료·재배포·이전 정상 Image 복귀·별도 Snapshot 복원·최종 회귀도 마감 범위에 남긴다. [주간 재개 순서](./weekly-plan.md#10월-13일-재개-순서)를 따르며, 10/13 하루에 끝내기 위해 학습 내용을 빼지는 않는다. 실제 AI·Cloud 실행·DNS 변경·리소스 정리는 각각 기존 승인 경계를 유지한다.
 
 Root의 MFA 활성화와 활성 Access Key 부재를 확인했다. 일상적인 사람의 접근에 사용할 별도 신원 구성은 남아 있으며, Root Access Key를 CI에 제공하는 방식은 사용하지 않는다. [AWS Root 사용 권고](https://docs.aws.amazon.com/IAM/latest/UserGuide/root-user-best-practices.html)
 
@@ -101,7 +107,7 @@ Browser→ALB의 HTTPS와 App→RDS TLS를 별도로 검증한다. 검증을 끄
 
 실행 명세의 JDBC URL은 `verify-full`·CA 파일 경로를 명시하고 Endpoint·DB 이름만 미확정 값으로 남긴다. 기본 DB 계정·Migration·Controller/Service/Repository 경계는 변경하지 않으며 실제 RDS의 계정·권한·Network·인증서 검증은 연결 단계에서 확인한다.
 
-영향 파일은 Lab의 Dockerfile·Build Context 제외 규칙·공개 CA/Manifest/안내·ECS 초안·관련 Test·README와 WIL의 Network 학습자료·노트·보고서다. [공개 CA와 Image 보고서](./lab-reports/2026-10-12-rds-public-ca-and-image-preparation.md)에 로컬 파일 확인을 기록했다. RDS의 실제 TLS·권한 거부·CA 갱신 시 재검증과 새 CI Image 업로드는 후속 항목이다. AWS 리소스 생성이나 과금 승인 범위는 확대하지 않았다.
+영향 파일은 Lab의 Dockerfile·Build Context 제외 규칙·공개 CA/Manifest/안내·ECS 초안·관련 Test·README와 WIL의 Network 학습자료·노트·보고서다. [공개 CA와 Image 보고서](./lab-reports/2026-10-12-rds-public-ca-and-image-preparation.md)에 로컬 파일 확인을 기록했고 새 CI Image 업로드는 10/13에 완료했다. RDS의 실제 TLS·권한 거부·CA 갱신 시 재검증은 후속 항목이다. AWS 리소스 생성이나 과금 승인 범위는 확대하지 않았다.
 
 ## 서울 요금에 따른 계산
 

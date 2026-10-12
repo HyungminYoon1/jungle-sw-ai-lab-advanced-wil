@@ -1,7 +1,7 @@
 # SW AI Lab 심화과정 12주 주차별 Roadmap
 
 > 작성일: 2026-08-18
-> 최종 수정일: 2026-10-10
+> 최종 수정일: 2026-10-13
 > 상태: Active
 > 전체 기간: 기술 심화 8주 + 취업 심화 4주
 > 공통 실습: AI Helpdesk Learning Lab
@@ -328,7 +328,11 @@ Week 5는 Event Loop·Rendering·Promise의 일부 실행 근거를 확보했지
 
 회차를 이어 실제 10/10에는 승인된 OIDC Provider·서울 Private ECR·main 전용 업로드 Role을 생성하고 저장된 정책을 확인했다. [AWS 초기 설정 보고서](../week8/lab-reports/2026-10-10-aws-oidc-ecr-baseline.md)에 실행일과 권한 범위를 구분했다. 이후 수동 Actions에서 Java 551개·JavaScript 146개·ESLint·Image Build가 통과했고, 검증한 Image를 재Build하지 않고 실제 OIDC 인증으로 ECR에 1회 업로드했다. Commit·Tag·Manifest Digest와 일반 Push의 Publish Skipped는 [업로드 보고서](../week8/lab-reports/2026-10-10-verified-image-ecr-publish.md), 개념과 오해 수정은 [10/10 노트](../week8/study-notes/2026-10-10-study-questions.md)에 정리했다.
 
-10/10 학습은 여기서 마감했다. 권한 거부 실험, 기본 App의 개인정보 처리·Secret·Worker 조립과 ECS·RDS·HTTPS·관측·복구·최종 회귀·WIL은 10/11 야간 또는 10/12부터 이어간다. 서울·월 3만 원·최대 12개월·실습 시 실행, `helpdesk.hmyoon.com`·Cloudflare 조건은 [배포 계획](../week8/deployment-plan.md)을 따른다. 일요일 낮 제외·야간 선택적 재개로 일정을 조정하고 전 학습 범위 유지·필요 시 같은 Week 8 연장 원칙은 그대로 둔다. ECR 업로드 승인을 나머지 생성·과금·DNS 변경 승인으로 확대하지 않는다.
+10/10 학습 마감 때 권한 거부 실험, 기본 App의 개인정보 처리·Secret·Worker 조립과 ECS·RDS·HTTPS·관측·복구·최종 회귀·WIL을 10/11 야간 또는 10/12부터 이어가기로 했다. 서울·월 3만 원 상한·최대 12개월·실습 시 실행, `helpdesk.hmyoon.com`·Cloudflare 조건은 [배포 계획](../week8/deployment-plan.md)을 따른다. 전 학습 범위 유지·필요 시 같은 Week 8 연장 원칙은 그대로 둔다. ECR 업로드 승인을 나머지 생성·과금·DNS 변경 승인으로 확대하지 않는다.
+
+10/12 회차에는 배포 사용자·AI 비활성 접수·Image 자원·RDS 공개 CA와 Parameter 여섯 개·Execution Role·365일 Log Group을 준비했다. 연장 구간의 실제 10/13에는 Lab `2e2cc40`의 로컬/CI Java 578개·JavaScript 173개·ESLint·Image Build 통과와 새 Image 추가·기존 Image 유지를 확인했다. 개념은 [10/12 학습 노트](../week8/study-notes/2026-10-12-study-questions.md), 날짜·Commit·Digest는 [10/13 실행 보고서](../week8/lab-reports/2026-10-13-deployment-image-ecr-publish.md)에 정리했다.
+
+이 회차를 마감하고 남은 학습은 10/13에 재개한다. 별도 실행 승인 뒤 AI 비활성 ECS·RDS·HTTPS 연결부터 확인하고, 배포용 개인정보 탐지·실패 저장·Provider·Worker 전체 조립과 실제 AI, System·CloudWatch·종료·Rollback·Snapshot 복원·최종 회귀·복습·WIL로 이어간다. Route 53 비교·조회와 IAM 거부·복구도 유지한다. [세부 재개 순서](../week8/weekly-plan.md#10월-13일-재개-순서)는 첫 HTTPS 접수·조회를 우선 목표로 두며, 전체 마감을 하루에 강제하거나 Week 9로 자동 이월하지 않는다.
 
 ### 핵심 질문
 
@@ -474,3 +478,4 @@ Weekly Plan의 Baseline 이후 학습 항목을 조용히 추가하거나 완료
 | 2026-10-09 | Week 8의 10/8 학습 회차 기록과 로컬 실험 근거를 반영하고 남은 Provider·Secret·Cloud 조건을 다음 학습 앞에 배치 | 사용자 학습노트·주간 계획 갱신 요청 | 10/10은 잔여 CI·IAM·ECR부터, 10/12는 잔여 배포부터 진행. 10/11 제외·선택 범위 유지, 복구·회귀·WIL 미완료 시 Week 8 기간 연장 |
 | 2026-10-10 | 10/9 회차의 설정·마스킹·Process·실제 CI 실패·복구와 연장 구간의 OIDC·ECR 초기 설정 반영 | 사용자 학습노트·진행 문서·Commit 요청 | 10/10은 실제 OIDC 인증·Image 전달부터 계속. Cloud AI 조립·배포·HTTPS·관측·복구는 미완료로 유지하며 10/11 제외·내용 유지 원칙 보존 |
 | 2026-10-10 | 실제 OIDC 인증·ECR 1회 업로드·Digest 대조와 개념 학습을 반영하고 10/10 마감. 잔여 과업은 10/11 야간 또는 10/12 재개 | 사용자의 종료·재개 및 문서·Commit 요청 | 일요일 낮 제외·야간 선택적 재개로 변경. 전체 조립·권한·Cloud·HTTPS·관측·복구·회귀·WIL 유지. 부족하면 Week 8 기간 연장, 나머지 생성·DNS 변경은 별도 승인 |
+| 2026-10-13 | 10/12 회차의 배포 준비와 자정 이후 전체 검증·새 Image 전달을 기록하고 잔여 과업을 10/13 재개로 갱신 | 사용자 진행 현황·노트·관련 문서·Commit 요청 | AI 비활성 첫 Cloud·HTTPS 뒤 전체 AI·System·관측·복구·마감 순서. 전 선택 범위 유지, Week 8 In Progress·필요 시 연장. 실제 실행 날짜와 별도 승인 경계 유지 |
