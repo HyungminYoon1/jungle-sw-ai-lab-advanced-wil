@@ -2,6 +2,8 @@
 
 배포 전에 필요한 객체를 연결하는 것과, 연결한 객체로 실제 AI 작업을 실행하는 것을 구분했다. 개인정보 처리기가 없는 활성 Provider는 기동에 실패하고, AI 기능을 끄면 문의 접수와 PostgreSQL 저장은 유지할 수 있다고 예상했다. 이 두 예상을 설정·접수 Test로 확인했다.
 
+이번 노트는 10/12 학습 회차를 정리한다. 이어서 진행한 전체 회귀·CI·ECR 업로드는 실제 실행일이 10/13이므로 [별도 보고서](../lab-reports/2026-10-13-deployment-image-ecr-publish.md)에 그 날짜를 유지했다. 남은 학습은 10/13에 재개한다.
+
 ## 설정값이 있어도 필요한 객체가 없으면 실행할 수 없다
 
 Key 파일이나 설정값이 존재한다고 Provider의 모든 의존성이 준비되는 것은 아니다. 현재 Configuration은 `Environment`·`ProviderLimits`·`AiInputPrivacyGuard`를 받아 Provider를 만든다.
@@ -100,6 +102,16 @@ Log는 초기 7일안보다 길게 1년 보존하도록 요청했다. 서울의 
 
 App을 끄면 메모리 Session은 사라지고 다음 실습에서는 다시 로그인한다. Snapshot과 Image를 보관하는 비용은 남는다. 다음에는 중지·Backup·복원·삭제가 각각 무엇을 유지하거나 없애는지 내 말로 확인하고, 새 Endpoint와 Secret 참조를 실행 명세에 연결한다.
 
+## Test 통과와 Image 업로드 그리고 실제 배포
+
+같은 코드라도 확인하는 대상은 다르다. Test는 정한 입력에서 코드와 연결된 계층의 결과를 확인한다. Image Build는 실행에 필요한 파일을 묶고, ECR 업로드는 그 Image를 AWS의 저장소에 전달한다. ECS Task를 시작하기 전에는 그 Image로 AWS의 JVM이 실행된 것이 아니다.
+
+이번 회차를 이어서 로컬 전체 Java 578개·JavaScript 173개와 ESLint가 통과했다. 같은 Source의 일반 CI와 수동 검증·업로드에서도 같은 Test 수와 Image Build 성공을 확인했다. 이전 Image는 유지하고 새 검증 Image 한 개를 추가했다. 지금 보관 중인 두 Image는 배포본을 선택할 수 있는 산출물이지, AWS에서 Helpdesk 두 개를 실행한 결과가 아니다.
+
+Commit은 Source를, Local Image ID는 검증 Job과 Publish Job 사이에 전달한 Image를, Manifest Digest는 ECR에서 선택할 Image를 식별한다. 이번 업로드에서는 검증한 Image를 Publish Job에서 다시 Build하지 않고 사용했으며 Push 결과와 ECR 조회의 Digest를 대조했다. 새로운 Task를 시작할 때는 이 Digest와 실행 설정을 함께 확인해야 한다.
+
+이 작업은 Codex가 변경 검토·회귀 실행·CI 확인·업로드와 기록을 진행했고, 나는 두 저장소의 Commit·Push와 검증 Image 한 개의 추가를 승인했다. App·RDS·ALB 실행은 별도 승인 대상으로 남겼다. 실제 ECS의 Parameter 읽기·Log 전달, RDS TLS와 HTTPS Browser 요청은 다음 실습에서 확인한다.
+
 ## 핵심 질문
 
 1. Key 설정은 있지만 개인정보 처리기 Bean이 없다면 어느 단계에서 실패하며, 외부 AI 요청은 전송되는가?
@@ -118,5 +130,16 @@ App을 끄면 메모리 Session은 사라지고 다음 실습에서는 다시 �
 14. Parameter Store의 DB Password 값만 교체하면 DB 사용자의 실제 Password와 기존 Task도 자동 변경되는가?
 15. ECS Agent의 Parameter 읽기가 거부됐다면 어떤 실행 단계부터 확인해야 하는가?
 16. `desiredCount=0`과 ALB·RDS 정리는 각각 어떤 비용을 줄이는가? 장기 휴지기를 위해 DB를 정리하기 전에 무엇을 실제로 검증해야 하는가?
+17. Test 통과·Image Build·ECR 업로드·ECS Task 실행은 각각 어떤 대상을 확인하는가?
+18. Source Commit·Local Image ID·ECR Manifest Digest는 각각 언제 비교하며, 왜 같은 값이어야 하는 것은 아닌가?
+19. USER·AGENT와 Secret 참조가 준비됐어도 실제 Cloud의 로그인·접수·AI 처리까지 완료했다고 말할 수 없는 이유는 무엇인가?
 
-다음에는 새 검증 Image와 RDS TLS·Network·HTTPS의 생성 범위를 확인하고 Task의 실제 Parameter 읽기·Container 전달·Log 출력을 검증한다. 개인정보 처리기·Provider·Worker 전체 조립과 추가 측정은 남아 있다. [설정과 Secret 자료](../study-docs/spring-settings-bean-and-secret-wiring.md#standard-securestring을-전달하는-순서), [Image와 ECS 자료](../study-docs/image-publishing-and-ecs-execution.md)와 [IAM 실행 Role 자료](../study-docs/iam-oidc-ecr-and-deployment-roles.md)에서 확인한다.
+## 회차 마감과 다음 학습
+
+이번 회차에서는 배포용 사용자·실행 설정·공개 CA와 자원을 로컬에서 검증하고, Standard Parameter 여섯 개·Execution Role·365일 보존 Log Group을 준비했다. 전체 회귀·CI·새 Image 전달까지 확인했지만 Week 8은 아직 진행 중이다.
+
+10/13에는 먼저 배포 사용자 Configuration과 Task Definition의 핵심 설정을 다시 설명하고, 검증 Image·Network·RDS TLS·최소 비용과 생성 범위를 확인한다. 별도 실행 승인 뒤 AI를 끈 첫 Cloud 연결에서 Parameter 전달·Migration·로그인·접수·조회·Log를 확인하고, DNS·HTTPS·Cookie·CSRF의 Browser 검증으로 이어간다.
+
+그 뒤 실제 개인정보 탐지기와 실패 코드의 DB·조회·UI 연결, Provider·Worker 전체 조립과 자원 측정을 진행한다. Cloud의 AI 수직 흐름·장애 추적·종료 중 DB와 Job·이전 Image 복귀·별도 Snapshot 복원·최종 복습과 WIL도 남아 있다. 하루에 모두 마치는 조건으로 내용을 줄이지 않는다.
+
+[설정과 Secret 자료](../study-docs/spring-settings-bean-and-secret-wiring.md#standard-securestring을-전달하는-순서), [Image와 ECS 자료](../study-docs/image-publishing-and-ecs-execution.md), [IAM 실행 Role 자료](../study-docs/iam-oidc-ecr-and-deployment-roles.md)와 [주간 재개 순서](../weekly-plan.md#10월-13일-재개-순서)에서 다음 학습을 확인한다.
