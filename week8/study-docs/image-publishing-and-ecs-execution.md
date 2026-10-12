@@ -114,6 +114,38 @@ Browser에서 실제 업무 흐름 확인
 
 배포 기록에는 Commit·CI 실행·Tag·Registry Digest·실행 Platform·Task Definition Revision과 실행 Task의 Image 정보를 연결한다. Image 자체에는 DB Password·AI Key를 넣지 않는다. 실행 설정과 Secret의 주입은 [Spring 설정과 Bean 자료](./spring-settings-bean-and-secret-wiring.md)에서 다룬다.
 
+## 첫 연결용 Task Definition 읽기
+
+Lab의 `deploy/ecs/task-definition.template.json`은 AI를 끈 첫 접속용 초안이다. 실행 명세는 프로그램 파일을 다시 만드는 것이 아니라 선택한 Image에 실행 조건을 전달한다. 새 Java 코드를 넣었다면 먼저 새 Image를 검증해야 하지만, 설정값만 교체할 때는 같은 Image로 새 객체를 만들 수 있다.
+
+| 필드 | 지정하는 것 |
+|---|---|
+| `image` | 검증된 ECR URI와 Manifest Digest |
+| `cpu`·`memory` | Task의 실행 자원. Image 파일 크기와 다른 값 |
+| `environment` | Profile·기능 활성화 같은 비밀이 아닌 실행 설정 |
+| `secrets` | Credential 값 대신 Secret 저장소의 참조 |
+| `executionRoleArn` | ECS Agent가 Image·Secret·Log를 준비할 때 쓰는 Role |
+
+Task Role은 Application이 AWS API를 직접 호출할 때 필요한 권한이다. JDBC의 DB Password와 외부 AI Key만 사용하는 첫 구성에서는 Task Role을 자동으로 추가할 필요가 없다. 새로운 AWS 기능을 선택하면 그 호출 주체와 권한을 다시 확인한다.
+
+`containerPort=8080`은 App의 수신 Port를 정한다. 이 값만으로 인터넷에서 접속할 수 있는 것은 아니다. ALB·Target Group·Subnet·Security Group 등의 실제 연결이 필요하다. Service의 실행 수와 교체 전략도 Task Definition의 필드가 아니다. [AWS Task Definition 안내](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definitions.html)
+
+Image의 표시 Size는 프로그램 파일 계층의 크기다. 실행 중 JVM의 Heap·Metaspace·Native Buffer·Thread 등이 사용하는 메모리는 별도로 측정한다. Image 크기보다 메모리 상한이 크다는 비교만으로 실행 가능하거나 충분한 여유가 있다고 판단하지 않는다.
+
+## 실행 메모리와 CPU를 측정하기
+
+Image는 디스크에 저장하는 파일이고, 메모리는 실행 중인 Process가 사용하는 공간이다. JVM의 Heap에는 객체가 들어가지만 Container의 전체 메모리는 Heap보다 넓다. Class Metadata·Thread Stack·Native Buffer·파일 Cache 등도 영향을 준다. 메모리 상한을 정할 때는 기동과 실제 요청을 함께 실행해 확인한다.
+
+Linux의 cgroup은 Container에 적용한 자원 상한과 사용량을 관리한다. `memory.current`는 현재 사용량, `memory.peak`는 해당 cgroup에서 기록한 최고 사용량이다. `memory.events`의 `oom`·`oom_kill`은 메모리 부족과 그로 인한 Process 종료를 구분하는 Counter다. 이 값은 JVM Heap만의 측정값이 아니다. [Linux cgroup 메모리 안내](https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html#memory)
+
+`docker stats`의 Linux 메모리 표시값은 Cache 일부를 빼서 계산한다. 따라서 그 화면에서 읽은 값과 cgroup 전체 사용량이 다를 수 있다. 잠깐 확인한 현재 사용량을 기동부터의 최고치라고 부르지 않는다. [Docker stats 안내](https://docs.docker.com/reference/cli/docker/container/stats/)
+
+CPU가 부족하면 계산할 차례를 더 기다려 기동·요청 처리 시간이 늘 수 있다. CPU 제한 때문에 실행을 잠시 늦추는 것을 Throttling이라고 한다. 메모리 부족과 다른 현상이며 CPU Throttling이 있었다는 사실만으로 요청 실패라고 판단하지 않는다. 실제 응답과 처리 시간도 함께 확인한다. [Docker 자원 제한](https://docs.docker.com/engine/containers/resource_constraints/)
+
+메모리와 CPU를 무제한으로 실행한 뒤 작은 Task에서도 같을 것이라 예상하는 대신, 후보 사양의 제한을 먼저 적용한다. Swap이 부족한 RAM을 대신해 결과를 바꾸지 않도록 조건도 명시한다. 순차 조회 몇 번이 통과하더라도 Worker·개인정보 검사·동시 요청·Session 증가·장시간 사용을 포함한 전체 실행 여유를 증명한 것은 아니다.
+
+Fargate Linux는 CPU·Memory의 지원 조합을 사용해야 한다. 예를 들어 `0.25 vCPU`에서는 `512 MiB`를 선택할 수 있지만 `0.5 vCPU`에서는 최소 `1 GiB`가 필요하다. App을 작은 구성으로 검증할 수 있다면 큰 사양을 먼저 선택할 이유는 없으며, 필요한 흐름과 처리 시간을 만족하는 후보를 비용과 함께 비교한다. [AWS 지원 조합](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#task_size)
+
 ## 실패한 단계 찾기
 
 | 관찰 | 먼저 확인할 단계 |
@@ -131,12 +163,18 @@ Registry에 파일이 있다는 것과 프로그램이 실행된다는 것을 �
 1. 업로드 Role과 ECR Repository를 만들었다면 Actions Runner가 이미 AWS에 인증된 것인가? 임시 Credential은 언제 발급되는가?
 2. 같은 Commit의 검사 결과가 있는데 배포 직전에 다시 Build한다면, 이전에 확인한 Image와 같다고 확신할 수 있는가?
 3. ECR Push 성공, Task 실행, HTTPS 문의 접수 성공은 각각 무엇을 확인한 것인가?
+4. Image의 표시 Size와 Task의 `memory`는 같은 대상을 측정하는가? 새 Task에 넣을 `image` Digest는 어디에서 확인해야 하는가?
+5. Container의 전체 메모리와 JVM Heap은 왜 다르며, 현재 사용량과 최고 사용량은 무엇이 다른가?
+6. CPU Throttling과 메모리 부족은 같은 현상인가? AI를 끈 순차 조회만으로 전체 AI Task의 사양까지 확정할 수 있는가?
 
 ## 핵심 질문 해설
 
 1. **아직 인증된 것은 아니다.** 실제 OIDC Role 사용 요청을 STS가 허용한 뒤 해당 실행에 임시 Credential이 발급된다.
 2. **다시 Build했다는 사실만으로 같다고 할 수 없다.** Build 입력과 결과가 달라질 수 있으므로 검사한 Commit과 업로드된 Digest를 연결하고, 배포에서는 그 결과물을 사용한다.
 3. **Push는 Image 저장, Task 실행은 실행 단위의 시작, 접수 성공은 업무 요청의 처리 결과다.** 마지막 단계에서는 HTTP 응답과 실제 DB의 Ticket·Message·Job Commit을 함께 확인한다.
+4. **파일 계층과 실행 메모리이므로 다르다.** 실행 메모리는 대표 작업을 포함해 별도로 측정하며, 배포 Digest는 검증 뒤 업로드한 ECR Manifest와 대조한다. Local Image ID만으로 이를 대신하지 않는다.
+5. **Heap 밖의 메모리와 Cache도 사용한다.** 현재 값은 관찰 시점의 사용량이고 최고치는 기동 중 일시적인 증가까지 포함해 기록한 값이다.
+6. **서로 다르다.** CPU는 실행 시간을 제한하고 메모리는 사용할 공간을 제한한다. 전체 AI 사양은 개인정보 검사·Provider·Worker와 실제 실행 조건을 포함해 다시 측정한다.
 
 ## 함께 읽을 자료
 

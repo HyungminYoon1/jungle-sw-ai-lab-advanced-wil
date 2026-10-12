@@ -116,6 +116,28 @@ ALB에 사용할 ACM 인증서는 해당 ALB의 Region에 준비한다. 인증�
 
 HTTP→HTTPS Redirect는 HTTP 요청에 `Location`을 포함한 Redirect 응답을 보내 Browser가 새 HTTPS 요청을 하게 하는 동작이다. 이미 HTTP로 보낸 Password를 소급해 보호하지는 않으므로, 로그인과 상태 변경은 처음부터 HTTPS 주소를 사용한다.
 
+## App과 RDS 사이의 TLS
+
+Browser가 HTTPS로 접속했다고 App과 DB 사이까지 암호화된 것은 아니다. App은 DB 연결을 시작하는 별도의 Client이며, JDBC Client가 RDS의 서버 인증서를 확인한다.
+
+```text
+Browser ── HTTPS ──> ALB ── HTTP ──> App ── DB TLS ──> RDS
+             │                                 │
+     Browser가 ALB 인증서 확인         JDBC가 RDS 인증서 확인
+```
+
+서버 인증서는 접속한 서버의 이름과 공개키 등을 담는다. CA는 인증서를 서명하는 인증기관이고, 신뢰할 Root CA의 공개 인증서는 그 서명을 확인하는 기준이다. 공개 CA 인증서는 Password나 Private Key가 아니므로 검토한 파일을 Image에 포함할 수 있다. 실제 DB 계정의 비밀값과 같은 방법으로 취급하지 않는다. [RDS의 CA와 공개 Bundle](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html)
+
+pgJDBC의 `sslmode=verify-full`은 암호화뿐 아니라 인증서 사슬과 접속 Hostname을 확인한다. `sslrootcert`는 신뢰할 CA 파일 위치다. Helpdesk의 실행 명세는 다음 형태로 둘을 지정한다.
+
+```text
+jdbc:postgresql://<RDS_ENDPOINT>:5432/<DB_NAME>?sslmode=verify-full&sslrootcert=/app/certs/rds-ca-bundle.pem
+```
+
+`sslmode=require`는 pgJDBC에서 암호화를 요구하지만 서버 인증서를 모두 받아들이므로, 서버 신원 검증과 같지 않다. 연결 오류가 나면 CA·Hostname·파일 읽기·서버 설정을 확인하고 검증을 끄지 않는다. TLS 성공 뒤에도 DB 사용자 인증과 SQL 권한 확인이 필요하다. [pgJDBC SSL 모드](https://jdbc.postgresql.org/documentation/ssl/)
+
+CA 파일이 있어도 App 사용자가 읽을 수 없으면 사용할 수 없다. Linux에서는 파일의 읽기 권한과 부모 디렉터리의 통과 권한을 함께 확인한다. Node의 공개 CA 파일 검사와 실제 Image 안의 비Root 읽기를 구분하고, 마지막으로 실제 RDS의 TLS 연결을 확인한다. 공개 파일의 Hash 일치는 파일 전달 확인이지 접속한 DB 서버 검증이 아니다.
+
 ## ALB 뒤에서 원래 HTTPS 요청을 알기
 
 ALB→App이 HTTP이면 App의 직접 연결만 보고는 Browser가 HTTPS로 접속했는지 알 수 없다. ALB는 `X-Forwarded-Proto: https` 같은 Header로 원래 연결 정보를 전달한다. App은 신뢰하는 Proxy에서 받은 정보를 해석해 Redirect 주소와 보안 처리를 구성할 수 있다. [ALB Forwarded Header 설명](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/x-forwarded-headers.html)
@@ -144,12 +166,16 @@ Cookie 속성의 설정과 실제 Browser가 전송하는 결과를 함께 확�
 1. App에서 RDS로 연결이 Timeout이라면 IAM Role에 관리자 권한을 주는 것이 해결책인가? 어떤 경로와 조건부터 확인해야 하는가?
 2. 서비스 CNAME과 ACM 검증 CNAME은 각각 무엇을 위한 Record인가? DNS-only에서는 Cloudflare가 로그인 요청을 받는가?
 3. Browser→ALB가 HTTPS이고 ALB→App이 HTTP라면 어디에서 TLS가 종료되는가? HTTPS가 USER·AGENT 권한과 CSRF 검사를 대신하는가?
+4. Browser의 HTTPS 자물쇠가 App→RDS 연결도 TLS라는 뜻인가? 두 연결에서 인증서를 확인하는 Client는 누구인가?
+5. `sslmode=require`와 `verify-full`의 차이는 무엇이며, 공개 CA 파일과 DB Password는 왜 구분해야 하는가?
 
 ## 핵심 질문 해설
 
 1. **권한 확대부터 하지 않는다.** 목적지 이름·Port, VPC 경로, App Outbound·DB Inbound와 DB 준비 상태를 먼저 확인한다. 연결 뒤의 DB 인증·권한은 다시 구분한다.
 2. **서비스 연결과 Domain 검증이다.** DNS-only에서는 Cloudflare가 DNS 조회에 응답하고, HTTP 요청은 Browser에서 ALB로 간다.
 3. **ALB에서 종료된다.** App까지의 연결은 별도다. HTTPS는 통신 보호이며, 로그인 인증·작업 인가·CSRF 검증은 Application이 계속 수행한다.
+4. **별도 연결이다.** Browser는 ALB의 인증서를, App의 JDBC Client는 RDS의 인증서를 확인한다.
+5. **암호화와 서버 신원 검증의 차이다.** pgJDBC의 `require`만으로는 서버 신원을 검증하지 않는다. 공개 CA는 서명을 확인할 기준이며 DB Password는 사용자 인증용 비밀값이다.
 
 ## 함께 읽을 자료
 

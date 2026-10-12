@@ -124,14 +124,39 @@ ALB는 실행 Task가 없는 시간에도 자체 이용 요금이 발생할 수 
 
 DB를 삭제하는 실습은 Snapshot 생성과 별도 복원 검증, 남길 데이터 확인과 대상 승인을 먼저 갖춘다. 복구를 설명하는 것과 실제 리소스를 삭제하는 것은 다른 작업이다.
 
+### 실습하지 않을 때 비용을 줄이는 순서
+
+`desiredCount=0`은 ECS Service가 유지할 Task 수를 0으로 만드는 설정이다. 단독으로 실행한 Task와 다른 시작 경로까지 모두 중단했다는 뜻은 아니다. 원하는 수량뿐 아니라 실제 실행 목록도 확인한다. ALB·RDS·Image·Snapshot은 Task와 독립된 리소스이므로 따로 관리한다.
+
+장기 휴지기는 App과 DB를 계속 실행할 때보다, 복원 가능한 데이터와 재개 설정만 남겼을 때 실행 비용을 줄일 수 있다. 이 과정에서 데이터 보존을 생략하면 비용 절감이 아니라 데이터 삭제가 된다.
+
+```text
+접수 중단·Worker의 새 작업 중단
+  → 진행 중 요청·Job 확인 후 App 종료
+  → DB 쓰기 중단 확인·마지막 Snapshot
+  → 원본을 유지한 별도 DB 복원·Row와 Migration 검증
+  → 대상 승인 뒤 ALB·DB Instance 정리
+  → Snapshot·필요한 Image·Parameter·재개 설정 보관
+```
+
+마지막 Snapshot 뒤에 새 쓰기를 허용하면 그 데이터는 보관한 Snapshot에 없다. 따라서 단순히 최근 Backup이 있다는 이유로 원본을 지우지 않고, 쓰기 중단 시점과 보관 시점을 맞춘다. Snapshot은 공개 공유하지 않으며 실행 중 Job·누적 예약·처리 기한을 초기화하지 않는다.
+
+재개는 남겨둔 실행 객체를 그대로 살리는 것이 아니라 새 실행을 구성하는 작업이다. Snapshot으로 만든 RDS는 새 Endpoint를 사용하고, 재생성한 ALB도 다른 주소를 가질 수 있다. DB 접속 설정·서비스 DNS·Target 등록을 맞추고, 새 Task에서 다시 로그인한다. ACM 검증 CNAME과 서비스 CNAME은 구분해 관리한다.
+
+RDS 복원 시에는 원래 VPC·Subnet Group·Security Group·DB Parameter Group을 따로 지정한다. Snapshot을 골랐다고 기존 접속 제한·사용자 정의 설정이 모두 자동으로 선택되는 것은 아니다. 암호화에 필요한 Key와 Private 접근도 유지해야 한다. [RDS 복원 시 Group 설정](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_RestoreFromSnapshot.html)
+
+복원된 미완료 Job이 추가 외부 호출을 시작하지 않도록 첫 확인은 AI 비활성으로 수행한다. 기존 Row와 로그인·Role·CSRF를 확인한 뒤 필요한 자동 처리만 별도로 재개한다. Snapshot·Image·Log의 보관료는 남으므로 휴지기 비용을 0원으로 단정하지 않는다.
+
 ## 핵심 질문
 
 1. ALB가 직접 반환한 `5xx`와 Helpdesk가 반환한 `5xx`를 어떻게 구분할 수 있는가? 어느 Log와 Metric을 먼저 확인할 것인가?
 2. App만 이전 Image로 되돌리면 같은 RDS에 접수된 문의와 Flyway Migration도 과거로 돌아가는가?
 3. Snapshot 복원으로 새 DB를 만든 뒤 무엇을 조회해야 복원 성공을 확인할 수 있는가? 왜 확인용 App의 Worker는 먼저 꺼 두는가?
+4. `desiredCount=0`만으로 ALB·RDS·보관 비용도 중단됐다고 말할 수 있는가? 마지막 Snapshot 뒤에도 접수를 허용하면 어떤 데이터가 사라질 수 있는가?
 
 ## 핵심 질문 해설
 
 1. **응답을 생성한 계층을 나눈다.** ALB의 ELB·Target 오류 Metric과 관련 기록, App의 Request Log를 대조하고 Target 연결 문제인지 업무 오류인지 찾는다.
 2. **돌아가지 않는다.** 프로그램과 데이터의 복구는 별개다. 현재 Schema와 이전 코드의 호환성도 확인해야 한다.
 3. **복원 시점의 실제 Row·관계·상태와 Migration 이력을 확인한다.** Worker 비활성은 복원된 미완료 Job의 외부 호출을 통제하기 위한 것이다.
+4. **그럴 수 없다.** 실행 Task와 ALB·DB·Storage는 별개다. Snapshot 뒤의 새 쓰기는 해당 Snapshot에 없으므로 마지막 보관 전에 접수와 쓰기를 중단해야 한다.

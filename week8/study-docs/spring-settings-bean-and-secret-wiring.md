@@ -135,6 +135,94 @@ Compose의 `secrets`는 지정한 Service에 파일을 제공한다. 파일을 �
 
 Secret 파일을 교체하는 일과 기존 Provider의 설정을 바꾸는 일도 다르다. 현재 Provider는 생성할 때 Key를 HTTP Client에 전달하며, 파일 변경을 감지해 Client의 인증 값을 다시 설정하는 로직은 없다. 새 Key를 적용하려면 파일 제공을 바꾸고 Provider를 다시 만들어야 한다. 새 설정으로 Application을 다시 시작하는 방법을 사용할 수 있다.
 
+## ECS가 Secret을 환경 변수로 전달하는 경우
+
+로컬 Compose의 파일과 Config Tree는 설정을 전달하는 한 방법이다. ECS에서는 Task Definition의 `secrets`에 참조한 값을 ECS Agent가 가져와 Container의 환경 변수로 전달할 수도 있다. 이때 파일이나 `configtree:`가 꼭 필요한 것은 아니다. [ECS의 Secret 환경 변수 전달](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/secrets-envvar-secrets-manager.html)
+
+```text
+Secret 저장소
+  → ECS Agent가 Execution Role로 읽음
+  → 새 Container의 환경 변수
+  → Spring Environment
+  → Configuration이 Provider 객체 생성
+```
+
+`HELPDESK_AI_PROVIDER_KEY`는 환경 변수 이름이며 값은 기록하지 않는다. Spring의 환경 변수 Property 조회로 `helpdesk.ai.provider.key`를 읽어 기존 Provider 생성자에 전달할 수 있다. 값의 전달 방식을 바꿔도 개인정보 처리기·검증기 등의 Bean 의존성이 없어지는 것은 아니다.
+
+ECS Agent가 값을 가져오는 구성에서는 Execution Role에 해당 Secret 읽기 권한을 부여한다. Java가 AWS SDK로 직접 가져오는 구성이라면 Task Role을 사용한다. 두 방식을 구분해 Application에 필요하지 않은 읽기 권한을 추가하지 않는다. [ECS Execution Role](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_execution_IAM_role.html)
+
+저장소의 Secret을 바꿔도 이미 실행 중인 Container에 새 값이 자동 주입되지는 않는다. 새 Task를 시작해야 하며, Task Definition이 특정 과거 Version을 고정했는지도 확인한다. 기존 Provider 역시 생성 시 받은 Key를 HTTP Client에 설정한다. Key만 바꿀 때 Source·Image를 다시 Build할 필요는 없지만 새 실행 설정으로 객체를 구성해야 한다.
+
+환경 변수 주입은 비밀값을 Java가 읽을 수 있게 하는 방법이지 Process·관리자·Debug 도구에서도 숨기는 방법은 아니다. 환경 변수·Task 설정·Log를 통째로 출력하지 않는다. 전달 이름·참조·권한과 값의 존재만 확인한다.
+
+## Parameter Store와 Secrets Manager
+
+AWS Systems Manager의 Parameter Store는 설정을 이름과 값의 쌍으로 보관한다. 여기서 Parameter는 Java 메서드의 매개변수가 아니라 저장소의 설정 항목이다. 일반 문자열은 `String`, 암호화해 보관할 민감한 값은 `SecureString`으로 구분한다. `SecureString`의 암호화·복호화에는 AWS KMS를 사용한다. [Parameter Store 암호화](https://docs.aws.amazon.com/systems-manager/latest/userguide/secure-string-parameter-kms-encryption.html)
+
+Secrets Manager도 비밀값을 보관하지만 자동 교체 같은 Secret 관리 기능을 제공한다. 저장소의 항목 수와 ECS에 전달할 환경 변수 수는 같지 않을 수 있다. Secrets Manager의 JSON 한 항목에서 여러 Field를 참조하는 구성과, Parameter Store에서 설정마다 별도 Parameter를 참조하는 구성을 구분한다.
+
+| 대상 | 보관하는 것 | 값을 사용하는 단계 |
+|---|---|---|
+| Parameter Store의 `SecureString` | 암호화한 설정값 | 허용된 읽기 요청에서 복호화해 전달 |
+| Task Definition의 `secrets.valueFrom` | Parameter나 Secret의 참조 | ECS Agent가 시작 준비 중 읽음 |
+| 새 Container의 환경 변수 | App이 읽을 수 있는 값 | Spring이 Property로 조회 |
+| Java 객체 | 생성 시 받은 설정과 실행 기능 | 실제 DB 연결·사용자 인증·Provider 요청에 사용 |
+
+예를 들어 `SPRING_DATASOURCE_PASSWORD`는 전달할 환경 변수 이름이고 `valueFrom`에는 Parameter의 ARN 같은 참조를 넣는다. ARN은 해당 자원의 식별자이지 Password가 아니다. Parameter Store가 비밀값을 암호화해 보관해도 App이 사용하려면 읽을 수 있는 값으로 전달돼야 하므로, Process 환경과 Log를 보호하는 책임이 없어진 것은 아니다.
+
+ECS Agent가 Parameter Store를 읽는 방식에서는 Execution Role의 `ssm:GetParameters` 권한을 필요한 Parameter로 제한한다. 현재 App이 AWS SDK로 저장소를 직접 읽는 구조가 아니라면 Task Role에 같은 권한을 추가하지 않는다. Customer-managed KMS Key를 선택한 경우에는 해당 Key의 복호화 권한도 별도로 확인한다. [ECS Parameter Store 전달과 권한](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_execution_IAM_role.html#task-execution-secrets)
+
+필요한 Parameter를 읽지 못하면 ECS의 실행 준비가 실패할 수 있다. 이를 기본 Password로 대체해 App을 시작하거나 외부 AI 인증 실패로 기록하지 않는다. 실제 실행에서는 Container 시작 여부와 실패한 작업·단계를 먼저 확인한다.
+
+### Standard SecureString을 전달하는 순서
+
+이름·Type·Tier·Key는 서로 다른 설정이다. `/helpdesk/learning/db/password`는 항목의 이름, `SecureString`은 암호화 저장 Type, `Standard`는 Tier, `aws/ssm`은 AWS 관리 KMS Key다. 이름에 `password`를 넣는 것만으로 암호화가 되는 것은 아니다. Standard Parameter는 값의 크기 한도도 확인해야 한다. [Parameter Tier](https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-advanced-parameters.html)
+
+```text
+Parameter Store
+  /helpdesk/learning/db/password = 암호화해 보관한 값
+      ↓ Execution Role의 지정 Parameter 읽기 허용
+ECS Agent
+      ↓ 새 Container 시작 시 환경 변수에 전달
+SPRING_DATASOURCE_PASSWORD
+      ↓ Spring이 DataSource에 설정
+JDBC 연결
+      ↓ PostgreSQL이 DB 계정의 Password를 확인
+```
+
+Task Definition에는 값 대신 `arn:aws:ssm:REGION:ACCOUNT_ID:parameter/helpdesk/learning/db/password`와 같은 참조를 적는다. IAM Policy의 `Resource`도 같은 대상을 가리키되 모든 Parameter의 읽기나 수정·삭제를 허용하지 않는다. 이 참조와 환경 변수 이름은 공개 예제로 설명할 수 있지만 실제 값은 출력하지 않는다.
+
+Agent의 읽기 권한은 PostgreSQL의 인증 권한이 아니다. Parameter를 읽어 환경 변수로 전달했더라도 DB의 실제 계정·Password가 다르면 JDBC 인증이 실패한다. 반대로 DB Password가 맞더라도 Agent의 읽기가 거부되면 필요한 실행 설정을 준비하지 못한다.
+
+Standard 저장과 Standard Throughput API에는 추가 요금이 없지만 KMS 요청은 별도의 사용량이다. 같은 계정의 다른 프로젝트가 무료 요청량을 사용했을 수도 있다. 계정 전체의 Higher Throughput 설정을 확인하고, 비용을 줄이려는 이유로 다른 프로젝트의 처리량 설정을 임의로 변경하지 않는다. [Parameter Store 요금](https://aws.amazon.com/systems-manager/pricing/#Parameter_Store), [KMS 요금](https://aws.amazon.com/kms/pricing/)
+
+## 저장소의 값과 대상 시스템의 Password
+
+Parameter Store의 DB Password를 교체하는 일과 PostgreSQL 사용자의 실제 Password를 교체하는 일은 다르다. 전자는 App이 사용할 접속 설정을 바꾸고, 후자는 DB가 인증할 값을 바꾼다. 두 값이 맞지 않으면 새 Task가 설정을 잘 읽어도 DB 인증에 실패한다.
+
+이미 실행 중인 Task의 환경 변수·DataSource·사용자 Bean도 저장소 변경만으로 자동 갱신되지 않는다. 대상 시스템의 변경과 새 Task의 설정 적용을 맞춰야 하며, Key·Password 값만 바뀌었다면 Image를 다시 Build할 필요는 없다. [ECS 시작 시 값 전달](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/secrets-envvar-ssm-paramstore.html)
+
+## 배포용 로그인 사용자와 DB 사용자의 분리
+
+Helpdesk의 `deployment` Profile은 실행 설정으로 학습용 USER·AGENT를 구성한다. 함께 활성화하는 `postgres`는 Ticket 저장소를 선택한다. Profile은 객체의 등록 조건이며, 활성화 이름만으로 DB 접속이나 AWS 배포 성공까지 결정되지는 않는다. [Spring의 Profile과 Property](https://docs.spring.io/spring-framework/reference/core/beans/environment.html)
+
+| 로그인 설정 | 환경 변수 이름 |
+|---|---|
+| `helpdesk.deployment.user.username` | `HELPDESK_DEPLOYMENT_USER_USERNAME` |
+| `helpdesk.deployment.user.password` | `HELPDESK_DEPLOYMENT_USER_PASSWORD` |
+| `helpdesk.deployment.agent.username` | `HELPDESK_DEPLOYMENT_AGENT_USERNAME` |
+| `helpdesk.deployment.agent.password` | `HELPDESK_DEPLOYMENT_AGENT_PASSWORD` |
+
+Configuration은 네 값을 읽고 기존 PasswordEncoder로 Hash를 만들어 `InMemoryUserDetailsManager`를 구성한다. USER에는 `ROLE_USER`, AGENT에는 `ROLE_USER`·`ROLE_AGENT`를 부여한다. 사용자를 메모리에 보관하는 것과 Ticket을 PostgreSQL에 저장하는 것은 독립된 선택이다. [Spring Security의 메모리 사용자 저장소](https://docs.spring.io/spring-security/reference/servlet/authentication/passwords/in-memory.html)
+
+필수 값이 없거나 공백뿐이면 기동을 거부한다. Local 설정이나 기본 계정으로 대체하지 않으며, 두 계정의 이름은 대소문자를 무시해도 구분되어야 한다. `postgres` 없이 사용하거나 `local-browser`·`in-memory`를 함께 켠 경우도 거부한다. 회원가입·영속 사용자 관리 대신 제한된 학습용 계정을 제공하는 구성이다.
+
+Browser가 보내는 로그인 Password는 Spring Security가 사용자 Hash와 비교한다. JDBC의 `spring.datasource.username`·`spring.datasource.password`는 Application이 PostgreSQL에 연결할 때 사용하는 값이며, Helpdesk의 USER·AGENT 로그인 계정과 다르다.
+
+UserDetails에는 Hash를 설정하지만 Process 환경 변수에 전달한 원문 Password까지 없애는 것은 아니다. 값을 Log·Source·전체 환경 변수 출력에 남기지 않는다. 새 실행 환경의 값으로 사용자 Bean을 다시 만들 수 있으므로 Password만 교체할 때 Image의 코드를 바꿀 필요는 없다.
+
+새 Configuration 코드를 추가하거나 Role 배정 코드를 수정했다면 Java Source가 바뀐 것이므로 JAR·Image를 다시 Build해야 한다. Password 값만 교체하는 경우와 구분한다.
+
 ## 파일 전달과 객체 조립을 검증하는 Test
 
 Lab의 `ConfigTreeProviderWiringTest`는 `@TempDir`에 임시 합성 값을 쓰고, 실제 Config Data 읽기를 적용한 작은 Spring Context를 실행한다. 실제 API Key나 외부 HTTP Client는 사용하지 않는다.
@@ -171,6 +259,11 @@ Lab의 `ConfigTreeProviderWiringTest`는 `@TempDir`에 임시 합성 값을 쓰�
 8. 첫 `@Bean` 메서드가 만든 Provider와 다른 메서드의 `provider` 매개변수, 그 메서드가 만든 Consumer는 각각 같은 객체인가?
 9. Provider 등록과 Worker 실행을 나누는 이유는 무엇이며, Provider를 켜고 Worker를 꺼 두면 무엇까지 준비되는가?
 10. Secret 파일을 교체하면 이미 만들어진 Provider의 인증 값도 자동으로 바뀌는가?
+11. `deployment`와 `postgres`는 각각 어떤 객체를 선택하며, 메모리 사용자 저장소를 쓰면 Ticket도 메모리에 저장되는가?
+12. Browser 로그인 계정과 JDBC의 DB 계정은 같은 신원인가? 환경 변수의 원문 Password도 Hashing 뒤 자동으로 사라지는가?
+13. Parameter Store의 값, `valueFrom` 참조, Container 환경 변수와 Java 객체는 각각 무엇인가?
+14. ECS가 필수 Parameter를 읽지 못한 경우와, App이 읽은 Password를 DB가 거부한 경우는 왜 다른 실패인가?
+15. Parameter Store에서 DB Password만 바꾸면 PostgreSQL 사용자의 Password와 기존 Task도 자동 변경되는가?
 
 ## 핵심 질문 해설
 
@@ -184,6 +277,11 @@ Lab의 `ConfigTreeProviderWiringTest`는 `@TempDir`에 임시 합성 값을 쓰�
 8. **Provider와 매개변수가 가리키는 객체는 같고 Consumer는 다르다.** 새 Consumer는 기존 Provider의 참조를 전달받는다.
 9. **객체를 사용할 준비와 자동 작업 실행은 별개이기 때문이다.** Provider와 검증기를 구성할 수 있지만 Worker·Scheduler가 비활성이므로 자동 Job 처리와 외부 요청은 시작하지 않는다.
 10. **현재 구현에서는 바뀌지 않는다.** Provider를 만들 때 받은 Key를 HTTP Client에 설정하며, 파일 변경을 감지해 다시 적용하는 로직은 없다. 새 설정으로 Provider를 다시 만들어야 한다.
+11. **사용자 구성과 Ticket 저장소를 선택한다.** `deployment`는 로그인용 메모리 사용자 Bean, `postgres`는 PostgreSQL Adapter를 선택한다. Ticket의 영속성은 사용자 저장소와 별개다.
+12. **서로 다르고 원문도 자동으로 사라지지 않는다.** Browser 로그인은 Spring Security, JDBC의 사용자명·Password는 PostgreSQL이 확인한다. UserDetails의 Hash와 Process 설정의 원문은 서로 다른 위치다.
+13. **보관된 값·식별 참조·실행 설정·그 설정을 사용하는 객체다.** 참조를 적는 것이 비밀값이나 Java 객체를 Image에 넣는 것은 아니다.
+14. **실행 준비와 DB 인증 단계가 다르다.** Agent의 읽기 거부는 App 실행 전의 문제일 수 있고, DB 인증 거부는 App이 연결을 시작해 DB에 도달한 뒤의 문제다.
+15. **자동 변경되지 않는다.** DB의 실제 인증 값과 App의 접속 설정을 일치시키고 새 Task로 적용해야 한다.
 
 ## 함께 읽을 자료
 
