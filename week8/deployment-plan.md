@@ -1,9 +1,9 @@
 # Week 8 AWS 배포와 비용 초안
 
-> 상태: 일부 실행 — OIDC·ECR 초기 설정과 검증 Image 업로드, SSM·Execution Role·1년 보존 Log Group 구성 완료. App·RDS·ALB 실행과 DNS·HTTPS 연결은 남아 있음
+> 상태: 일부 실행 — 배포 준비 변경의 CI 통과·검증 Image 추가, SSM·Execution Role·1년 보존 Log Group 구성 완료. 기존 Image 유지, App·RDS·ALB 실행과 DNS·HTTPS 연결은 남아 있음
 > 요금 확인일: 2026-10-12
-> 진행 반영일: 2026-10-12 — 배포용 사용자·Image·자원·CA 검증과 SSM·Role·Log 설정 포함
-> 계획 수정일: 2026-10-12 — Standard Parameter Store 선택, 최소 실행·휴지기 보관과 재개 절차, Log 365일 보존 반영
+> 진행 반영일: 2026-10-13 — 두 저장소 Commit·Push, Java 578개·JavaScript 173개 CI 통과와 새 Image 추가 포함
+> 계획 수정일: 2026-10-13 — 최소 비용·Log 365일 보존 유지, 새/기존 Image 식별과 App·RDS·ALB 별도 실행 승인 반영
 
 ## 확인한 조건
 
@@ -43,6 +43,8 @@ ECR·ECS Fargate·RDS·ALB·DNS·HTTPS·Backup 복원은 [주간 계획](./weekl
 장기 Access Key는 만들지 않았다. 신규 KMS Key·Enhanced Scanning·서명·복제·Pull-through Cache는 추가하지 않았다. IAM은 추가 이용 요금 없이 제공되지만, ECR은 이후 Image 보관량과 전송량에 따른 요금이 있으므로 전체 AWS 비용이 0원이라는 뜻은 아니다. [IAM 요금 안내](https://aws.amazon.com/iam/faqs/), [ECR 요금 안내](https://aws.amazon.com/ecr/pricing/)
 
 같은 날 승인한 수동 업로드에서는 실제 OIDC·STS 인증과 ECR Push를 확인했다. 일반 검증 Job에서 만든 Image를 재Build하지 않고 전달했으며, ECR에 Image 한 건이 저장됐다. Source Commit은 `77ce72c`, 실행 Platform은 `linux/amd64`다. 업로드 결과와 ECR 조회의 Manifest Digest가 같았고 Console에서도 같은 Tag·Digest를 확인했다. 일반 Push는 Publish Job을 실행하지 않는다. 실행 링크와 식별 정보는 [ECR 업로드 보고서](./lab-reports/2026-10-10-verified-image-ecr-publish.md)에 기록했다.
+
+10/13에는 배포 준비 변경을 두 저장소에 목적별로 Commit·Push했다. Lab `2e2cc40`의 일반 CI 성공 뒤 수동 검증·업로드를 한 번 실행했고, 두 실행의 Java 578개·JavaScript 173개·ESLint·Image Build가 통과했다. 수동 실행의 검증 Image를 그대로 ECR에 한 개 추가했으며 Console에서 기존 `77ce72c`와 새 `2e2cc40`의 Tag·Digest가 함께 남아 있는 두 Image를 확인했다. [새 Image 업로드 보고서](./lab-reports/2026-10-13-deployment-image-ecr-publish.md)에 실행 링크와 Digest를 기록했다. App·RDS·ALB 실행은 이번 승인에서 제외했고 DNS·IAM 설정과 기존 Image는 변경하지 않았다.
 
 10/10에는 Image 보관까지 진행하고 마감했다. ECS·RDS·ALB·NAT Gateway·DNS Record·ACM 인증서는 생성하거나 변경하지 않았다. 자동 Image 삭제 정책도 만들지 않았다. ECR 보관 비용은 남으며 아래 2 GB 비용 가정은 실제 청구량이 아닌 초기 계산 기준이다. 남은 과업은 10/11 야간 또는 10/12에 재개하고, 업로드 승인을 나머지 배포 리소스의 생성·과금·DNS 변경·삭제 승인으로 확대하지 않는다.
 

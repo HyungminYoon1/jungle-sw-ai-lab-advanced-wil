@@ -1,11 +1,11 @@
 # Week 8 학습 계획 Docker와 CI에서 AWS HTTPS 배포까지
 
 > 작성일: 2026-10-07
-> 최종 수정일: 2026-10-12
+> 최종 수정일: 2026-10-13
 > 상태: In Progress — 로컬 설정·마스킹·관측·종료 검증, 실제 CI 실패·복구와 OIDC 인증·검증 Image의 ECR 업로드 완료. ECS·RDS·HTTPS·복구는 남아 있음
 > 1차 목표 기간: 2026-10-08 목요일 ~ 2026-10-12 월요일. 미완료 항목이 남으면 Week 8 기간 연장
 > 초기 학습일: 10/8·10/9·10/10·10/12, 총 4일
-> 재개: 10/11 일요일 야간 또는 10/12 월요일. 일요일 낮에는 과업을 배정하지 않음
+> 현재 진행: 10/12 배포 준비를 이어 10/13 CI·Image 추가까지 확인. 남은 Cloud 실행·HTTPS·복구 학습을 위해 Week 8 연장, 실행 리소스는 별도 승인
 > 초기 순학습 시간 배분: 하루 10시간, 총 40시간. 휴식·식사와 단순 대기 시간 제외. 완료에 필요한 시간의 상한은 아님
 > 모드: `DEEP_LEARNING_MODE`
 > 핵심 질문: 이미 검증한 문의 접수와 AI 제안 흐름을 Cloud의 HTTPS 환경에 배포하고, 실패 원인을 찾으며 이전 실행 상태로 복구할 수 있는가?
@@ -154,13 +154,15 @@ Lab의 Workflow와 관련 변경은 Commit·Push했고 실제 GitHub Actions에�
 
 10/10에는 Lab Commit `77ce72c`에서 일반 검증과 수동 Publish Job을 분리했다. 실제 Actions의 Java 551개·JavaScript 146개·ESLint·Image Build가 통과했고, 검증한 Image를 재Build하지 않고 OIDC 인증으로 ECR에 1회 업로드했다. Docker Push와 ECR 조회의 Manifest Digest가 같았으며 Console에서도 같은 Tag·Digest의 Image 한 건을 확인했다. 일반 Push 실행은 Publish Job을 건너뛰었다. [ECR 업로드 보고서](./lab-reports/2026-10-10-verified-image-ecr-publish.md)에 Commit·Tag·Digest와 실행 링크를 기록했다. 기존 IAM 정책은 유지했고 권한 거부 실험·ECS·RDS·ALB·DNS·ACM 구성은 남아 있다.
 
+10/13에는 배포 준비 변경을 목적별로 Commit·Push한 뒤 Lab `2e2cc40`의 일반 CI와 수동 검증·업로드가 통과했다. 두 실행의 Java 578개·JavaScript 173개·ESLint·Image Build를 확인했고 ECR에 검증 Image 한 개를 추가했다. Console에는 이전 Image와 새 Image 총 두 개가 남아 있다. [10/13 업로드 보고서](./lab-reports/2026-10-13-deployment-image-ecr-publish.md)에 식별 정보를 기록했으며 App·RDS·ALB 실행과 DNS 변경은 하지 않았다.
+
 ### 회차 마감에 따른 일정 조정
 
 Docker·Compose의 기초와 저장·재시작·설정 비교까지 진행했다. 초기 첫날에 함께 배정했던 배포용 Provider·Secret 조립과 Cloud 실행 조건 확인은 마치지 못했으므로 다음 학습의 앞부분으로 옮긴다. 10/9에는 설정 읽기·Main Provider 등록과 별도 Compose의 합성 파일 제공까지 검증했다. 기본 App의 개인정보 처리기·실행용 Secret·Worker·DB를 함께 연결하는 실험은 남아 있다.
 
 10/9 회차에서 실제 CI 실패·복구와 AWS 초기 설정까지 진행했고, 10/10에는 OIDC 인증·ECR Image 전달을 확인했다. 다음 학습은 같은 기본 실험을 반복하기보다 배포용 전체 조립과 Cloud Network·Database·HTTPS 연결로 이어간다. Process의 DB·Job 종료 상태, 권한 거부 실험·Log 연결·Cloud 관측·Rollback·Backup 복원도 남은 분량으로 유지한다.
 
-10/10 학습은 여기서 마감하고 남은 과업은 10/11 야간 또는 10/12에 재개한다. 현재 AWS 실행 근거는 ECR의 Image 한 건까지다. ECS·RDS·ALB·DNS·ACM은 생성·변경하지 않았으며, 남은 리소스 생성과 DNS 변경은 재개 시 구성·비용·범위를 확인한 뒤 진행한다.
+10/10 학습 마감 때 남은 과업을 10/11 야간 또는 10/12에 재개하기로 했다. 당시 AWS 실행 근거는 ECR의 Image 한 건까지였다. 10/12~10/13에는 배포용 설정·Image·자원·CA와 SSM·Execution Role·Log Group을 준비하고 새 검증 Image를 추가했다. ECS·RDS·ALB·DNS·ACM은 아직 생성·변경하지 않았으며, 남은 리소스 생성과 DNS 변경은 구성·비용·범위를 확인하고 별도 승인 뒤 진행한다.
 
 | 과업 | 현재 상태 | 다음 배치 |
 |---|---|---|
@@ -350,6 +352,7 @@ Actions는 장기 AWS Key 저장 대신 OIDC의 단기 자격 증명을 사용�
   - [배포 Image와 ECS 명세 초안](./lab-reports/2026-10-12-deployment-image-and-ecs-draft.md): 새 로컬 Image·JAR 확인, AI 비활성 실행 명세와 JavaScript 전체 152개
   - [배포 Image의 실행 자원 측정](./lab-reports/2026-10-12-deployment-resource-probe.md): CPU·메모리 제한 아래 접수·로그인·조회와 Container 자원 관찰
   - [RDS 공개 CA와 Image 준비](./lab-reports/2026-10-12-rds-public-ca-and-image-preparation.md): 공개 Root CA 확인, 최종 Image 포함과 `verify-full` 연결 준비
+  - [배포 준비 변경의 CI·ECR 업로드](./lab-reports/2026-10-13-deployment-image-ecr-publish.md): 두 저장소 Commit·Push, Java 578개·JavaScript 173개 CI 통과, 검증 Image 한 개 추가와 기존 Image 유지
 - `wil.md`: 주간 결과와 이해 변화, 직접 판단한 부분과 AI 도움을 받은 부분을 정리한다. 실제 결과가 생긴 뒤 작성한다.
 - Lab Repository: Dockerfile·Compose·Workflow·배포 설정·관련 Test·실행/복구 안내를 관리한다. WIL과 구현 변경은 별도 Commit으로 나눈다.
 
@@ -380,7 +383,8 @@ Actions는 장기 AWS Key 저장 대신 OIDC의 단기 자격 증명을 사용�
 | 10/8 회차 마감 | Compose 실행·영속성·설정 비교는 확인. 배포용 Provider·Secret과 Cloud 선행 조건은 미완료 | 10/9 첫 순서로 배치 완료. 그 뒤 Process·CI·Cloud도 선행 조건에 따라 이동하며 범위는 유지 |
 | 10/9 회차 마감 | 설정·마스킹·Process·실제 CI 실패·복구, AWS OIDC·ECR 초기 설정 확인 | 실제 Image 전달·전체 AI 조립·DB·Job 종료 상태는 남음. 10/10은 OIDC 인증·ECR 전달부터 시작하고 뒤의 배포·복구 시간을 재산정 |
 | 10/10 종료 | OIDC 인증·검증 Image의 ECR 1회 업로드·Digest 확인 완료. ECS·RDS·HTTPS는 미수행 | 10/11 야간 또는 10/12에 전체 조립·구성 승인부터 재개. 뒤의 복구·회귀·WIL은 없애지 않고 연장 대상으로 기록 |
-| 10/12 종료 | 전체 완료 체크와 직접 설명, 복구·회귀·공개 제출 | 필수 항목이 남으면 Week 8을 계속 진행. 남은 항목별 예상 시간과 실제 가용일을 바탕으로 추가 일정을 정함 |
+| 10/12 종료 | 배포용 사용자·Image·자원·CA의 로컬 검증, Standard Parameter·Execution Role·365일 Log Group 구성 확인 | Cloud 실행·전체 AI 조립·HTTPS·복구는 남아 Week 8 연장. 범위는 유지하고 리소스 실행은 별도 승인 |
+| 10/13 Image 전달 | 두 저장소 목적별 Commit·Push, 일반/수동 CI 통과와 검증 Image 한 개 추가. 이전 Image 유지 | 다음은 구성·비용과 별도 실행 승인을 확인한 뒤 App·RDS·ALB 연결·HTTPS 검증. 이번 Image 업로드 승인을 실행 리소스의 생성·과금·DNS 변경·삭제 승인으로 확대하지 않음 |
 
 연장은 이미 허용한 진행 방식이므로, 시간이 부족하다는 이유로 다시 학습 범위를 줄이는 안을 만들지 않는다. 다만 추가 날짜를 임의로 확정하지는 않는다. 필요해진 학습·구현·검증 시간과 Cloud 대기를 구분해 제시하고, 실제 사용할 수 있는 날짜에 남은 순서를 배치한다. 하루 10시간을 넘겨야만 계획을 지킨 것으로 평가하지 않는다.
 
@@ -404,6 +408,7 @@ Actions는 장기 AWS Key 저장 대신 OIDC의 단기 자격 증명을 사용�
 | 2026-10-12 | Secret 저장소·권한 미정, 초기 Secrets Manager·큰 App 비용 가정 | Standard SecureString 6개·기본 처리량·`aws/ssm`, 지정 Parameter 읽기 권한 초안. AI 비활성 첫 최소 사양으로 비용 갱신 | 사용자 권장안 승인. 실제 값 등록·Role 연결·Cloud 실행은 구분하고 보안·영속성·전체 AI 검증을 생략하지 않음 |
 | 2026-10-12 | 중지·장기 보관의 대안만 제시 | 장기 휴지기는 최종 Snapshot·별도 복원 검증 뒤 승인한 ALB·DB Instance 정리와 필요한 산출물 보관, 새 Endpoint·DNS·Task로 재개 | 사용자 최소 비용 구성 요청. 실행·보관 비용을 줄이되 자동 삭제·범위 확대·학습 생략은 하지 않음 |
 | 2026-10-12 | CloudWatch Log 7일 보존 후보, 실제 Group 미생성 | 서울 `/ecs/helpdesk-learning` 하나를 Standard 클래스·365일 보존으로 생성하고 목록 확인 | 사용자 1년 보존 요청·생성 승인. 월 비용 상한은 유지하고 누적 저장량을 검토하며, 실제 Task 출력 전달은 후속 검증 |
+| 2026-10-13 | 배포 준비 변경 미Push, ECR에 이전 Image 한 개 | 목적별 Commit·Push와 CI 후 검증 Image 한 개 추가. 기존 Image 유지, 실제 Cloud 실행은 별도 승인 | 사용자 범위 지정. CI Java 578개·JavaScript 173개와 ECR Digest·두 Image 보관 확인. 남은 전체 학습 범위와 최소 비용 원칙 유지 |
 
 ## 관련 기준
 
