@@ -3,7 +3,7 @@
 > 상태: Active
 > 시작일: 2026-08-18
 > 전체 기간: 기술 심화 8주 + 취업 심화 4주
-> 현재 단계: Week 1·2·3·4·6·7 완료 — Week 5 부분 완료·공개 제출 완료. Week 8은 배포 준비·로컬/CI 검증·ECR Image 전달, Parameter·Execution Role·365일 Log Group 구성 확인. 10/12 회차 마감, 잔여 Cloud·HTTPS·전체 AI·복구는 10/13 재개·내용 유지·필요 시 기간 연장
+> 현재 단계: Week 1·2·3·4·6·7 완료 — Week 5 부분 완료·공개 제출 완료. Week 8은 배포 준비·CI·ECR·IAM·Network·DB 관리 통로·Subnet Group 확인. 10/13 회차 마감, RDS 생성 요청의 IAM 거부부터 10/14에 확인하고 HTTPS·전체 AI·관측·복구 범위를 유지
 
 이 저장소는 SW AI Lab 심화과정에서 선택한 기술을 학습하고, 이해가 바뀐 과정과 재현 가능한 근거를 주차별로 기록한다. 목표는 큰 제품을 기간 안에 완성하는 것이 아니라 AI/AX·Java Backend 직무에 필요한 개념을 직접 설명하고, 작은 실험과 Test로 검증하며, 필요한 범위만 서비스에 적용할 수 있는 역량을 만드는 것이다.
 
@@ -59,7 +59,7 @@ Week 9~12에는 취업 활동을 우선하면서 검증된 기반 위에 AI를 �
 | 5 | Browser JavaScript·Frontend·E2E·품질 기초 | Partially Completed | [Week 5 학습 계획](./week5/weekly-plan.md) · [WIL](./week5/wil.md) |
 | 6 | Browser·PostgreSQL·Test 수직 마감 | Completed — Local 수직 검증, 독립 재설명, 블로그·포럼 게시 완료 | [Week 6 학습 계획](./week6/weekly-plan.md) · [WIL](./week6/wil.md) |
 | 7 | LLM Structured Output·평가·Guardrail | Completed — 10/7 학습·평가·회귀 확인과 블로그 게시·포럼 등록 완료. 10/5 회차 이후 2일 추가 진행 | [Week 7 학습 계획](./week7/weekly-plan.md) · [WIL](./week7/wil.md) · [10/7 학습 노트](./week7/study-notes/2026-10-07-study-questions.md) |
-| 8 | Docker·CI·System·AWS Cloud·HTTPS | In Progress — 배포 준비·Java 578개/JavaScript 173개 CI·새 Image 추가와 기존 Image 유지, Parameter·Role·Log 구성 확인. Cloud·HTTPS·전체 AI·관측·복구는 10/13 재개 | [Week 8 학습 계획](./week8/weekly-plan.md) · [10/12 학습 노트](./week8/study-notes/2026-10-12-study-questions.md) · [새 CI·ECR 근거](./week8/lab-reports/2026-10-13-deployment-image-ecr-publish.md) · [배포·비용 계획](./week8/deployment-plan.md) |
+| 8 | Docker·CI·System·AWS Cloud·HTTPS | In Progress — 검증 Image의 CI Java 578개/JavaScript 173개·ECR 확인. 후속 정책의 로컬 JavaScript 205개·ESLint 통과. IAM·Network·DB 관리 통로·Subnet Group 적용, RDS 생성 거부 확인 후 잔여 범위는 10/14 재개 | [Week 8 학습 계획](./week8/weekly-plan.md) · [10/13 학습 노트](./week8/study-notes/2026-10-13-study-questions.md) · [RDS 준비·거부 근거](./week8/lab-reports/2026-10-14-rds-subnet-group-and-runtime-policy.md) · [배포·비용 계획](./week8/deployment-plan.md) |
 | 9 | 취업 Baseline·Portfolio 근거 정리 | Not Started | 주차 시작 시 추가 |
 | 10 | 맞춤 지원·기술 면접 보완 | Not Started | 주차 시작 시 추가 |
 | 11 | 면접·과제 대응과 취약 개념 재학습 | Not Started | 주차 시작 시 추가 |
@@ -82,15 +82,20 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [Week 6 WIL](./week6/wil.md): Browser·Session·CSRF·PostgreSQL 수직 흐름과 블로그·포럼 게시 기록
 - [Week 7 AI Native 학습 계획](./week7/weekly-plan.md): Structured Output·평가·Guardrail과 Suggestion 영속성 일정
 - [Week 7 WIL](./week7/wil.md): AI 출력의 형식·내용 평가, 문의 보존과 비동기 처리의 이해 변화. 10/7 블로그 게시·포럼 등록 완료 확인
-- [Week 8 배포 학습 계획](./week8/weekly-plan.md): Docker·CI·System·AWS·HTTPS와 복구 전 범위 유지. 10/12 회차 마감 후 10/13 재개, AI 비활성 첫 배포 뒤 전체 AI·관측·복구 진행
+- [Week 8 배포 학습 계획](./week8/weekly-plan.md): 10/13 회차 마감 후 10/14에 RDS 요청·정책 대조부터 재개. Docker·CI·System·AWS·HTTPS·전체 AI·관측·복구 범위 유지
 - [10월 8일 학습 노트](./week8/study-notes/2026-10-08-study-questions.md): JAR·Container·Volume·Session과 설정의 수명, Cache·Secret 전달의 이해 변화와 핵심 질문
 - [10월 9일 학습 노트](./week8/study-notes/2026-10-09-study-questions.md): 설정·Bean 조립, 개인정보 탐지·치환, 종료·Health·CI와 AWS 권한의 이해 변화와 핵심 질문
 - [10월 10일 학습 노트](./week8/study-notes/2026-10-10-study-questions.md): ECR·Task·Role·Network·TLS와 Cookie, Health·HttpOnly의 오해 수정과 실제 Image 업로드
 - [10월 12일 학습 노트](./week8/study-notes/2026-10-12-study-questions.md): 설정·객체·인증·자원·TLS와 Secret 전달, CI·Image 업로드와 실제 배포의 차이, 다음 학습
+- [10월 13일 학습 노트](./week8/study-notes/2026-10-13-study-questions.md): IAM·Network·관리 통로와 요청 조건, Console 오류·생성 거부의 구분, 다음 학습
 - [Process·Health·CI 자료](./week8/study-docs/process-health-and-ci.md): 종료 Signal과 요청 완료, Health·Job 상태, HTTP Metric과 CI의 역할
 - [AWS OIDC·ECR 초기 설정](./week8/lab-reports/2026-10-10-aws-oidc-ecr-baseline.md): 초기 생성·main 제한·한 ECR의 Push 권한 대조, 후속 업로드 보고서 연결
 - [검증 Image의 ECR 업로드](./week8/lab-reports/2026-10-10-verified-image-ecr-publish.md): 수동 Publish·실제 OIDC 인증, CI Image 전달과 ECR Tag·Digest 대조
 - [배포 준비 변경의 CI·ECR 업로드](./week8/lab-reports/2026-10-13-deployment-image-ecr-publish.md): Java 578개·JavaScript 173개, 새 검증 Image 한 개 추가·기존 Image 유지. Cloud 실행은 별도 승인
+- [배포 신원과 정책](./week8/lab-reports/2026-10-13-deployer-identity-and-policies.md): 비Root 사용자·MFA·제한된 정책과 저장 JSON 대조
+- [학습 Network와 Security Group](./week8/lab-reports/2026-10-13-learning-network-and-security-groups.md): Public/Private 경로·ALB→App→RDS 규칙 확인, 실제 연결은 별도
+- [Private DB 관리 통로](./week8/lab-reports/2026-10-13-private-db-bootstrap.md): CloudShell VPC·정확한 환경 권한·psql 준비
+- [DB Subnet Group·Runtime 정책·RDS 생성 거부](./week8/lab-reports/2026-10-14-rds-subnet-group-and-runtime-policy.md): 10/13 회차 연장 구간의 실제 실행 결과, 요청 조건 대조와 DB 연결은 미완료
 - [Week 8 AWS 배포·비용 계획](./week8/deployment-plan.md): 서울·월 3만 원·실습 시 실행 조건, 완료한 초기 설정과 남은 생성 범위·실행·보관 비용
 - [9월 30일 학습 노트](./week7/study-notes/2026-09-30-study-questions.md): 판단 보류 표현, 문의 보존, Ticket·Message와 AI 처리 상태의 구분
 - [10월 5일 학습 노트](./week7/study-notes/2026-10-05-study-questions.md): AI 입력·판단, 접수·예약·결과 Transaction과 실제 Java AI 저장, 10/6 재개 경계

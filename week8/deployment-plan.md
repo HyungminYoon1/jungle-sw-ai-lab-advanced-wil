@@ -1,9 +1,9 @@
 # Week 8 AWS 배포와 비용 초안
 
-> 상태: 일부 실행 — 배포 준비 변경의 CI 통과·검증 Image 추가, SSM·Execution Role·1년 보존 Log Group 구성 완료. 기존 Image 유지, App·RDS·ALB 실행과 DNS·HTTPS 연결은 남아 있음
+> 상태: 일부 실행 — 검증 Image·배포 신원·Network·DB 관리 통로·Subnet Group 확인. RDS 생성 요청은 IAM 거부, 실제 App·DB·HTTPS 연결과 복구는 남아 있음
 > 요금 확인일: 2026-10-12
-> 진행 반영일: 2026-10-13 — 두 저장소 Commit·Push, Java 578개·JavaScript 173개 CI 통과와 새 Image 추가 포함
-> 계획 수정일: 2026-10-13 — 10/12 회차 마감·10/13 재개, AI 비활성 첫 실행 뒤 전체 AI·HTTPS·복구 검증. 최소 비용·Log 365일 보존과 별도 실행 승인 유지
+> 진행 반영일: 2026-10-14 — 10/13 회차의 IAM·Network·CloudShell·Subnet Group·Runtime 정책과 RDS 생성 거부 포함
+> 계획 수정일: 2026-10-14 — 10/13 회차 마감·10/14 재개. 요청과 정책 조건 대조 뒤 Private DB·AI 비활성 App·HTTPS, 전체 AI·관측·복구 순서. 최소 비용·Log 365일 보존과 기존 승인 경계 유지
 
 ## 확인한 조건
 
@@ -12,7 +12,7 @@
 - 최대 12개월 동안 학습 환경을 보관하되, 실습할 때만 실행해도 된다.
 - AWS 월 지출 상한은 최대 3만 원이다. 이 금액을 채우거나 근처까지 사용하는 목표가 아니다. 학습·Application의 목적을 달성하는 범위에서 지출을 최소화한다. 외부 AI 호출은 별도 당일 승인 범위로 관리한다.
 - 학습용 주소는 `helpdesk.hmyoon.com`이며 기존 DNS는 Cloudflare에서 관리한다.
-- AWS Console 접근과 OIDC·ECR·Image 업로드 Role을 구성했다. 이후 Standard Parameter 여섯 개를 직접 등록하고 별도 승인을 받아 ECS Execution Role과 1년 보존 Log Group을 생성했다. DNS 변경과 나머지 배포 리소스의 생성 범위는 확인 전이다.
+- AWS Console 접근과 OIDC·ECR·Image 업로드 Role을 구성했다. 이후 Standard Parameter 여섯 개·ECS Execution Role·1년 보존 Log Group과 비Root 배포 사용자·학습 Network·DB 관리 통로·Subnet Group을 승인 범위에서 적용했다. RDS 생성 요청은 IAM 거부 상태다. DNS 변경과 기존 승인을 벗어나는 권한·리소스 변경은 별도로 확인한다.
 
 ECR·ECS Fargate·RDS·ALB·DNS·HTTPS·Backup 복원은 [주간 계획](./weekly-plan.md)의 학습 범위를 그대로 유지한다. 비용을 줄이기 위해 해당 학습을 다른 서비스로 대체하거나 생략하지 않는다.
 
@@ -46,15 +46,77 @@ ECR·ECS Fargate·RDS·ALB·DNS·HTTPS·Backup 복원은 [주간 계획](./weekl
 
 10/13에는 배포 준비 변경을 두 저장소에 목적별로 Commit·Push했다. Lab `2e2cc40`의 일반 CI 성공 뒤 수동 검증·업로드를 한 번 실행했고, 두 실행의 Java 578개·JavaScript 173개·ESLint·Image Build가 통과했다. 수동 실행의 검증 Image를 그대로 ECR에 한 개 추가했으며 Console에서 기존 `77ce72c`와 새 `2e2cc40`의 Tag·Digest가 함께 남아 있는 두 Image를 확인했다. [새 Image 업로드 보고서](./lab-reports/2026-10-13-deployment-image-ecr-publish.md)에 실행 링크와 Digest를 기록했다. App·RDS·ALB 실행은 이번 승인에서 제외했고 DNS·IAM 설정과 기존 Image는 변경하지 않았다.
 
-10/10에는 Image 보관까지 진행하고 마감했다. ECS·RDS·ALB·NAT Gateway·DNS Record·ACM 인증서는 생성하거나 변경하지 않았다. 자동 Image 삭제 정책도 만들지 않았다. ECR 보관 비용은 남으며 아래 2 GB 비용 가정은 실제 청구량이 아닌 초기 계산 기준이다. 당시 재개 후보는 10/11 야간 또는 10/12였고, 10/12 회차의 배포 준비·후속 검증을 마친 현재 남은 학습은 10/13에 재개한다. 업로드 승인을 나머지 배포 리소스의 생성·과금·DNS 변경·삭제 승인으로 확대하지 않는다.
+10/10에는 Image 보관까지 진행하고 마감했다. 당시 ECS·RDS·ALB·NAT Gateway·DNS Record·ACM 인증서는 생성하거나 변경하지 않았고 자동 Image 삭제 정책도 만들지 않았다. ECR 보관 비용은 남으며 아래 2 GB 비용 가정은 실제 청구량이 아닌 초기 계산 기준이다. 10/12 회차의 배포 준비·후속 검증 뒤 10/13 회차에는 별도 승인 범위의 IAM·Network·관리 통로·Subnet Group을 적용했다. 현재 남은 학습은 10/14에 재개한다. 업로드 승인을 다른 리소스의 생성·과금·DNS 변경·삭제 승인으로 확대하지 않는다.
 
-### 10월 13일에 이어갈 배포 단계
+### 10월 14일에 이어갈 배포 단계
 
-먼저 검증 Digest와 Task Definition의 설정·최소 사양·Network·DB 계정·비용·중단 절차를 확정하고 실행 범위를 별도 승인받는다. 그 뒤 AI를 끈 App·RDS 연결에서 실제 Parameter 전달·Log·TLS·Migration·로그인·접수를 확인하고, DNS·ACM·ALB·HTTPS와 Browser 보안 계약을 검증한다.
+먼저 RDS·서비스 연결 Role의 존재를 재조회하고 생성 요청의 비밀값 없는 설정을 Runtime 정책과 대조한다. 적용 가능한 Allow가 없다는 오류만으로 어떤 조건이 맞지 않았는지 단정하지 않는다. 기존 보안·최소 비용 조건을 유지하며, 정책 변경이 필요하면 차이와 최소 변경안을 제시해 승인받는다. DB 생성 뒤 관리 통로의 공개 CA·TLS·관리자/App 계정·Migration을 확인한다. 이어 검증 Digest와 Task Definition의 실제 설정·사양·참조·실행 범위를 확인하고 AI 비활성 App의 Parameter 전달·Log·로그인·접수, DNS·ACM·ALB·HTTPS와 Browser 보안 계약을 검증한다.
 
-개인정보 탐지기·실패 코드의 DB/조회/UI 반영·Provider·Worker 조립과 전체 AI 자원 측정은 이어서 진행한다. 관측·종료·재배포·이전 정상 Image 복귀·별도 Snapshot 복원·최종 회귀도 마감 범위에 남긴다. [주간 재개 순서](./weekly-plan.md#10월-13일-재개-순서)를 따르며, 10/13 하루에 끝내기 위해 학습 내용을 빼지는 않는다. 실제 AI·Cloud 실행·DNS 변경·리소스 정리는 각각 기존 승인 경계를 유지한다.
+개인정보 탐지기·실패 코드의 DB/조회/UI 반영·Provider·Worker 조립과 전체 AI 자원 측정은 이어서 진행한다. 관측·종료·재배포·이전 정상 Image 복귀·별도 Snapshot 복원·최종 회귀도 마감 범위에 남긴다. [주간 재개 순서](./weekly-plan.md#10월-14일-재개-순서)를 따르며, 하루에 끝내기 위해 학습 내용을 빼지는 않는다. 실제 AI·Cloud 실행·DNS 변경·리소스 정리는 각각 기존 승인 경계를 유지한다.
 
-Root의 MFA 활성화와 활성 Access Key 부재를 확인했다. 일상적인 사람의 접근에 사용할 별도 신원 구성은 남아 있으며, Root Access Key를 CI에 제공하는 방식은 사용하지 않는다. [AWS Root 사용 권고](https://docs.aws.amazon.com/IAM/latest/UserGuide/root-user-best-practices.html)
+Root의 MFA 활성화와 활성 Access Key 부재를 확인했다. 일상 배포용 IAM 사용자와 제한된 정책을 생성·연결한 뒤 본인이 Password·MFA를 등록하고 비Root 신원으로 로그인했다. Root Access Key를 CI에 제공하는 방식은 사용하지 않는다. [AWS Root 사용 권고](https://docs.aws.amazon.com/IAM/latest/UserGuide/root-user-best-practices.html)
+
+### 배포용 사람의 접근 준비
+
+10/13에는 App·RDS·ALB·학습 Network와 해당 Subdomain의 ACM·DNS 연결 범위를 승인했다. Console에 다시 로그인한 뒤 Root MFA·활성 Root Key 부재와 IAM 사용자 0명을 확인했고, Cloudflare의 `helpdesk` Record 검색에는 일치하는 항목이 없었다. 비Root 접근이 없어 추가 IAM 준비 범위를 따로 승인했다. 유료 실행 리소스와 DNS는 아직 생성·변경하지 않았다.
+
+사람의 Console 사용자 `helpdesk-deployer`와 Customer-managed Policy 세 개를 생성·연결했다. Foundation은 MFA·서울·학습 Network·지정 Execution Role 전달, Runtime은 첫 ECS·Private RDS, Edge는 ALB·ACM·지정 Image와 Log 조회를 담당한다. Console Password와 MFA는 직접 설정하고 Access Key는 만들지 않는다. 기존 Role을 재사용하거나 `AdministratorAccess`를 연결하는 안 대신 별도 사용자와 제한한 정책을 선택했다.
+
+새 Network의 `Project=helpdesk-learning` Tag와 기존 다른 VPC의 변경 거부, Cluster·Service·Task Family·DB 이름, 첫 App `256 CPU Units·512 MiB`와 Private Single-AZ·20 GiB PostgreSQL 사양을 정책에 반영했다. 직접 Secret 값 조회·Image Push·리소스 삭제·임의 IAM 변경 권한은 넣지 않는다. 목록과 일부 Describe API는 서울의 다른 프로젝트 메타데이터도 조회할 수 있으므로 변경 대상 제한과 구분한다. 배포자는 지정 실행 Role로 Secret을 전달받는 Task를 실행할 수 있어 승인한 Image·명세도 유지해야 한다.
+
+사전 조회한 여섯 Role 중 ECS·RDS·ELB의 서비스 연결 Role 세 개가 없어, 필요한 세 Role의 생성만 지정 ARN·Service Name으로 허용했다. 이 초기 준비 단계에서는 Role 자체를 생성하지 않았다. 이후 RDS 생성 요청을 시도했으므로 다음 회차에 실제 Role 존재 여부를 다시 확인한다. 기존 Role 정책 수정이나 다른 Role 생성 권한은 추가하지 않는다.
+
+Lab의 `deploy/iam/` Template·안내와 구조 Test를 작성했다. AWS 편집기에서 ECS Feature Key의 String Type 경고 10개와 ALB Listener Protocol의 집합 한정자 오류 2개를 확인해 수정하고 관련 회귀 Test를 추가했다. Focused Test 16개·JavaScript 전체 189개·ESLint가 통과했고, AWS 편집기에서 세 정책의 보안·오류·경고·제안은 모두 0이었다.
+
+생성 후 저장된 정책 세 개의 전체 JSON이 Template과 일치하고, 지정 사용자에게 세 정책만 직접 연결된 것을 확인했다. 본인이 Password·MFA를 등록했고 Console에서 Password 활성화·MFA 1개·Access Key 0개를 확인했다. Root 로그아웃 후 `helpdesk-deployer`로 로그인하고 서울 Region으로 전환했다. [배포 신원 적용 보고서](./lab-reports/2026-10-13-deployer-identity-and-policies.md)에 근거를 남겼다. 실제 변경 권한·다른 대상의 거부와 Cloud 실행은 별도로 확인한다.
+
+### 첫 Network 명세
+
+10/13에는 별도 VPC에 Public·Private Subnet을 나누는 안과 기존 Network 재사용을 비교해, 학습 대상을 명확히 분리하는 별도 VPC를 선택했다. 세부 생성·접근 규칙을 적용 직전에 승인받았다. 직접 생성한 VPC·Subnet·Gateway·Public Route Table·Security Group에 `Project=helpdesk-learning` Tag를 지정했다. 기본 Security Group은 사용하지 않고, 자동 생성 Main Route Table은 기존 `local` 경로를 유지했다.
+
+| 대상 | 승인한 첫 구성 |
+|---|---|
+| VPC | `helpdesk-learning`, IPv4 `10.42.0.0/16`, IPv6 없음 |
+| Public Subnet | `helpdesk-public-a`·`c`, 서울 a·c AZ, `10.42.0.0/24`·`10.42.1.0/24` |
+| Private Subnet | `helpdesk-private-a`·`c`, 같은 두 AZ, `10.42.10.0/24`·`10.42.11.0/24`. Internet 기본 경로 없음 |
+| Internet Gateway / Route Table | Gateway 한 개와 Public Route Table 한 개. Public Subnet 두 개만 Internet 기본 경로 연결 |
+| ALB Group | 현재 학습자의 공인 IPv4 한 개(`/32`)에서 TCP 443, Outbound는 App Group의 TCP 8080 |
+| App Group | ALB Group에서 TCP 8080, Outbound는 HTTPS TCP 443과 RDS Group TCP 5432 |
+| RDS Group | App Group에서 TCP 5432. 응답은 Stateful 규칙 적용 |
+
+실제 공인 IP는 AWS 규칙에만 반영하고 공개 문서에는 적지 않는다. NAT Gateway·유료 Endpoint·Elastic IP를 만들지 않으며 기존 다른 리소스는 변경하지 않는다. Network 적용 단계에서는 App·RDS·ALB 실행을 시작하지 않는다.
+
+두 AZ의 Subnet을 준비하는 것은 App 두 개나 Multi-AZ DB를 실행한다는 뜻이 아니다. ALB는 두 AZ의 Subnet이 필요하고 RDS Subnet Group도 Single-AZ Instance와 별도로 두 AZ의 Subnet을 요구한다. 첫 App 한 개·Single-AZ RDS와 비용 최소화 조건은 유지한다. [ALB Subnet 조건](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/application-load-balancers.html), [RDS VPC 조건](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_VPC.WorkingWithRDSInstanceinaVPC.html)
+
+서울에서 VPC·Subnet 네 개의 `Available`, Gateway의 `Attached`, Public 기본 경로의 활성 상태와 Public Subnet 두 개의 명시적 연결을 확인했다. Private Subnet 두 개는 Main Route Table을 사용하며 그 Table에는 `10.42.0.0/16 → local` 한 경로만 있었다. VPC의 DNS 확인·Hostname 활성화와 Security Group 세 개의 Project 태그, Inbound/Outbound 수 ALB `1/1`·App `1/2`·RDS `1/0` 및 포트·출발 Group·목적지를 대조했다.
+
+Console의 Network ACL·NAT·Carrier Gateway 메타데이터 조회는 Allow 부재로 거부됐으며 추가 권한을 넣지는 않았다. 해당 오류와 실제 생성·설정 저장 성공을 구분했다. 자세한 결과는 [Network 적용 보고서](./lab-reports/2026-10-13-learning-network-and-security-groups.md)에 남겼고, 실제 Resource ID는 Lab의 Git 제외 `local/deployment/`에 보관한다. 공인 IP·Secret 값은 이 기록에 넣지 않는다. App·DB·ALB를 실행한 Packet 연결 Test와 RDS TLS·HTTPS는 다음 단계다.
+
+### Private DB의 최초 관리 통로
+
+Parameter Store의 사용자명·Password 등록과 PostgreSQL 안의 계정 생성은 별개의 작업이다. App에는 DB 관리자 Credential 대신 App용 계정을 전달한다. 최초 계정 설정을 위해 Private RDS에 접속할 관리 경로를 준비한다.
+
+Public RDS를 여는 안, 별도 EC2·VPN을 추가하는 안과 CloudShell VPC 환경을 비교해 이번에는 CloudShell 환경 한 개를 선택했다. 기존 Private Subnet과 DB의 인터넷 비공개 설정을 유지하고 NAT·유료 Endpoint·별도 EC2를 추가하지 않는다. 관리 통로의 임시 IAM 권한·Group·접속 규칙과 사용 후 정리 범위를 별도로 승인받았다. 이 승인은 RDS·App·ALB 실행을 포함하지 않는다. [AWS CloudShell VPC 안내](https://docs.aws.amazon.com/cloudshell/latest/userguide/using-cshell-in-vpc.html)
+
+`helpdesk-learning-db-bootstrap` Group을 `Project=helpdesk-learning`·`Purpose=db-bootstrap`으로 생성했다. Inbound는 없고 Outbound는 RDS Group의 TCP 5432 한 개다. RDS에는 App Group의 기존 규칙을 유지하고 Bootstrap Group의 TCP 5432 한 개만 추가했다. 저장된 Group·태그·규칙을 대조했으며 현재 RDS 규칙 수는 `2/0`, Bootstrap은 `0/1`이다.
+
+임시 정책은 기존 세 정책과 분리한다. 환경 생성 단계에는 VPC·Private Subnet·Bootstrap Group의 실제 ID를 제한하고 터미널 Session은 허용하지 않는다. 환경 ID를 확인한 뒤 같은 정책을 그 환경 ARN 하나의 시작·Session·중지·정리 권한으로 갱신한다. 전체 환경의 터미널 접근을 허용하는 `environment/*`는 사용하지 않는다. AWS 인증정보의 Shell 전달·Secret 값 조회·Access Key·자기 IAM 권한 수정도 허용하지 않는다.
+
+정리 권한은 해당 Private Subnet·VPC의 CloudShell 태그가 있는 ENI와 Bootstrap Group 한 개로 제한한다. DB 초기 설정과 App 연결 확인 뒤 환경·ENI 정리, RDS의 임시 규칙 제거, Bootstrap Group 삭제와 임시 정책 분리를 순서대로 확인한다. 기존 App·RDS·ALB Group과 기존 세 배포 정책은 유지한다. 권한 적용은 관리자 신원으로 수행하고 다시 배포 사용자로 돌아온다.
+
+관리자 신원으로 생성 단계의 `helpdesk-deployer-db-bootstrap` 정책을 생성·연결했다. AWS 편집기의 보안·오류·경고·추천은 모두 0이었고 저장된 전체 JSON은 실제 Network 값을 반영한 Template과 일치했다. 사용자에게 직접 연결된 네 정책을 확인했으며 기존 세 정책은 유지했다. Root에서 로그아웃한 뒤 배포 사용자로 환경을 생성하고, 실제 환경 ID의 Session 권한만 추가한다.
+
+배포 사용자로 학습 VPC·`helpdesk-private-a`·Bootstrap Group을 선택해 `helpdesk-db-bootstrap` VPC 환경 한 개를 등록했다. 목록의 이름과 `GetEnvironmentStatus` 거부 상세에서 확인한 환경 ID를 대조했다. 관리자 신원으로 해당 ID 하나를 반영한 두 번째 단계 정책을 기본 Version 2에 적용했고 전체 JSON의 일치와 Version 1 보존을 확인했다. 배포 사용자로 돌아와 실제 터미널·`psql 16.15` 실행과 환경 상세의 VPC·Subnet·Group 일치를 확인했다. RDS 생성과 실제 TLS·DB 접속은 별도로 진행한다.
+
+영향 파일은 Lab의 Bootstrap 정책 Template·구조 Test·관리 절차, WIL의 이 계획·주간 계획·10/13 노트·관리 통로 보고서다. 새 구조 Test 12개와 기존 정책 Test 16개가 통과했다. VPC 환경·권한·SQL Client 준비는 확인했고 ENI 개별 확인·공개 CA·실제 DB 연결은 남아 있다. [관리 통로 준비 보고서](./lab-reports/2026-10-13-private-db-bootstrap.md)에 설정과 실제 실행을 구분한다.
+
+### DB Subnet Group과 RDS 생성 거부
+
+10/13 회차의 연장 구간에서 실제 10/14에 `helpdesk-learning` DB Subnet Group을 만들고 Private Subnet 두 개·두 AZ·IPv4와 Project 태그를 확인했다. Console의 태그 입력·조회 흐름에 맞춘 Runtime 정책과 별도 승인한 `outposts:ListOutposts`를 기본 Version 3에 적용했다. 기존 Version 1·2를 보존했고 MFA·서울 Region·생성 제한 조건을 유지한 전체 저장 JSON을 대조했다. PostgreSQL 17의 기본 Parameter Group을 유지하기로 했으며, 서버의 TLS 강제와 Client의 `verify-full` 검증은 따로 확인한다.
+
+정책 저장 뒤에도 일반 PostgreSQL 생성 화면에서 Connection·태그 등 일부 구역을 불러오지 못했다. 작성자가 시도한 생성 요청은 `rds:CreateDBInstance`의 적용 가능한 identity-based Allow가 없다는 `403`으로 거부됐다. Action의 존재만으로 Resource·Condition까지 맞았다고 볼 수 없다. 실제 Payload의 암호화·Public Access·태그 등은 아직 읽지 못했으므로 누락이나 불일치를 확정하지 않는다. 비밀값을 노출하지 않기 위해 전체 Payload·Headers·HAR를 수집하지 않았고, 현재 브라우저 URL 식별이 불확실해 직접 확인을 중단했다.
+
+[실행·거부 보고서](./lab-reports/2026-10-14-rds-subnet-group-and-runtime-policy.md)에는 실제 실행일을, [학습 노트](./study-notes/2026-10-13-study-questions.md)에는 10/13 회차의 개념과 핵심 질문을 남긴다. 정책 관련 로컬 Test 32개·JavaScript 전체 205개·ESLint 통과는 저장 파일과 회귀 근거이며, RDS 생성·TLS·DB 계정 접속 성공을 의미하지 않는다. 추가 권한 확대나 Root 생성 우회는 하지 않고, 10/14에 실제 요청·저장 정책·리소스 상태를 대조한 뒤 같은 학습 범위를 이어간다.
 
 ## 실습 구성 후보
 

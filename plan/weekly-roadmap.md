@@ -1,7 +1,7 @@
 # SW AI Lab 심화과정 12주 주차별 Roadmap
 
 > 작성일: 2026-08-18
-> 최종 수정일: 2026-10-13
+> 최종 수정일: 2026-10-14
 > 상태: Active
 > 전체 기간: 기술 심화 8주 + 취업 심화 4주
 > 공통 실습: AI Helpdesk Learning Lab
@@ -332,7 +332,9 @@ Week 5는 Event Loop·Rendering·Promise의 일부 실행 근거를 확보했지
 
 10/12 회차에는 배포 사용자·AI 비활성 접수·Image 자원·RDS 공개 CA와 Parameter 여섯 개·Execution Role·365일 Log Group을 준비했다. 연장 구간의 실제 10/13에는 Lab `2e2cc40`의 로컬/CI Java 578개·JavaScript 173개·ESLint·Image Build 통과와 새 Image 추가·기존 Image 유지를 확인했다. 개념은 [10/12 학습 노트](../week8/study-notes/2026-10-12-study-questions.md), 날짜·Commit·Digest는 [10/13 실행 보고서](../week8/lab-reports/2026-10-13-deployment-image-ecr-publish.md)에 정리했다.
 
-이 회차를 마감하고 남은 학습은 10/13에 재개한다. 별도 실행 승인 뒤 AI 비활성 ECS·RDS·HTTPS 연결부터 확인하고, 배포용 개인정보 탐지·실패 저장·Provider·Worker 전체 조립과 실제 AI, System·CloudWatch·종료·Rollback·Snapshot 복원·최종 회귀·복습·WIL로 이어간다. Route 53 비교·조회와 IAM 거부·복구도 유지한다. [세부 재개 순서](../week8/weekly-plan.md#10월-13일-재개-순서)는 첫 HTTPS 접수·조회를 우선 목표로 두며, 전체 마감을 하루에 강제하거나 Week 9로 자동 이월하지 않는다.
+10/13 회차에는 비Root 배포 사용자·MFA·정책 4개, 학습 Network·CloudShell VPC 관리 통로·DB Subnet Group과 Runtime 정책을 확인했다. RDS 생성 요청은 `rds:CreateDBInstance`의 적용 가능한 Allow 부재로 거부됐으며, 실제 요청에서 맞지 않은 Resource·Condition은 아직 미확인이다. [10/13 학습 노트](../week8/study-notes/2026-10-13-study-questions.md)에 개념과 이해 변화를 정리하고, 자정 이후 실험은 [실제 10/14 보고서](../week8/lab-reports/2026-10-14-rds-subnet-group-and-runtime-policy.md)에 남겼다. 후속 정책의 로컬 Test 32개·JavaScript 전체 205개·ESLint는 통과했지만 실제 Cloud 연결은 미수행이다.
+
+이 회차를 마감하고 남은 학습은 10/14에 재개한다. 먼저 RDS 요청·정책 조건과 리소스 상태를 대조하고, Private DB의 TLS·계정·Migration과 AI 비활성 ECS·HTTPS 연결로 이어간다. 배포용 개인정보 탐지·실패 저장·Provider·Worker 전체 조립과 실제 AI, System·CloudWatch·종료·Rollback·Snapshot 복원·최종 회귀·복습·WIL도 유지한다. Route 53 비교·조회와 IAM 거부·복구를 생략하지 않는다. [세부 재개 순서](../week8/weekly-plan.md#10월-14일-재개-순서)를 따르며, 전체 마감을 하루에 강제하거나 Week 9로 자동 이월하지 않는다.
 
 ### 핵심 질문
 
@@ -479,3 +481,4 @@ Weekly Plan의 Baseline 이후 학습 항목을 조용히 추가하거나 완료
 | 2026-10-10 | 10/9 회차의 설정·마스킹·Process·실제 CI 실패·복구와 연장 구간의 OIDC·ECR 초기 설정 반영 | 사용자 학습노트·진행 문서·Commit 요청 | 10/10은 실제 OIDC 인증·Image 전달부터 계속. Cloud AI 조립·배포·HTTPS·관측·복구는 미완료로 유지하며 10/11 제외·내용 유지 원칙 보존 |
 | 2026-10-10 | 실제 OIDC 인증·ECR 1회 업로드·Digest 대조와 개념 학습을 반영하고 10/10 마감. 잔여 과업은 10/11 야간 또는 10/12 재개 | 사용자의 종료·재개 및 문서·Commit 요청 | 일요일 낮 제외·야간 선택적 재개로 변경. 전체 조립·권한·Cloud·HTTPS·관측·복구·회귀·WIL 유지. 부족하면 Week 8 기간 연장, 나머지 생성·DNS 변경은 별도 승인 |
 | 2026-10-13 | 10/12 회차의 배포 준비와 자정 이후 전체 검증·새 Image 전달을 기록하고 잔여 과업을 10/13 재개로 갱신 | 사용자 진행 현황·노트·관련 문서·Commit 요청 | AI 비활성 첫 Cloud·HTTPS 뒤 전체 AI·System·관측·복구·마감 순서. 전 선택 범위 유지, Week 8 In Progress·필요 시 연장. 실제 실행 날짜와 별도 승인 경계 유지 |
+| 2026-10-14 | 10/13 회차의 IAM·Network·DB 관리 통로·Subnet Group과 RDS 생성 거부를 기록하고 10/14 재개로 갱신 | 사용자의 회차 마감·노트·계획·Commit 요청 | 실제 요청의 불일치 조건은 미확인으로 유지. 요청·정책 대조 뒤 Private DB·AI 비활성 App·HTTPS·전체 AI·관측·복구·마감 범위를 그대로 이어감 |

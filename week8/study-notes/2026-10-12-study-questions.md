@@ -142,4 +142,4 @@ Commit은 Source를, Local Image ID는 검증 Job과 Publish Job 사이에 전�
 
 그 뒤 실제 개인정보 탐지기와 실패 코드의 DB·조회·UI 연결, Provider·Worker 전체 조립과 자원 측정을 진행한다. Cloud의 AI 수직 흐름·장애 추적·종료 중 DB와 Job·이전 Image 복귀·별도 Snapshot 복원·최종 복습과 WIL도 남아 있다. 하루에 모두 마치는 조건으로 내용을 줄이지 않는다.
 
-[설정과 Secret 자료](../study-docs/spring-settings-bean-and-secret-wiring.md#standard-securestring을-전달하는-순서), [Image와 ECS 자료](../study-docs/image-publishing-and-ecs-execution.md), [IAM 실행 Role 자료](../study-docs/iam-oidc-ecr-and-deployment-roles.md)와 [주간 재개 순서](../weekly-plan.md#10월-13일-재개-순서)에서 다음 학습을 확인한다.
+[설정과 Secret 자료](../study-docs/spring-settings-bean-and-secret-wiring.md#standard-securestring을-전달하는-순서), [Image와 ECS 자료](../study-docs/image-publishing-and-ecs-execution.md), [IAM 실행 Role 자료](../study-docs/iam-oidc-ecr-and-deployment-roles.md)와 [현재 주간 재개 순서](../weekly-plan.md#10월-14일-재개-순서)에서 다음 학습을 확인한다.
