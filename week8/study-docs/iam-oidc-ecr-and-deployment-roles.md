@@ -156,9 +156,23 @@ Secret을 누가 읽는지도 구분한다. ECS가 Task 설정의 Secret을 가�
 
 권한이 맞아도 Network 경로가 차단되면 AWS 서비스에 연결하지 못할 수 있다. 권한 거부와 연결 실패를 같은 문제로 취급하지 않는다. 오류를 없애기 위해 관리자 권한을 통째로 붙이기보다 거부된 작업과 대상을 먼저 확인한다.
 
+## Action이 있어도 Allow가 적용되지 않는 경우
+
+권한 정책은 `Action`만 검사하지 않는다. 해당 요청이 `Resource`와 `Condition`에도 맞아야 그 문장의 `Allow`가 적용된다. 한 Condition 안의 서로 다른 조건들은 모두 참이어야 한다. [AWS 조건 평가](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-logic-multiple-context-keys-or-values.html)
+
+예를 들어 DB 생성은 허용하되 이름·Instance Class·Storage 크기·Project 태그·암호화·Public Access를 제한할 수 있다. 요청 이름과 크기가 맞더라도 필요한 태그가 없으면 그 Allow 문장에는 맞지 않는다. 다른 유효한 허용도 없다면 요청은 거부된다.
+
+`no identity-based policy allows`라는 오류는 현재 요청에 적용되는 신원 정책의 Allow를 찾지 못했다는 뜻이다. Action 자체가 빠졌는지, 대상이 다른지, 조건이 맞지 않는지는 구분해 확인해야 한다. 명시적인 Deny가 있으면 다른 Allow를 추가해도 그 Deny를 우회할 수 없다. [AWS Access Denied 설명](https://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_access-denied.html)
+
+태그도 확인 위치가 다르다. `aws:RequestTag/Project`는 이번 생성 요청에 포함된 태그이며, `rds:subgrp-tag/Project`는 참조하는 RDS Subnet Group에 저장된 태그다. 부모나 참조 대상의 태그가 새 리소스의 생성 요청에 자동으로 복사된다고 가정하지 않는다.
+
+Console의 JavaScript 경고·메타데이터 조회 실패·실제 생성 요청 실패는 따로 본다. HTTP Status와 서비스 주소만으로 정확한 Action이나 실패 조건을 판정하지 않고, 응답의 오류 코드·설명과 요청의 비밀값 없는 필드를 대조한다. 전체 요청 Body·Header·HAR에는 Password·Credential·Token이 포함될 수 있으므로 공개하지 않는다.
+
 ## 핵심 질문
 
 1. `contents: read`와 `id-token: write`만으로 ECR Push가 허용되는가? AWS에서 추가로 어떤 결정을 내려야 하는가?
 2. Trust Policy가 `main` 실행만 허용하는데 다른 Branch가 Role 사용을 요청한다면, ECR 업로드 권한이 있어도 그 Role을 사용할 수 있는가?
 3. Role 사용은 성공했지만 `GetAuthorizationToken`만 허용되어 있다면 Registry 인증 성공만으로 Push 성공까지 예상할 수 있는가?
 4. GitHub Actions의 업로드 Role, ECS Execution Role, Application의 Task Role은 각각 누가 사용하는가?
+5. DB 생성 Action이 정책에 있어도 Project 태그나 암호화 조건이 맞지 않으면 요청은 허용되는가?
+6. 참조하는 Subnet Group의 태그와 이번 DB 생성 요청의 태그는 같은 값인가?
