@@ -1,9 +1,9 @@
 # Week 8 AWS 배포와 비용 초안
 
-> 상태: 일부 실행 — 검증 Image·배포 신원·Network·DB 관리 통로·Subnet Group 확인. RDS 생성 요청은 IAM 거부, 실제 App·DB·HTTPS 연결과 복구는 남아 있음
-> 요금 확인일: 2026-10-12
-> 진행 반영일: 2026-10-14 — 10/13 회차의 IAM·Network·CloudShell·Subnet Group·Runtime 정책과 RDS 생성 거부 포함
-> 계획 수정일: 2026-10-14 — 10/13 회차 마감·10/14 재개. 요청과 정책 조건 대조 뒤 Private DB·AI 비활성 App·HTTPS, 전체 AI·관측·복구 순서. 최소 비용·Log 365일 보존과 기존 승인 경계 유지
+> 상태: 일부 실행 — RDS·Private TLS·App DB 계정·Migration 7개·ACM·Cloudflare 서비스 DNS·ALB·App 연결 완료. Target Healthy·HTTPS Health 200/UP·로그인 페이지 200·익명 API 401 확인. App·ALB·RDS 실행 중이며 실제 로그인·Session·Role·CSRF·접수/DB Row·전체 AI·복구는 남아 있음
+> 요금 확인일: 2026-10-12, 2026-10-14 첫 Fargate 실행 요금 재확인
+> 진행 반영일: 2026-10-15 — Edge Version 4·비Root ALB/App 실행·Cloudflare 서비스 CNAME·Target Healthy·HTTPS 기본 응답 확인
+> 계획 수정일: 2026-10-15 — 10/14 회차 마감·10/15 재개. HTTPS의 실제 로그인·접수/SQL Row 뒤 전체 AI·관측·복구 순서. 최소 비용·Log 365일 보존과 기존 승인 경계 유지
 
 ## 확인한 조건
 
@@ -12,7 +12,7 @@
 - 최대 12개월 동안 학습 환경을 보관하되, 실습할 때만 실행해도 된다.
 - AWS 월 지출 상한은 최대 3만 원이다. 이 금액을 채우거나 근처까지 사용하는 목표가 아니다. 학습·Application의 목적을 달성하는 범위에서 지출을 최소화한다. 외부 AI 호출은 별도 당일 승인 범위로 관리한다.
 - 학습용 주소는 `helpdesk.hmyoon.com`이며 기존 DNS는 Cloudflare에서 관리한다.
-- AWS Console 접근과 OIDC·ECR·Image 업로드 Role을 구성했다. 이후 Standard Parameter 여섯 개·ECS Execution Role·1년 보존 Log Group과 비Root 배포 사용자·학습 Network·DB 관리 통로·Subnet Group을 승인 범위에서 적용했다. RDS 생성 요청은 IAM 거부 상태다. DNS 변경과 기존 승인을 벗어나는 권한·리소스 변경은 별도로 확인한다.
+- AWS Console 접근과 OIDC·ECR·Image 업로드 Role을 구성했다. 이후 Standard Parameter 여섯 개·ECS Execution Role·1년 보존 Log Group과 비Root 배포 사용자·학습 Network·DB 관리 통로·Subnet Group을 승인 범위에서 적용했다. 10/14에는 RDS·Private TLS·DB 계정을 준비하고 Cluster·Task Definition을 등록했다. 첫 Task의 DB 인증 실패 뒤 지정 암호 Parameter 한 개를 직접 맞췄고, 같은 Image의 새 Task에서 JDBC·Migration 7개·Spring 기동을 확인한 뒤 중지했다. 10/15에는 승인한 ALB·새 Task·Cloudflare 서비스 DNS를 연결해 HTTPS 기본 응답을 확인했다. 로그인 이후의 업무 요청·전체 AI·복구와 실습 종료는 남아 있으며 기존 승인을 벗어나는 권한·리소스 변경은 별도로 확인한다.
 
 ECR·ECS Fargate·RDS·ALB·DNS·HTTPS·Backup 복원은 [주간 계획](./weekly-plan.md)의 학습 범위를 그대로 유지한다. 비용을 줄이기 위해 해당 학습을 다른 서비스로 대체하거나 생략하지 않는다.
 
@@ -46,13 +46,47 @@ ECR·ECS Fargate·RDS·ALB·DNS·HTTPS·Backup 복원은 [주간 계획](./weekl
 
 10/13에는 배포 준비 변경을 두 저장소에 목적별로 Commit·Push했다. Lab `2e2cc40`의 일반 CI 성공 뒤 수동 검증·업로드를 한 번 실행했고, 두 실행의 Java 578개·JavaScript 173개·ESLint·Image Build가 통과했다. 수동 실행의 검증 Image를 그대로 ECR에 한 개 추가했으며 Console에서 기존 `77ce72c`와 새 `2e2cc40`의 Tag·Digest가 함께 남아 있는 두 Image를 확인했다. [새 Image 업로드 보고서](./lab-reports/2026-10-13-deployment-image-ecr-publish.md)에 실행 링크와 Digest를 기록했다. App·RDS·ALB 실행은 이번 승인에서 제외했고 DNS·IAM 설정과 기존 Image는 변경하지 않았다.
 
-10/10에는 Image 보관까지 진행하고 마감했다. 당시 ECS·RDS·ALB·NAT Gateway·DNS Record·ACM 인증서는 생성하거나 변경하지 않았고 자동 Image 삭제 정책도 만들지 않았다. ECR 보관 비용은 남으며 아래 2 GB 비용 가정은 실제 청구량이 아닌 초기 계산 기준이다. 10/12 회차의 배포 준비·후속 검증 뒤 10/13 회차에는 별도 승인 범위의 IAM·Network·관리 통로·Subnet Group을 적용했다. 현재 남은 학습은 10/14에 재개한다. 업로드 승인을 다른 리소스의 생성·과금·DNS 변경·삭제 승인으로 확대하지 않는다.
+10/10에는 Image 보관까지 진행하고 마감했다. 당시 ECS·RDS·ALB·NAT Gateway·DNS Record·ACM 인증서는 생성하거나 변경하지 않았고 자동 Image 삭제 정책도 만들지 않았다. ECR 보관 비용은 남으며 아래 2 GB 비용 가정은 실제 청구량이 아닌 초기 계산 기준이다. 10/12 회차의 배포 준비·후속 검증 뒤 10/13 회차에는 별도 승인 범위의 IAM·Network·관리 통로·Subnet Group을 적용했고, 10/14 회차에는 Private DB·ECS·HTTPS를 연결했다. 업로드 승인을 다른 리소스의 생성·과금·DNS 변경·삭제 승인으로 확대하지 않는다.
 
 ### 10월 14일에 이어갈 배포 단계
 
 먼저 RDS·서비스 연결 Role의 존재를 재조회하고 생성 요청의 비밀값 없는 설정을 Runtime 정책과 대조한다. 적용 가능한 Allow가 없다는 오류만으로 어떤 조건이 맞지 않았는지 단정하지 않는다. 기존 보안·최소 비용 조건을 유지하며, 정책 변경이 필요하면 차이와 최소 변경안을 제시해 승인받는다. DB 생성 뒤 관리 통로의 공개 CA·TLS·관리자/App 계정·Migration을 확인한다. 이어 검증 Digest와 Task Definition의 실제 설정·사양·참조·실행 범위를 확인하고 AI 비활성 App의 Parameter 전달·Log·로그인·접수, DNS·ACM·ALB·HTTPS와 Browser 보안 계약을 검증한다.
 
-개인정보 탐지기·실패 코드의 DB/조회/UI 반영·Provider·Worker 조립과 전체 AI 자원 측정은 이어서 진행한다. 관측·종료·재배포·이전 정상 Image 복귀·별도 Snapshot 복원·최종 회귀도 마감 범위에 남긴다. [주간 재개 순서](./weekly-plan.md#10월-14일-재개-순서)를 따르며, 하루에 끝내기 위해 학습 내용을 빼지는 않는다. 실제 AI·Cloud 실행·DNS 변경·리소스 정리는 각각 기존 승인 경계를 유지한다.
+#### 첫 ECS 기동 결과와 남은 연결
+
+`helpdesk-learning:1`은 `0.25 vCPU·512 MiB`, 검증 Image Digest·기존 Execution Role·여섯 Parameter·Private RDS를 사용한다. 단독 Task 첫 실행은 Image Pull·JVM·Log 전송 뒤 DB 인증 `28P01`로 종료됐다. 지정 DB 암호 Parameter만 사용자 입력으로 맞춘 다음, 같은 Image·명세의 Task 한 개를 추가 실행해 JDBC·Migration 7개와 Spring 기동을 확인했다. 기동 확인 뒤 Task는 중지했으며 Service 자동 재실행·AI 호출은 추가하지 않았다. [첫 Cloud 실행 보고서](./lab-reports/2026-10-14-ecs-first-cloud-startup.md)
+
+Task Definition의 `awslogs-create-group: "false"`는 Console 등록에서 거부되어 필드를 생략했다. 기본값 false를 사용하므로 기존 Log Group·권한 범위는 유지한다. 이 설정 수정에 Image 재Build나 IAM 변경은 필요하지 않았다.
+
+서울 공개 요금의 Linux x86 Fargate는 vCPU 시간당 `$0.04656`, GB 시간당 `$0.00511`이다. 첫 사양은 `$0.014195/시간`, 공인 IPv4 한 개 `$0.005/시간`을 합쳐 약 `$0.0192/시간`이다. 실행 종료 뒤 App·해당 IPv4의 실행 과금은 멈추지만, 기존 RDS·Storage·Image·Log·세금·기타 전송은 별개다. 실제 전체 청구액을 이 계산으로 대신하지 않는다. [서울 ECS 공개 요금표](https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonECS/current/ap-northeast-2/index.json), [Fargate 과금 기준](https://aws.amazon.com/fargate/pricing/), [IPv4 요금](https://aws.amazon.com/vpc/pricing/)
+
+ACM의 검색 거부는 `acm:SearchCertificates`가 기존 Edge 정책에 없어서 발생했다. 승인한 검색 Action 한 개만 MFA·서울 조건으로 추가해 기본 Version 2로 저장하고 Version 1을 보존했다. 저장 JSON 전체가 승인안과 일치하며, 비Root MFA 로그인 뒤 `helpdesk.hmyoon.com` 검색에서 거부 없이 0개 결과를 확인했다. 기존 인증서 생성 조건·다른 IAM 정책·Network는 바꾸지 않았고 인증서·DNS·ALB·새 Task는 만들지 않았다.
+
+내보내기 불가능한 ACM 공개 인증서의 DNS 검증·발급을 먼저 마친 뒤 승인한 ALB·App을 연결해 인증서 대기 중의 실행 비용을 줄였다. 이제 실제 HTTPS 로그인·Session·Role·CSRF·접수/조회와 SQL Row를 대조한다. App 8080을 인터넷에 직접 열거나 Secure Cookie를 끄는 방식으로 우회하지 않는다. 현재 ALB Group의 Inbound는 지정 IPv4 `/32`의 443만 허용하므로, 80 Port의 Redirect를 시험하려면 해당 규칙 변경 범위를 먼저 확인한다. 그 뒤 전체 AI·관측·재배포·Rollback·DB 복원을 이어간다.
+
+#### ACM 발급·DNS 검증과 ALB 준비
+
+10/14 회차를 이어서 실제 10/15에 인증서 발급을 진행했다. Project 태그를 포함한 요청은 기존 Edge에 `acm:AddTagsToCertificate`가 없어 거부됐다. 별도 승인한 태그 Action 한 개를 기간 제한 없이 기본 Version 3에 적용하고 Version 1·2를 보존했다. MFA·서울·Project 태그와 기존 도메인·DNS·RSA 2048·내보내기 비활성 조건은 유지했다. 저장 JSON 전체의 일치와 AWS 편집기 검사 0건, 관련 구조 Test 26개·JavaScript 전체 211개·ESLint 통과를 확인했다.
+
+비Root MFA 로그인으로 `helpdesk.hmyoon.com` 단일 공개 인증서 요청에 성공했다. Cloudflare에는 지정 검증 CNAME 한 개를 `DNS only`·TTL Auto로 추가했고, 기존 Record는 변경하지 않았다. AWS 안내와 저장된 이름·대상의 일치, 공개 DNS 조회와 01:28:52 KST의 ACM `발급됨`을 확인했다. 인증서 발급과 실제 HTTPS 요청 성공은 다른 검증이다.
+
+학습용 IP Target Group `helpdesk-learning`을 HTTP 8080·Health 경로 `/actuator/health`·성공 코드 200으로 생성하고 Project 태그를 확인했다. ALB는 학습 VPC·Public Subnet 두 개·기존 ALB Group·HTTPS 443·발급된 인증서로 준비했다. 권장 TLS 1.2/1.3 정책을 유지하며 HTTP 80·WAF·CloudFront·Global Accelerator는 추가하지 않았다. [ALB 생성 설정](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-application-load-balancer.html), [TLS 정책](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/describe-ssl-policies.html)
+
+ALB 생성 단계는 `ec2:GetSecurityGroupsForVpc` 조회 권한 부족으로 거부됐다. 이후 목록을 재조회해 ALB 0개를 확인했다. 새 단독 App Task는 기존 명세·Public a Subnet·App Group·Fargate·한 개 실행으로 준비했지만 제출하지 않았다. 추가 IAM 권한·보안 그룹 규칙·서비스 DNS는 변경하지 않았고, 이번 단계에서 ALB·App 실행 비용은 시작하지 않았다. 기존 RDS·Storage·Image·Log 비용은 별개다.
+
+이후 학습 VPC 한 개의 보안 그룹 조회 추가를 승인받아 01:51 KST에 Edge 기본 Version 4로 저장했다. `ec2:GetSecurityGroupsForVpc` 한 Action·지정 VPC의 ARN 한 개와 MFA·서울·Project 조건만 추가했고 기존 14개 문장·Version 1~3을 보존했다. 전체 저장 JSON은 승인안과 정확히 일치하며 공백 제외 5,164자다. 정책 Test 27개·JavaScript 전체 212개·ESLint 10.11.0도 통과했다. 이 정책 변경에서는 실행·생성·Secret·인터넷 접근 권한과 다른 IAM·보안 그룹 규칙을 변경하지 않았다. [조회 API와 역할](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetSecurityGroupsForVpc.html), [VPC 단위 권한 참조](https://docs.aws.amazon.com/service-authorization/latest/reference/list_ec2.html)
+
+#### ALB·App 실행과 HTTPS 기본 응답
+
+비Root MFA 로그인 뒤 02:05 KST에 ALB와 HTTPS 443 Listener가 생성됐다. Wizard의 추가 `AddListenerCertificates`와 자동 삭제 단계는 거부됐지만, 상세에서 실제 ALB·Listener 한 개와 이미 연결된 기본 인증서·Target Group 전달 규칙을 확인했다. 추가 인증서·삭제 권한을 넓히거나 같은 ALB를 재생성하지 않고 현재 구성의 HTTPS 동작을 검증했다.
+
+같은 검증 Image·명세의 App Task 한 개를 실행하고 Private IP의 8080을 Target Group에 등록했다. ALB는 활성, Task는 RUNNING, 대상은 Healthy였다. Cloudflare에는 서비스 CNAME `helpdesk` 한 개를 ALB 주소로 연결해 DNS-only·TTL Auto로 저장했고 기존 검증 CNAME을 유지했다. App의 Inbound는 여전히 ALB Group만 허용하며 HTTP 80은 열지 않았다.
+
+브라우저에서 Health의 `{"status":"UP"}`와 로그인 페이지를 확인했다. 별도 익명 HTTP 점검은 Health 200·로그인 200·Ticket 조회 401과 Location Header 부재를 확인했다. 실제 로그인·Session·Role·CSRF·접수/SQL Row와 AI·복구는 다음 단계다. [HTTPS 연결 보고서](./lab-reports/2026-10-15-cloud-https-baseline.md)에 확인 수단과 결과를 구분했다.
+
+App·ALB·RDS는 현재 실행 중이며 비용도 계속 발생한다. App과 공인 IPv4 한 개는 약 `$0.0192/시간`, ALB와 IPv4 두 개는 약 `$0.0325/시간`에 LCU 사용량이 더해진다. 기존 RDS 실행·Storage·Image·Log·세금·전송 비용은 별개다. 실습 종료 시 Task 중지와 ALB·DB 정리의 승인 범위를 확인하며, 삭제나 상시 실행을 이번 연결 확인만으로 승인한 것으로 보지 않는다.
+
+10/14 회차를 마감하고 남은 학습은 10/15에 실제 로그인·Session·Role·CSRF와 접수/SQL Row부터 이어간다. 개인정보 탐지기·실패 코드의 DB/조회/UI 반영·Provider·Worker 조립과 전체 AI 자원 측정, 관측·종료·재배포·이전 정상 Image 복귀·별도 Snapshot 복원·최종 회귀도 마감 범위에 남긴다. [주간 재개 순서](./weekly-plan.md#10월-15일-재개-순서)를 따르며 하루에 끝내기 위해 내용을 빼지는 않는다. 마지막 확인 시 App·ALB·RDS는 실행 중이며, 중지·삭제는 이번 문서 마감과 구분해 승인 범위를 확인한다.
 
 Root의 MFA 활성화와 활성 Access Key 부재를 확인했다. 일상 배포용 IAM 사용자와 제한된 정책을 생성·연결한 뒤 본인이 Password·MFA를 등록하고 비Root 신원으로 로그인했다. Root Access Key를 CI에 제공하는 방식은 사용하지 않는다. [AWS Root 사용 권고](https://docs.aws.amazon.com/IAM/latest/UserGuide/root-user-best-practices.html)
 
@@ -98,7 +132,7 @@ Parameter Store의 사용자명·Password 등록과 PostgreSQL 안의 계정 생
 
 Public RDS를 여는 안, 별도 EC2·VPN을 추가하는 안과 CloudShell VPC 환경을 비교해 이번에는 CloudShell 환경 한 개를 선택했다. 기존 Private Subnet과 DB의 인터넷 비공개 설정을 유지하고 NAT·유료 Endpoint·별도 EC2를 추가하지 않는다. 관리 통로의 임시 IAM 권한·Group·접속 규칙과 사용 후 정리 범위를 별도로 승인받았다. 이 승인은 RDS·App·ALB 실행을 포함하지 않는다. [AWS CloudShell VPC 안내](https://docs.aws.amazon.com/cloudshell/latest/userguide/using-cshell-in-vpc.html)
 
-`helpdesk-learning-db-bootstrap` Group을 `Project=helpdesk-learning`·`Purpose=db-bootstrap`으로 생성했다. Inbound는 없고 Outbound는 RDS Group의 TCP 5432 한 개다. RDS에는 App Group의 기존 규칙을 유지하고 Bootstrap Group의 TCP 5432 한 개만 추가했다. 저장된 Group·태그·규칙을 대조했으며 현재 RDS 규칙 수는 `2/0`, Bootstrap은 `0/1`이다.
+`helpdesk-learning-db-bootstrap` Group을 `Project=helpdesk-learning`·`Purpose=db-bootstrap`으로 생성했다. Inbound는 없고 Outbound는 RDS Group의 TCP 5432 한 개다. RDS에는 App Group의 기존 규칙을 유지하고 Bootstrap Group의 TCP 5432 한 개만 추가했다. 저장된 Group·태그·규칙을 대조했으며 당시 RDS 규칙 수는 `2/0`, Bootstrap은 `0/1`이었다.
 
 임시 정책은 기존 세 정책과 분리한다. 환경 생성 단계에는 VPC·Private Subnet·Bootstrap Group의 실제 ID를 제한하고 터미널 Session은 허용하지 않는다. 환경 ID를 확인한 뒤 같은 정책을 그 환경 ARN 하나의 시작·Session·중지·정리 권한으로 갱신한다. 전체 환경의 터미널 접근을 허용하는 `environment/*`는 사용하지 않는다. AWS 인증정보의 Shell 전달·Secret 값 조회·Access Key·자기 IAM 권한 수정도 허용하지 않는다.
 
@@ -118,6 +152,14 @@ Public RDS를 여는 안, 별도 EC2·VPN을 추가하는 안과 CloudShell VPC 
 
 [실행·거부 보고서](./lab-reports/2026-10-14-rds-subnet-group-and-runtime-policy.md)에는 실제 실행일을, [학습 노트](./study-notes/2026-10-13-study-questions.md)에는 10/13 회차의 개념과 핵심 질문을 남긴다. 정책 관련 로컬 Test 32개·JavaScript 전체 205개·ESLint 통과는 저장 파일과 회귀 근거이며, RDS 생성·TLS·DB 계정 접속 성공을 의미하지 않는다. 추가 권한 확대나 Root 생성 우회는 하지 않고, 10/14에 실제 요청·저장 정책·리소스 상태를 대조한 뒤 같은 학습 범위를 이어간다.
 
+10/14에는 Console 조회와 DB 생성 조건을 함께 점검하고 Runtime Version 4를 유지했다. 지원하지 않는 Aurora Serverless용 IAM Action은 제외했고, 지원되는 RDS 조회 세 개만 MFA·서울 조건의 보조 정책으로 분리했다. 기존 네 정책과 DB 생성 조건은 유지했다.
+
+학습 VPC·Private Subnet 두 개와 Project 태그를 확인한 뒤 비Root로 PostgreSQL을 생성했다. 초기 DB 이름은 `helpdesk`, 자동 백업은 7일 보존이며 자동 증설·추가 유료 기능은 껐다. 마스터 암호 입력과 생성 제출은 작성자가 직접 했다. 이어 Private TLS·관리자/App DB 접속과 권한을 확인했다. [종합 진단과 정책 적용](./lab-reports/2026-10-14-rds-console-permission-diagnostics.md)에 조회·생성·접속 결과를 정리했다.
+
+생성 요청은 비Root에서 성공했고, 저장된 엔진 17.11·`db.t4g.micro`·Single-AZ·gp3 20 GiB·암호화·비공개·기존 Private Subnet Group과 전용 RDS Group을 확인했다. 자동 증설·추가 모니터링은 비활성이고 자동 백업은 7일이다. 지정 DB는 `사용 가능` 상태다. 승인한 DB 한 개의 태그 조회를 MFA·서울 조건으로 보조 정책 Version 2에 적용하고 `Project=helpdesk-learning`을 확인했다. 글로벌 클러스터·Snapshot 조회는 추가하지 않았다.
+
+기존 Private CloudShell에서 공개 CA의 Hash를 대조하고 실제 TLS Handshake를 수행했다. `TLSv1.3`·인증서 검증 `OK`·RDS Endpoint의 Hostname 일치와 관리자/App 계정의 `verify-full` 접속을 확인했다. 승인한 App 계정·Schema 권한을 준비하고 실제 생성·INSERT·조회·Rollback을 검증했으며 임시 Table·Row는 남지 않았다. 잘못된 Hostname과 암호 없는 비TLS 접속도 거부됐다. ECS App·Migration·JDBC·HTTPS 연결은 다음 단계다. 인터넷 경로·NAT·유료 Endpoint·새 EC2는 추가하지 않았다.
+
 ## 실습 구성 후보
 
 ```text
@@ -127,7 +169,7 @@ HTTPS: Browser → ALB HTTPS 443 → Helpdesk Task → Private RDS PostgreSQL
 
 기존 Cloudflare DNS를 유지하고 `helpdesk.hmyoon.com`을 ALB로 연결하는 CNAME을 DNS-only로 두는 구성을 제안한다. DNS-only는 Cloudflare가 주소 조회에 응답하되 HTTP 요청을 Proxy하지 않는 방식이다. 첫 실습에서 CDN·Proxy·이중 TLS 경로를 추가하지 않고 ALB의 인증서와 Source IP 접근 제한을 직접 확인하기 위한 선택이다. 이 경우 Cloudflare의 HTTP 보호 기능은 사용하지 않으므로 ALB의 Inbound 제한을 별도로 유지한다. [Cloudflare Proxy와 DNS-only](https://developers.cloudflare.com/dns/proxy-status/)
 
-ACM이 발급하는 도메인 검증 CNAME과 서비스 주소를 ALB로 연결하는 CNAME은 서로 다른 Record다. 두 Record를 구분하고, 인증서 검증 Record는 Proxy하지 않는다. AWS의 인증서는 AWS 밖의 DNS에서도 검증할 수 있다. 아직 Record나 인증서를 만들지 않았다. [ACM DNS 검증](https://docs.aws.amazon.com/acm/latest/userguide/dns-validation.html)
+ACM이 발급하는 도메인 검증 CNAME과 서비스 주소를 ALB로 연결하는 CNAME은 서로 다른 Record다. 두 Record를 구분하고, 인증서 검증 Record는 Proxy하지 않는다. AWS의 인증서는 AWS 밖의 DNS에서도 검증할 수 있다. 10/15에는 검증 CNAME 등록·인증서 발급과 서비스 CNAME의 ALB 연결을 완료했다. 두 Record 모두 Cloudflare DNS-only·TTL Auto로 유지한다. [ACM DNS 검증](https://docs.aws.amazon.com/acm/latest/userguide/dns-validation.html)
 
 기존 Roadmap에서 선택한 Route 53 학습은 삭제하지 않는다. Hosted Zone·NS 위임·Alias를 Cloudflare와 비교하고, 별도 학습 Zone에서 직접 DNS 조회하는 실습을 유지한다. 메인 도메인의 Nameserver를 옮기거나 기존 서비스를 변경할 필요는 없다. 별도 Zone 생성은 AWS 승인 범위에 포함하며 추가 비용을 따로 계산한다.
 
