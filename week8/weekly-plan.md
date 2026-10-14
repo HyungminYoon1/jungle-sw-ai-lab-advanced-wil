@@ -5,7 +5,7 @@
 > 상태: In Progress — 배포 준비·IAM·Network·DB 관리 통로 확인. RDS 생성 요청은 IAM 거부, 실제 ECS·RDS·HTTPS·복구 검증은 남아 있음
 > 1차 목표 기간: 2026-10-08 목요일 ~ 2026-10-12 월요일. 미완료 항목이 남으면 Week 8 기간 연장
 > 초기 학습일: 10/8·10/9·10/10·10/12, 총 4일
-> 현재 진행: 10/13 회차 마감. 비Root 배포 사용자·학습 Network·CloudShell VPC·DB Subnet Group·Runtime 정책 적용을 확인했다. 자정 이후 실제 실행일은 10/14 보고서에 유지하며, 10/14에는 RDS 생성 요청과 정책 조건 대조부터 재개한다. 학습 범위는 줄이지 않는다.
+> 현재 진행: 10/14 RDS 오류 진단 진행 중. CloudTrail에서 생성 거부와 세 메타데이터 조회 거부를 구분했고, 승인한 Runtime Version 4를 적용·대조했다. 비Root 생성 화면 재확인과 실제 생성 조건 대조부터 이어가며, DB·TLS·ECS·HTTPS와 나머지 학습 범위는 유지한다.
 > 초기 순학습 시간 배분: 하루 10시간, 총 40시간. 휴식·식사와 단순 대기 시간 제외. 완료에 필요한 시간의 상한은 아님
 > 모드: `DEEP_LEARNING_MODE`
 > 핵심 질문: 이미 검증한 문의 접수와 AI 제안 흐름을 Cloud의 HTTPS 환경에 배포하고, 실패 원인을 찾으며 이전 실행 상태로 복구할 수 있는가?
@@ -453,3 +453,4 @@ Actions는 장기 AWS Key 저장 대신 OIDC의 단기 자격 증명을 사용�
 - [학습 및 기술 콘텐츠 계획](../plan/learning-and-content-plan.md)
 - [깊은 수직 학습 범위 결정](../plan/decisions/0002-depth-first-ai-assisted-expansion.md)
 - [Week 7 완료 결과](../week7/wil.md)
+- [10월 14일 RDS 조회 권한과 생성 요청 진단](./lab-reports/2026-10-14-rds-console-permission-diagnostics.md)
