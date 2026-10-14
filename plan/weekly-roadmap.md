@@ -1,7 +1,7 @@
 # SW AI Lab 심화과정 12주 주차별 Roadmap
 
 > 작성일: 2026-08-18
-> 최종 수정일: 2026-10-14
+> 최종 수정일: 2026-10-15
 > 상태: Active
 > 전체 기간: 기술 심화 8주 + 취업 심화 4주
 > 공통 실습: AI Helpdesk Learning Lab
@@ -334,7 +334,9 @@ Week 5는 Event Loop·Rendering·Promise의 일부 실행 근거를 확보했지
 
 10/13 회차에는 비Root 배포 사용자·MFA·정책 4개, 학습 Network·CloudShell VPC 관리 통로·DB Subnet Group과 Runtime 정책을 확인했다. RDS 생성 요청은 `rds:CreateDBInstance`의 적용 가능한 Allow 부재로 거부됐으며, 실제 요청에서 맞지 않은 Resource·Condition은 아직 미확인이다. [10/13 학습 노트](../week8/study-notes/2026-10-13-study-questions.md)에 개념과 이해 변화를 정리하고, 자정 이후 실험은 [실제 10/14 보고서](../week8/lab-reports/2026-10-14-rds-subnet-group-and-runtime-policy.md)에 남겼다. 후속 정책의 로컬 Test 32개·JavaScript 전체 205개·ESLint는 통과했지만 실제 Cloud 연결은 미수행이다.
 
-이 회차를 마감하고 남은 학습은 10/14에 재개한다. 먼저 RDS 요청·정책 조건과 리소스 상태를 대조하고, Private DB의 TLS·계정·Migration과 AI 비활성 ECS·HTTPS 연결로 이어간다. 배포용 개인정보 탐지·실패 저장·Provider·Worker 전체 조립과 실제 AI, System·CloudWatch·종료·Rollback·Snapshot 복원·최종 회귀·복습·WIL도 유지한다. Route 53 비교·조회와 IAM 거부·복구를 생략하지 않는다. [세부 재개 순서](../week8/weekly-plan.md#10월-14일-재개-순서)를 따르며, 전체 마감을 하루에 강제하거나 Week 9로 자동 이월하지 않는다.
+10/14 회차에는 기존 DB 생성 조건을 유지한 비Root RDS 생성·Private TLS·App 계정과 권한을 확인했다. 같은 Image의 첫 Task는 DB 인증에서 실패했고, 지정 Parameter를 맞춘 새 Task에서 JDBC·Migration 7개·Spring 기동이 성공했다. 자정 이후 ACM·두 CNAME·ALB·새 App Task를 연결해 Target Healthy·HTTPS Health 200/UP·로그인 페이지 200·익명 API 401을 확인했다. 개념은 [10/14 노트](../week8/study-notes/2026-10-14-study-questions.md), 실제 실행일과 확인 수단은 [ECS 보고서](../week8/lab-reports/2026-10-14-ecs-first-cloud-startup.md)와 [10/15 HTTPS 보고서](../week8/lab-reports/2026-10-15-cloud-https-baseline.md)에 기록했다. 후속 로컬 JavaScript 전체 212개·ESLint 통과를 기존 Image의 CI 결과와 구분한다.
+
+이 회차를 마감하고 남은 학습은 10/15에 실제 Browser의 로그인·Session·Role·CSRF와 접수/SQL Row부터 재개한다. 배포용 개인정보 탐지·실패 저장·Provider·Worker 전체 조립과 실제 AI, System·CloudWatch·종료·Rollback·Snapshot 복원·최종 회귀·복습·WIL은 유지한다. Route 53 비교·조회와 HTTP Redirect도 남은 실험으로 관리한다. [세부 재개 순서](../week8/weekly-plan.md#10월-15일-재개-순서)를 따르며, 전체 마감을 하루에 강제하거나 Week 9로 자동 이월하지 않는다. 마지막 확인 시 App·ALB·RDS는 실행 중이므로 재개할 때 비용·중지·보관 범위를 확인한다.
 
 ### 핵심 질문
 
@@ -482,3 +484,4 @@ Weekly Plan의 Baseline 이후 학습 항목을 조용히 추가하거나 완료
 | 2026-10-10 | 실제 OIDC 인증·ECR 1회 업로드·Digest 대조와 개념 학습을 반영하고 10/10 마감. 잔여 과업은 10/11 야간 또는 10/12 재개 | 사용자의 종료·재개 및 문서·Commit 요청 | 일요일 낮 제외·야간 선택적 재개로 변경. 전체 조립·권한·Cloud·HTTPS·관측·복구·회귀·WIL 유지. 부족하면 Week 8 기간 연장, 나머지 생성·DNS 변경은 별도 승인 |
 | 2026-10-13 | 10/12 회차의 배포 준비와 자정 이후 전체 검증·새 Image 전달을 기록하고 잔여 과업을 10/13 재개로 갱신 | 사용자 진행 현황·노트·관련 문서·Commit 요청 | AI 비활성 첫 Cloud·HTTPS 뒤 전체 AI·System·관측·복구·마감 순서. 전 선택 범위 유지, Week 8 In Progress·필요 시 연장. 실제 실행 날짜와 별도 승인 경계 유지 |
 | 2026-10-14 | 10/13 회차의 IAM·Network·DB 관리 통로·Subnet Group과 RDS 생성 거부를 기록하고 10/14 재개로 갱신 | 사용자의 회차 마감·노트·계획·Commit 요청 | 실제 요청의 불일치 조건은 미확인으로 유지. 요청·정책 대조 뒤 Private DB·AI 비활성 App·HTTPS·전체 AI·관측·복구·마감 범위를 그대로 이어감 |
+| 2026-10-15 | 10/14 회차의 RDS·ECS·HTTPS 기본 응답을 기록하고 잔여 과업을 10/15 재개로 갱신 | 사용자의 회차 마감·진행 문서·Commit 요청 | 실제 실행일은 보고서에 유지. 로그인·업무 Row·전체 AI·관측·복구·마감 범위 유지, Week 8 In Progress·Week 9 자동 이월 없음. 실행 리소스 비용과 정리는 별도 확인 |
