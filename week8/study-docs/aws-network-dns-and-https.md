@@ -75,6 +75,28 @@ Outbound도 맞춰야 한다. ALB에서 App의 `8080`, App에서 DB의 `5432`, T
 
 App에 Public IP가 있어도 App Inbound를 ALB에서만 허용할 수 있다. 반대로 Private RDS라는 이름만으로 안전해지는 것은 아니므로 Public Access·Route·Group을 함께 확인한다. IPv4와 IPv6 규칙도 별개의 범위다.
 
+### 학습자 IP와 ipconfig의 주소는 무엇이 다른가
+
+학습자 IP 제한은 **허용한 출발 IP에서만 ALB에 연결하도록 하는 조치**다. Browser가 ALB에 직접 연결하는 IPv4 구성에서는 인터넷에서 보이는 공인 출발 IP를 허용한다. 보통 공유기를 사용하는 PC의 사설 IPv4를 등록하는 것은 아니다.
+
+다음 주소는 설명용 예이며 실제 학습자의 주소가 아니다.
+
+```text
+PC의 사설 IPv4           공유기·통신사의 NAT          인터넷의 ALB
+192.168.0.10 ──────────> 공인 IPv4 203.0.113.25 ─────> 출발 IP 확인
+
+허용 규칙의 예: TCP 443, Source 203.0.113.25/32
+               TCP 80,  Source 203.0.113.25/32
+```
+
+NAT는 통신에 사용하는 주소를 변환한다. ALB가 보는 출발 IP는 이 예에서 `192.168.0.10`이 아니라 `203.0.113.25`다. `/32`는 단일 IPv4 주소를 뜻하며, PC 한 대나 사용자 한 명을 식별한다는 뜻은 아니다. [AWS의 단일 IP 허용 규칙](https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html#security-group-rule-components)
+
+`ipconfig`는 PC의 각 Network Adapter에 설정된 IPv4·IPv6·Subnet Mask·Gateway 등을 보여준다. 집이나 회사의 일반적인 공유기 환경에서 보이는 IPv4는 사설 주소인 경우가 많지만, 출력된 모든 주소가 사설 주소라고 단정하지 않는다. 인터넷으로 나갈 때 보이는 공인 출발 IP는 별도로 확인한다. [Microsoft ipconfig 설명](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/ipconfig)
+
+같은 공유기나 회사망의 여러 기기가 같은 공인 IPv4를 공유할 수 있다. 따라서 IP 제한은 접속 범위를 줄이는 방어이고, 로그인·Role 검사를 대체하지 않는다.
+
+학습 장소 이동·모바일 Hotspot·VPN·통신사의 주소 재할당으로 공인 출발 IP가 바뀌면 기존 `/32` 규칙으로 새 연결이 허용되지 않을 수 있다. 이때는 새 출발 IP를 확인하고 승인한 범위에서 ALB의 80·443 규칙을 함께 갱신한다. 접속이 안 된다는 이유로 인터넷 전체를 허용하거나 App·DB의 접근 범위를 넓히지 않는다.
+
 ## DNS Record는 주소를 알려준다
 
 서비스 주소 연결과 인증서 검증은 서로 다른 DNS Record를 사용한다.
@@ -98,6 +120,47 @@ Hosted Zone은 특정 Domain에 대한 DNS Record 묶음이다. Public Hosted Zo
 
 Route 53의 Alias는 ALB 같은 지원 대상에 이름을 연결하는 AWS의 Record 기능이다. Domain 최상위에도 사용할 수 있다는 점 등이 일반 CNAME과 다르다. Cloudflare에 CNAME을 둔다고 Route 53의 Alias를 사용하는 것은 아니다. [Route 53과 ALB 연결](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-to-elb-load-balancer.html)
 
+AWS에 App을 배포했다고 DNS까지 Route 53으로 옮길 필요는 없다. 기존 Cloudflare DNS에서 서비스 이름을 ALB의 DNS 이름에 연결해 사용할 수 있다.
+
+## App Task만 교체하면 무엇을 바꿔야 할까
+
+**같은 ALB를 유지한다면 서비스 CNAME은 그대로 두고, Target Group에 등록된 App의 주소를 새 Task에 맞춘다.** DNS가 알려주는 대상과 ALB가 요청을 전달하는 대상은 서로 다르다.
+
+| 설정 | 연결하는 대상 | 하는 일 |
+|---|---|---|
+| Cloudflare의 서비스 CNAME | 서비스 Domain → ALB의 DNS 이름 | Browser가 접속할 ALB를 찾게 한다 |
+| ALB의 Listener와 전달 규칙 | HTTPS `443` 요청 → Target Group | ALB가 받은 요청을 어느 Group으로 넘길지 정한다 |
+| Target Group의 등록된 Target | Task의 Private IP와 App Port | 실제 요청을 처리할 App의 주소를 지정한다 |
+
+Listener는 요청을 받는 Protocol·Port와 처리 규칙을 갖고, 그 규칙의 전달 대상이 Target Group이다. Fargate의 `ip` Target에는 Task의 Private IP와 `8080` 같은 App Port를 등록한다. [AWS Listener와 Target Group 설명](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html)
+
+다음은 같은 ALB와 Target Group을 유지하면서 App만 교체하는 예다. 주소는 실제 값이 아닌 자리표시자다.
+
+```text
+DNS 설정 — 교체 전후 동일
+  helpdesk.example.com ── CNAME ──> <ALB_DNS_NAME>
+
+교체 전 요청 경로
+  Browser ── HTTPS 443 ──> 같은 ALB ── 같은 Target Group ──> Task A의 Private IP:8080
+
+교체 후 요청 경로
+  Browser ── HTTPS 443 ──> 같은 ALB ── 같은 Target Group ──> Task B의 Private IP:8080
+                                                              ↑ 등록 대상 갱신
+```
+
+새 Task의 IP는 이전과 달라질 수 있으므로 실제 주소를 확인해야 한다. 새 App을 시작했더라도 Target Group에 이전 주소만 남아 있다면, Browser는 ALB를 찾아가도 새 App으로 연결되지 않을 수 있다. 이때 고칠 것은 CNAME이 아니라 Target 등록이다.
+
+### Target 등록은 누가 갱신하는가
+
+- **단독 Task로 실행하는 구성:** 운영자나 배포 Script가 새 Task의 IP·Port 등록과 이전 Target의 등록 해제를 처리한다. Task를 시작했다는 사실만으로 ALB 연결까지 자동으로 만들어지는 것은 아니다.
+- **ALB 연결을 설정한 ECS Service 구성:** ECS가 Service의 Task 생성·종료에 따라 Target 등록과 해제를 관리한다. 이 동작에는 ECS의 Service-linked Role이 사용된다. [AWS ECS와 ALB 연동 설명](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/alb.html)
+
+Target 등록 해제와 Task 중지는 별개다. 등록을 해제했다고 JVM이 종료되는 것은 아니므로, 교체할 때는 Target 목록·Health Check와 실제 Task 실행 목록을 각각 확인한다. 새 App의 로그인·문의 조회도 이어서 확인한다.
+
+Task 교체로 새 JVM이 시작되면 이전 JVM 메모리의 `HttpSession`은 이어지지 않는다. 반면 같은 RDS를 사용한다면 이미 Commit한 Ticket·Message·Job은 그대로 조회할 수 있다. **Target 연결을 바꾸는 일, 재로그인하는 일, DB 데이터를 유지하는 일은 각각 다른 문제다.**
+
+ALB 자체를 새로 만들어 DNS 이름도 달라졌다면 서비스 CNAME의 대상을 새 ALB 이름으로 변경해야 한다. App Task만 교체하는 경우와 구분한다. ACM 검증용 CNAME은 App Task의 주소를 가리키는 Record가 아니므로 Task 교체 때문에 바꾸지 않는다.
+
 ## HTTPS와 인증서 그리고 TLS 종료
 
 HTTPS는 HTTP를 TLS로 보호해 전달하는 방식이다. Browser는 서버의 인증서 이름·유효 기간·신뢰 사슬 등을 확인하고 암호화된 연결을 만든다. 신뢰 사슬은 서버 인증서에서 중간 인증기관을 거쳐 Browser가 신뢰하는 인증기관으로 이어지는 관계다. [ALB 인증서 설명](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/https-listener-certificates.html)
@@ -115,6 +178,26 @@ ALB→App을 HTTP로 구성하면 해당 구간까지 TLS로 암호화되는 것
 ALB에 사용할 ACM 인증서는 해당 ALB의 Region에 준비한다. 인증서 발급과 Listener 연결, DNS 연결을 모두 확인하며 인증서 경고를 무시하고 접속 성공으로 취급하지 않는다. [ACM의 Region별 사용](https://docs.aws.amazon.com/acm/latest/userguide/acm-overview.html)
 
 HTTP→HTTPS Redirect는 HTTP 요청에 `Location`을 포함한 Redirect 응답을 보내 Browser가 새 HTTPS 요청을 하게 하는 동작이다. 이미 HTTP로 보낸 Password를 소급해 보호하지는 않으므로, 로그인과 상태 변경은 처음부터 HTTPS 주소를 사용한다.
+
+### HTTP Listener에서 Redirect가 일어나는 순서
+
+HTTPS Listener가 있다고 HTTP 요청까지 자동으로 처리되는 것은 아니다. HTTP `80`으로 보낸 연결을 받으려면 해당 Port의 Network 허용과 Listener가 모두 필요하다.
+
+```text
+① Browser ── HTTP 80 ──> ALB
+   Security Group이 출발 IP·Port 허용 → HTTP Listener가 요청 수신
+
+② ALB ── 301 + Location: https://helpdesk.example.com/tickets.html ──> Browser
+   HTTP Listener의 Redirect 규칙 실행
+
+③ Browser ── 새로운 HTTPS 443 요청 ──> ALB ──> Target Group ──> App
+```
+
+ALB의 Redirect 규칙에서 목적지 Protocol을 `HTTPS`, Port를 `443`, Status를 `HTTP_301`로 지정할 수 있다. Host·Path·Query를 유지하면 같은 자원의 HTTPS 주소로 이동한다. HTTP Listener는 이 구성에서 App으로 요청을 전달하지 않고 Redirect 응답을 보낸다. [AWS Redirect Action 설명](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/rule-action-types.html#redirect-actions)
+
+Security Group이 80번 연결을 차단하면 HTTP Listener가 요청을 받아 `301`을 반환할 수 없다. 반대로 80번을 허용한 것만으로 Redirect가 생기는 것도 아니므로 Listener의 동작까지 확인한다.
+
+검증할 때는 비밀값이 없는 GET을 사용하고, 자동 Redirect를 끈 HTTP Client에서 첫 응답의 `301`과 `Location`을 확인한다. 이후 해당 HTTPS 주소의 응답을 따로 확인한다. 자동으로 이동한 뒤의 최종 `200`만 보면 중간 Redirect 응답을 놓칠 수 있다.
 
 ## App과 RDS 사이의 TLS
 
@@ -168,6 +251,11 @@ Cookie 속성의 설정과 실제 Browser가 전송하는 결과를 함께 확�
 3. Browser→ALB가 HTTPS이고 ALB→App이 HTTP라면 어디에서 TLS가 종료되는가? HTTPS가 USER·AGENT 권한과 CSRF 검사를 대신하는가?
 4. Browser의 HTTPS 자물쇠가 App→RDS 연결도 TLS라는 뜻인가? 두 연결에서 인증서를 확인하는 Client는 누구인가?
 5. `sslmode=require`와 `verify-full`의 차이는 무엇이며, 공개 CA 파일과 DB Password는 왜 구분해야 하는가?
+6. Cloudflare DNS와 같은 ALB를 유지하면서 App Task만 교체한다면, 서비스 CNAME과 Target Group 중 무엇을 갱신해야 하는가?
+7. 새 Task를 시작하면 ALB의 Target 등록도 항상 자동으로 갱신되는가? 단독 Task와 ECS Service는 무엇이 다른가?
+8. ALB 자체를 새로 만들어 DNS 이름이 달라졌다면 어떤 Record를 바꿔야 하는가? ACM 검증용 CNAME도 App 주소에 맞춰 바꾸는가?
+9. ALB의 학습자 IPv4 제한에는 보통 PC의 사설 주소와 인터넷에서 보이는 공인 출발 주소 중 무엇을 사용하는가? `/32`가 사용자 한 명을 뜻하는가?
+10. ALB의 443만 허용한 상태에서 HTTP 80 요청에 `301`을 보낼 수 있는가? 나중에 HTTPS로 이동하면 앞서 HTTP로 보낸 Password도 보호되는가?
 
 ## 핵심 질문 해설
 
@@ -176,6 +264,11 @@ Cookie 속성의 설정과 실제 Browser가 전송하는 결과를 함께 확�
 3. **ALB에서 종료된다.** App까지의 연결은 별도다. HTTPS는 통신 보호이며, 로그인 인증·작업 인가·CSRF 검증은 Application이 계속 수행한다.
 4. **별도 연결이다.** Browser는 ALB의 인증서를, App의 JDBC Client는 RDS의 인증서를 확인한다.
 5. **암호화와 서버 신원 검증의 차이다.** pgJDBC의 `require`만으로는 서버 신원을 검증하지 않는다. 공개 CA는 서명을 확인할 기준이며 DB Password는 사용자 인증용 비밀값이다.
+6. **Target Group의 등록 대상을 새 Task의 실제 IP·Port에 맞춘다.** 서비스 CNAME은 여전히 같은 ALB 이름을 가리키므로 유지한다. DNS를 Route 53으로 옮길 필요도 없다.
+7. **항상 자동은 아니다.** 단독 Task는 운영자나 Script가 등록·해제를 처리하고, ALB 연결을 설정한 ECS Service는 ECS가 이를 관리한다.
+8. **서비스 CNAME의 대상을 새 ALB의 DNS 이름으로 바꾼다.** ACM 검증용 CNAME은 Domain 검증을 위한 별도 Record이므로 App 주소로 바꾸지 않는다.
+9. **ALB가 직접 받는 연결의 공인 출발 IPv4를 사용한다.** `/32`는 단일 주소다. 같은 인터넷 출구를 공유하는 여러 사람이 통과할 수 있으므로 로그인·인가를 계속 적용한다. 출발 주소가 바뀌면 허용 규칙도 다시 확인한다.
+10. **둘 다 아니다.** HTTP 연결을 받으려면 80번의 Network 허용과 Listener가 필요하다. Redirect는 새 HTTPS 요청을 안내할 뿐, 이미 보낸 HTTP 요청을 소급해 암호화하지 않는다.
 
 ## 함께 읽을 자료
 

@@ -42,6 +42,9 @@ ALB가 직접 만든 `5xx`와 Target Application이 만든 `5xx`는 다른 Metri
 
 | Metric | 의미 |
 |---|---|
+| `RequestCount` | ALB가 Target을 선택할 수 있었던 요청 수. Health Check는 제외 |
+| `HTTPCode_Target_4XX_Count` | Target Application이 반환한 HTTP `4xx` 수 |
+| `HTTPCode_ELB_4XX_Count` | ALB가 직접 반환한 HTTP `4xx` 수 |
 | `HTTPCode_ELB_5XX_Count` | ALB에서 발생한 HTTP `5xx` 수 |
 | `HTTPCode_Target_5XX_Count` | Target이 반환한 HTTP `5xx` 수 |
 | `TargetResponseTime` | ALB가 Target으로 보낸 뒤 응답 Header가 시작될 때까지의 시간 |
@@ -60,6 +63,33 @@ HTTP Request ID
 Request ID만 검색하면 HTTP 이후의 비동기 작업을 놓칠 수 있다. 접수 시 생성한 Job과 연결하고, 오래된 Attempt의 응답을 채택했는지도 확인한다. 실제로 연결 가능한 식별자가 각 기록에 있는지 점검해야 한다.
 
 Log에는 API Key·DB Password·Cookie·CSRF Token·원문과 Provider 응답 전체를 넣지 않는다. 오류 구분에는 검증 단계와 고정 오류 코드, 식별자·소요 시간 같은 필요한 정보만 사용한다. 전체 환경 변수나 관리 Endpoint를 공개해 진단하지 않는다.
+
+### 기동 Log와 HTTP Metric을 차례로 읽는다
+
+Log는 개별 사건의 기록이고 Metric은 정해진 범위의 수치 집계다. `Started HelpdeskApplication`이라는 Log와 `401` 요청 수는 서로 다른 질문에 답한다. 전자는 Spring 기동 완료 사건이며, 후자는 특정 요청들이 어떤 응답을 받았는지의 집계다.
+
+1. **실행 대상을 고른다.** ECS Cluster 이름뿐 아니라 현재 Task·Container의 Log Stream을 확인한다. 이전 Task의 성공 기록을 현재 Task의 기동 성공으로 해석하지 않는다.
+2. **기간을 맞춘다.** 기동이 하루 전이라면 최근 1시간 필터에 기동 기록이 없는 것이 자연스럽다. Log가 보이지 않을 때 기간·Stream·검색어·권한부터 확인하며 삭제나 전달 실패로 단정하지 않는다.
+3. **실제 Event를 읽는다.** 기동 문구를 검색창에 넣었다고 그 사건을 확인한 것은 아니다. 검색 결과의 Event와 시각을 확인한다. 기동 완료만으로 후속 로그인·접수·AI 성공을 확정하지 않는다.
+4. **알려진 HTTP 조건을 만든다.** 익명 Health는 `200`, 익명 보호 API는 `401`처럼 계약을 아는 읽기 전용 요청을 사용한다. 의도한 접근 거부는 App 장애와 다르다.
+5. **응답을 만든 계층의 Metric을 고른다.** App의 `401`은 Target의 `4xx` 쪽을 살펴본다. ALB가 직접 만든 `5xx`는 ELB 오류 Metric과 연결한다. 요청 수·응답시간의 기간·Statistic·대상 Dimension도 함께 확인한다.
+6. **숫자의 범위를 설명한다.** ALB Metric은 Health Check 요청을 제외하고, `RequestCount`는 Target을 선택할 수 있었던 요청을 센다. App의 HTTP 집계와 항상 일치한다고 가정하지 않는다. 별도 시점·URI·Status로 필터링하지 않은 총합을 방금 보낸 요청 수라고 해석하지 않는다. [AWS ALB Metric 기준](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-cloudwatch-metrics.html)
+
+Metric이 아직 표시되지 않은 상태와 값이 `0`인 상태도 다르다. 수집·집계 주기, 선택한 시간 범위·대상, 실제 트래픽을 확인한 뒤 해석한다. App Metric의 AGENT 제한을 없애거나 새 유료 관측 기능을 켜는 것으로 조회 문제를 우회하지 않는다.
+
+Monitoring 화면의 `GetMetricData` 접근 거부는 그래프를 읽는 IAM 신원의 권한부터 조사한다. Container 실행용 Execution Role이나 App의 Task Role에 조회 권한을 넣는 것으로 해결할 사안이 아니다. 읽기 권한 부족·Metric 데이터 없음·실제 오류 증가를 같은 현상으로 해석하지 않는다.
+
+요청 그래프가 1분 간격·합계라면 각 점은 해당 1분에 집계한 요청 수다. 그래프의 한 점을 전체 표시 기간의 총합으로 읽지 않는다. Target 4xx에는 계약대로 차단한 익명 `401`·권한 없는 `403`도 포함될 수 있어, 숫자가 있다는 이유만으로 서비스 장애라고 부르지 않는다. 반대로 예상하지 못한 4xx 증가를 모두 정상 보안 동작이라고 가정하지도 않는다. 요청 조건과 App 지표·Log를 대조해야 한다.
+
+응답의 `X-Request-Id`와 Log의 Request ID도 자동으로 같은 기능이 아니다. 필터가 Header·Request Attribute만 설정한다면 그 값이 CloudWatch에 출력됐다는 근거가 없다. 요청 Log를 실제로 남기는 위치와 Security 거부 요청까지 포함하는지, 비동기 Job과 연결할 식별자가 있는지 따로 확인한다. 특정 응답에 Header가 없다는 사실 하나로 App 전체가 중단됐다고 판단하지 않는다.
+
+## 단독 App Task를 교체하는 순서
+
+ALB에서 Target 등록을 해제하는 것과 App Process를 종료하는 것은 다른 작업이다. 먼저 기존 Target으로 새 요청이 전달되지 않게 하고, 처리 중인 연결이 정리되는 Draining을 확인한 뒤 App을 종료한다. 등록 해제는 Target Group·DB의 삭제가 아니다. [AWS의 등록 해제와 종료 순서](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/target-group-register-targets.html)
+
+단일 실행·잠깐의 중단을 허용하는 실습이라면 기존 Target 등록 해제·Draining → 기존 Task 종료 → 새 Task 실행 → 새 Private IP와 App Port 등록 → Healthy·HTTPS 확인 순서로 관찰한다. 단독 Task에 수동 등록한 IP를 ECS Service가 자동으로 갱신한다고 가정하지 않는다. 같은 ALB라면 Task IP 변경만으로 서비스 DNS를 바꿀 필요는 없다.
+
+교체 전에는 인증된 Session으로 기존 문의가 읽히는 기준을 확보한다. 교체 후 이전 Session의 거부·재로그인·동일 문의 조회를 비교한다. 교체 전부터 인증되지 않았던 Browser로는 교체 때문에 Session이 사라졌다고 증명할 수 없다. 같은 Image·명세의 새 Task 실행은 실행 객체 교체이며, 이전 Image로 되돌리는 Rollback과 구분한다.
 
 ## Application Rollback
 
@@ -153,6 +183,8 @@ RDS 복원 시에는 원래 VPC·Subnet Group·Security Group·DB Parameter Grou
 2. App만 이전 Image로 되돌리면 같은 RDS에 접수된 문의와 Flyway Migration도 과거로 돌아가는가?
 3. Snapshot 복원으로 새 DB를 만든 뒤 무엇을 조회해야 복원 성공을 확인할 수 있는가? 왜 확인용 App의 Worker는 먼저 꺼 두는가?
 4. `desiredCount=0`만으로 ALB·RDS·보관 비용도 중단됐다고 말할 수 있는가? 마지막 Snapshot 뒤에도 접수를 허용하면 어떤 데이터가 사라질 수 있는가?
+5. 현재 Task의 기동이 20시간 전인데 최근 1시간의 Log가 비어 있다면 먼저 무엇을 확인할 것인가? 검색창의 기동 문구와 실제 기동 Event는 무엇이 다른가?
+6. 익명 API의 의도한 `401`은 정상 요청 흐름에서 발생할 수 있는가? 이 응답을 ALB 자체의 `5xx`와 같은 장애로 볼 수 있는가?
 
 ## 핵심 질문 해설
 
@@ -160,3 +192,5 @@ RDS 복원 시에는 원래 VPC·Subnet Group·Security Group·DB Parameter Grou
 2. **돌아가지 않는다.** 프로그램과 데이터의 복구는 별개다. 현재 Schema와 이전 코드의 호환성도 확인해야 한다.
 3. **복원 시점의 실제 Row·관계·상태와 Migration 이력을 확인한다.** Worker 비활성은 복원된 미완료 Job의 외부 호출을 통제하기 위한 것이다.
 4. **그럴 수 없다.** 실행 Task와 ALB·DB·Storage는 별개다. Snapshot 뒤의 새 쓰기는 해당 Snapshot에 없으므로 마지막 보관 전에 접수와 쓰기를 중단해야 한다.
+5. **기간과 현재 Task의 Stream부터 확인한다.** 검색어 입력은 조회 조건일 뿐이며, 결과 Event·시각을 확인해야 기동 기록을 관찰한 것이다.
+6. **발생할 수 있다.** 익명 접근을 차단하는 계약이라면 의도한 결과다. 응답 생성 계층과 요청 조건이 다르므로 ELB 장애와 나누어 본다.
