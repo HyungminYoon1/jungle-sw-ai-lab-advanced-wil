@@ -1,11 +1,11 @@
 # Week 8 학습 계획 Docker와 CI에서 AWS HTTPS 배포까지
 
 > 작성일: 2026-10-07
-> 최종 수정일: 2026-10-15
-> 상태: In Progress — RDS·Private TLS·Migration 7개·ECS 기동·ACM·ALB·DNS 연결 확인. HTTPS Health 200/UP·로그인 페이지 200·익명 API 401까지 확인했으며 실제 로그인·업무 Row·전체 AI·복구 검증은 남아 있음.
+> 최종 수정일: 2026-10-16
+> 상태: In Progress — HTTPS 접수·업무 SQL Row·HTTP 301과 Cloud Log·ALB Metric 확인. 10/16 Target 0개·App 실행 0개·RDS 일시중지 확인. ALB 유지. 새 Task·재로그인·전체 AI·Rollback·DB 복원은 미완료.
 > 1차 목표 기간: 2026-10-08 목요일 ~ 2026-10-12 월요일. 미완료 항목이 남으면 Week 8 기간 연장
 > 초기 학습일: 10/8·10/9·10/10·10/12, 총 4일
-> 현재 진행: 10/14 회차에서 RDS·TLS·DB 계정과 같은 Image의 DB 인증 복구를 확인했다. 자정 이후 ACM·Cloudflare의 두 CNAME·ALB와 새 App Task를 연결해 Target Healthy·HTTPS 기본 응답을 확인했다. 남은 학습은 10/15에 실제 로그인·Session·Role·CSRF와 접수/DB Row부터 재개한다. 마지막 확인 시 App·ALB·RDS는 실행 중이다.
+> 현재 진행: 10/15 회차의 Session Cookie·CSRF 접수 403/201·SQL Row·HTTP 301·Cloud 관측과 로컬 개인정보 검증/모델 평가를 기록했다. Edge V6·V1 보관/삭제 뒤 별도 비용 중지 요청에 따라 기존 Target 해제·App 종료·RDS 중지를 진행했다. ALB·보관 비용은 남으며 새 Task·교체 후 조회는 실행하지 않았다. 재개 때 RDS→새 Task→Target 연결과 재로그인을 먼저 확인한다. 기존 검증 Image·Migration 7개·AI 비활성과 전체 미완료 학습 범위는 유지한다.
 > 초기 순학습 시간 배분: 하루 10시간, 총 40시간. 휴식·식사와 단순 대기 시간 제외. 완료에 필요한 시간의 상한은 아님
 > 모드: `DEEP_LEARNING_MODE`
 > 핵심 질문: 이미 검증한 문의 접수와 AI 제안 흐름을 Cloud의 HTTPS 환경에 배포하고, 실패 원인을 찾으며 이전 실행 상태로 복구할 수 있는가?
@@ -142,7 +142,25 @@ Log Group은 작성자가 초기 7일안 대신 1년 보존을 지정해 서울�
 
 기존 `AiInputPrivacyGuard`와 Worker의 실행 동작은 변경하지 않았다. 새 치환기는 감지된 위치를 적용하는 함수이며 개인정보 탐지 모델이나 검사 실패의 Job 저장까지 구현한 것은 아니다. 새 실패 코드의 Java Enum·DB 제약·조회와 UI 허용값, 현재 Attempt 확인과 자동 복구 차단은 구현·검증할 대상이다. 기존 예약과 정책 Snapshot을 유지한다. 한국어 탐지 모델 선정·검사 결과의 JSON 검증·실행용 연결은 후속 검토·구현 대상이며, 추가 검사 재시도 정책은 확정하지 않았다.
 
-AWS 계정·도메인 보유, 서울 Region과 월 3만 원·최대 12개월·실습 시 실행 조건, `helpdesk.hmyoon.com`·Cloudflare를 확인했다. Console 접근과 OIDC·ECR·업로드 Role의 초기 생성 승인을 확인했다. DNS 수정 권한과 나머지 배포 리소스의 구성·생성 범위는 아직 확정하지 않았다.
+10/15 후속 구현에서는 두 개인정보 실패 코드와 V8·조회·UI 허용값을 맞추고, 현재 Attempt의 재시도 차단과 최종 실패를 하나의 Transaction으로 저장하는 경계를 추가했다. 새 PostgreSQL Test 9개와 관련 조회를 포함한 Focused 65개, 전체 Java Clean 589개·JavaScript 232개·변경 UI ESLint가 통과했다. [실패 저장 보고서](./lab-reports/2026-10-15-privacy-scan-failure-persistence.md)에 원문·예약 보존과 반복 Polling/조회 무변경을 정리했다. 이 구현은 실제 검사기를 호출하거나 Processor에서 실패를 자동 분류하는 연결이 아니며, 해당 실행용 조립과 Cloud V8 적용은 계속 남아 있다.
+
+이어서 완료 표시와 위치 목록을 함께 받는 `{completed, spans}` 계약을 정하고, JSON 검증기와 기존 위치 치환기를 연결했다. 새 Unit Test 84개와 기존 치환·Guard를 포함한 163개가 통과했다. 완료된 탐지 0건과 검사 미완료를 구분하며, 타입 자동 변환·잘못된 위치·충돌은 거부한다. 이 단계에서는 전체 회귀를 재실행하지 않고 다음 Processor 연결까지 진행했다.
+
+후속 구현에서는 `AiPrivacyScanner` Port·`AiScannedInputPreparer`와 Processor를 연결했다. Timeout·잘못된 결과를 전용 실패 기록 경계로 전달하고, 스캔 뒤 현재 Attempt·Lease·잔여 시간을 재확인한다. Main에는 빈 검사기를 추가하지 않았다. 전처리기 Unit 12개·Pipeline Integration 15개·Worker 설정 8개와 전체 Java Clean 701개·JavaScript 232개가 통과했다. 실제 한국어 탐지 모델·로컬 실행 Adapter의 제한 시간/자원 회수·Main Bean·Cloud 연결은 여전히 남아 있다. 가짜 검사 응답·로컬 HTTP의 통과를 탐지 정확도나 실제 AI 배포 완료로 해석하지 않는다.
+
+실제 탐지의 1차 후보로 CPU용 한국어 NER `ko_core_news_sm` 3.8.0의 개발사 Metadata·라이선스를 확인한 뒤, 사용자 승인으로 입력 종류 PERSON을 추가했다. 별도 Container에서 합성 12건을 실제 추론해 7건만 통과했으며 이름 누락·일반 문구 오탐 때문에 배포용 채택을 보류했다. [모델 평가 보고서](./lab-reports/2026-10-15-korean-privacy-ner-probe.md)에 Java Focused 178개·Python Unit 10개와 실제 모델의 품질·시간·메모리를 구분한다. 업무 인원·마감을 지워 탐지 실패를 숨기지 않고, 다른 탐지 후보와 문맥 정책은 같은 기준으로 평가한다. 모델 평가만으로 Main 연결·Job별 Timeout·Cloud 검증을 완료 처리하거나 AWS Task 크기를 변경하지 않는다.
+
+이후 실명은 업무에 불필요한 경우 가리되 인물 관계를 보존하고, 이름/일반명사의 판단이 불분명하면 일반명사로 해석하는 [정책 결정](../plan/decisions/0003-contextual-person-masking.md)을 승인받았다. 현재 단일 PERSON Placeholder는 관계를 표현하지 않으므로 실행 구현과 구분한다. 모델·Dataset·JSON·AWS는 이 정책 정리에서 변경하지 않는다. 이름 탐지 개선과 독립적으로 가능한 Cloud 관측·복구 학습을 이어가며, 실제 AI 전송 전 필요한 입력 처리·실행 제한은 남은 범위로 유지한다.
+
+Cloud 관측에서는 실제 Running Task 1개·Service 0개, 현재 Task의 기동 완료 Log Event와 익명 Health `200/UP`·보호 API/Metric `401`을 확인했다. 최초 ALB Monitoring은 `cloudwatch:GetMetricData` 허용 부재로 거부됐다. 범위를 설명하고 별도 승인받아 Edge 기본 Version 5에 MFA·서울 조건의 조회 한 개만 추가했다. 기존 15개 문장과 Version 1~4를 보존했고, 비Root MFA 로그인 뒤 요청·대상 응답시간·Target 4xx 그래프의 실제 데이터를 확인했다. ELB 오류의 데이터 없음은 0건으로 기록하지 않았다. [관측 보고서](./lab-reports/2026-10-15-cloud-observability-baseline.md)에 로컬 정책 Test 28개·JavaScript 233개 통과와 AWS 적용·그래프 결과를 구분했다. 다른 IAM 정책·실행 설정은 유지하며 App Metric·전체 AI·복구 검증은 이어간다.
+
+이어 같은 Image·명세·RDS의 Task 교체를 준비했다. 기존 Task의 Digest·0.25 vCPU/512 MiB·Profile·AI 비활성과 정상 Target 한 개를 대조했다. 승인한 지정 Group의 `DeregisterTargets` 한 개만 MFA·서울·Project 조건으로 Edge 기본 Version 6에 추가했다. Version 1은 Git 제외 JSON과 AWS 원본의 일치를 확인한 뒤 삭제했고 Version 2~5와 기존 16개 문장을 보존했다. 정책 Test 29개·JavaScript 전체 234개·ESLint가 통과했다. Root는 로그아웃했고 작성자가 비Root 로그인·MFA 완료를 알렸다. 교체 전 AGENT 로그인·기준 조회는 아직 확인하지 못했으며 실제 등록 해제·Draining·Task 교체는 `NOT_RUN`이다. [교체 준비 보고서](./lab-reports/2026-10-16-cloud-task-replacement.md)의 실제 적용일은 10/16으로 유지한다.
+
+[10월 15일 학습 노트](./study-notes/2026-10-15-study-questions.md)에 로그인 뒤 404와 인증, Cookie/CSRF·접수와 Job, SELECT/Commit, DNS/Target·Redirect, 개인정보 탐지 품질·Log/Metric과 App/DB 복구의 이해 변화를 정리했다. 10/15 회차를 마감하고 남은 학습은 10/16에 이어간다. 내용은 줄이지 않으며 마지막 확인 시 남은 실행 리소스의 비용도 재개 시 먼저 확인한다.
+
+[HTTPS 접수·SQL Row 보고서](./lab-reports/2026-10-15-cloud-session-csrf-and-postgres.md)는 작성자가 공유한 Cookie 속성·접수 403/201·Ticket 1/2의 실제 SQL 결과를 묶는다. 로컬 MockMvc·JavaScript 회귀와 Cloud의 실제 처리 결과를 구분하며, 이 결과를 아직 미실행인 Task 교체 후 보존 검증으로 바꾸지 않는다.
+
+초기에는 AWS 계정·도메인·서울 Region·비용 조건과 OIDC/ECR의 생성 범위부터 확인했다. 이후 별도 승인으로 Private RDS·ECS·ALB·ACM과 Cloudflare CNAME·HTTP Redirect를 구성했다. 이 초기 승인 기록을 아직 DNS 권한·배포 구성이 모두 미정이라는 현재 상태로 읽지 않는다. 추가 리소스·삭제·실제 AI는 해당 범위를 따로 확인한다.
 
 배포 학습을 우선하기 위해 개인정보 탐지 모델의 추가 연결과 별개로 Process·관측·CI를 진행했다. [Process·Health·CI 자료](./study-docs/process-health-and-ci.md)를 추가하고, Main에 최소 Health·AGENT 전용 HTTP Metric과 HTTP 종료 유예를 설정했다. 실제 HTTP에서 Security가 거부한 `401` 요청도 Metric에 기록됐다. 관리 상세·환경 변수·Dump는 공개하지 않았다.
 
@@ -172,7 +190,7 @@ Private DB에 최초 접속할 관리 통로도 별도로 승인받았다. 임�
 | 배포 설정·자원 | Main USER·AGENT, AI 비활성 접수·DB 저장, 최소 사양 후보, 공개 CA·명세 준비 | ECS의 실제 설정 전달·TLS 연결, 전체 AI를 포함한 추가 측정 |
 | CI·ECR | `2e2cc40`의 CI Java 578개·JavaScript 173개·ESLint·Build, 새 Image 추가·이전 Image 유지. 후속 정책 변경의 로컬 JavaScript 전체 205개·ESLint 통과 | 후속 변경의 원격 CI, 실행 Task와 검증 Digest의 실제 대조 |
 | AWS 선행 설정 | 기존 OIDC·SSM·Execution Role·Log Group, 비Root 사용자와 정책 4개, 학습 Network·CloudShell VPC·DB Subnet Group·Runtime V3 확인 | RDS 생성 거부의 실제 요청 조건 확인, DB 계정·TLS·Migration, ECS·ALB·DNS·ACM과 실제 연결 |
-| 전체 AI 연결 | 기존 Provider·검증기·Worker와 별도 위치 치환기 | 실제 개인정보 탐지·검사 결과 계약, 검사 실패의 Job·DB·조회·UI 반영과 배포용 조립 |
+| 전체 AI 연결 | 검사 결과 JSON·범위 치환·실패 기록·Processor 연결을 통제된 응답과 실제 PostgreSQL·로컬 Provider HTTP로 확인 | 실제 한국어 탐지 모델·실행 Adapter·Main Bean, 전체 AI·Secret의 배포용 조립·자원 측정·Cloud 검증 |
 | 관측·종료 | 로컬 Health·HTTP Metric, Signal과 진행 중 HTTP 요청 비교 | CLI Log Pipeline, DB·Session·Job 종료 결과, CloudWatch의 요청·Job·오류 추적 |
 | 복구·마감 | 중단·재개·최소 비용과 보관 절차 | Cloud 재배포·Rollback·별도 Snapshot 복원, 최종 회귀·자료 없는 재설명·WIL 공개 |
 
@@ -184,17 +202,17 @@ Docker·Compose의 기초와 저장·재시작·설정 비교까지 진행했다
 
 10/9 회차에서 실제 CI 실패·복구와 AWS 초기 설정까지 진행했고, 10/10에는 OIDC 인증·ECR Image 전달을 확인했다. 다음 학습은 같은 기본 실험을 반복하기보다 배포용 전체 조립과 Cloud Network·Database·HTTPS 연결로 이어간다. Process의 DB·Job 종료 상태, 권한 거부 실험·Log 연결·Cloud 관측·Rollback·Backup 복원도 남은 분량으로 유지한다.
 
-10/10 학습 마감 때 남은 과업을 10/11 야간 또는 10/12에 재개하기로 했다. 당시 AWS 실행 근거는 ECR의 Image 한 건까지였다. 10/12 회차에는 배포용 설정·Image·자원·CA와 SSM·Execution Role·Log Group을 준비하고 새 검증 Image를 추가했다. 10/13의 RDS 생성 거부 뒤 10/14 회차에는 DB 생성·TLS·계정, 같은 Image의 ECS 기동과 HTTPS 기본 응답을 확인했다. 남은 실제 로그인·업무 Row·전체 AI·관측·복구는 10/15부터 이어간다. 기존 승인을 벗어나는 권한 변경·리소스 생성과 DNS 변경은 별도로 확인한다.
+10/10 학습 마감 때 남은 과업을 10/11 야간 또는 10/12에 재개하기로 했다. 당시 AWS 실행 근거는 ECR의 Image 한 건까지였다. 10/12 회차에는 배포용 설정·Image·자원·CA와 SSM·Execution Role·Log Group을 준비하고 새 검증 Image를 추가했다. 10/13의 RDS 생성 거부 뒤 10/14 회차에는 DB 생성·TLS·계정, 같은 Image의 ECS 기동과 HTTPS 기본 응답을 확인했다. 10/15 회차에는 실제 접수·업무 Row·HTTP Redirect·Cloud 관측과 Task 교체의 권한 준비까지 진행했다. 미실행 교체·복구·전체 AI와 남은 실험은 10/16에 이어간다. 기존 승인을 벗어나는 권한 변경·리소스 생성과 DNS 변경은 별도로 확인한다.
 
 | 과업 | 현재 상태 | 다음 배치 |
 |---|---|---|
 | Image·Cache·Compose·Volume·Session 수명 | 로컬 Build·실제 HTTP·PostgreSQL 실험과 문답 확인 | 같은 실험을 처음부터 반복하지 않고 Process·배포 실험의 기준으로 사용 |
 | 필수 값·Worker 기본 비활성 | Compose 누락·빈 문자열 12개 거부, 기존 Spring 설정 Test 7개 통과 | 배포용 정상 조립·Secret 누락·실제 실행의 추가 Test와 구분 |
 | 배포용 Provider·개인정보 처리기·검증기·Worker·Secret | Provider·검증기 등록과 합성 파일 Mount·Main 조립 확인. 기본 App의 개인정보 처리기·실행용 Secret·전체 연결 미완료 | Process·CI와 Cloud 설정 준비를 병행. 실제 AI 수직 흐름 전에는 남은 조립을 완료하고 별도 호출 승인 |
-| 개인정보 탐지 위치의 범위 검증과 치환 | 별도 치환기의 Code Point 변환·중복 제거·충돌 거부·원문 구간 보존 Test 47개 통과 | 학습 범위는 유지하되 배포 설명·CI를 멈추고 탐지 모델만 계속 확장하지 않는다. JSON 계약·실패 저장·실행용 연결을 병행 |
-| Cloud 권한·DNS·Region·구성·비용 조건 | 기존 보안·최소 비용 조건 유지. RDS·TLS·App DB 계정·Migration·Edge V4·ACM·두 CNAME·ALB/App·Target Healthy 확인 | 실제 로그인·보안 계약·접수/SQL Row, Route 53·Redirect·실습 종료와 남은 관측·복구 확인 |
-| Process·관측·CI·IAM·ECR | 최소 Health·HTTP Metric·종료 로컬 비교와 실제 CI 실패·복구 통과. OIDC 인증·검증 Image의 ECR 업로드와 Digest 대조 완료 | 권한 거부 실험, DB·Job 종료 상태와 Log 연결, 실제 ECS 실행을 이어간다 |
-| Cloud·HTTPS·복구·회귀·WIL | Cloud 기동·Migration·HTTPS Health/로그인 화면·익명 API는 확인. 실제 로그인 이후 업무 흐름·전체 AI·복구·WIL은 미완료 | 10/15 실제 Browser와 SQL Row부터 재개. 전체 AI·복구·최종 Cloud 회귀·마감 유지 |
+| 개인정보 탐지 위치의 범위 검증과 치환 | Code Point·JSON·Processor·실패 기록의 로컬 검증. 실제 NER 후보는 합성 12건 중 7건 통과로 채택 보류 | 배포 학습과 병행해 실제 탐지 Adapter·관계 보존·Main 연결·전체 AI 자원/Cloud 검증을 완료. 검사를 생략하지 않음 |
+| Cloud 권한·DNS·Region·구성·비용 조건 | 기존 보안·최소 비용 유지. RDS·TLS·Migration·ACM·두 CNAME·HTTPS 접수/SQL Row·HTTP 301·Edge V6 준비 확인 | 10/16 Task 교체 기준·같은 RDS의 문의 보존부터, Route 53·실습 종료·복구 순서. 새 리소스·삭제는 별도 확인 |
+| Process·관측·CI·IAM·ECR | 로컬 종료 비교·실제 CI·OIDC/ECR·실행 Digest 대조, Cloud 기동 Log·ALB 그래프와 권한 복구 확인 | DB·Session·Job 종료 상태, CLI Pipeline·Request/Job 연결과 App Metric·대표 실패의 추가 관측 |
+| Cloud·HTTPS·복구·회귀·WIL | HTTPS 업무 접수·SQL Row까지 확인. Task 교체는 권한 준비만 완료, 실제 실행·재로그인 미확인 | 10/16 기준 조회·Draining·Task 교체·문의 보존부터 재개. 이전 Image 복귀·별도 DB 복원·전체 AI·최종 회귀·WIL 유지 |
 
 이월한 시간을 기존 하루 배정에 무조건 더해 끝내는 일정으로 보지 않는다. 아래 주제별 시간은 초기 예상 분량을 유지한 것이며, 실제 날짜별 배치는 선행 조건과 하루 종료 때의 잔여량을 기준으로 조정한다. 설정 구현이 길어지면 Process·CI의 시작이 밀리고, CI가 미완료면 Cloud 시작도 밀린다. 뒤의 학습을 삭제하거나 복구·WIL 시간을 줄이지 않는다.
 
@@ -211,7 +229,8 @@ Docker·Compose의 기초와 저장·재시작·설정 비교까지 진행했다
 | 10/12 월 회차 | 초기 10시간 기준 | 배포 사용자·AI 비활성 접수·실행 명세·자원·CA, Parameter·Execution Role·Log 보존, 전체 회귀·CI·새 Image 전달 | 노트·보고서 정리. 자정 이후 검증·업로드는 실제 실행일 10/13 유지. Cloud·전체 AI·복구는 이월 |
 | 10/13 화 회차 | 실제 진행 분량 기록 | 비Root 신원·학습 Network·CloudShell 관리 통로 → DB Subnet Group·Runtime 정책 대조 → RDS 생성 거부 확인 | 노트·실행 보고서 정리. 실제 DB·App 연결은 미수행, 요청과 정책의 불일치 항목은 미확인 |
 | 10/14 수 회차 | 실제 진행 분량 기록 | RDS 조회·생성 조건 대조, Private TLS·App 계정 → ECS의 DB 인증 실패·설정 수정·Migration → ACM·ALB·DNS·HTTPS 기본 응답 | 회차 노트·보고서 정리. 자정 이후 실제 실행일은 10/15 유지. 실제 로그인·업무 Row·전체 AI·복구는 이월 |
-| 10/15 목 재개 | 실제 가용 시간에 맞춰 진행 | 실행 리소스·비용 확인 → USER/AGENT 로그인·Session·Role·CSRF → 접수/SQL Row → 전체 AI·관측·복구 | 완료한 기초를 반복하지 않고 남은 실험을 순서대로 진행. 전체 마감은 하루에 강제하지 않으며 미완료 항목은 같은 Week 8로 유지 |
+| 10/15 목 회차 | 실제 진행 분량 기록 | HTTPS 로그인·Cookie·CSRF 접수/SQL Row, HTTP 301·개인정보 검증/후보 평가·Cloud Log/Metric, Task 교체 권한 준비 | 10/15 노트·보고서 정리. 자정 이후 Version 6의 실제 적용일은 10/16 유지. Task 교체·재로그인 미실행 |
+| 10/16 금 재개 | 실제 가용 시간에 맞춰 진행 | AGENT 기준 조회 → 승인한 Draining·같은 Image/명세 Task 교체·기존 문의/재로그인 → 남은 복구·관측·전체 AI·Route 53 | 완료한 권한 보완과 기초 실험은 반복하지 않음. 기존 전체 범위를 유지하고 잔여량을 실제 결과로 갱신 |
 
 ### 10월 8일 목요일 실행 환경과 데이터 보존
 
@@ -317,13 +336,33 @@ Actions는 장기 AWS Key 저장 대신 OIDC의 단기 자격 증명을 사용�
 ### 10월 15일 재개 순서
 
 1. **실행 상태와 비용:** 단독 Task·ALB·RDS와 현재 Target 등록을 확인한다. 마지막 확인 시 모두 실행 중이었으며 아직 중지·삭제하지 않았다. 사용하지 않을 때의 중지·보관·정리 범위와 비용을 확인한다. 새로운 실행·권한·삭제는 기존 승인 범위를 넘기지 않는다.
-2. **Browser 보안과 실제 DB:** Helpdesk USER·AGENT의 실제 로그인, Cookie의 Secure·HttpOnly·SameSite 속성, CSRF 없는 접수 403·정상 접수 201과 익명 401·USER 조회 403·AGENT 조회 200을 확인한다. Ticket·Message·PENDING Job Row와 자동 호출 0회를 SQL로 대조한다. Cookie·CSRF 값은 출력하지 않는다.
-3. **DNS의 남은 실험:** Route 53 Hosted Zone·NS·Alias 비교와 별도 조회를 진행한다. HTTP Redirect는 현재 443만 허용하는 접근 규칙과 구분해 필요한 변경 범위를 확인한 뒤 시험한다. 메인 도메인의 기존 DNS를 이전하지 않는다.
+2. **Browser 보안과 실제 DB:** Helpdesk USER·AGENT의 실제 로그인, Cookie의 Secure·HttpOnly·SameSite 속성, CSRF 없는 접수 403·정상 접수 201과 익명 401·USER 조회 403·AGENT 조회 200을 확인한다. Ticket·Message·PENDING Job Row·예약 0건을 SQL로 대조하고, 자동 외부 호출 부재는 Provider·Worker의 실행 설정과 나누어 확인한다. Cookie·CSRF 값은 출력하지 않는다. 접수와 SQL Row의 기초 확인은 진행했으며 후속 전체 AI 회귀에서도 보안 계약을 유지한다.
+3. **DNS의 남은 실험:** Route 53 Hosted Zone·NS·Alias 비교와 별도 조회를 유지한다. HTTP Redirect는 승인한 기존 443과 동일한 학습자 `/32`의 80 허용과 301 Listener를 추가해 실제 응답을 확인했다. [Redirect 보고서](./lab-reports/2026-10-15-alb-http-https-redirect.md)에 기록했으며 메인 도메인의 DNS·App·RDS·IAM은 변경하지 않았다.
 4. **전체 AI와 실행 자원:** 개인정보 탐지기·위치 치환·실패 코드의 DB/조회/UI·Provider·검증기·Worker·Secret을 연결한다. 통제된 Provider로 정상·실패를 먼저 확인하고 당일 승인한 실제 AI로 RDS·화면을 대조한다. 전체 구성의 CPU·메모리도 측정한다.
 5. **관측과 복구:** `/proc`·CLI Log Pipeline·Request/Job 추적과 CloudWatch Log·Health·요청 수·오류·지연을 확인한다. 종료 중 DB·Session·Job, 같은 RDS를 유지한 재배포·재로그인, 이전 정상 Image 복귀와 별도 Snapshot 복원을 검증한다.
 6. **최종 마감:** Local·CI·Cloud 회귀, 자료 없는 핵심 설명, 직접 설정 수정·검증과 재현·비용 기록을 마친 뒤 WIL을 검토한다. 블로그 게시·포럼 등록·리소스 삭제는 별도 확인한다.
 
 이 순서는 15일 하루 안에 모두 끝내라는 시간 상한이 아니다. 학습량을 줄이거나 미실행 항목을 완료 처리하지 않으며, 필요한 시간이 남으면 같은 Week 8 기간을 연장한다.
+
+### 10월 15일 회차 마감과 10월 16일 재개
+
+15일에는 HTTPS 로그인·Cookie·CSRF 접수/SQL Row와 HTTP 301, 로컬 개인정보 검증·실제 후보 평가와 Cloud 관측을 진행했다. 자정 이후 Edge V6·Version 1 JSON 보관과 삭제를 마쳤지만, 사용자가 마감을 요청해 실제 Target 등록 해제·Task 중지/교체·재로그인은 실행하지 않았다. [10/15 노트](./study-notes/2026-10-15-study-questions.md)와 [실제 10/16 교체 준비 보고서](./lab-reports/2026-10-16-cloud-task-replacement.md)에 회차와 실행일을 구분한다.
+
+권한 준비 직후에는 아래 순서를 계획했다. 이후 비용 중지 요청에 따른 실제 상태와 먼저 필요한 복구는 다음 ‘리소스 일시중지’ 절을 따른다. 전체 분량을 하루에 강제하거나 미실행 실험을 삭제하지 않는다.
+
+1. **현재 상태와 교체 전 기준:** 비Root 로그인·현재 Task/Target·비용을 다시 확인한다. AGENT로 기존 문의가 읽히는 새 기준을 확보한다. 이미 인증되지 않았던 Browser 상태를 교체 때문에 Session이 사라진 결과로 기록하지 않는다. Edge V6 적용·Version 1 정리는 반복하지 않는다.
+2. **승인한 Task 한 개 교체:** 같은 Image Digest·`helpdesk-learning:1`·RDS·AI 비활성을 유지한다. 기존 Target 등록 해제·Draining → 기존 Task 종료 → 새 Task 한 개 → 새 Private IP:8080 등록·Healthy 순서로 검증한다. 기존 문의 보존·이전 Session 거부·재로그인 후 재조회를 확인한다. RDS·Schema·DNS·Secret은 변경하지 않는다. 같은 Image 재실행을 이전 Image Rollback으로 부르지 않는다.
+3. **실제 복구와 남은 배포 실험:** 이전 정상 Image 복귀와 Schema 호환성, 별도 Snapshot 복원·실제 Row·접속 설정을 확인한다. Route 53의 별도 Zone/조회와 `/proc`·CLI Log Pipeline·Request/Job 연결·App Metric 등 미완료 실험을 유지한다. 추가 리소스·복원 비용·삭제·새 권한은 해당 범위를 확인한 뒤 실행한다.
+4. **전체 AI 연결과 자원:** 개인정보 탐지 후보·실행 Adapter의 Timeout/자원 회수·Main Bean·관계 보존을 완성한다. 원문·예약·현재 Attempt·외부 미전송·실패 기록을 검증하고 Provider·검증기·Worker·Secret을 연결한다. 합성 입력의 실제 AI는 그날의 호출 범위·비용 조건을 확인하며, 전체 CPU·메모리와 Cloud 결과를 측정한다.
+5. **회귀·설명·마감:** Local·CI·Cloud HTTPS를 다시 검증하고 자료 없이 흐름·실패·복구를 설명한다. WIL·게시/포럼, 최종 Snapshot·보관·정리는 실제 완료와 별도 승인에 따라 기록한다. 마지막 확인 시 App·ALB·RDS가 남아 있으며 문서 마감은 실행 중지나 비용 중단이 아니다.
+
+### 10월 16일 리소스 일시중지
+
+별도 요청으로 기존 Target 한 개를 해제하고 300초 Draining 종료·Target 0개를 확인한 뒤 App Task의 실제 STOPPED·실행/보류 Task 0개·Service 0개를 확인했다. 이어 RDS 한 개의 최종 ‘일시적으로 중지됨’·연결 0개를 확인했다. 추가 Snapshot·새 Task·AI 호출·권한 변경은 하지 않았다. [중지 보고서](./lab-reports/2026-10-16-learning-resource-pause.md)에 최종 상태·남는 비용·재개 순서를 기록한다.
+
+ALB는 중지 기능이 없어 유지했다. RDS 저장/백업·ECR Image·Log 보관과 ALB·공인 IPv4 비용은 별도로 남으며, RDS 확인창은 10/23 00:57 KST 자동 재시작을 안내했다. 이번 요청은 리소스 삭제·자동 중지 예약의 승인이 아니다.
+
+다음 실습은 RDS 시작/사용 가능 확인 → 같은 검증 Image·명세의 새 Task → 새 Private IP:8080 등록/Healthy → HTTPS·재로그인·기존 문의 조회부터 이어간다. 실제 중지 뒤 데이터 보존·Session 비교는 아직 검증하지 않았다. 정식 Task 교체 비교의 인증 기준은 복구 후 새로 확보한다. 이전 Image 복귀·Snapshot 복원·전체 AI·Route 53·System·관측·회귀·WIL의 범위는 그대로 남긴다.
 
 ### 10월 12일 이후 실패 추적과 복구
 
@@ -357,8 +396,8 @@ Actions는 장기 AWS Key 저장 대신 OIDC의 단기 자격 증명을 사용�
 
 | 확인 항목 | 결정할 내용 |
 |---|---|
-| AWS 계정과 권한 | 비Root·MFA, 직접 연결된 배포 정책 다섯 개와 기존 Execution Role 확인. Runtime V4·조회 보조 V2·Edge V4 적용, 기존 DB 생성 조건 유지. Task Role은 실제 AWS API 사용 여부에 맞춰 결정 |
-| 도메인 | `helpdesk.hmyoon.com`의 비수출 ACM·검증/서비스 CNAME과 DNS-only 연결 확인. Route 53 별도 학습 Zone과 80 Redirect의 변경 범위는 실행 전 확인 |
+| AWS 계정과 권한 | 비Root·MFA와 기존 Execution Role 유지. Runtime V4·조회 보조 V2·Edge V6 적용, 기존 DB 생성 조건 유지. Edge V1 JSON 보관 후 삭제·V2~5 보존. Task Role은 실제 AWS API 사용 여부에 맞춰 결정 |
+| 도메인 | `helpdesk.hmyoon.com`의 비수출 ACM·두 CNAME·DNS-only와 동일 Source 제한의 HTTP 301 확인. Route 53 별도 학습 Zone·조회는 생성 범위/비용 확인 후 진행 |
 | 과금 | 최대 12개월 보관·월 지출 상한 3만 원·실습 시 실행 조건 확인. 목적을 충족하는 최소 비용안을 비교하고 ECS·RDS·ALB·IPv4·보관량·잔여 비용을 실제 필요량으로 갱신 |
 | AI 호출 | Helpdesk 전용 Key의 존재만 확인. 배포 실험의 입력·횟수·당일 비용 조건 확인 |
 | 자료 공개 | 합성 문의만 사용하고 Credential·Cookie·Token·실사용자 원문·내부 주소가 근거 파일에 섞이지 않는지 확인 |
@@ -388,6 +427,7 @@ Actions는 장기 AWS Key 저장 대신 OIDC의 단기 자격 증명을 사용�
   - [10월 12일 노트](./study-notes/2026-10-12-study-questions.md): Provider 조립 실패와 AI 비활성 접수의 예측·검증, 비용 상한과 최소 지출 기준
   - [10월 13일 노트](./study-notes/2026-10-13-study-questions.md): IAM·Network·관리 통로, 생성 요청과 정책 조건, Console 오류 구분과 다음 학습
   - [10월 14일 노트](./study-notes/2026-10-14-study-questions.md): RDS·TLS·App DB 계정, ECS의 DB 인증 복구, 두 CNAME·ALB·HTTPS와 Health/업무 성공 구분
+  - [10월 15일 노트](./study-notes/2026-10-15-study-questions.md): Session/CSRF·접수/SQL Row, SELECT/Commit·Redirect, 개인정보 품질·Log/Metric과 App/DB 복구, 16일 재개 기준
 - `lab-reports/`: 실행 환경·명령·예상·결과·실패 원인과 재현 방법을 묶는다. 로컬·CI·Cloud 근거는 구분한다.
   - [실제 CI 실패·복구](./lab-reports/2026-10-09-process-health-and-ci-baseline.md): 최초 운영체제 의존 실패와 별도 Branch의 UI 오류·복구, main 검증
   - [AWS OIDC·ECR 초기 설정](./lab-reports/2026-10-10-aws-oidc-ecr-baseline.md): 초기 생성·정책 대조와 당시 미실행 상태, 후속 업로드 보고서 연결
@@ -404,6 +444,12 @@ Actions는 장기 AWS Key 저장 대신 OIDC의 단기 자격 증명을 사용�
   - [DB Subnet Group·Runtime 정책·RDS 생성 거부](./lab-reports/2026-10-14-rds-subnet-group-and-runtime-policy.md): 10/13 회차 연장 구간의 실제 실행일·확인 결과와 요청 조건 미확인
   - [ECS 첫 기동과 DB 암호 전달 수정](./lab-reports/2026-10-14-ecs-first-cloud-startup.md): 실제 Task의 검증 Digest·Log·DB 인증 실패와 같은 Image의 JDBC·Flyway·Spring 기동 성공
   - [ALB·App·DNS와 HTTPS 기본 응답](./lab-reports/2026-10-15-cloud-https-baseline.md): 10/14 회차의 연장 실습. 실제 10/15의 Edge V4·Target Healthy·브라우저 화면·익명 HTTP 결과
+  - [HTTPS 로그인·CSRF 접수와 실제 DB Row](./lab-reports/2026-10-15-cloud-session-csrf-and-postgres.md): 작성자가 확인한 Cookie 속성·접수 403/201·Ticket 1/2의 원문/작성자 존재·PENDING/예약 0건과 SELECT/Commit
+  - [ALB의 HTTP → HTTPS 301 Redirect](./lab-reports/2026-10-15-alb-http-https-redirect.md): 기존 443과 같은 학습자 Source의 80 허용·새 Redirect Listener·실제 301/Location과 HTTPS 기본 응답 유지
+  - [개인정보 검사 실패의 저장과 조회](./lab-reports/2026-10-15-privacy-scan-failure-persistence.md): 로컬 V8·원문/예약 보존·현재 Attempt·실패 기록 Rollback·읽기 전용 조회와 Worker 확인. 실제 검사기·Cloud 조립과 구분
+  - [PERSON 계약과 실제 한국어 NER 평가](./lab-reports/2026-10-15-korean-privacy-ner-probe.md): PERSON 치환·업무 사실 보존과 고정 합성 12건의 실제 CPU 평가. 이름 누락·일반 문구 오탐으로 후보 채택 보류, 배포용 Adapter와 구분
+  - [실제 Cloud의 기동 Log와 HTTP 관측](./lab-reports/2026-10-15-cloud-observability-baseline.md): 현재 Task의 기동 Event·익명 응답, Edge V5의 최소 조회 적용 뒤 실제 ALB 그래프 확인
+  - [같은 Image·RDS의 Task 교체 준비](./lab-reports/2026-10-16-cloud-task-replacement.md): Edge V6·V1 보관/삭제·V2~5 보존과 교체 전 기준. 실제 Draining·교체·재로그인은 NOT_RUN으로 16일 이월
 - `wil.md`: 주간 결과와 이해 변화, 직접 판단한 부분과 AI 도움을 받은 부분을 정리한다. 실제 결과가 생긴 뒤 작성한다.
 - Lab Repository: Dockerfile·Compose·Workflow·배포 설정·관련 Test·실행/복구 안내를 관리한다. WIL과 구현 변경은 별도 Commit으로 나눈다.
 
@@ -439,6 +485,7 @@ Actions는 장기 AWS Key 저장 대신 OIDC의 단기 자격 증명을 사용�
 | 10/13 회차 마감 | IAM·학습 Network·관리 통로·DB Subnet Group·Runtime V3 확인. RDS 생성 요청은 IAM 거부, 실제 불일치 조건은 미확인 | 10/14 요청·정책 대조부터 재개. Private TLS·DB 계정·AI 비활성 App 뒤 HTTPS·전체 AI·관측·복구·마감 유지 |
 | 10/14 DB·ECS 연결 | RDS·TLS·App 계정 준비, Cluster·명세 등록. 첫 DB 인증 실패 뒤 지정 암호 Parameter 수정으로 같은 Image의 JDBC·Migration 7개·Spring 기동 성공. Task 중지 | 다음은 HTTPS·Health·Session·Role·CSRF·접수/조회·업무 Row. 전체 AI·관측·재배포·DB 복원과 마감 범위 유지 |
 | 10/14 회차 마감 | 연장 실습에서 ACM·두 CNAME·ALB·새 App Task를 연결. Target Healthy·Health 200/UP·로그인 페이지 200·익명 API 401 확인 | 10/15 실제 로그인·보안 계약·접수/SQL Row부터 재개. 마지막 확인 시 실행 리소스가 남아 있으므로 비용과 중지·정리 범위를 먼저 확인 |
+| 10/15 회차 마감 | HTTPS 접수·SQL Row·HTTP 301·Cloud 관측 확인. 개인정보 후보 채택 보류, Edge V6의 교체 권한 준비 완료 | 10/16 새 AGENT 기준 조회·승인한 Task 교체부터. 이전 Image 복귀·별도 복원·전체 AI·남은 관측/DNS·최종 회귀와 WIL 유지 |
 
 연장은 이미 허용한 진행 방식이므로, 시간이 부족하다는 이유로 다시 학습 범위를 줄이는 안을 만들지 않는다. 다만 추가 날짜를 임의로 확정하지는 않는다. 필요해진 학습·구현·검증 시간과 Cloud 대기를 구분해 제시하고, 실제 사용할 수 있는 날짜에 남은 순서를 배치한다. 하루 10시간을 넘겨야만 계획을 지킨 것으로 평가하지 않는다.
 
@@ -466,6 +513,7 @@ Actions는 장기 AWS Key 저장 대신 OIDC의 단기 자격 증명을 사용�
 | 2026-10-13 | 재개 날짜가 10/11 야간 또는 10/12로 남아 있고 새 Image 전달이 일부 미래 과업으로 표시 | 10/12 회차를 마감해 노트에 반영, 잔여 과업은 10/13 재개. AI 비활성 첫 Cloud·HTTPS 뒤 전체 AI·관측·복구 순서로 명시 | 사용자의 기록·재개 요청. 실제 CI·업로드일은 10/13 유지. 모든 선택 학습 유지, 실행 리소스·유료 AI·DNS 변경·삭제 승인은 별도 확인 |
 | 2026-10-14 | 10/13 첫 Cloud·HTTPS 연결을 목표로 진행 | 10/13 회차의 IAM·Network·관리 통로·Subnet Group과 RDS 생성 거부를 기록하고, 잔여 과업은 10/14 요청·정책 대조부터 재개 | 사용자의 마감·기록·Commit 요청. 자정 이후 실제 실행일은 보고서에 유지. 불일치 조건을 추측하거나 권한을 넓히지 않고 전체 학습 범위 유지 |
 | 2026-10-15 | RDS·ECS 첫 기동 확인, HTTPS 연결과 업무 요청 미완료 | 10/14 회차의 ACM·DNS·ALB/App·HTTPS 기본 응답까지 기록하고 실제 로그인·업무 Row 등 잔여 과업을 10/15로 이월 | 사용자 회차 마감·기록·Commit 요청. 실제 실행일은 보고서에 유지. 전 학습 범위·최소 비용·승인 경계를 유지하고 Week 8은 In Progress |
+| 2026-10-16 | 10/15에 업무 접수·Cloud 관측·전체 AI·복구를 이어가던 상태 | 10/15 노트를 작성하고 실제 교체 전 중단 지점을 기록. 미실행 Task 교체·재로그인과 나머지 전체 범위를 10/16으로 이동 | 사용자 기록·재개 요청. 정책 V6 적용·V1 보관/삭제는 완료, V2~5 유지. Task·DB·DNS·Secret은 변경하지 않고 당일 문서 작업만 진행. 학습량과 최소 비용 원칙 유지 |
 
 ## 관련 기준
 

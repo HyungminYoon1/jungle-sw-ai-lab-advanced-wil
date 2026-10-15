@@ -1,9 +1,9 @@
 # Week 8 AWS 배포와 비용 초안
 
-> 상태: 일부 실행 — RDS·Private TLS·App DB 계정·Migration 7개·ACM·Cloudflare 서비스 DNS·ALB·App 연결 완료. Target Healthy·HTTPS Health 200/UP·로그인 페이지 200·익명 API 401 확인. App·ALB·RDS 실행 중이며 실제 로그인·Session·Role·CSRF·접수/DB Row·전체 AI·복구는 남아 있음
+> 상태: 일부 실행·비용 중지 — HTTPS 접수/SQL Row·HTTP 301·Cloud 관측 확인. 10/16 Target 0개·App 실행 0개·RDS 일시중지 확인. ALB 유지. 새 Task·재로그인·전체 AI·이전 Image 복귀·DB 복원은 미완료
 > 요금 확인일: 2026-10-12, 2026-10-14 첫 Fargate 실행 요금 재확인
-> 진행 반영일: 2026-10-15 — Edge Version 4·비Root ALB/App 실행·Cloudflare 서비스 CNAME·Target Healthy·HTTPS 기본 응답 확인
-> 계획 수정일: 2026-10-15 — 10/14 회차 마감·10/15 재개. HTTPS의 실제 로그인·접수/SQL Row 뒤 전체 AI·관측·복구 순서. 최소 비용·Log 365일 보존과 기존 승인 경계 유지
+> 진행 반영일: 2026-10-16 — 10/15 회차의 업무 요청·관측과 자정 이후 Edge V6·V1 JSON 보관/삭제 반영. Task 교체는 NOT_RUN
+> 계획 수정일: 2026-10-16 — 리소스 중지 상태에서 RDS·새 Task·Target 연결/재로그인부터 복구. 남은 전체 학습·최소 비용·Log 365일 보존·기존 승인 경계 유지
 
 ## 확인한 조건
 
@@ -12,7 +12,7 @@
 - 최대 12개월 동안 학습 환경을 보관하되, 실습할 때만 실행해도 된다.
 - AWS 월 지출 상한은 최대 3만 원이다. 이 금액을 채우거나 근처까지 사용하는 목표가 아니다. 학습·Application의 목적을 달성하는 범위에서 지출을 최소화한다. 외부 AI 호출은 별도 당일 승인 범위로 관리한다.
 - 학습용 주소는 `helpdesk.hmyoon.com`이며 기존 DNS는 Cloudflare에서 관리한다.
-- AWS Console 접근과 OIDC·ECR·Image 업로드 Role을 구성했다. 이후 Standard Parameter 여섯 개·ECS Execution Role·1년 보존 Log Group과 비Root 배포 사용자·학습 Network·DB 관리 통로·Subnet Group을 승인 범위에서 적용했다. 10/14에는 RDS·Private TLS·DB 계정을 준비하고 Cluster·Task Definition을 등록했다. 첫 Task의 DB 인증 실패 뒤 지정 암호 Parameter 한 개를 직접 맞췄고, 같은 Image의 새 Task에서 JDBC·Migration 7개·Spring 기동을 확인한 뒤 중지했다. 10/15에는 승인한 ALB·새 Task·Cloudflare 서비스 DNS를 연결해 HTTPS 기본 응답을 확인했다. 로그인 이후의 업무 요청·전체 AI·복구와 실습 종료는 남아 있으며 기존 승인을 벗어나는 권한·리소스 변경은 별도로 확인한다.
+- AWS Console 접근과 OIDC·ECR·Image 업로드 Role을 구성했다. 이후 Standard Parameter 여섯 개·ECS Execution Role·1년 보존 Log Group과 비Root 배포 사용자·학습 Network·DB 관리 통로·Subnet Group을 승인 범위에서 적용했다. 10/14에는 RDS·Private TLS·DB 계정을 준비하고 Cluster·Task Definition을 등록했다. 첫 DB 인증 실패 뒤 지정 Parameter 한 개를 맞춰 같은 Image의 JDBC·Migration 7개·Spring 기동을 확인했다. 10/15에는 ALB·App·두 CNAME과 HTTPS 업무 접수/SQL Row·HTTP 301·Cloud 관측을 확인했고, 연장 구간에 교체 권한을 준비했다. 실제 Task 교체·전체 AI·복구·실습 종료는 남아 있으며 기존 승인을 벗어나는 권한·리소스 변경은 별도로 확인한다.
 
 ECR·ECS Fargate·RDS·ALB·DNS·HTTPS·Backup 복원은 [주간 계획](./weekly-plan.md)의 학습 범위를 그대로 유지한다. 비용을 줄이기 위해 해당 학습을 다른 서비스로 대체하거나 생략하지 않는다.
 
@@ -48,7 +48,7 @@ ECR·ECS Fargate·RDS·ALB·DNS·HTTPS·Backup 복원은 [주간 계획](./weekl
 
 10/10에는 Image 보관까지 진행하고 마감했다. 당시 ECS·RDS·ALB·NAT Gateway·DNS Record·ACM 인증서는 생성하거나 변경하지 않았고 자동 Image 삭제 정책도 만들지 않았다. ECR 보관 비용은 남으며 아래 2 GB 비용 가정은 실제 청구량이 아닌 초기 계산 기준이다. 10/12 회차의 배포 준비·후속 검증 뒤 10/13 회차에는 별도 승인 범위의 IAM·Network·관리 통로·Subnet Group을 적용했고, 10/14 회차에는 Private DB·ECS·HTTPS를 연결했다. 업로드 승인을 다른 리소스의 생성·과금·DNS 변경·삭제 승인으로 확대하지 않는다.
 
-### 10월 14일에 이어갈 배포 단계
+### 10월 14일 회차의 배포 단계
 
 먼저 RDS·서비스 연결 Role의 존재를 재조회하고 생성 요청의 비밀값 없는 설정을 Runtime 정책과 대조한다. 적용 가능한 Allow가 없다는 오류만으로 어떤 조건이 맞지 않았는지 단정하지 않는다. 기존 보안·최소 비용 조건을 유지하며, 정책 변경이 필요하면 차이와 최소 변경안을 제시해 승인받는다. DB 생성 뒤 관리 통로의 공개 CA·TLS·관리자/App 계정·Migration을 확인한다. 이어 검증 Digest와 Task Definition의 실제 설정·사양·참조·실행 범위를 확인하고 AI 비활성 App의 Parameter 전달·Log·로그인·접수, DNS·ACM·ALB·HTTPS와 Browser 보안 계약을 검증한다.
 
@@ -62,7 +62,7 @@ Task Definition의 `awslogs-create-group: "false"`는 Console 등록에서 거�
 
 ACM의 검색 거부는 `acm:SearchCertificates`가 기존 Edge 정책에 없어서 발생했다. 승인한 검색 Action 한 개만 MFA·서울 조건으로 추가해 기본 Version 2로 저장하고 Version 1을 보존했다. 저장 JSON 전체가 승인안과 일치하며, 비Root MFA 로그인 뒤 `helpdesk.hmyoon.com` 검색에서 거부 없이 0개 결과를 확인했다. 기존 인증서 생성 조건·다른 IAM 정책·Network는 바꾸지 않았고 인증서·DNS·ALB·새 Task는 만들지 않았다.
 
-내보내기 불가능한 ACM 공개 인증서의 DNS 검증·발급을 먼저 마친 뒤 승인한 ALB·App을 연결해 인증서 대기 중의 실행 비용을 줄였다. 이제 실제 HTTPS 로그인·Session·Role·CSRF·접수/조회와 SQL Row를 대조한다. App 8080을 인터넷에 직접 열거나 Secure Cookie를 끄는 방식으로 우회하지 않는다. 현재 ALB Group의 Inbound는 지정 IPv4 `/32`의 443만 허용하므로, 80 Port의 Redirect를 시험하려면 해당 규칙 변경 범위를 먼저 확인한다. 그 뒤 전체 AI·관측·재배포·Rollback·DB 복원을 이어간다.
+내보내기 불가능한 ACM 공개 인증서의 DNS 검증·발급을 먼저 마친 뒤 승인한 ALB·App을 연결해 인증서 대기 중의 실행 비용을 줄였다. 그다음 실제 HTTPS 로그인·Session·Role·CSRF·접수/조회와 SQL Row를 대조하는 순서로 진행했다. App 8080을 인터넷에 직접 열거나 Secure Cookie를 끄는 방식으로 우회하지 않는다. 이 첫 연결 당시에는 지정 IPv4 `/32`의 443만 허용했으며, 이후 별도 승인한 80 Redirect 결과는 아래 10/15 회차에 구분한다.
 
 #### ACM 발급·DNS 검증과 ALB 준비
 
@@ -86,7 +86,29 @@ ALB 생성 단계는 `ec2:GetSecurityGroupsForVpc` 조회 권한 부족으로 �
 
 App·ALB·RDS는 현재 실행 중이며 비용도 계속 발생한다. App과 공인 IPv4 한 개는 약 `$0.0192/시간`, ALB와 IPv4 두 개는 약 `$0.0325/시간`에 LCU 사용량이 더해진다. 기존 RDS 실행·Storage·Image·Log·세금·전송 비용은 별개다. 실습 종료 시 Task 중지와 ALB·DB 정리의 승인 범위를 확인하며, 삭제나 상시 실행을 이번 연결 확인만으로 승인한 것으로 보지 않는다.
 
-10/14 회차를 마감하고 남은 학습은 10/15에 실제 로그인·Session·Role·CSRF와 접수/SQL Row부터 이어간다. 개인정보 탐지기·실패 코드의 DB/조회/UI 반영·Provider·Worker 조립과 전체 AI 자원 측정, 관측·종료·재배포·이전 정상 Image 복귀·별도 Snapshot 복원·최종 회귀도 마감 범위에 남긴다. [주간 재개 순서](./weekly-plan.md#10월-15일-재개-순서)를 따르며 하루에 끝내기 위해 내용을 빼지는 않는다. 마지막 확인 시 App·ALB·RDS는 실행 중이며, 중지·삭제는 이번 문서 마감과 구분해 승인 범위를 확인한다.
+10/14 회차 마감 때 남은 로그인·Session·Role·CSRF와 접수/SQL Row를 10/15에 이어가기로 했다. 이후의 실제 결과와 다음 재개 위치는 아래 10/15 회차 마감에 갱신한다. 전체 AI·추가 관측·종료·재배포·이전 정상 Image 복귀·별도 Snapshot 복원·최종 회귀는 여전히 완료 기준에 포함하며, 학습량을 줄여 날짜에 맞추지 않는다.
+
+### 10월 15일 회차 마감과 16일 재개
+
+실제 HTTPS 로그인 Session으로 CSRF 조회 `200`·Cookie Secure/HttpOnly·SameSite=Lax, CSRF Header 없는 접수 `403`과 유효한 접수 `201`을 확인했다. Ticket·Message 원문 보존과 `PENDING` Job·예약/제안 0건을 SQL로 대조했다. [HTTPS 접수·실제 Row 보고서](./lab-reports/2026-10-15-cloud-session-csrf-and-postgres.md)에 작성자가 공유한 결과를 정리했다. Cloud의 Provider·Worker는 계속 꺼져 있으므로 이 결과는 AI 처리 성공이 아니다.
+
+기존 443과 같은 학습자 Source 범위에만 80을 허용해 ALB의 HTTP→HTTPS `301`을 확인했다. DNS·App·RDS·Secret은 이 Redirect 작업에서 바꾸지 않았다. 실제 Cloud 관측에서는 현재 Task의 기동 Event와 ALB 요청·응답시간·Target 4xx 그래프를 확인했다. Metric 조회 한 개는 MFA·서울 조건으로 Edge V5에 적용했으며 빈 ELB 그래프를 0건으로 해석하지 않았다.
+
+같은 Image·명세·RDS의 Task 교체를 위해 지정 Target Group의 등록 해제 Action 한 개를 Edge V6에 추가했다. Version 1은 Git 제외 JSON과 원본의 일치를 확인한 뒤 승인받아 삭제했고, Version 2~5·기존 16개 문장과 MFA·서울 제한은 유지했다. 로컬 정책 Test 29개·JavaScript 전체 234개·ESLint 통과와 실제 저장 JSON 대조를 구분해 기록했다. 실제 적용일은 10/16이다.
+
+작성자의 마감 요청에 따라 Draining·Task 중지/교체·재로그인은 실행하지 않았다. Root는 로그아웃했고 비Root 로그인·MFA 완료 알림을 받았지만 교체 전 AGENT 기준 조회는 미확인이다. 마지막 확인의 App·ALB·RDS는 그대로 남아 있으며, 문서 마감만으로 실행·보관 비용이 멈추지 않는다. RDS·Schema·DNS·Secret을 변경하거나 실행 리소스를 정리하지 않았다.
+
+당초 16일에는 AGENT 기준 조회 뒤 같은 Image의 Task 교체를 계획했다. 이후 별도의 비용 중지 요청에 따라 아래 상태로 전환했으므로, 재개 때 먼저 RDS·App 연결을 복구한다. 이번 중지를 Task 교체나 이전 Image Rollback의 완료로 기록하지 않으며 이미 끝난 권한 보완·정책 보관은 반복하지 않는다.
+
+그 뒤 이전 정상 Image 복귀·별도 Snapshot 복원, 남은 Route 53·System/관측·실제 개인정보 검사 Adapter와 전체 AI·자원 측정·회귀·WIL을 유지한다. 추가 리소스·비용·삭제·외부 AI는 각 승인 범위에서 진행한다. [주간 재개 순서](./weekly-plan.md#10월-15일-회차-마감과-10월-16일-재개), [10/15 노트](./study-notes/2026-10-15-study-questions.md), [교체 준비 보고서](./lab-reports/2026-10-16-cloud-task-replacement.md)에 계획·이해·실행 근거를 나누어 기록한다.
+
+### 10월 16일 비용 중지
+
+지정 Target 해제 → 기존 300초 Draining 종료/Target 0개 → 기존 단독 App STOPPED/실행·보류 Task 0개 → 지정 RDS ‘일시적으로 중지됨’/연결 0개 순서로 확인했다. 추가 Snapshot을 선택하지 않았고 DB 데이터·Schema·Secret·DNS·IAM은 변경하지 않았다. 실제 최종 상태와 재개 순서는 [리소스 중지 보고서](./lab-reports/2026-10-16-learning-resource-pause.md)를 따른다.
+
+ALB는 일시정지할 수 없어 삭제하지 않았다. ALB·공인 IPv4와 RDS 저장/백업·Image·Log 비용은 계속 별도로 발생할 수 있다. RDS는 최대 7일 뒤 자동 재시작하므로 확인창의 10/23 00:57 KST 안내도 남긴다. ALB 삭제·재생성과 장기 비용 절감 방식은 이번 중지와 구분해 추가 승인·보존 조건을 확인한다.
+
+실습 재개는 RDS 시작/사용 가능 확인 → 같은 검증 Image·명세의 새 Task → 새 Target Healthy → HTTPS·재로그인·기존 문의 조회 순서다. 중지된 Fargate Task 자체를 다시 시작하지 않는다. 복구 후 인증된 교체 전 기준을 새로 확보하고 정식 Task 교체·Session 비교를 진행한다.
 
 Root의 MFA 활성화와 활성 Access Key 부재를 확인했다. 일상 배포용 IAM 사용자와 제한된 정책을 생성·연결한 뒤 본인이 Password·MFA를 등록하고 비Root 신원으로 로그인했다. Root Access Key를 CI에 제공하는 방식은 사용하지 않는다. [AWS Root 사용 권고](https://docs.aws.amazon.com/IAM/latest/UserGuide/root-user-best-practices.html)
 
