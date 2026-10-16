@@ -81,6 +81,20 @@ Flyway는 Migration 파일과 적용 이력을 검증한다. DB에 적용된 버
 
 준비 P는 지정한 후속 Schema에 연결해 기동·기존 상태·새 실패 코드·접수·보안을 함께 확인한다. 적용한 Migration 파일을 고치거나 이력을 지워 이전 버전처럼 꾸미지 않는다. Image를 바꿔도 삭제된 Column이 자동으로 생기지는 않는다.
 
+### 관리 도구와 DB 엔진 및 Schema 버전은 다르다
+
+다음 세 번호는 서로 다른 대상을 나타낸다.
+
+| 표시 예 | 버전을 가진 대상 | 바꾸면 달라지는 것 |
+|---|---|---|
+| psql 16.15 | 사람이 SQL을 입력하는 접속 도구 | SQL 입력·결과 표시와 도구의 부가 명령 |
+| PostgreSQL 17.11 | RDS에서 동작하는 DB 엔진 | DB 서버 프로그램 |
+| Flyway V8 | Helpdesk가 적용한 Migration 이력 | 애플리케이션의 테이블·제약 등 Schema |
+
+`psql major version 16, server major version 17` 경고는 도구가 서버보다 이전 주 버전이라는 뜻이다. DB가 중단됐다거나 TLS 접속에 실패했다는 뜻은 아니다. 일반 SQL 실행·결과 표시는 동작할 수 있지만, `\d` 계열처럼 서버의 내부 목록을 읽는 도구 명령은 실패할 수 있다. 관리 도구의 주 버전을 서버와 같은 17로 맞추는 것이 좋으며, 이 경고를 없애려고 정상 DB를 16으로 낮출 필요는 없다. [PostgreSQL의 psql 호환성 안내](https://www.postgresql.org/docs/17/app-psql.html#APP-PSQL-NOTES)
+
+Spring App은 psql이 아니라 JDBC Driver로 DB와 통신한다. 관리용 psql만 교체하는 일은 App Image 교체나 Flyway 이력 변경과 별개다. 반대로 App Image를 되돌려도 DB 엔진과 이미 적용한 V8이 자동으로 이전 버전으로 돌아가지는 않는다.
+
 ## 5 Snapshot으로 DB를 복원하기
 
 Snapshot은 특정 시점의 DB 상태를 보관한 Backup이다. RDS의 Snapshot 복원은 기존 DB를 덮어쓰는 작업이 아니라 **새 DB Instance를 만드는 작업**이다. 새 Instance에는 별도 Endpoint가 생긴다. [AWS의 Snapshot 복원 설명](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_RestoreFromSnapshot.html)
@@ -161,6 +175,7 @@ RDS를 중지해도 Storage·Backup 비용은 남고 연속 7일 뒤 자동 재�
 7. 읽기 전용 조회 후 ROLLBACK하면 기존에 Commit된 Ticket도 지워지는가?
 8. 복원 DB에 제안·예약이 없다는 이유만으로 AI를 다시 호출해도 되는가?
 9. 임시 DB를 중지하면 실행 비용과 보관 비용이 모두 없어지는가?
+10. psql 버전 경고를 없애기 위해 RDS 엔진이나 Flyway 이력까지 이전 버전으로 바꿔야 하는가?
 
 ## 질문 해설
 
@@ -173,6 +188,7 @@ RDS를 중지해도 Storage·Backup 비용은 남고 연속 7일 뒤 자동 재�
 7. **지워지지 않는다.** 이번 읽기를 끝내는 일과 과거에 확정한 쓰기를 취소하는 일은 다르다.
 8. **안 된다.** 외부 호출은 DB 복원으로 취소되지 않는다. 누락된 이력·실행권·정책을 확인한다.
 9. **아니다.** Storage·Backup과 자동 재시작을 고려하고 보존·삭제를 선택한다.
+10. **아니다.** 접속 도구의 주 버전을 서버에 맞추는 문제다. DB 엔진·Schema·App Image의 버전과 구분한다.
 
 ## 이어서 읽기
 

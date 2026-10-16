@@ -2,10 +2,10 @@
 
 > 작성일: 2026-10-07
 > 최종 수정일: 2026-10-16
-> 상태: In Progress — HTTPS 접수·업무 SQL Row·HTTP 301과 Cloud 관측, 별도 RDS의 SQL/App 복원·원본 복귀·Session 비교 완료. 임시 DB·해당 자동 Backup 삭제 후 원본·검증 Snapshot 유지. 읽기 준비 P의 로컬/원격 CI·ECR 전달도 완료. P의 Cloud 실행·이전 Image Rollback·전체 AI와 나머지 마감은 미완료.
+> 상태: In Progress — HTTPS·DB 복원과 원본 복귀, A→P·B 적용·P Image 복귀 검증 완료. V8·업무 Hash 보존과 재로그인 조회를 확인했다. 전체 AI·나머지 마감은 미완료.
 > 1차 목표 기간: 2026-10-08 목요일 ~ 2026-10-12 월요일. 미완료 항목이 남으면 Week 8 기간 연장
 > 초기 학습일: 10/8·10/9·10/10·10/12, 총 4일
-> 현재 진행: 10/16에는 중지 환경을 재개하고 같은 Image의 단일 App을 원본 → 복원 DB → 원본 순서로 전환했다. 복원 DB의 일곱 Table 건수/Hash, 실제 Browser의 Ticket 1/2·OPEN·PENDING Job과 두 전환의 Session 거부·재로그인 조회를 확인했다. App 순차 전환 중에는 기존 300초 Draining·Migration 7개·AI 비활성을 유지했고 추가 IAM·Secret·DNS 변경은 없었다. 임시 DB는 중지 후 별도 최종 승인으로 삭제했고 원본 DB·검증 Snapshot은 사용 가능 상태로 유지됐다. 다음 Image Rollback은 현재 정상 Image와 후보의 호환성부터 확인한다. 이전 Image Rollback·전체 AI·최종 회귀와 WIL 등 남은 전체 범위는 유지한다.
+> 현재 진행: 10/16에는 중지 환경 재개·별도 RDS 복원·원본 App 복귀와 임시 DB 정리, A→P와 B 적용을 검증했다. 이어 10/17 KST에 V8을 유지한 P :4로 복귀했다. Target Healthy·HTTPS Health UP·AGENT 재로그인 뒤 기존 Ticket 1/2·PENDING Job과 합성 Job 3/4의 원래 실패 코드 조회를 확인했으며, 일곱 Table의 전후 건수/Hash가 같았다. AI Provider·Worker는 계속 비활성이다. 전체 AI·최종 회귀·WIL 등 남은 범위는 유지한다.
 > 초기 순학습 시간 배분: 하루 10시간, 총 40시간. 휴식·식사와 단순 대기 시간 제외. 완료에 필요한 시간의 상한은 아님
 > 모드: `DEEP_LEARNING_MODE`
 > 핵심 질문: 이미 검증한 문의 접수와 AI 제안 흐름을 Cloud의 HTTPS 환경에 배포하고, 실패 원인을 찾으며 이전 실행 상태로 복구할 수 있는가?
@@ -376,7 +376,11 @@ ALB는 중지 기능이 없어 유지했다. RDS 저장/백업·ECR Image·Log �
 
 10/16에는 기준 Source `2e2cc40`의 별도 `codex/week8-rollback-prepare` Branch에서 읽기 준비 P를 구성했다. 운영 변경은 새 실패 코드 두 개의 Java Enum·UI 허용값뿐이며 V8은 Test Fixture로 분리했다. 로컬 PostgreSQL V7/V8의 P 기동·기존 데이터 보존·새 실패 코드 HTTP 200/FAILED 조회·신규 접수와 보안 계약을 확인했다. 관련 Java 56개·JAR 포장에 이어 P Docker Image를 빌드하고, 0.25 vCPU·512 MiB의 실제 Container/JVM·HTTP로 같은 호환 흐름과 재로그인을 검증했다. 추가 안전장치 Test를 포함한 P JavaScript 전체 181개·ESLint도 통과했다. V8은 외부 Test 단계에서만 적용하고 정상 P 실행 때 Mount·추가 설정을 제거했다. 실제 Browser·AI·후속 B·Cloud Rollback과는 구분하며 [P 사전 검증 보고서](./lab-reports/2026-10-16-image-rollback-preflight.md)에 결과를 기록했다.
 
-이후 승인한 Commit·Push와 P의 원격 CI·ECR 전달을 완료했다. main의 고정 Manifest에서 P `77359c9`만 선택해 전체 Java 579개·JavaScript 181개·ESLint·Image Build를 통과한 동일 Image 한 개를 기존 ECR에 추가했다. main의 별도 CI도 Java 704개·JavaScript 254개·ESLint·Build에 성공했다. 기존 main Workflow·IAM과 App·RDS·ALB·DNS·Secret은 변경하지 않았다. [P CI·ECR 보고서](./lab-reports/2026-10-16-prepare-image-ci-ecr.md)에 두 Commit·Run·Tag·Digest를 연결했다. 다음은 P의 실제 Cloud 실행과 후속 B 활성화·B→P 복귀 범위를 검토하는 단계이며, 현재 업로드만으로 그 단계를 완료 처리하지 않는다.
+이후 승인한 Commit·Push와 P의 원격 CI·ECR 전달을 완료했다. main의 고정 Manifest에서 P `77359c9`만 선택해 전체 Java 579개·JavaScript 181개·ESLint·Image Build를 통과한 동일 Image 한 개를 기존 ECR에 추가했다. main의 별도 CI도 Java 704개·JavaScript 254개·ESLint·Build에 성공했다. 기존 main Workflow·IAM과 App·RDS·ALB·DNS·Secret은 이 전달 단계에서 변경하지 않았다. [P CI·ECR 보고서](./lab-reports/2026-10-16-prepare-image-ci-ecr.md)에 두 Commit·Run·Tag·Digest를 연결했다.
+
+별도 승인한 A→P Cloud 전환도 완료했다. 요청 태그 누락과 잘못된 임시 DB 주소의 :3 기동 실패 때에는 A로 복귀했고, 실제 기준 :1에서 Image만 바꾼 수정 :4를 다시 대조해 실행했다. 원본 RDS·V7·AI 비활성을 유지한 P의 실제 Digest·Spring 기동·Target Healthy·HTTPS를 확인했다. AGENT 재로그인 후 Ticket 1/2가 OPEN이고 각 Job이 PENDING인 것을 읽기 전용으로 조회했다. IAM·DNS·Secret은 변경하지 않았으며 :2·:3은 재실행하지 않는다. [P Cloud 전환 보고서](./lab-reports/2026-10-16-prepare-image-cloud-transition.md)에 실제 실패·복귀와 최종 결과를 구분했다. 이어진 B 적용과 P 복귀 결과는 아래에 정리한다.
+
+이어 승인한 B→P 실험도 완료했다. 고정 B `3fdbdeb`의 Java 704개·JavaScript 254개·Lint·Build와 동일 Image ECR 전달을 확인하고, 실제 P :4에서 Image만 바꾼 :5를 대조했다. 기존 P의 300초 Draining·종료 코드 143 뒤 단일 B가 기동했다. 원본 RDS의 V8 적용·기존 여섯 Table의 Hash 보존·Target Healthy·HTTPS를 확인했다. 별도 합성 SQL은 로컬 PostgreSQL Test를 통과한 뒤 새 실패 두 건만 추가했으며 실제 AI 실행 자료가 아니다. B의 AGENT 조회 뒤 같은 300초 정리·B STOPPED를 확인하고 P :4 한 개로 복귀했다. 10/17 KST의 P 기동·Target Healthy·HTTPS Health UP과 재로그인 후 기존 문의/Job·새 실패 코드 조회까지 확인했다. 복귀 전·P 기동 뒤·인증 조회 뒤 일곱 Table 건수/Hash가 모두 같았다. [B→P 실행 보고서](./lab-reports/2026-10-16-image-rollback-cloud.md)에 결과와 합성 자료 범위를 기록한다. IAM·DNS·Secret·보안 그룹은 변경하지 않았고 Provider·Worker도 켜지 않았다. 전체 AI·자원 측정·최종 회귀·WIL은 남아 있다.
 
 토요일에 남은 배포·HTTPS·Browser 검증을 먼저 이어간다. 일요일 야간 재개 여부와 실제 진도에 따라 아래 실험의 날짜를 조정한다. 복구·회귀·설명·WIL의 초기 분량을 줄여 끼워 넣지 않고, 완료하지 못한 항목과 필요한 추가 시간을 마감 때 확인한다.
 

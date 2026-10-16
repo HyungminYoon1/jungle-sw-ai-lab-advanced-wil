@@ -1,8 +1,8 @@
 # Week 8 AWS 배포와 비용 초안
 
-> 상태: 일부 검증 — HTTPS 접수/SQL Row·HTTP 301·Cloud 관측과 별도 RDS의 SQL/App 복원·원본 복귀·Session 비교 완료. 임시 DB·해당 자동 Backup 삭제 후 원본 DB·검증 Snapshot 유지. 읽기 준비 P의 로컬/원격 CI·ECR 전달도 완료. P의 Cloud 실행·이전 Image 복귀·전체 AI와 남은 마감은 미완료
+> 상태: 일부 검증 — HTTPS·DB 복원·원본 복귀와 A→P·B 적용·P Image 복귀 완료. V8·업무 Hash 보존과 재로그인 조회 확인. 전체 AI와 남은 마감은 미완료
 > 요금 확인일: 2026-10-12, 2026-10-14 첫 Fargate 실행 요금 재확인
-> 진행 반영일: 2026-10-16 — 원본 → 복원 DB → 원본 순서의 단일 App 전환·AGENT 재로그인·기존 문의와 Job 보존, 임시 DB 삭제 후 원본 DB·검증 Snapshot 사용 가능 확인
+> 진행 반영: 10/16 학습 회차, P 복귀·최종 대조는 10/17 KST — B :5 적용 뒤 같은 RDS V8을 유지한 P :4로 복귀했다. 일곱 Table의 전후 건수/Hash·Target Healthy·HTTPS Health UP과 AGENT 재로그인 뒤 기존 문의·새 실패 코드 두 건 조회를 확인했다. AI 비활성 유지
 > 계획 수정일: 2026-10-16 — 복원 실험을 마치고 Image Rollback의 현재 설정·DB 호환성을 점검. 임시 DB는 중지 후 최종 승인으로 삭제. 전체 AI 등 남은 범위·최소 비용·Log 365일 보존·기존 승인 경계 유지
 
 ## 확인한 조건
@@ -130,7 +130,11 @@ RDS Console의 `DescribeGlobalClusters` 거부는 Aurora 글로벌 클러스터�
 
 그 뒤 Image Rollback 준비 P의 로컬 검증을 승인받았다. 기존 Source의 별도 Branch에서 새 두 실패 코드의 읽기만 준비하고 V8은 Test 전용으로 적용했다. 실제 PostgreSQL V7/V8·Spring Context·MockMvc·UI Test에서 기동·새 코드 조회·원문/작성자/예약/제안 보존·접수·보안을 확인했다. 관련 Java 56개·JAR 포장 뒤 Docker Image도 빌드했다. 로컬 0.25 vCPU·512 MiB의 같은 P Image를 V7/V8 DB에서 실행해 실제 HTTP·새 JVM 교체·Session 소실/재로그인을 확인했으며, V8 Test Mount·추가 설정은 정상 P 재실행 전에 제거했다. 추가 소스 안전장치 Test를 포함한 P JavaScript 전체 181개·ESLint도 통과했다. 현재 main은 이미 V8과 개인정보 처리 변경을 포함하므로 그대로 P라고 배포하지 않는다.
 
-추가 승인 뒤 P Branch와 main의 복원 자료·선택형 Workflow를 적절한 단위로 Commit·Push했다. 기존 main Workflow·AWS IAM을 유지하고, main의 고정 Manifest가 P `77359c9`의 Source·계보·변경 범위·Hash를 확인한 뒤 전체 Java 579개·JavaScript 181개·ESLint·Build를 실행했다. 같은 CI Image를 기존 ECR에 한 번 업로드하고 Manifest Digest `sha256:7369d0471d58ed27add9b6a9fc1d9fb28c99e9de7e006620127fd01ecea3933b`를 대조했다. main CI의 Java 704개·JavaScript 254개·ESLint·Build도 별도로 통과했다. [P CI·ECR 보고서](./lab-reports/2026-10-16-prepare-image-ci-ecr.md)에 Source/Workflow Commit과 산출물 관계를 정리한다. App·RDS·ALB·DNS·Secret·IAM은 이 전달 단계에서 변경하지 않았다. P의 실제 Cloud 실행·후속 B 활성화·B→P 복귀·전체 AI는 남아 있다.
+추가 승인 뒤 P Branch와 main의 복원 자료·선택형 Workflow를 적절한 단위로 Commit·Push했다. 기존 main Workflow·AWS IAM을 유지하고, main의 고정 Manifest가 P `77359c9`의 Source·계보·변경 범위·Hash를 확인한 뒤 전체 Java 579개·JavaScript 181개·ESLint·Build를 실행했다. 같은 CI Image를 기존 ECR에 한 번 업로드하고 Manifest Digest `sha256:7369d0471d58ed27add9b6a9fc1d9fb28c99e9de7e006620127fd01ecea3933b`를 대조했다. main CI의 Java 704개·JavaScript 254개·ESLint·Build도 별도로 통과했다. [P CI·ECR 보고서](./lab-reports/2026-10-16-prepare-image-ci-ecr.md)에 Source/Workflow Commit과 산출물 관계를 정리한다. App·RDS·ALB·DNS·Secret·IAM은 이 전달 단계에서 변경하지 않았다.
+
+이후 별도 승인으로 A→P를 실행했다. 요청 태그 누락과 삭제한 임시 DB 주소를 사용한 :3의 설정 오류로 A에 복귀한 뒤, 실제 기준 :1의 DOM JSON에서 Image만 바꾼 :4를 검증·실행했다. P Digest·원본 RDS/V7·Spring 시작·Target Healthy·HTTPS와 AGENT 재로그인 후 Ticket 1/2의 OPEN·각 Job의 PENDING 조회를 확인했다. IAM·DNS·Secret과 AI 비활성은 유지했다. [P Cloud 전환 보고서](./lab-reports/2026-10-16-prepare-image-cloud-transition.md)에 실패와 복구, 최종 검증을 기록한다. :2·:3은 삭제한 임시 DB를 참조하므로 실행하지 않는다. 이어진 B 적용·P 복귀 결과는 아래에 정리한다.
+
+추가 승인한 B→P 실험에서는 B `3fdbdeb`의 CI·동일 Image ECR 전달 뒤 실제 P :4에서 Image만 바꾼 B :5를 실행했다. 기존 300초 Draining과 단일 Task를 유지했고 B가 원본 RDS에 V8을 적용한 뒤 여섯 업무 Table의 건수/Hash는 전과 같았다. 별도 합성 SQL로 새 실패 코드 두 건의 Ticket/Message/Job/Attempt만 추가했으며 실제 AI 호출 자료가 아니다. B의 AGENT 조회 뒤 Target 정리·B STOPPED를 확인하고 P :4 한 개로 복귀했다. P는 V8에서 추가 Migration 없이 기동했고 Target Healthy·HTTPS Health UP을 확인했다. 10/17 KST에 재로그인해 기존 Ticket 1/2·PENDING Job과 합성 Job 3/4의 원래 실패 코드를 조회했다. 복귀 전·P 기동 뒤·인증 조회 뒤 일곱 Table의 건수/Hash가 모두 같았다. 최종 실행 상태는 원본 RDS V8·P :4 한 개이며 Provider·Worker는 비활성이다. IAM·DNS·Secret·보안 그룹·Log 보존은 그대로다. [B→P 실행 보고서](./lab-reports/2026-10-16-image-rollback-cloud.md)에 결과를 기록한다. 전체 AI와 최종 마감은 이어서 진행한다.
 
 적용 전 Console에서는 DescribeDBSnapshots의 snapshot:* 거부를 확인했다. 그때의 스냅샷 (0) 표시는 실제 Backup 부재의 증거로 쓰지 않는다. 승인 후 Snapshot 목록 조회는 서울의 같은 계정 메타데이터까지 가능하며 다른 프로젝트의 이름·설정도 보일 수 있다. 생성·변경은 지정 대상만 허용하고 모든 문장에 MFA·서울 조건을 둔다.
 

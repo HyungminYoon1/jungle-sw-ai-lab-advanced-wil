@@ -76,7 +76,7 @@ RDS는 연속 최대 7일만 중지할 수 있고 이후 자동으로 다시 시
 
 이번 복원 실험에서는 같은 Image를 유지하고 DB 접속 대상만 바꿨다. 실행 명세가 :1에서 :2로 바뀌었어도 프로그램 버전을 바꾼 것은 아니다. 다음 Image Rollback은 같은 원본 RDS를 유지한 채 실행할 프로그램을 다른 Digest의 이전 정상 Image로 교체하는 실험이다.
 
-사전 Source 비교에서 10/10 Image에는 현재 명세가 요구하는 RDS CA 파일과 배포 사용자 Configuration이 없음을 확인했다. 단순히 오래된 Image라는 이유로 복귀 대상으로 선택할 수 없다. 현재 Cloud에서 기동·로그인·업무 조회를 확인한 Image를 기준으로 보존하고, 후속 후보와 현재 DB·실행 설정의 호환성을 점검하는 순서가 필요하다. 아직 새 Image 업로드나 Rollback Task 교체는 하지 않았다.
+사전 Source 비교에서 10/10 Image에는 현재 명세가 요구하는 RDS CA 파일과 배포 사용자 Configuration이 없음을 확인했다. 단순히 오래된 Image라는 이유로 복귀 대상으로 선택할 수 없다. Cloud에서 기동·로그인·업무 조회를 확인한 Image를 기준으로 보존하고, 후속 후보와 현재 DB·실행 설정의 호환성을 점검하는 순서가 필요하다.
 
 이어진 문답에서는 명세의 개정 번호가 바뀌어도 Digest가 같으면 프로그램 버전은 같고, 같은 RDS에 Commit된 Ticket은 Image를 되돌려도 남는다고 답했다. Image와 실행 명세, DB의 수명을 구분한 것이다.
 
@@ -86,7 +86,7 @@ RDS는 연속 최대 7일만 중지할 수 있고 이후 자동으로 다시 시
 
 이후 별도 P Worktree에서 Java Enum과 UI의 읽기만 바꿔 로컬 PostgreSQL을 검증했다. 운영 Migration은 V7까지 두고 V8을 Test Fixture로 적용했다. P가 V8 DB에서도 기동해 두 새 실패를 HTTP 200·Job FAILED·원래 코드로 조회했고, 기존 원문·작성자·대기/성공/실패·예약·제안이 조회 전후 유지됐다. 같은 JVM의 Spring Context를 새로 만든 실험이며 실제 Process 교체나 Browser E2E로 확대하지 않는다. AI는 호출하지 않았고 새 실패 데이터는 합성 Fixture로 만들었다.
 
-Flyway에는 DB가 V8인데 프로그램의 최신 Migration이 V7이라는 경고가 있었다. 기본 Future 처리로 기동됐다는 사실과 프로그램이 새 Row를 올바르게 읽는다는 사실은 다르다. 이번에는 기동과 실제 데이터/API 조회를 함께 확인했다. 준비 버전의 Cloud 배포와 실제 Image Rollback은 아직 하지 않았다.
+Flyway에는 DB가 V8인데 프로그램의 최신 Migration이 V7이라는 경고가 있었다. 기본 Future 처리로 기동됐다는 사실과 프로그램이 새 Row를 올바르게 읽는다는 사실은 다르다. 로컬에서는 기동과 실제 데이터/API 조회를 함께 확인했다. 이 결과와 뒤의 Cloud 전환은 별개의 검증이다.
 
 ## Image 빌드와 실행 검증은 다르다
 
@@ -104,7 +104,29 @@ App은 0.25 vCPU·512 MiB로 제한했고 AI Provider와 Worker는 껐다. 이 �
 
 그래서 Workflow Commit과 프로그램 Source Commit을 나누어 기록하고, P의 Test·Image Label·전달 Artifact·ECR Digest가 이어지는지 확인했다. P 전체 Java 579개·JavaScript 181개가 통과한 Image를 업로드했고, main 전체 회귀는 Java 704개·JavaScript 254개로 따로 확인했다. Publish 단계에서는 다시 Build하지 않았다.
 
-ECR에 Image가 저장됐다고 App 서버가 그 Image를 실행하는 것은 아니다. 이번에는 P 산출물 전달까지만 끝났고 App·DB·ALB를 바꾸지 않았다. DB와 App 복구의 개념은 [별도 학습자료](../study-docs/database-and-application-recovery.md)로 정리했으며, 아래 추가 질문은 직접 설명해볼 복습 항목으로 남긴다.
+ECR에 Image가 저장됐다고 App 서버가 그 Image를 실행하는 것은 아니다. 이 전달 단계에서는 P 산출물만 업로드했고 App·DB·ALB를 바꾸지 않았다. DB와 App 복구의 개념은 [별도 학습자료](../study-docs/database-and-application-recovery.md)로 정리했다.
+
+## 같은 프로그램도 실행 설정이 다르면 기동에 실패한다
+
+P 전환에서는 Image뿐 아니라 실행 명세의 출처와 DB 주소도 확인해야 한다는 점을 배웠다. 처음 사용한 :3에는 삭제한 임시 복원 DB 주소가 남아 있어 DB 연결 단계에서 실패했다. 이를 P 코드의 오류나 DB Password 오류와 혼동하지 않는다. A로 복귀한 뒤 실제 기준 :1의 JSON에서 Image만 바꾼 :4를 검증해 다시 실행했다.
+
+태그가 명세에 있다는 사실과 실행 요청에 태그가 포함됐다는 사실도 같지 않았다. 기존 IAM 조건이 요구한 요청 태그를 직접 넣어 해결했으며 권한을 넓히지 않았다. 입력 폼이나 클립보드만 믿지 않고, 등록된 명세와 실제 Task가 사용하는 설정을 대조해야 한다.
+
+수정한 P는 원본 RDS의 V7에 연결됐고 추가 Migration 없이 기동했다. Target Healthy와 HTTPS를 확인한 뒤 AGENT로 직접 재로그인했다. 기존 Ticket 1·2의 제목과 OPEN 상태, 각 Job의 PENDING을 다시 읽을 수 있었다. AI Provider와 Worker는 계속 꺼 두었다. 읽기 준비 P의 배포와 새 값을 저장하는 B의 활성화·B→P 복귀는 서로 다른 단계임을 구분한다. 상세 실행은 [P Cloud 전환 보고서](../lab-reports/2026-10-16-prepare-image-cloud-transition.md)에 남긴다.
+
+## B의 DB 변경과 P 복귀를 구분하기
+
+B는 새 개인정보 검사 실패 코드 두 개를 저장할 수 있도록 V8을 적용한다. 이번 V8은 기존 Row를 바꾸지 않고 허용 코드만 늘린다. 실제 B 기동 전후의 여섯 업무 Table 건수·내용 Hash가 모두 같고 Flyway 이력만 7건에서 8건으로 늘어난 것을 확인했다.
+
+P로 돌아갈 때 DB도 V7로 되돌리는 것은 아니다. V8과 B 단계에서 추가한 Row를 남겨 놓고 P가 그 값을 올바르게 조회하는지가 핵심이다. 그래서 아직 새 값을 읽지 못하는 A가 아니라 읽기 준비를 마친 P를 복귀 대상으로 사용한다.
+
+이번에 추가한 Ticket/Job 3·4는 새 실패 값을 조회하기 위한 별도의 합성 SQL 자료다. 실제 개인정보 검사나 AI 호출이 실패한 기록이 아니며, 포함된 Attempt도 실제 API 사용량으로 계산하지 않는다. 기존 문의를 실패로 바꾸거나 실제 Worker를 켜지 않고 저장·조회 호환성을 확인하는 범위다. B와 복귀한 P 모두에서 기존 문의·두 PENDING Job과 합성 Job 3·4의 원래 실패 코드를 조회했다. P 기동 뒤와 인증 조회 뒤에도 V8 이력을 포함한 일곱 Table의 건수·Hash가 복귀 직전과 같았다. 기존 JVM의 Session은 이어지지 않아 P에서도 재로그인했다. P로 돌아가는 것은 프로그램 교체이지 DB를 V7로 되돌리는 일이 아님을 실제 흐름에서 확인했다. P 복귀·최종 대조의 실제 실행일은 10/17 KST이며, 학습 회차는 이 노트로 이어서 정리한다. 상세는 [B→P 실행 보고서](../lab-reports/2026-10-16-image-rollback-cloud.md)에 있다.
+
+## 접속 도구와 DB 및 Schema의 버전을 구분하기
+
+`psql 16.15, server 17.11` 경고는 접속 도구와 DB 엔진의 주 버전이 다르다는 뜻이다. DB 자체가 고장 났다는 메시지가 아니다. 일반 SQL 조회는 동작할 수 있지만 `\d` 같은 도구 명령의 호환성에는 주의해야 한다. 관리 도구를 psql 17.x로 맞추는 안과 정상 RDS의 엔진을 바꾸는 작업은 별개다. 이번에는 SQL 대조를 진행했으며 도구를 설치하거나 DB 엔진을 변경하지 않았다.
+
+Flyway의 V8은 PostgreSQL 17.11과 다른 번호다. 전자는 Helpdesk의 테이블 변경 이력이고 후자는 DB 서버 프로그램의 버전이다. P Image를 실행해도 이 둘이 자동으로 이전 상태가 되지 않는다. Spring App이 사용하는 JDBC Driver와 사람이 접속할 때 사용하는 psql도 구분한다. [복구 학습자료의 버전 설명](../study-docs/database-and-application-recovery.md#관리-도구와-db-엔진-및-schema-버전은-다르다)
 
 ## 핵심 질문
 
@@ -135,5 +157,10 @@ ECR에 Image가 저장됐다고 App 서버가 그 Image를 실행하는 것은 �
 25. Workflow가 main에서 실행됐어도 P Source를 별도로 고정·검증해야 하는 이유는 무엇인가?
 26. CI의 Image ID·전달 Artifact Hash·ECR Manifest Digest는 같은 대상을 식별하는가?
 27. 복원한 DB에 AI 예약이 없다고 바로 AI를 재호출하면 안 되는 이유는 무엇인가?
+28. 올바른 Image를 실행했어도 실행 명세가 삭제한 DB 주소를 가리킨다면 어느 단계에서 실패할 수 있는가?
+29. 명세의 태그와 실행 요청 태그가 IAM 조건에서 같은 의미인지 어떻게 확인해야 하는가?
+30. psql 16.15·PostgreSQL 17.11·Flyway V8은 각각 무엇의 버전인가?
+31. 관리 도구의 주 버전 경고를 해결하려고 정상 RDS를 이전 버전으로 낮춰야 하는가?
+32. P로 복귀한 뒤에도 V8의 새 실패 코드와 기존 업무 Hash를 다시 확인하는 이유는 무엇인가?
 
 실제 Task·Target·HTTPS와 기존 문의의 재개 후 결과는 실행 보고서에 따로 정리한다. 준비한 설정이나 시작 요청만으로 재개 검증 전체를 완료 처리하지 않는다.
