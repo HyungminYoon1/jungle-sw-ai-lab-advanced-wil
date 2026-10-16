@@ -2,8 +2,8 @@
 
 > 상태: Active
 > 시작일: 2026-08-18
-> 전체 기간: 기술 심화 8주 + 취업 심화 4주
-> 현재 단계: Week 1·2·3·4·6·7 완료 — Week 5 부분 완료·공개 제출 완료. Week 8은 RDS·TLS·Migration·ECS와 ALB·DNS·HTTPS 기본 응답 확인. 10/14 회차를 마감하고 실제 로그인·접수/DB Row·전체 AI·관측·복구는 10/15부터 재개
+> 전체 기간: 12주 유지 — 기술 학습 Week 1–9, 취업 우선 Week 10–12. 배포 과정은 Week 8–9 통합
+> 현재 단계: Week 1·2·3·4·6·7 완료 — Week 5 부분 완료·공개 제출 완료. Week 8–9는 HTTPS 보안·접수/DB Row, Snapshot 복원·원본 복귀와 B→P Image 복귀까지 확인. 전체 AI·남은 관측·최종 마감은 진행 중. 16일 연장 회차를 정리하고 10/17·18 휴무 뒤 10/19 재개
 
 이 저장소는 SW AI Lab 심화과정에서 선택한 기술을 학습하고, 이해가 바뀐 과정과 재현 가능한 근거를 주차별로 기록한다. 목표는 큰 제품을 기간 안에 완성하는 것이 아니라 AI/AX·Java Backend 직무에 필요한 개념을 직접 설명하고, 작은 실험과 Test로 검증하며, 필요한 범위만 서비스에 적용할 수 있는 역량을 만드는 것이다.
 
@@ -25,14 +25,14 @@
 
     로그인 → 문의 등록 → AI 분류 제안 → 담당자 확인 → 상태 변경 → 이력 조회
 
-이 Lab은 Week 1~8에 많은 제품 기능을 완성하는 프로젝트가 아니다. 대신 선택한 한 수직 흐름에서는 Browser, Security, Application, PostgreSQL, AI와 배포를 실제로 연결한다. 독립 재현 실험은 원리를 이해하기 위한 준비 근거이며 실제 PostgreSQL 영속성·API 흐름·배포를 대신하지 않는다.
+이 Lab은 기술 학습 기간에 많은 제품 기능을 완성하는 프로젝트가 아니다. 대신 선택한 한 수직 흐름에서는 Browser, Security, Application, PostgreSQL, AI와 배포를 실제로 연결한다. 독립 재현 실험은 원리를 이해하기 위한 준비 근거이며 실제 PostgreSQL 영속성·API 흐름·배포를 대신하지 않는다.
 
-Week 9~12에는 취업 활동을 우선하면서 검증된 기반 위에 AI를 활용해 Portfolio 기능을 수평 확장한다. 이때 사용자는 모든 Line을 직접 작성하기보다 요구사항, Architecture, 데이터·권한·실패 경계, Acceptance Test와 운영 결과를 검토한다.
+Week 8–9는 같은 배포 학습을 이어온 기간으로 통합한다. Week 10–12에는 취업 활동을 우선하고, 남은 수직 과업과 Project 보완은 주 6시간 안에서 진행한다. 수직 마감 뒤 필요한 Portfolio 기능만 AI로 수평 확장하며 같은 시간 상한을 공유한다. 이때 사용자는 모든 Line을 직접 작성하기보다 요구사항, Architecture, 데이터·권한·실패 경계, Acceptance Test와 운영 결과를 검토한다.
 
 ### 초기 범위
 
 - 핵심 개념: User, Ticket, Message와 AI Suggestion
-- Week 7에서는 Ticket의 최초 문의 Message와 자동 AI 처리만 연결하고, 후속 대화·공식 답변 기능은 Week 9 이후에 확장한다.
+- Week 7에서는 Ticket의 최초 문의 Message와 자동 AI 처리만 연결하고, 후속 대화·공식 답변 기능은 수직 마감 뒤 취업 단계의 필요에 따라 확장한다.
 - 인증: Session 방식 한 가지
 - AI: 요약·카테고리·우선순위 Structured Output와 평가
 - UI: 핵심 흐름을 확인할 수 있는 최소 Browser 화면
@@ -59,9 +59,8 @@ Week 9~12에는 취업 활동을 우선하면서 검증된 기반 위에 AI를 �
 | 5 | Browser JavaScript·Frontend·E2E·품질 기초 | Partially Completed | [Week 5 학습 계획](./week5/weekly-plan.md) · [WIL](./week5/wil.md) |
 | 6 | Browser·PostgreSQL·Test 수직 마감 | Completed — Local 수직 검증, 독립 재설명, 블로그·포럼 게시 완료 | [Week 6 학습 계획](./week6/weekly-plan.md) · [WIL](./week6/wil.md) |
 | 7 | LLM Structured Output·평가·Guardrail | Completed — 10/7 학습·평가·회귀 확인과 블로그 게시·포럼 등록 완료. 10/5 회차 이후 2일 추가 진행 | [Week 7 학습 계획](./week7/weekly-plan.md) · [WIL](./week7/wil.md) · [10/7 학습 노트](./week7/study-notes/2026-10-07-study-questions.md) |
-| 8 | Docker·CI·System·AWS Cloud·HTTPS | In Progress — RDS·Private TLS·Migration 7개·같은 Image의 ECS 기동·Target Healthy·HTTPS Health 200/UP 확인. 실제 로그인·업무 Row·전체 AI·복구는 10/15 재개 | [Week 8 학습 계획](./week8-9/weekly-plan.md) · [10/14 학습 노트](./week8-9/study-notes/2026-10-14-study-questions.md) · [HTTPS 연결 근거](./week8-9/lab-reports/2026-10-15-cloud-https-baseline.md) · [배포·비용 계획](./week8-9/deployment-plan.md) |
-| 9 | 취업 Baseline·Portfolio 근거 정리 | Not Started | 주차 시작 시 추가 |
-| 10 | 맞춤 지원·기술 면접 보완 | Not Started | 주차 시작 시 추가 |
+| 8–9 | Docker·CI·System·AWS Cloud·HTTPS 통합 | In Progress — HTTPS 접수·SQL Row, DB 복원·원본 복귀·B→P/V8 보존, psql 17·Process 관찰 확인. 전체 AI·남은 관측·최종 회귀/WIL은 미완료. 10/19 재개 | [통합 학습 계획](./week8-9/weekly-plan.md) · [16일 통합 노트](./week8-9/study-notes/2026-10-16-study-questions.md) · [Image 복귀 결과](./week8-9/lab-reports/2026-10-16-image-rollback-cloud.md) · [배포·비용 계획](./week8-9/deployment-plan.md) |
+| 10 | 취업 Baseline·Portfolio 근거와 맞춤 지원·기술 면접 | Planned — 초기 Week 9의 취업 과업을 함께 배치. 지원·면접은 기술 마감을 기다리지 않음 | [12주 Roadmap](./plan/weekly-roadmap.md#10주차--취업-baseline과-맞춤-지원-및-기술-면접) |
 | 11 | 면접·과제 대응과 취약 개념 재학습 | Not Started | 주차 시작 시 추가 |
 | 12 | 취업 결과 정리와 최종 회고 | Not Started | 주차 시작 시 추가 |
 
@@ -72,7 +71,7 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 ## 문서 안내
 
 - [12주 총괄 학습 계획](./plan/advanced-track-12-week-plan.md): 목표, 범위, 운영 원칙과 성공 기준
-- [주차별 Roadmap](./plan/weekly-roadmap.md): 8주 기술 학습과 4주 취업 심화 순서
+- [주차별 Roadmap](./plan/weekly-roadmap.md): 기술 학습 1–9주와 취업 우선 10–12주의 순서
 - [학습 및 기술 콘텐츠 계획](./plan/learning-and-content-plan.md): 학습 방법, 증거, WIL과 AI 활용 원칙
 - [Week 4 3일 Session 인증 학습 계획](./week4/weekly-plan.md): 공지 검토 결과를 반영한 범위 결정, 실행 순서와 이월 조건
 - [Week 4 WIL](./week4/wil.md): Session 인증·Role·CSRF의 이해 변화, Test와 Log 점검 및 게시 근거
@@ -82,14 +81,14 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [Week 6 WIL](./week6/wil.md): Browser·Session·CSRF·PostgreSQL 수직 흐름과 블로그·포럼 게시 기록
 - [Week 7 AI Native 학습 계획](./week7/weekly-plan.md): Structured Output·평가·Guardrail과 Suggestion 영속성 일정
 - [Week 7 WIL](./week7/wil.md): AI 출력의 형식·내용 평가, 문의 보존과 비동기 처리의 이해 변화. 10/7 블로그 게시·포럼 등록 완료 확인
-- [Week 8 배포 학습 계획](./week8-9/weekly-plan.md): 10/14 회차의 RDS·ECS·HTTPS 기본 연결을 기록하고 10/15 실제 로그인·접수/SQL Row부터 재개. 전체 AI·관측·복구 범위 유지
+- [Week 8–9 통합 배포 학습 계획](./week8-9/weekly-plan.md): 16일 연장 회차 마감과 완료/미완료 구분, 17·18일 휴무 및 19일 재개 순서. 기존 학습 범위 유지
 - [10월 8일 학습 노트](./week8-9/study-notes/2026-10-08-study-questions.md): JAR·Container·Volume·Session과 설정의 수명, Cache·Secret 전달의 이해 변화와 핵심 질문
 - [10월 9일 학습 노트](./week8-9/study-notes/2026-10-09-study-questions.md): 설정·Bean 조립, 개인정보 탐지·치환, 종료·Health·CI와 AWS 권한의 이해 변화와 핵심 질문
 - [10월 10일 학습 노트](./week8-9/study-notes/2026-10-10-study-questions.md): ECR·Task·Role·Network·TLS와 Cookie, Health·HttpOnly의 오해 수정과 실제 Image 업로드
 - [10월 12일 학습 노트](./week8-9/study-notes/2026-10-12-study-questions.md): 설정·객체·인증·자원·TLS와 Secret 전달, CI·Image 업로드와 실제 배포의 차이, 다음 학습
 - [10월 13일 학습 노트](./week8-9/study-notes/2026-10-13-study-questions.md): IAM·Network·관리 통로와 요청 조건, Console 오류·생성 거부의 구분, 다음 학습
 - [10월 14일 학습 노트](./week8-9/study-notes/2026-10-14-study-questions.md): Private RDS·TLS·DB 계정, 같은 Image의 인증 복구, 두 CNAME과 ALB·HTTPS 응답의 의미
-- [10월 16일 학습 노트](./week8-9/study-notes/2026-10-16-study-questions.md): Snapshot·App 복원, Session과 데이터 보존, 읽기 준비 P·CI·ECR 전달
+- [10월 16일 학습 노트](./week8-9/study-notes/2026-10-16-study-questions.md): Snapshot·App 복원, Session·V8과 데이터 보존, B→P 복귀·psql 17·Process 메모리와 남은 문답
 - [Snapshot과 별도 RDS 복원 검증](./week8-9/lab-reports/2026-10-16-rds-snapshot-restore.md): Row·Migration 대조, 같은 Image의 App 전환·재로그인·원본 복귀
 - [준비 P의 CI와 ECR 업로드](./week8-9/lab-reports/2026-10-16-prepare-image-ci-ecr.md): 고정 P Source·원격 Test·검증 Image 전달과 Manifest Digest
 - [프로그램과 Cloud DB를 연결하는 자료](./week8-9/study-docs/cloud-database-and-application-connection.md): psql·JDBC, AWS·DB·App 신원, 설정값 전달·Migration과 업무 요청
@@ -105,7 +104,7 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [RDS 생성과 Private TLS 검증](./week8-9/lab-reports/2026-10-14-rds-console-permission-diagnostics.md): 조회 보조 정책·기존 생성 조건, 비Root 생성과 관리자/App DB 접속·권한 확인
 - [ECS 첫 기동과 DB 암호 전달 수정](./week8-9/lab-reports/2026-10-14-ecs-first-cloud-startup.md): DB 인증 실패 후 같은 Image의 JDBC·Migration 7개·Spring 기동 성공
 - [ALB·App·DNS와 첫 HTTPS 응답](./week8-9/lab-reports/2026-10-15-cloud-https-baseline.md): 10/14 회차 연장 구간의 Target Healthy·브라우저 화면·익명 HTTP 결과. 로그인 이후 업무 검증은 미완료
-- [Week 8 AWS 배포·비용 계획](./week8-9/deployment-plan.md): 서울·월 3만 원·실습 시 실행 조건, 완료한 초기 설정과 남은 생성 범위·실행·보관 비용
+- [Week 8–9 AWS 배포·비용 계획](./week8-9/deployment-plan.md): 서울·월 3만 원 상한·최소 비용·실습 시 실행 조건, 실행·보관과 19일 재개 전 확인
 - [9월 30일 학습 노트](./week7/study-notes/2026-09-30-study-questions.md): 판단 보류 표현, 문의 보존, Ticket·Message와 AI 처리 상태의 구분
 - [10월 5일 학습 노트](./week7/study-notes/2026-10-05-study-questions.md): AI 입력·판단, 접수·예약·결과 Transaction과 실제 Java AI 저장, 10/6 재개 경계
 - [10월 6일 학습 노트](./week7/study-notes/2026-10-06-study-questions.md): 재시도 대기·현재 Attempt·최종 실패, 선택 Worker와 제한된 DB 저장 재시도
@@ -116,7 +115,8 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [Browser·자동 Worker 연결 실험](./week7/lab-reports/2026-10-06-worker-browser-experiment-lab.md): 실제 접수·자동 Worker·실제 AI·PostgreSQL·AGENT 화면의 연결과 원문·제안 대조
 - [공격성 입력·응답의 저장 경계](./week7/lab-reports/2026-10-07-ai-injection-boundary-integration-lab.md): 실제 Java·PostgreSQL 사례 12개와 전체 Java 461개 통과, 원문·Ticket 상태 유지
 - [담당자 최소 조회 화면](./week7/lab-reports/2026-10-06-agent-ai-suggestion-ui-lab.md): HTTP 조회와 Job 상태의 구분, Text·Race·Page 연결과 Java 449개·JavaScript 133개 회귀
-- [깊은 수직 학습과 AI 보조 수평 확장 Decision](./plan/decisions/0002-depth-first-ai-assisted-expansion.md): Week 1~8과 Week 9~12의 구현 모드
+- [깊은 수직 학습과 AI 보조 수평 확장 Decision](./plan/decisions/0002-depth-first-ai-assisted-expansion.md): 수직 깊이와 수평 확장의 경계
+- [8–9주차 통합과 취업 일정 조정](./plan/decisions/0004-combined-week8-9-deployment-learning.md): 실제 기간·학습 회차·후속 취업 과업과 시간 경계
 - [AgentOps Lab 보류 안내](./plan/agentops-lab-12-week-plan.md): 과정 이후 별도로 검토할 장기 프로젝트
 - [계획 문서 안내](./plan/README.md): 현재 기준 문서와 Archive
 - [산출물 Template](./templates/README.md): Weekly Plan, Lab Report, Learning Note와 WIL 작성 방법
@@ -141,6 +141,7 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
     ├── week2/       # HTTP·REST·Spring 요청 흐름 계획과 이후 학습 근거
     ├── week3/       # PostgreSQL·Transaction·Lock·Index 계획과 이후 학습 근거
     ├── week4/       # 인증·인가·Session·CSRF의 3일 축소 계획
+    ├── week8-9/     # Docker·CI·AWS·HTTPS·AI 연결·관측·복구의 통합 학습
     └── weekN/       # 해당 주차에 실제 산출물이 생길 때 추가
 
 실습 Source는 별도 `ai-helpdesk-learning-lab` 저장소에서 관리한다. 이 WIL 저장소에는 주차별 계획, 실험 결과, Learning Note, WIL과 공개 가능한 근거를 남긴다.

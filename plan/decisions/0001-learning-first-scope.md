@@ -2,7 +2,7 @@
 
 > 상태: Accepted
 > 결정일: 2026-08-18
-> 검토 시점: Week 4 종료, Week 8 종료
+> 검토 시점: Week 4 종료, 기술 수직 학습 마감. 최초 Week 8 목표는 [ADR-0004](./0004-combined-week8-9-deployment-learning.md)에 따라 Week 8–9 통합으로 갱신
 
 ## Context
 

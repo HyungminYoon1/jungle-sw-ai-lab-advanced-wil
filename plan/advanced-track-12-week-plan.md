@@ -1,9 +1,9 @@
 # SW AI Lab 심화과정 12주 학습 계획
 
 > 작성일: 2026-08-18
-> 최종 수정일: 2026-10-01
+> 최종 수정일: 2026-10-17
 > 상태: Active
-> 대상 기간: 기술 심화 8주 + 취업 심화 4주
+> 대상 기간: 전체 12주 유지 — 기술 학습 Week 1–9(배포 Week 8–9 통합), 취업 우선 Week 10–12
 > 대상 직무: AI/AX 개발자, Java Backend 개발자, AI Platform·LLMOps Backend 개발자
 
 이 문서는 12주의 학습 목표, 선택 범위, 운영 원칙과 성공 기준을 정의하는 최상위 계획이다. 주차별 세부 순서는 `12주 주차별 Roadmap`, 학습 증거와 공개 기록 방식은 `학습 및 기술 콘텐츠 계획`을 따른다.
@@ -18,7 +18,9 @@
 - 작은 코드를 직접 수정하고 실패를 재현하는 Test를 작성한다.
 - 선택, Trade-off, 실패와 한계를 WIL과 기술 글로 전달한다.
 
-Week 1~8에는 기능 종류를 넓히지 않고 선택한 기술의 수직 흐름을 실제로 연결한다. Week 9~12에는 취업 활동을 우선하면서 검증된 수직 기반 위에서 AI를 활용해 Portfolio 기능을 수평 확장한다.
+Week 1–9에는 기능 종류를 넓히지 않고 선택한 기술의 수직 흐름을 실제로 연결한다. 지연된 배포 학습은 Week 8–9의 한 과정으로 관리한다. Week 10–12에는 취업 활동을 우선하며, 수직 마감 뒤 필요한 Portfolio 기능만 AI로 수평 확장한다.
+
+초기 계획은 기술 8주·취업 4주였다. 10/17에는 실제 기간을 반영해 [8–9주차 통합 결정](./decisions/0004-combined-week8-9-deployment-learning.md)을 적용했다. 기존 Week 9의 취업 Baseline은 Week 10의 맞춤 지원·면접 준비와 합치며, Week 11·12나 전체 종료를 자동으로 뒤로 밀지 않는다. 10/17·10/18은 휴무이고 남은 학습은 10/19에 재개한다.
 
 ## 2. 지원 직무와 우선순위
 
@@ -42,9 +44,9 @@ Week 1~8에는 기능 종류를 넓히지 않고 선택한 기술의 수직 흐�
 4. 담당자가 제안을 확인하고 Ticket 상태를 변경한다.
 5. 사용자는 처리 이력을 조회한다.
 
-### Week 8 수직 흐름 목표
+### Week 8–9 수직 흐름 목표
 
-Week 8 종료 전에는 다음 최소 흐름을 실제 환경에서 연결하고 근거를 남긴다.
+Week 8–9 통합 학습의 마감 전에는 다음 최소 흐름을 실제 환경에서 연결하고 근거를 남긴다.
 
 1. Browser가 HTTPS로 Session 로그인과 Ticket 요청을 보낸다.
 2. Security Filter Chain이 인증·인가·CSRF를 검사한다.
@@ -65,12 +67,12 @@ Week 8 종료 전에는 다음 최소 흐름을 실제 환경에서 연결하고
 ### 범위 제한
 
 - AI는 제안만 하며 외부 Side Effect를 자동 실행하지 않는다.
-- Week 1~8에는 로그인·Ticket 등록·조회·AI Suggestion 확인이라는 한 수직 흐름에 필요한 코드만 추가한다.
+- 수직 학습 마감 전에는 로그인·Ticket 등록·조회·AI Suggestion 확인이라는 한 수직 흐름에 필요한 코드만 추가한다.
 - Week 7에서는 최초 문의 Message를 Ticket과 함께 저장한 뒤 자동 AI 처리를 연결한다. 기본 정상·실패 흐름부터 검증하고, 단일 Application·PostgreSQL에서 중단 후 처리 재개를 확인하는 최소 복구로 이어간다.
 - 같은 기능을 여러 Framework로 완성하지 않는다.
 - 제품에 맞지 않는 개념은 독립 Spike로 먼저 재현하되, 선택한 수직 흐름의 필수 연결을 Spike로 대체하지 않는다.
-- Week 1~8에는 후속 대화·공식 답변, 검색·Pagination, 알림, Dashboard와 UI 장식을 추가하지 않는다. 분산 Queue·Worker 운영으로 범위를 넓히지 않는다.
-- Week 9~12에는 AI가 기능 Code 초안을 만들 수 있지만, 사용자는 요구사항·Architecture·데이터·권한·실패 처리·Acceptance Test와 운영 결과를 검토한다.
+- 수직 학습 마감 전에는 후속 대화·공식 답변, 검색·Pagination, 알림, Dashboard와 UI 장식을 추가하지 않는다. 분산 Queue·Worker 운영으로 범위를 넓히지 않는다.
+- Week 10–12에는 수직 마감 후 AI가 기능 Code 초안을 만들 수 있지만, 사용자는 요구사항·Architecture·데이터·권한·실패 처리·Acceptance Test와 운영 결과를 검토한다.
 
 ## 4. 학습 항목 상태
 
@@ -81,7 +83,7 @@ Week 8 종료 전에는 다음 최소 흐름을 실제 환경에서 연결하고
 | 선택 적용 | 공통 Lab에서 원리를 확인할 가치가 있음 | 작은 기능, Test와 적용 전후 해석 |
 | 독립 Spike | Lab에 통합하지 않고 별도 실험 | 질문, 예상, 조건, 관찰과 결론 |
 | 조건부 후속 | 실제 필요나 측정 결과가 생길 때 수행 | 선행 조건과 보류 이유 |
-| 선정 제외 | 8주 목표와 비용이 맞지 않음 | 제외 이유와 재검토 조건 |
+| 선정 제외 | 기술 학습 목표와 비용이 맞지 않음 | 제외 이유와 재검토 조건 |
 
 모든 공지 항목을 완료하는 것은 목표가 아니다. 하지 않기로 한 이유를 설명할 수 있는 것도 학습 판단의 일부다.
 
@@ -89,7 +91,7 @@ Week 8 종료 전에는 다음 최소 흐름을 실제 환경에서 연결하고
 
 ## 5. 선택 범위
 
-| 영역 | 8주 선택 범위 | 초기 경계 |
+| 영역 | 기술 학습 선택 범위 | 초기 경계 |
 |---|---|---|
 | Git | 운영 Baseline: `status`·`diff`, Staging, 작은 Commit, Branch, `restore`·`revert`와 PR | Merge·Rebase·Conflict는 공백이 확인되거나 실제 필요가 있을 때만 안전한 실험 Repository에서 보충 |
 | Java·객체지향 | Encapsulation, Abstraction, Polymorphism, Composition, SOLID, Exception, Collection | Pattern 개수를 성과로 삼지 않음 |
@@ -113,7 +115,7 @@ Week 8 종료 전에는 다음 최소 흐름을 실제 환경에서 연결하고
 
 비율은 분 단위 시간표가 아니라 구현이 학습을 압도하는지 확인하는 기준이다. 설정이나 통합이 예상보다 길어지면 수평 기능과 UI 장식을 줄이고 독립 Spike로 원인을 먼저 확인한다. PostgreSQL 영속성, Security, AI 검증과 배포처럼 선택한 수직 흐름의 필수 연결은 Spike로 대체하지 않는다.
 
-## 7. 기술 심화 8주 목표
+## 7. 기술 학습 Week 1–9 목표
 
 | 주차 | 중심 영역 | 주간 결과 |
 |---:|---|---|
@@ -124,18 +126,19 @@ Week 8 종료 전에는 다음 최소 흐름을 실제 환경에서 연결하고
 | 5 | Browser·Frontend·Test 기초 | Event Loop·Rendering·Promise의 실행 근거와 미완료 경계 |
 | 6 | Browser·PostgreSQL·Test 수직 마감 | 최소 UI에서 Session API와 실제 PostgreSQL 영속성을 잇고 Integration·E2E 근거 확보 |
 | 7 | AI Native | 최초 문의 보존, Structured Output·고정 평가·Guardrail, 자동 AI 처리와 검증된 Suggestion 저장 |
-| 8 | DevOps·System·Cloud 통합 | Container·CI·Process·관측을 거쳐 IAM·ECS·ECR·RDS·DNS·HTTPS 수직 배포 |
+| 8–9 | DevOps·System·Cloud 통합 | 기존 배포 학습 범위를 유지하고 Container·CI·Process·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·AI 연결과 복구를 마감 |
 
 세부 학습 질문과 비범위는 [주차별 Roadmap](./weekly-roadmap.md)을 따른다.
 
-## 8. 취업 심화 4주 목표
+## 8. 취업 우선 Week 10–12 목표
 
 - 검증된 학습 근거를 직무별 이력서와 Portfolio 문장으로 전환한다.
+- 초기 Week 9의 기준 이력서·Portfolio 근거·면접 질문 정리를 Week 10의 맞춤 지원과 함께 진행한다. 지원·면접은 수직 학습의 완료를 기다리지 않는다.
 - Java·Spring·Database·Security·AI 질문을 Lab의 실패와 판단으로 설명한다.
 - 공고별 요구 역량에 맞춰 지원 자료를 조정한다.
 - 코딩 Test와 면접에서 확인된 취약 개념만 작은 Spike로 다시 학습한다.
 - AI를 활용해 후속 Message·공식 답변, 상태 변경, 검색, 알림과 Dashboard 같은 수평 기능을 빠르게 확장할 수 있다.
-- 수평 확장은 주 6시간 이내의 Portfolio 작업으로 제한하고 지원·면접 일정을 침해하지 않는다.
+- 잔여 기술 학습·Project 보완·마감 후 수평 확장을 합쳐 주 6시간 이내로 제한하고 지원·면접 일정을 침해하지 않는다. 범위는 유지하되 실제 가용시간에 나누며, 기간 끝에 남은 항목은 후속 과제로 구분한다.
 - AI 생성 Code 전체를 직접 작성한 것으로 표현하지 않고, 사용자가 검토한 Architecture·보안·데이터·Test·운영 범위를 구분한다.
 
 ## 9. 학습 완료 기준
@@ -155,10 +158,10 @@ Git 운영 Baseline은 위 핵심 주제 완료 기준을 별도로 적용하지
 
 ## 10. AI 활용 원칙
 
-- Week 1~8은 `DEEP_LEARNING_MODE`다. 먼저 학습 질문, 예상 동작과 모르는 부분을 작성하고, 핵심 Code를 직접 추적·수정하며 실패를 재현한다.
+- Week 1–9의 수직 학습은 `DEEP_LEARNING_MODE`다. 먼저 학습 질문, 예상 동작과 모르는 부분을 작성하고, 핵심 Code를 직접 추적·수정하며 실패를 재현한다. 취업 기간에 남은 수직 과업도 같은 방식으로 마감한다.
 - `DEEP_LEARNING_MODE`에서 AI는 설명 비교, 실험 Case 제안, 초안 검토와 반복 작업에 활용한다. 생성 Code는 작은 Diff로 나누고 각 단계의 동작을 직접 확인한다.
-- 설명하거나 수정하거나 실패를 재현할 수 없는 생성 Code는 Week 1~8 학습 성과에 포함하지 않는다.
-- Week 9~12는 `AI_ASSISTED_PRODUCTIZATION_MODE`다. AI가 수평 기능을 빠르게 구현할 수 있지만, 사용자는 전체 Architecture, Module 책임, 데이터 흐름, 권한, 실패 처리, Acceptance Test와 운영 결과를 이해하고 승인한다.
+- 설명하거나 수정하거나 실패를 재현할 수 없는 생성 Code는 수직 학습 성과에 포함하지 않는다.
+- Week 10–12의 수직 마감 후 확장은 `AI_ASSISTED_PRODUCTIZATION_MODE`다. AI가 수평 기능을 빠르게 구현할 수 있지만, 사용자는 전체 Architecture, Module 책임, 데이터 흐름, 권한, 실패 처리, Acceptance Test와 운영 결과를 이해하고 승인한다.
 - AI가 수행한 일과 학습자가 판단·수정·검증한 일을 WIL에서 구분한다.
 - Secret, Credential과 민감 원문을 Prompt, Source, Log와 공개 문서에 포함하지 않는다.
 
@@ -169,11 +172,11 @@ Git 운영 Baseline은 위 핵심 주제 완료 기준을 별도로 적용하지
 | 매일 | 오늘의 실험이 핵심 질문 한 가지에 답하는가 | 기능 추가를 멈추고 실험을 더 작게 분리 |
 | 매주 | 설명·재현·검증 근거가 최소 한 개 있는가 | 다음 주 새 주제보다 미해결 개념 보완 |
 | Week 4 | 학습 시간이 구현·설정에 잠식되지 않았는가 | Helpdesk 적용 범위와 선택 주제 축소 |
-| Week 8 | Browser부터 PostgreSQL·AI·Cloud HTTPS까지 최소 수직 흐름이 실제로 연결됐는가 | 미실행 항목을 `Partially Completed`로 남기고 Week 9 수평 기능 추가를 중단한 채 핵심 결함만 주 6시간 이내에서 보완 |
+| Week 8–9 통합 마감 | Browser부터 PostgreSQL·AI·Cloud HTTPS까지 최소 수직 흐름이 실제로 연결됐는가 | 미완료 항목을 명시하고 새 수평 기능을 보류한다. 취업 우선 기간에는 잔여 학습·보완을 주 6시간 안에서 나누며, 취업 일정과 전체 12주 틀을 자동 연장하지 않음 |
 
 ## 12. 최종 산출물
 
-- 8개의 주간 WIL과 주간 계획 대비 결과
+- Week 1–7의 WIL과 Week 8–9의 통합 WIL, 각 계획 대비 결과. 취업 기간은 별도 활동 요약으로 기록
 - 핵심 개념별 Learning Note와 재현 가능한 Lab Report
 - Java·Spring·PostgreSQL·Security·AI Native의 대표 실패 Test
 - Query Plan, HTTP Trace, 평가 Dataset과 CI 실행 근거
@@ -183,7 +186,7 @@ Git 운영 Baseline은 위 핵심 주제 완료 기준을 별도로 적용하지
 ## 13. 최종 성공 기준
 
 - 큰 제품을 미완성으로 남기는 대신 선택한 핵심 기술을 직접 설명·수정·검증할 수 있다.
-- Week 8까지 기능 수는 작아도 실제 PostgreSQL 영속성, Security, AI 검증, CI와 HTTPS 배포가 연결된 수직 흐름이 있다.
+- Week 8–9 통합 마감에서 기능 수는 작아도 실제 PostgreSQL 영속성, Security, AI 검증, CI와 HTTPS 배포가 연결된 수직 흐름을 확인한다. 기간만 지났다는 이유로 미완료 항목을 완료 처리하지 않는다.
 - Helpdesk Lab의 각 변경이 어떤 학습 질문에서 시작됐는지 추적할 수 있다.
 - AI 도움을 받은 범위와 직접 판단한 범위를 구분할 수 있다.
 - 실패와 제외 범위를 숨기지 않고 다음 학습 조건을 설명한다.
@@ -196,4 +199,5 @@ Git 운영 Baseline은 위 핵심 주제 완료 기준을 별도로 적용하지
 - [학습 및 기술 콘텐츠 계획](./learning-and-content-plan.md)
 - [학습 우선 범위 전환 Decision](./decisions/0001-learning-first-scope.md)
 - [깊은 수직 학습과 AI 보조 수평 확장 Decision](./decisions/0002-depth-first-ai-assisted-expansion.md)
+- [8–9주차 통합과 취업 일정 조정](./decisions/0004-combined-week8-9-deployment-learning.md)
 - [AgentOps Lab 보류 안내](./agentops-lab-12-week-plan.md)

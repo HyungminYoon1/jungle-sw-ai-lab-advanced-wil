@@ -1,9 +1,9 @@
 # SW AI Lab 심화과정 12주 주차별 Roadmap
 
 > 작성일: 2026-08-18
-> 최종 수정일: 2026-10-15
+> 최종 수정일: 2026-10-17
 > 상태: Active
-> 전체 기간: 기술 심화 8주 + 취업 심화 4주
+> 전체 기간: 12주 유지 — 기술 학습 Week 1–9, 취업 우선 Week 10–12. 배포 과정은 Week 8–9 통합
 > 공통 실습: AI Helpdesk Learning Lab
 
 이 문서는 각 주의 핵심 질문, 선택한 공지 학습 주제, 최소 실험과 완료 근거를 정의한다. 전체 목표와 범위는 `SW AI Lab 심화과정 12주 학습 계획`, 학습·WIL 작성 방식은 `학습 및 기술 콘텐츠 계획`을 따른다.
@@ -12,13 +12,13 @@
 
 - 한 주에는 핵심 질문 한 가지와 2~4개의 밀접한 개념만 우선한다.
 - 개념을 설명하고 예상한 뒤 최소 실패·비교 실험을 먼저 수행한다.
-- Week 1~8 Helpdesk Lab 적용은 한 수직 흐름에 필요한 범위로 제한하고 수평 기능을 추가하지 않는다.
+- 수직 학습 마감 전 Helpdesk Lab 적용은 한 수직 흐름에 필요한 범위로 제한하고 수평 기능을 추가하지 않는다.
 - 통합 비용이 개념 학습보다 커지면 독립 Spike로 원인을 먼저 확인하되, PostgreSQL 영속성·Security·AI 검증·배포 같은 필수 수직 연결은 생략하지 않는다.
-- Week 9~12에는 취업 활동을 우선하며 AI 보조 수평 확장을 주 6시간 이내에서 수행한다.
+- Week 10–12에는 취업 활동을 우선한다. 잔여 수직 학습·Project 보완·마감 후 AI 보조 확장을 합쳐 주 6시간 이내에서 진행한다.
 - 매주 최소 한 개의 설명·Test·Trace·Query Plan·Metric 또는 평가 결과를 남긴다.
 - 미완료 주제를 다음 주에 무조건 누적하지 않고 중요도와 선행 조건을 다시 판단한다.
 - 이미 사용하는 도구는 운영 Baseline으로 짧게 진단하고, 확인된 공백만 보충한다.
-- 기술 심화 8주 동안 AgentOps Lab 구현을 시작하지 않는다.
+- 기술 학습 기간에 AgentOps Lab 구현을 시작하지 않는다.
 
 ## 학습 항목 선택 절차
 
@@ -318,11 +318,21 @@ Week 5는 Event Loop·Rendering·Promise의 일부 실행 근거를 확보했지
 
 10/7에는 보완 Prompt 52건의 원문 대조·수동 평가, 기존 Prompt 52건의 Codex 예비 검토와 대표 응답 문답, 핵심 개념 재설명을 마쳤다. 판정 출처는 구분해 기록했다. 전체 회귀 테스트는 Java 449개·JavaScript 145개·ESLint 통과였고 새 실제 AI 호출은 없었다. 이어서 실제 Java·PostgreSQL의 [공격 사례 통합 Test](../week7/lab-reports/2026-10-07-ai-injection-boundary-integration-lab.md) 12개를 추가하고 전체 Java 461개 통과를 확인했다. 계약 위반의 저장 거부·원문 보존·Ticket 상태 유지와 형식상 유효한 제안의 검토 대기를 구분했다. [Week 7 WIL](../week7/wil.md)의 작성자 검토와 블로그 게시·포럼 등록 완료를 확인하고 Week 7을 마감했다.
 
-일정은 초기 9/29~10/3 계획과 10/4 학습 제외를 보존하고, 10/5 회차 이후 추가로 사용한 10/6·10/7의 2일을 반영했다. 실제 Week 7 기간은 9/29~10/7이다. 이후 Week 8은 10/8~10/12 중 일요일을 제외한 4일을 초기 배분으로 시작했다. 10/10 마감 뒤 재개 요청에 따라 10/11 야간 또는 10/12에 남은 내용을 이어가며 일요일 낮은 제외한다. 시간이 부족하면 Cloud·HTTPS를 포함한 선택 범위를 줄이지 않고 Week 8 기간을 연장하며, Week 9로 자동 이월하지 않는다.
+일정은 초기 9/29~10/3 계획과 10/4 학습 제외를 보존하고, 추가로 사용한 10/6·10/7의 2일을 반영했다. 실제 Week 7 기간은 9/29~10/7이다. 배포 과정은 10/8~10/12의 초기 4일 배분을 넘겨 계속했으며, 10/17 결정에 따라 같은 학습을 Week 8–9로 통합한다. 이전의 ‘Week 8만 연장’ 방침은 아래 변경 기록으로 남긴다.
 
-## 8주차 — DevOps·System·AWS Cloud·HTTPS 수직 배포
+## 8–9주차 — DevOps·System·AWS Cloud·HTTPS 수직 배포
 
-> 2026-10-07 초기 일정: 10/8 목요일~10/12 월요일, 10/11 일요일 제외. 우선 4일·순학습 40시간에 전체 내용을 배치하고, 부족하면 Week 8 기간을 연장한다. [Week 8 세부 계획](../week8-9/weekly-plan.md)의 세부 실험·복습 질문·완료 기준을 따른다.
+현재 기준은 [통합 주간 계획](../week8-9/weekly-plan.md)과 [일정 결정](./decisions/0004-combined-week8-9-deployment-learning.md)이다. 기존 학습 범위를 유지하고 실행 보고서·Source·Image 식별자는 바꾸지 않는다. 16일 회차의 연장 실습까지 통합 기록했으며 **10/17·10/18 휴무 뒤 10/19 월요일에 재개**한다.
+
+| 현재 확인 | 다음에 남은 것 |
+|---|---|
+| HTTPS 로그인·Role·CSRF 접수와 RDS 업무 Row | 개인정보 탐지·관계 보존의 실행용 Adapter와 전체 AI 조립·실제 Cloud AI·Peak 자원 측정 |
+| 별도 Snapshot/RDS 복원·원본 복귀, B→P와 V8/데이터 보존 | Request/Job 연결·App Metric·종료 중 DB/Job과 남은 Route 53 비교 |
+| psql 17.11·TLS, 로컬 Process/cgroup·합성 Log 관찰 | 메모리/Log 설명 검증·최종 Local/CI/Cloud 회귀·직접 설정 수정·통합 WIL |
+
+이하 날짜별 문단은 초기 계획과 당시 확인 결과다. 현재 완료 여부와 재개 순서는 위 통합 계획을 따른다.
+
+> 2026-10-07 초기 일정: 10/8 목요일~10/12 월요일, 10/11 일요일 제외. 당시 4일·순학습 40시간 배분과 기간 연장을 계획했다. [현재 8–9주차 계획](../week8-9/weekly-plan.md)에 원래 실험·복습 질문·완료 기준을 보존한다.
 
 2026-10-09 회차: [10/8 학습](../week8-9/study-notes/2026-10-08-study-questions.md)의 로컬 기준선에 이어 합성 Secret Mount·Provider 등록, 개인정보 범위 치환, 최소 Health·HTTP Metric·종료 Signal을 확인했다. 실제 GitHub Actions에서 운영체제 의존 Test를 보완하고 별도 Branch의 오류·복구를 비교했다. main의 Java 551개·JavaScript 146개·ESLint·Image Build가 통과했다. 개념과 오해 수정은 [10/9 학습 노트](../week8-9/study-notes/2026-10-09-study-questions.md)에 정리했다.
 
@@ -374,7 +384,7 @@ Week 5는 Event Loop·Rendering·Promise의 일부 실행 근거를 확보했지
 - IAM 최소 권한, ECS·RDS 연결과 CloudWatch 오류 추적 결과
 - 공개 HTTPS Request·Certificate·DNS Trace와 실제 PostgreSQL 영속성
 - Application Rollback, RDS Backup 경계, 비용·Resource 정리 Checklist
-- Week 8 최종 WIL과 Portfolio용 수직 흐름 설명
+- Week 8–9 통합 WIL과 Portfolio용 수직 흐름 설명
 
 ### 이번 주 비범위
 
@@ -385,11 +395,13 @@ Week 5는 Event Loop·Rendering·Promise의 일부 실행 근거를 확보했지
 - Comment·검색·알림·Dashboard 같은 수평 기능
 - AgentOps Lab 재개
 
-## 9주차 — 취업 Baseline과 근거 전환
+## 10주차 — 취업 Baseline과 맞춤 지원 및 기술 면접
+
+초기 Week 9의 취업 Baseline과 Week 10의 맞춤 지원을 함께 배치한다. 기술 학습이 남아 있어도 지원·면접은 먼저 진행하며 Week 11·12를 뒤로 밀지 않는다.
 
 ### 핵심 질문
 
-> 학습한 기술을 기능 나열이 아니라 문제·행동·검증·한계로 설명할 수 있는가?
+> 학습 근거를 문제·행동·검증·한계로 설명하고, 공고가 요구하는 역량에 맞춰 지원할 수 있는가?
 
 ### 활동
 
@@ -397,34 +409,18 @@ Week 5는 Event Loop·Rendering·Promise의 일부 실행 근거를 확보했지
 - Helpdesk Lab의 직접 구현·AI 보조·미구현 범위 구분
 - Java·Spring·Database·Security·AI 면접 질문 Baseline
 - Coding Test와 지원 활동 추적 방식 확정
-- 취업 근거에 도움이 되는 후속 Message·공식 답변·상태 변경·검색·알림·Dashboard 중 필요한 기능만 AI로 수평 확장
-- AI 생성 Code는 요구사항·Module 책임·데이터·권한·실패·Acceptance Test를 검토한 뒤 인수하고 주 6시간을 넘기지 않음
+- 공고별 핵심 역량 선정·맞춤 지원과 실제 응답에 따른 이력서 수정
+- 예상 질문을 Helpdesk 실험과 연결하고, 설명이 막힌 개념만 작은 Spike로 보완
+- 수직 마감 후 취업 근거에 도움이 되는 후속 Message·공식 답변·상태 변경·검색·알림·Dashboard 중 필요한 기능만 AI로 수평 확장
+- 잔여 수직 학습·Project 보완·마감 후 확장을 합쳐 주 6시간 이내로 운영. AI Code는 Module·데이터·권한·실패·Acceptance Test 검토 후 인수
 
 ### 완료 근거
 
 - 직무별 Project 설명과 대표 근거 Link
 - AI 보조 구현 범위와 사용자가 직접 검토·판단한 범위
 - 취약 개념 목록과 보완 순서
+- 맞춤 지원 기록·모의 면접 Feedback과 보완 Spike
 - 주간 취업 활동 요약과 WIL
-
-## 10주차 — 맞춤 지원과 기술 면접 보완
-
-### 핵심 질문
-
-> 공고가 요구하는 역량을 현재 근거로 설명하고 부족한 부분만 학습할 수 있는가?
-
-### 활동
-
-- 공고별 핵심 역량을 선정하고 맞춤 지원
-- 예상 질문을 Helpdesk 실험과 연결해 답변
-- 면접에서 설명이 막힌 개념 한두 개를 작은 Spike로 보완
-- 지원·응답 결과를 기준으로 이력서 문장 수정
-
-### 완료 근거
-
-- 맞춤 지원 기록과 변경한 근거
-- 모의 면접 Feedback
-- 보완 Spike와 Learning Note
 
 ## 11주차 — 면접·과제 대응과 취약 개념 재학습
 
@@ -485,3 +481,4 @@ Weekly Plan의 Baseline 이후 학습 항목을 조용히 추가하거나 완료
 | 2026-10-13 | 10/12 회차의 배포 준비와 자정 이후 전체 검증·새 Image 전달을 기록하고 잔여 과업을 10/13 재개로 갱신 | 사용자 진행 현황·노트·관련 문서·Commit 요청 | AI 비활성 첫 Cloud·HTTPS 뒤 전체 AI·System·관측·복구·마감 순서. 전 선택 범위 유지, Week 8 In Progress·필요 시 연장. 실제 실행 날짜와 별도 승인 경계 유지 |
 | 2026-10-14 | 10/13 회차의 IAM·Network·DB 관리 통로·Subnet Group과 RDS 생성 거부를 기록하고 10/14 재개로 갱신 | 사용자의 회차 마감·노트·계획·Commit 요청 | 실제 요청의 불일치 조건은 미확인으로 유지. 요청·정책 대조 뒤 Private DB·AI 비활성 App·HTTPS·전체 AI·관측·복구·마감 범위를 그대로 이어감 |
 | 2026-10-15 | 10/14 회차의 RDS·ECS·HTTPS 기본 응답을 기록하고 잔여 과업을 10/15 재개로 갱신 | 사용자의 회차 마감·진행 문서·Commit 요청 | 실제 실행일은 보고서에 유지. 로그인·업무 Row·전체 AI·관측·복구·마감 범위 유지, Week 8 In Progress·Week 9 자동 이월 없음. 실행 리소스 비용과 정리는 별도 확인 |
+| 2026-10-17 | 배포 학습을 Week 8–9로 통합하고 `week8-9`로 이동. 16일 회차 기록 통합·17/18 휴무·19일 재개 반영 | 실제 기간을 반영한 디렉터리·계획 조정과 회차 기록 요청 | 전 기술 범위·미완료 상태 유지. 초기 Week 9 취업 Baseline은 Week 10과 합치고 Week 11·12/전체 12주는 유지. 취업 기간의 잔여 학습·Project 작업은 합쳐 주 6시간 이내 |

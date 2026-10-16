@@ -1,6 +1,6 @@
 # 심화과정 계획 문서
 
-이 디렉터리는 기술 심화 8주와 취업 심화 4주의 학습 목표, 주차별 순서, 학습 증거와 변경 이력을 관리한다.
+이 디렉터리는 전체 12주의 학습 목표, 순서, 학습 증거와 변경 이력을 관리한다. 현재는 기술 학습 Week 1–9와 취업 우선 Week 10–12로 배치하며, 지연된 배포 과정은 Week 8–9로 통합한다.
 
 ## 현재 기준 문서
 
@@ -15,7 +15,13 @@
 
 ## 현재 학습 일정
 
-[Week 8 학습 계획](../week8-9/weekly-plan.md)의 초기 배분은 2026-10-08~2026-10-12 중 일요일을 제외한 4일·순학습 40시간이다. 10/14 회차에는 Private RDS·ECS 기동과 ALB·DNS·HTTPS 기본 응답까지 확인했다. 남은 학습은 10/15 목요일에 실제 로그인·Session·Role·CSRF와 접수/SQL Row부터 재개한다. 초기 기간을 넘겼으므로 같은 Week 8을 연장하며 Docker·CI·System·AWS Cloud·HTTPS·복구 전 범위를 유지한다.
+[Week 8–9 통합 학습 계획](../week8-9/weekly-plan.md)은 Docker·CI·System·AWS·HTTPS·AI 연결·관측·복구의 기존 범위를 유지한다. 초기 4일·40시간 배분을 넘겨 사용한 기간을 통합 명칭에 반영했으며, 미완료 과업을 완료 처리한 것은 아니다.
+
+16일 회차는 17일 새벽의 Image 복귀·psql 17·Process 관찰까지 [16일 노트](../week8-9/study-notes/2026-10-16-study-questions.md)에 합쳤다. 실제 실행 보고서는 해당 날짜를 유지한다. HTTPS 접수/SQL Row·Snapshot 별도 복원·원본 복귀·B→P와 V8/데이터 보존은 확인했고, 전체 AI·나머지 관측·최종 회귀·복습·WIL은 남아 있다.
+
+**10/17·10/18은 휴무, 10/19 월요일에 재개한다.** Week 10에는 기존 Week 9의 취업 Baseline과 맞춤 지원을 함께 진행하며 Week 11·12는 뒤로 밀지 않는다. 취업 기간의 잔여 수직 학습·Project 보완·마감 후 수평 확장은 합쳐 주 6시간 이내다. [일정 통합 결정](./decisions/0004-combined-week8-9-deployment-learning.md)을 따른다.
+
+### 초기 계획과 실행 근거
 
 [10월 8일 학습 노트](../week8-9/study-notes/2026-10-08-study-questions.md)에 Docker의 실행·저장·설정 수명과 이해 변화를 정리했다. Build Cache와 [Compose의 실제 HTTP·PostgreSQL 실험](../week8-9/lab-reports/2026-10-08-compose-http-postgresql-baseline.md)에서는 DB 교체 후 Row·App Session 유지, App 재시작 뒤 Row 보존·재로그인, 같은 Image의 설정 변경을 확인했다. 필수 값 누락·빈 문자열 검사와 기존 Worker 설정 Test도 확인했다.
 
@@ -23,15 +29,16 @@
 
 10/12에는 배포 사용자·AI 비활성 접수·자원·공개 CA를 확인하고 Standard Parameter 여섯 개·Execution Role·365일 Log Group을 준비했다. 연장 구간의 실제 10/13에는 Java 578개·JavaScript 173개·ESLint·Image Build의 로컬/CI 검증과 새 ECR Image 추가를 확인했다. [10월 12일 노트](../week8-9/study-notes/2026-10-12-study-questions.md)와 [10월 13일 실행 보고서](../week8-9/lab-reports/2026-10-13-deployment-image-ecr-publish.md)에 회차와 실행일을 나누었다. 이후 별도 실행 승인으로 AI 비활성 첫 Cloud·HTTPS 연결을 진행했다.
 
-10/14 회차에서는 비Root RDS 생성·Private verify-full·App DB 권한과 Migration 7개, DB 인증 실패의 설정 복구를 확인했다. 자정 이후 같은 회차에서 ACM·Cloudflare 검증/서비스 CNAME·ALB와 새 App Task를 연결해 HTTPS Health 200/UP·로그인 페이지 200·익명 API 401을 확인했다. [10월 14일 노트](../week8-9/study-notes/2026-10-14-study-questions.md)에 개념을, [실제 10월 15일 보고서](../week8-9/lab-reports/2026-10-15-cloud-https-baseline.md)에 실행일과 확인 수단을 기록했다. Week 8은 In Progress이며 전체 AI·관측·재배포·Snapshot 복원·최종 회귀·복습·WIL은 남아 있다. 마지막 확인 시 App·ALB·RDS는 실행 중이므로 15일 재개 때 비용·중지·정리 범위를 함께 확인한다.
+10/14 회차에서는 비Root RDS 생성·Private verify-full·App DB 권한과 Migration 7개, DB 인증 실패의 설정 복구를 확인했다. 자정 이후 같은 회차에서 ACM·Cloudflare 검증/서비스 CNAME·ALB와 새 App Task를 연결해 HTTPS Health 200/UP·로그인 페이지 200·익명 API 401을 확인했다. [10월 14일 노트](../week8-9/study-notes/2026-10-14-study-questions.md)에 개념을, [실제 10월 15일 보고서](../week8-9/lab-reports/2026-10-15-cloud-https-baseline.md)에 실행일과 확인 수단을 기록했다. 당시 남았던 로그인·업무 Row·복원은 후속 회차에서 검증했으며, 현재 잔여 과업은 위 통합 계획을 기준으로 확인한다.
 
 ## 범위 결정
 
 - [학습 우선 범위 전환 Decision](./decisions/0001-learning-first-scope.md)
 - [깊은 수직 학습과 AI 보조 수평 확장 Decision](./decisions/0002-depth-first-ai-assisted-expansion.md)
+- [8–9주차 통합과 취업 일정 조정](./decisions/0004-combined-week8-9-deployment-learning.md)
 - [AgentOps Lab 보류 안내](./agentops-lab-12-week-plan.md)
 
-AI Helpdesk Learning Lab은 공지 학습 주제를 관찰하는 공통 실습 대상이다. Week 1~8에는 수평 기능 수보다 Browser·Security·Application·PostgreSQL·AI·배포를 잇는 수직 깊이를 우선한다. 독립 실험은 원리를 분리해 확인하기 위한 근거이며 PostgreSQL 영속성·API 흐름·배포 같은 선택 수직 연결을 대체하지 않는다. Week 9~12에는 취업 활동을 우선하면서 AI 보조 수평 확장을 별도 모드로 수행한다.
+AI Helpdesk Learning Lab은 공지 학습 주제를 관찰하는 공통 실습 대상이다. 수직 학습에서는 기능 수보다 Browser·Security·Application·PostgreSQL·AI·배포의 실제 연결을 우선한다. 독립 실험은 PostgreSQL 영속성·API 흐름·배포를 대체하지 않는다. 수직 마감 전에는 수평 확장을 시작하지 않고, Week 10–12에는 취업 활동을 우선하면서 필요한 AI 보조 확장만 수행한다.
 
 ## Archive
 
