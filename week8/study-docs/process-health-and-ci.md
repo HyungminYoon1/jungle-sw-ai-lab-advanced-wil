@@ -22,6 +22,37 @@ Linux의 `/proc/1/status`에서는 Process 이름, PID, 상태, Thread 수와 �
 
 Process 환경 변수와 전체 실행 인자에는 Credential이 들어갈 수 있다. 학습에서는 필요한 상태 항목만 읽고 `/proc/<pid>/environ`이나 전체 실행 인자를 출력하지 않는다.
 
+### 가상 주소 공간·JVM 메모리·Container 메모리
+
+메모리 숫자를 볼 때는 무엇을 세고 있는지부터 구분한다.
+
+| 항목 | 세는 대상 | 주의할 점 |
+|---|---|---|
+| `/proc/1/status`의 `VmSize` | 해당 Process의 전체 가상 주소 공간 | 확보한 주소 범위가 모두 실제 RAM에 올라온 것은 아님 |
+| 같은 파일의 `VmRSS` | 해당 Process의 상주 메모리 | Java Heap만의 크기가 아니며 Container 전체 사용량도 아님 |
+| cgroup의 `memory.current` | 해당 cgroup에 현재 청구된 메모리 | Process 외 File Cache·일부 Kernel 메모리 등도 포함 |
+| cgroup의 `memory.max` | 해당 cgroup의 메모리 상한 | 현재 사용량이나 앞으로 필요한 최대량을 측정한 값은 아님 |
+
+예를 들어 512 MiB 제한에서 `VmSize`가 3.34 GiB이고 `VmRSS`가 197 MiB여도 곧바로 모순은 아니다. 주소 공간을 예약한 것과 실제 메모리를 사용하는 것은 다르다. 같은 시점 근처의 Container 사용량이 238 MiB라면 JVM의 RSS와도 구분해 읽는다. 서로 다른 관찰은 읽는 시각도 조금씩 다를 수 있다. [Linux Process 상태](https://man7.org/linux/man-pages/man5/proc_pid_status.5.html), [cgroup v2 메모리](https://docs.kernel.org/admin-guide/cgroup-v2.html#memory)
+
+Linux의 값에서 `/proc`의 kB는 통상 1024바이트 단위이며 cgroup 메모리 값은 바이트다. 단위를 맞춘 뒤 비교한다. Container 사용량이 지금 238 MiB라는 사실은 실제 AI·개인정보 모델을 함께 실행해도 512 MiB 안에 들어간다는 보장이 아니다. 실제 조합에서 시작·처리·실패·종료 중 Peak를 관찰해야 한다.
+
+CPU의 `cpu.max`가 `25000 100000`이면 100,000마이크로초 주기당 25,000마이크로초의 CPU 시간을 허용한다. 평균적으로 0.25 CPU에 해당하는 Quota이지 메모리 0.25개나 특정 물리 Core 한 개의 소유권이 아니다. [cgroup v2 CPU](https://docs.kernel.org/admin-guide/cgroup-v2.html#cpu)
+
+### Log Pipeline은 필요한 사건만 골라 읽는 과정
+
+Pipeline의 `|`는 앞 명령의 출력을 다음 명령의 입력으로 전달한다. 예를 들어 **민감 정보가 없는 Test 전용 합성 실험**에서 시작 Marker의 수를 셀 수 있다.
+
+```powershell
+docker logs '<EXPERIMENT_CONTAINER>' 2>&1 |
+    Select-String -Pattern '^LIFECYCLE_PROBE_REQUEST_STARTED$' |
+    Measure-Object
+```
+
+`docker logs`가 표준 출력·오류를 가져오고, `Select-String`이 정확히 일치하는 Marker만 고르며, `Measure-Object`가 그 수를 센다. Marker 1개는 그 기록이 한 번 관찰됐다는 뜻이다. 요청 완료·DB Commit·AI 성공까지 증명하지 않으므로 실제 응답·DB 상태·Job 결과를 따로 확인한다.
+
+이는 Log를 수집한 뒤 고르는 것이지 민감 정보가 처음부터 Log에 기록되지 않았다는 보장이 아니다. 실제 문의 원문·Password·Token·환경 변수는 애초에 Log에 넣지 않는다. 원격 업무 Log 전체를 내려받는 대신 허용된 식별자와 필요한 사건으로 조회 범위를 좁힌다.
+
 ## SIGTERM과 SIGKILL
 
 ### 이름과 Signal의 뜻
@@ -214,3 +245,5 @@ CI에서 사용한 설정과 배포 환경의 설정은 다를 수 있다. 같�
 2. 요청을 마치기까지 4초가 남았는데 Docker가 SIGTERM 후 1초만 기다린다면, Spring의 20초 종료 유예만으로 요청을 끝낼 수 있는가?
 3. Health가 `UP`인데 AI Job은 `FAILED`일 수 있는가? AI 응답 수신과 Job의 `SUCCEEDED`는 어떻게 다른가?
 4. CI에서 Test와 Image Build가 성공했다면, AWS에서 HTTPS 접속도 성공했다고 말할 수 있는가?
+5. 512 MiB 제한에서 `VmSize`가 3.34 GiB라면 반드시 메모리 상한 위반인가? `VmRSS`와 `memory.current`는 무엇이 다른가?
+6. Log에서 요청 시작 Marker를 한 번 찾았다는 사실만으로 응답 완료·DB 저장·AI 성공까지 확인한 것인가?

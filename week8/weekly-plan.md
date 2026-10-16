@@ -1,11 +1,11 @@
 # Week 8 학습 계획 Docker와 CI에서 AWS HTTPS 배포까지
 
 > 작성일: 2026-10-07
-> 최종 수정일: 2026-10-16
+> 최종 수정일: 2026-10-17
 > 상태: In Progress — HTTPS·DB 복원과 원본 복귀, A→P·B 적용·P Image 복귀 검증 완료. V8·업무 Hash 보존과 재로그인 조회를 확인했다. 전체 AI·나머지 마감은 미완료.
 > 1차 목표 기간: 2026-10-08 목요일 ~ 2026-10-12 월요일. 미완료 항목이 남으면 Week 8 기간 연장
 > 초기 학습일: 10/8·10/9·10/10·10/12, 총 4일
-> 현재 진행: 10/16에는 중지 환경 재개·별도 RDS 복원·원본 App 복귀와 임시 DB 정리, A→P와 B 적용을 검증했다. 이어 10/17 KST에 V8을 유지한 P :4로 복귀했다. Target Healthy·HTTPS Health UP·AGENT 재로그인 뒤 기존 Ticket 1/2·PENDING Job과 합성 Job 3/4의 원래 실패 코드 조회를 확인했으며, 일곱 Table의 전후 건수/Hash가 같았다. AI Provider·Worker는 계속 비활성이다. 전체 AI·최종 회귀·WIL 등 남은 범위는 유지한다.
+> 현재 진행: 10/16~17의 A→P→B→P 전환에서 같은 RDS V8·업무 Hash·원래 실패 코드와 재로그인 조회를 확인했다. 10/17에는 RDS를 유지하고 관리용 psql만 17.11로 맞춰 TLS 1.3·메타 명령·일곱 Table Hash 불변을 확인했다. 로컬 JVM의 `/proc`·cgroup·합성 Log Pipeline도 관찰했다. AI Provider·Worker는 계속 비활성이며 전체 AI·남은 관측·최종 회귀·WIL 등 전체 범위는 유지한다.
 > 초기 순학습 시간 배분: 하루 10시간, 총 40시간. 휴식·식사와 단순 대기 시간 제외. 완료에 필요한 시간의 상한은 아님
 > 모드: `DEEP_LEARNING_MODE`
 > 핵심 질문: 이미 검증한 문의 접수와 AI 제안 흐름을 Cloud의 HTTPS 환경에 배포하고, 실패 원인을 찾으며 이전 실행 상태로 복구할 수 있는가?
@@ -89,6 +89,8 @@ OIDC Provider·ECR·업로드 Role은 초기 설정 승인을 받아 생성했�
 후속 대화·공식 답변·검색·알림·Dashboard·UI 장식, 여러 Provider 비교, 새로운 AI 평가 Dataset은 추가하지 않는다. Kubernetes·Terraform·Auto Scaling·WAF·CloudFront·분산 Queue·전체 관측 Stack·Multi-AZ 고가용성·무중단 배포는 기존 제외 범위를 유지한다.
 
 ## 학습 진행 현황
+
+[10월 17일 노트](./study-notes/2026-10-17-study-questions.md)에는 psql·DB Engine·Migration 버전과 메모리 관찰 항목을 구분했다. [psql 전환 보고서](./lab-reports/2026-10-17-cloudshell-psql17.md)는 Private 경로를 유지한 공식 Client 분리와 실제 접속·Hash 대조, [Process 관찰 보고서](./lab-reports/2026-10-17-proc-cgroup-log-pipeline.md)는 Test 전용 로컬 JVM의 VmSize/RSS·cgroup 제한·Log Marker와 HTTP 결과를 기록한다. 현재 JavaScript 전체 262개·ESLint가 통과했다. 원격 CI·추가 Push·Image 업로드는 이 회차에서 실행하지 않았다.
 
 [10월 8일 학습 노트](./study-notes/2026-10-08-study-questions.md)에 이번 회차의 개념과 이해 변화를 정리했다. 학습 회차는 10/8로 묶고, 실제 실험의 실행일은 각 보고서의 10/8~10/9 기록을 유지한다.
 
@@ -210,9 +212,9 @@ Docker·Compose의 기초와 저장·재시작·설정 비교까지 진행했다
 | 필수 값·Worker 기본 비활성 | Compose 누락·빈 문자열 12개 거부, 기존 Spring 설정 Test 7개 통과 | 배포용 정상 조립·Secret 누락·실제 실행의 추가 Test와 구분 |
 | 배포용 Provider·개인정보 처리기·검증기·Worker·Secret | Provider·검증기 등록과 합성 파일 Mount·Main 조립 확인. 기본 App의 개인정보 처리기·실행용 Secret·전체 연결 미완료 | Process·CI와 Cloud 설정 준비를 병행. 실제 AI 수직 흐름 전에는 남은 조립을 완료하고 별도 호출 승인 |
 | 개인정보 탐지 위치의 범위 검증과 치환 | Code Point·JSON·Processor·실패 기록의 로컬 검증. 실제 NER 후보는 합성 12건 중 7건 통과로 채택 보류 | 배포 학습과 병행해 실제 탐지 Adapter·관계 보존·Main 연결·전체 AI 자원/Cloud 검증을 완료. 검사를 생략하지 않음 |
-| Cloud 권한·DNS·Region·구성·비용 조건 | 기존 보안·최소 비용 유지. RDS·TLS·Migration·ACM·두 CNAME·HTTPS 접수/SQL Row·HTTP 301·Edge V6 준비 확인 | 10/16 Task 교체 기준·같은 RDS의 문의 보존부터, Route 53·실습 종료·복구 순서. 새 리소스·삭제는 별도 확인 |
-| Process·관측·CI·IAM·ECR | 로컬 종료 비교·실제 CI·OIDC/ECR·실행 Digest 대조, Cloud 기동 Log·ALB 그래프와 권한 복구 확인 | DB·Session·Job 종료 상태, CLI Pipeline·Request/Job 연결과 App Metric·대표 실패의 추가 관측 |
-| Cloud·HTTPS·복구·회귀·WIL | HTTPS 업무 접수·SQL Row까지 확인. Task 교체는 권한 준비만 완료, 실제 실행·재로그인 미확인 | 10/16 기준 조회·Draining·Task 교체·문의 보존부터 재개. 이전 Image 복귀·별도 DB 복원·전체 AI·최종 회귀·WIL 유지 |
+| Cloud 권한·DNS·Region·구성·비용 조건 | Private RDS·TLS·Migration·ACM·CNAME·HTTPS 접수/SQL Row·301, Task 교체와 실제 Image 복귀 확인 | Route 53 별도 학습·종료 비용 확인. 새 리소스·삭제는 별도 승인 |
+| Process·관측·CI·IAM·ECR | 실제 CI·ECR·실행 Digest·Cloud 기동 Log/ALB 그래프, 로컬 Signal 비교·`/proc`/cgroup·합성 Log Pipeline 확인 | DB·Job 종료 상태, Request/Job 연결과 App Metric·대표 실패의 추가 관측. 로컬 합성 Marker를 전체 추적으로 확대하지 않음 |
+| Cloud·HTTPS·복구·회귀·WIL | HTTPS 접수/Row·Task/Session 비교·Snapshot 별도 복원·원본 복귀·B→P와 V8/업무 Hash 보존 완료 | 전체 AI 조립·관계 보존 마스킹·Cloud AI/자원 검증, 나머지 관측·Route 53·최종 회귀·복습·WIL 유지 |
 
 이월한 시간을 기존 하루 배정에 무조건 더해 끝내는 일정으로 보지 않는다. 아래 주제별 시간은 초기 예상 분량을 유지한 것이며, 실제 날짜별 배치는 선행 조건과 하루 종료 때의 잔여량을 기준으로 조정한다. 설정 구현이 길어지면 Process·CI의 시작이 밀리고, CI가 미완료면 Cloud 시작도 밀린다. 뒤의 학습을 삭제하거나 복구·WIL 시간을 줄이지 않는다.
 
@@ -231,6 +233,7 @@ Docker·Compose의 기초와 저장·재시작·설정 비교까지 진행했다
 | 10/14 수 회차 | 실제 진행 분량 기록 | RDS 조회·생성 조건 대조, Private TLS·App 계정 → ECS의 DB 인증 실패·설정 수정·Migration → ACM·ALB·DNS·HTTPS 기본 응답 | 회차 노트·보고서 정리. 자정 이후 실제 실행일은 10/15 유지. 실제 로그인·업무 Row·전체 AI·복구는 이월 |
 | 10/15 목 회차 | 실제 진행 분량 기록 | HTTPS 로그인·Cookie·CSRF 접수/SQL Row, HTTP 301·개인정보 검증/후보 평가·Cloud Log/Metric, Task 교체 권한 준비 | 10/15 노트·보고서 정리. 자정 이후 Version 6의 실제 적용일은 10/16 유지. Task 교체·재로그인 미실행 |
 | 10/16 금 재개 | 실제 가용 시간에 맞춰 진행 | AGENT 기준 조회 → 승인한 Draining·같은 Image/명세 Task 교체·기존 문의/재로그인 → 남은 복구·관측·전체 AI·Route 53 | 완료한 권한 보완과 기초 실험은 반복하지 않음. 기존 전체 범위를 유지하고 잔여량을 실제 결과로 갱신 |
+| 10/17 토 연장 | 실제 진행 분량 기록 | B→P 최종 대조 → RDS 유지·psql 17 전환 → 로컬 `/proc`·cgroup·Log Pipeline | 실제 접속·Hash·Client 준비와 로컬 수치 기록. 다음은 메모리/Log 문답과 남은 관측·전체 AI 선행 구현이며 학습 범위는 줄이지 않음 |
 
 ### 10월 8일 목요일 실행 환경과 데이터 보존
 
@@ -445,6 +448,8 @@ ALB는 중지 기능이 없어 유지했다. RDS 저장/백업·ECR Image·Log �
   - [10월 13일 노트](./study-notes/2026-10-13-study-questions.md): IAM·Network·관리 통로, 생성 요청과 정책 조건, Console 오류 구분과 다음 학습
   - [10월 14일 노트](./study-notes/2026-10-14-study-questions.md): RDS·TLS·App DB 계정, ECS의 DB 인증 복구, 두 CNAME·ALB·HTTPS와 Health/업무 성공 구분
   - [10월 15일 노트](./study-notes/2026-10-15-study-questions.md): Session/CSRF·접수/SQL Row, SELECT/Commit·Redirect, 개인정보 품질·Log/Metric과 App/DB 복구, 16일 재개 기준
+  - [10월 16일 노트](./study-notes/2026-10-16-study-questions.md): Snapshot 별도 복원·원본 복귀, A/P/B의 읽기 호환성과 실제 Image Rollback
+  - [10월 17일 노트](./study-notes/2026-10-17-study-questions.md): psql과 RDS·V8, Process/Container 메모리·합성 Log 관찰
 - `lab-reports/`: 실행 환경·명령·예상·결과·실패 원인과 재현 방법을 묶는다. 로컬·CI·Cloud 근거는 구분한다.
   - [실제 CI 실패·복구](./lab-reports/2026-10-09-process-health-and-ci-baseline.md): 최초 운영체제 의존 실패와 별도 Branch의 UI 오류·복구, main 검증
   - [AWS OIDC·ECR 초기 설정](./lab-reports/2026-10-10-aws-oidc-ecr-baseline.md): 초기 생성·정책 대조와 당시 미실행 상태, 후속 업로드 보고서 연결
@@ -467,6 +472,9 @@ ALB는 중지 기능이 없어 유지했다. RDS 저장/백업·ECR Image·Log �
   - [PERSON 계약과 실제 한국어 NER 평가](./lab-reports/2026-10-15-korean-privacy-ner-probe.md): PERSON 치환·업무 사실 보존과 고정 합성 12건의 실제 CPU 평가. 이름 누락·일반 문구 오탐으로 후보 채택 보류, 배포용 Adapter와 구분
   - [실제 Cloud의 기동 Log와 HTTP 관측](./lab-reports/2026-10-15-cloud-observability-baseline.md): 현재 Task의 기동 Event·익명 응답, Edge V5의 최소 조회 적용 뒤 실제 ALB 그래프 확인
   - [같은 Image·RDS의 Task 교체 준비](./lab-reports/2026-10-16-cloud-task-replacement.md): Edge V6·V1 보관/삭제·V2~5 보존과 교체 전 기준. 실제 Draining·교체·재로그인은 NOT_RUN으로 16일 이월
+  - [실제 Image Rollback](./lab-reports/2026-10-16-image-rollback-cloud.md): B의 V8 적용·합성 새 실패 코드, P 복귀 뒤 일곱 Table과 인증 조회 보존
+  - [Private CloudShell psql 17](./lab-reports/2026-10-17-cloudshell-psql17.md): 공식 Client 분리·기존 16 보존, RDS 17.11 TLS·Schema/Hash 대조
+  - [Process·cgroup·Log Pipeline](./lab-reports/2026-10-17-proc-cgroup-log-pipeline.md): 실제 로컬 JVM 수치와 Container 제한, 합성 시작 Marker/HTTP 응답
 - `wil.md`: 주간 결과와 이해 변화, 직접 판단한 부분과 AI 도움을 받은 부분을 정리한다. 실제 결과가 생긴 뒤 작성한다.
 - Lab Repository: Dockerfile·Compose·Workflow·배포 설정·관련 Test·실행/복구 안내를 관리한다. WIL과 구현 변경은 별도 Commit으로 나눈다.
 
@@ -480,11 +488,11 @@ ALB는 중지 기능이 없어 유지했다. RDS 저장/백업·ECR Image·Log �
 - [x] 실제 GitHub Actions의 Build·Test·정적 검사·Image Build와 Test 실패·복구를 확인했다.
 - [x] 실제 OIDC 인증·ECR Image 업로드와 Commit·Tag·Digest 대응을 확인했다.
 - [ ] IAM User·Role·Policy·최소 권한과 Network 접근 경계를 설명하고, 권한 거부·복구와 같은 Image의 ECS 실행을 확인했다.
-- [ ] 실제 RDS Migration·저장·조회와 Application 재배포 뒤 Row 보존을 확인했다.
+- [x] 실제 RDS Migration·저장·조회와 Application 재배포 뒤 Row 보존을 확인했다.
 - [ ] DNS·ACM·HTTPS·Redirect와 안전한 Cookie·Session·Role·CSRF를 실제 Browser에서 확인했다.
 - [ ] 실제 Cloud의 접수·Worker·AI·제안 저장·AGENT 조회를 연결하고 원문·Ticket 상태를 유지했다.
 - [ ] CloudWatch에서 대표 실패의 Log·Health·요청 수·오류·응답시간을 추적했다.
-- [ ] 이전 Image로 복귀하고 Backup 설정·별도 DB 복원 결과와 데이터 보존을 확인했다.
+- [x] 이전 Image로 복귀하고 Backup 설정·별도 DB 복원 결과와 데이터 보존을 확인했다.
 - [ ] 최종 회귀·공개 문서·Secret 노출 점검, 재현 절차와 비용·리소스 정리 기록이 있다.
 - [ ] WIL을 작성자 표현으로 검토했다. 블로그 게시와 포럼 등록은 실제 확인 뒤 각각 완료 처리한다.
 
@@ -531,6 +539,7 @@ ALB는 중지 기능이 없어 유지했다. RDS 저장/백업·ECR Image·Log �
 | 2026-10-14 | 10/13 첫 Cloud·HTTPS 연결을 목표로 진행 | 10/13 회차의 IAM·Network·관리 통로·Subnet Group과 RDS 생성 거부를 기록하고, 잔여 과업은 10/14 요청·정책 대조부터 재개 | 사용자의 마감·기록·Commit 요청. 자정 이후 실제 실행일은 보고서에 유지. 불일치 조건을 추측하거나 권한을 넓히지 않고 전체 학습 범위 유지 |
 | 2026-10-15 | RDS·ECS 첫 기동 확인, HTTPS 연결과 업무 요청 미완료 | 10/14 회차의 ACM·DNS·ALB/App·HTTPS 기본 응답까지 기록하고 실제 로그인·업무 Row 등 잔여 과업을 10/15로 이월 | 사용자 회차 마감·기록·Commit 요청. 실제 실행일은 보고서에 유지. 전 학습 범위·최소 비용·승인 경계를 유지하고 Week 8은 In Progress |
 | 2026-10-16 | 10/15에 업무 접수·Cloud 관측·전체 AI·복구를 이어가던 상태 | 10/15 노트를 작성하고 실제 교체 전 중단 지점을 기록. 미실행 Task 교체·재로그인과 나머지 전체 범위를 10/16으로 이동 | 사용자 기록·재개 요청. 정책 V6 적용·V1 보관/삭제는 완료, V2~5 유지. Task·DB·DNS·Secret은 변경하지 않고 당일 문서 작업만 진행. 학습량과 최소 비용 원칙 유지 |
+| 2026-10-17 | DB 복원 뒤 A→P→B 전환, 관리 Client 16·서버 17의 차이 | P Image 복귀·V8/데이터 보존 확인, 공식 psql 17 분리·실제 TLS 접속과 로컬 Process/Log 관찰 | 사용자 Client만 교체·목적별 Commit·학습 계속 요청. RDS/IAM/Network는 그대로 두며 전체 AI·남은 관측·Route 53·마감 범위 유지. 추가 Push·Cloud 활성화는 하지 않음 |
 
 ## 관련 기준
 
