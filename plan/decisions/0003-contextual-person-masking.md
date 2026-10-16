@@ -3,7 +3,7 @@
 > 상태: Accepted — 정책 승인. 관계 보존·문맥 판정의 실행 구현은 미완료
 > 결정일: 2026-10-15
 > 결정 책임자: 프로젝트 작성자
-> 관련 자료: [개인정보 학습자료](../../week8-9/study-docs/privacy-detection-and-minimal-masking.md), [Week 8 계획](../../week8-9/weekly-plan.md)
+> 관련 자료: [개인정보 학습자료](../../week8-9/study-docs/privacy-detection-and-minimal-masking.md), [Week 8–9 계획](../../week8-9/weekly-plan.md)
 
 ## Context
 

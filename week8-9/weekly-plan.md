@@ -1,26 +1,47 @@
-# Week 8 학습 계획 Docker와 CI에서 AWS HTTPS 배포까지
+# Week 8–9 통합 학습 계획 Docker와 CI에서 AWS HTTPS 배포까지
 
 > 작성일: 2026-10-07
 > 최종 수정일: 2026-10-17
 > 상태: In Progress — HTTPS·DB 복원과 원본 복귀, A→P·B 적용·P Image 복귀 검증 완료. V8·업무 Hash 보존과 재로그인 조회를 확인했다. 전체 AI·나머지 마감은 미완료.
-> 1차 목표 기간: 2026-10-08 목요일 ~ 2026-10-12 월요일. 미완료 항목이 남으면 Week 8 기간 연장
+> 초기 목표 기간: 2026-10-08 목요일 ~ 2026-10-12 월요일. 실제 연장을 반영해 Week 8–9 통합으로 변경
 > 초기 학습일: 10/8·10/9·10/10·10/12, 총 4일
-> 현재 진행: 10/16~17의 A→P→B→P 전환에서 같은 RDS V8·업무 Hash·원래 실패 코드와 재로그인 조회를 확인했다. 10/17에는 RDS를 유지하고 관리용 psql만 17.11로 맞춰 TLS 1.3·메타 명령·일곱 Table Hash 불변을 확인했다. 로컬 JVM의 `/proc`·cgroup·합성 Log Pipeline도 관찰했다. AI Provider·Worker는 계속 비활성이며 전체 AI·남은 관측·최종 회귀·WIL 등 전체 범위는 유지한다.
+> 현재 진행: 10/16 회차의 연장 구간에서 A→P→B→P와 같은 RDS V8·업무 Hash·원래 실패 코드·재로그인 조회를 확인했다. 실제 10/17의 psql 17·TLS·메타 명령과 로컬 JVM `/proc`·cgroup·Log 관찰까지 16일 노트에 통합했다. Cloud AI Provider·Worker는 비활성이며 전체 AI·남은 관측·최종 마감은 미완료
+> 휴무와 재개: 10/17 토요일·10/18 일요일에는 새 학습을 배정하지 않는다. 남은 과업은 10/19 월요일부터 재개하며 종료일은 실제 잔여량을 보고 정한다.
 > 초기 순학습 시간 배분: 하루 10시간, 총 40시간. 휴식·식사와 단순 대기 시간 제외. 완료에 필요한 시간의 상한은 아님
 > 모드: `DEEP_LEARNING_MODE`
 > 핵심 질문: 이미 검증한 문의 접수와 AI 제안 흐름을 Cloud의 HTTPS 환경에 배포하고, 실패 원인을 찾으며 이전 실행 상태로 복구할 수 있는가?
 
 ## 계획 배경
 
-7주차에는 Browser 접수부터 자동 Worker·실제 AI·PostgreSQL·담당자 조회까지 연결했다. 10/5 회차 이후 이틀을 더 사용해 10/7에 학습과 WIL 공개를 마쳤다. 8주차는 그 흐름을 새로운 실행 환경으로 옮기는 학습이다. 화면이나 업무 기능을 늘리지 않고, 같은 코드가 어디서 실행되며 데이터와 Secret은 어디에 남는지 확인한다.
+7주차에는 Browser 접수부터 자동 Worker·실제 AI·PostgreSQL·담당자 조회까지 연결했다. 10/5 회차 이후 이틀을 더 사용해 10/7에 학습과 WIL 공개를 마쳤다. 8–9주차는 그 흐름을 새로운 실행 환경으로 옮기는 하나의 배포 과정이다. 화면이나 업무 기능을 늘리지 않고, 같은 코드가 어디서 실행되며 데이터와 Secret은 어디에 남는지 확인한다.
 
-Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유지한다. 우선 4일에 집중 배치하고, 실제 이해·구현·검증 속도를 보고 필요한 만큼 기간을 연장한다. 4일에 맞추기 위해 선택한 내용을 빼지는 않는다.
+Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유지한다. 처음에는 4일에 집중 배치했지만 실제 이해·구현·검증에 더 많은 기간을 사용했다. 10/17의 [통합 결정](../plan/decisions/0004-combined-week8-9-deployment-learning.md)에 따라 디렉터리와 계획을 Week 8–9로 묶고 기존 세부 범위와 완료 기준은 보존한다.
 
-40시간은 이번 배분을 위한 추정치다. 하루 10시간 안에 모두 끝난다고 보장하는 일정은 아니며, 설정 문제를 해결하는 데 시간이 들었다고 개념 설명·실패 실험·복구·복습 시간을 생략하지 않는다. 미완료 학습은 같은 Week 8 과제로 이어간다.
+40시간은 초기 배분을 위한 추정치였다. 설정 문제에 시간이 들었다고 개념 설명·실패 실험·복구·복습을 생략하지 않는다. 미완료 학습은 같은 통합 과정의 잔여로 추적하며, 기간이 지났다는 이유로 완료 처리하지 않는다.
 
-10/10은 ECR 업로드와 관련 개념 학습까지 진행하고 마감했다. 기존 일요일 전체 제외 계획은 이번 재개 요청에 따라 **낮 제외·야간 선택적 재개**로 조정한다. 야간에 재개하지 않으면 월요일부터 이어가며, 남은 전체 분량을 월요일 하루 안에 끝내는 조건으로 바꾸지는 않는다.
+초기 10/11의 야간 선택 재개 여부는 당시 일정 기록으로 남긴다. **현재 확정 일정은 10/17·10/18 휴무, 10/19 재개**다. 19일에 남은 전체 분량을 끝내도록 압축하지 않는다. Week 10–12의 취업 과업은 뒤로 밀지 않고, 취업 우선 기간에는 잔여 기술 학습·Project 보완·마감 후 수평 확장을 합쳐 주 6시간 이내에서 나눈다.
 
-## 이번 주 목표
+## 10월 19일 재개와 남은 학습
+
+19일에는 메모리·Log 문답과 실제 실행 상태·비용부터 확인한다. 먼저 개념을 짧게 설명하고 핵심 질문 2~3개로 이해를 확인한 뒤 작은 구현과 Test를 진행한다. 이미 확인한 로그인·복원·Image 전환 전체를 처음부터 반복하지 않는다.
+
+| 순서 | 남은 학습과 구현 | 확인할 결과 |
+|---|---|---|
+| 1. 재개 기준과 메모리/Log | 현재 Task·Target·RDS·비용·도구 상태 확인, VmSize/RSS/cgroup·시작 Marker의 의미 문답 | 새 CloudShell 세션이면 psql 17·공개 CA를 다시 준비. Snapshot·Image 호환성의 기존 근거는 보존하고 확인하지 않은 현재 상태는 단정하지 않음 |
+| 2. 남은 관측·종료 | 허용된 Request/Job 식별자의 Log 연결·AGENT App Metric·HTTP/Job 지연 구분, 종료 중 DB Connection·Job/Attempt 결과 확인 | CLI의 시작 기록과 실제 응답·DB Commit·Job 결과를 따로 대조. Secret·원문은 Log에서 제외하고 정상/실패 한 조건씩 비교 |
+| 3. 실행용 개인정보 처리 | 한국어 탐지 후보·관계 보존 계약과 Adapter, JSON/위치·Code Point 검증, Timeout·Process 취소·자원 회수·Main Bean | 불필요한 실명은 가리고 인물 관계·복구 사실·인원/마감은 보존. 모호한 이름은 승인 정책을 따르며 검사 실패를 빈 정상 결과로 우회하지 않음 |
+| 4. 전체 AI 조립·로컬 자원 | 개인정보 처리기→Provider→출력 검증→Worker→PostgreSQL을 실행 설정으로 조립. 통제된 정상/실패와 전체 CPU·Peak 메모리 측정 | 원문·현재 Attempt·예약·실행 기한 유지. 모델 단독이나 AI 비활성 App의 수치로 0.25 vCPU/512 MiB의 충분함을 대신 판단하지 않음 |
+| 5. Cloud 실제 AI | 검증 Image/명세·Secret 참조·필요 사양을 확인한 뒤 합성 접수 한 흐름을 실제 AI·RDS·AGENT 화면으로 연결 | 당일 호출 범위/비용·리소스 변경 승인 후 진행. 기존 PENDING의 기한·예약을 초기화하지 않고 새 검증 문의의 접수/처리/제안·Ticket OPEN을 대조 |
+| 6. DNS 비교 | 기존 Cloudflare 서비스 DNS는 유지하고 Route 53 Hosted Zone·NS·Alias와 직접 조회를 별도 실험 | 기존 메인 DNS 이전 없이 책임을 비교. 새 Zone 등 유료 리소스 생성은 범위·비용 승인 뒤 실행 |
+| 7. 최종 마감 | 변경 Code의 Local/CI 회귀·Cloud Browser 재검증, 자료 없는 설명·직접 설정 수정·재현/비용/보관 검토·통합 WIL | 실제 결과와 미완료 상태를 유지. 블로그/포럼은 작성자 확인 뒤 각각 완료 처리 |
+
+2번과 6번처럼 독립적으로 가능한 배포 실험은 개인정보 모델 검토와 병행할 수 있다. 다만 5번의 실제 외부 전송 전에는 3·4번을 마친다. 모델 품질이 부족하면 채택 보류·남은 실패 Case를 명시하고 전송 검사를 생략하지 않는다.
+
+**완료한 기준선:** HTTPS 로그인·Role·CSRF 접수/SQL Row, 별도 Snapshot/RDS의 SQL/App 복원·원본 복귀, A→P→B→P와 V8/업무 Hash·원래 실패 코드 보존, psql 17.11 TLS와 로컬 Process/Log 관찰이다. 복원·Rollback은 필요 변경의 회귀 범위로만 확인하며 새 전체 재실험을 자동 배정하지 않는다.
+
+휴무는 실행 리소스가 자동 중지됐다는 뜻이 아니다. 이번 문서 정리에서는 AWS·AI·DNS·Secret·권한을 변경하지 않으며, 다음 실행 전 보관 비용과 필요한 중지/재개 범위를 확인한다. 학습 범위·보안 조건·월 3만 원은 상한이라는 최소 비용 원칙을 유지한다.
+
+## 통합 과정 목표
 
 | 주제 | 설명할 내용 | 직접 확인할 근거 |
 |---|---|---|
@@ -33,7 +54,7 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 
 아래 항목은 4일에 모두 배치한 필수 범위다. 날짜를 넘겨도 항목 자체를 선택 과제로 낮추지 않는다.
 
-| 학습 묶음 | 세부 개념과 구현 | 실험에서 확인할 것 | 배정일 |
+| 학습 묶음 | 세부 개념과 구현 | 실험에서 확인할 것 | 초기 배정일 |
 |---|---|---|---|
 | Docker Build | Image·Container·Layer, Dockerfile, Build Context·`.dockerignore`, Build Cache | Layer 순서와 변경 파일에 따른 Cache Hit·Miss, 같은 Source에서 실행 환경 재현 | 10/8 |
 | Compose와 영속성 | Service Network·Port, 환경별 설정, Volume, 준비 완료와 시작 순서 | 실제 PostgreSQL 저장·조회, Container 교체와 Volume 유지, 같은 DB 재연결 | 10/8 |
@@ -48,7 +69,7 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 
 ## 시작 기준과 먼저 연결할 부분
 
-| 항목 | 7주차 마감 기준 | 8주차에서 할 일 |
+| 항목 | 7주차 마감 기준 | 8–9주차 통합 과정에서 할 일 |
 |---|---|---|
 | 업무 흐름 | 최초 Message·Job의 접수 원자성, 별도 AI 처리·제안 저장, AGENT 조회 구현 | 같은 Controller·Service·Repository 경계를 유지해 배포 |
 | 회귀 근거 | Java 461개·JavaScript 145개·ESLint, 별도 실제 Browser·AI 연결 실험 | Container·CI·Cloud 변경 뒤 다시 실행하고 환경별 결과를 구분 |
@@ -84,11 +105,13 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 
 OIDC Provider·ECR·업로드 Role은 초기 설정 승인을 받아 생성했다. 이 승인은 나머지 ECS·RDS·ALB·Secret·DNS·HTTPS 구성이나 삭제·외부 공개까지 포함하지 않는다. 사용할 수량·권한·예산·공개 범위를 확인한 뒤 남은 생성 범위를 따로 확정한다.
 
-### 이번 주에 추가하지 않을 것
+### 통합 과정에서 추가하지 않을 것
 
 후속 대화·공식 답변·검색·알림·Dashboard·UI 장식, 여러 Provider 비교, 새로운 AI 평가 Dataset은 추가하지 않는다. Kubernetes·Terraform·Auto Scaling·WAF·CloudFront·분산 Queue·전체 관측 Stack·Multi-AZ 고가용성·무중단 배포는 기존 제외 범위를 유지한다.
 
-## 학습 진행 현황
+## 학습 회차별 실행 기록
+
+이 절은 각 회차 당시의 계획·확인 결과를 보존한다. 이후 완료된 복원·Image 전환 등을 당시의 미실행 상태로 읽지 않으며, 현재 잔여 과업은 앞의 ‘10월 19일 재개와 남은 학습’을 따른다.
 
 [10월 16일 노트](./study-notes/2026-10-16-study-questions.md)에 자정을 넘겨 이어진 psql·DB Engine·Migration 버전과 메모리 관찰까지 통합했다. [psql 전환 보고서](./lab-reports/2026-10-17-cloudshell-psql17.md)는 Private 경로를 유지한 공식 Client 분리와 실제 접속·Hash 대조, [Process 관찰 보고서](./lab-reports/2026-10-17-proc-cgroup-log-pipeline.md)는 Test 전용 로컬 JVM의 VmSize/RSS·cgroup 제한·Log Marker와 HTTP 결과를 기록한다. 두 실험의 실제 실행일은 10/17로 유지한다. 현재 JavaScript 전체 262개·ESLint가 통과했다. 원격 CI·추가 Push·Image 업로드는 이 회차에서 실행하지 않았다.
 
@@ -232,8 +255,9 @@ Docker·Compose의 기초와 저장·재시작·설정 비교까지 진행했다
 | 10/13 화 회차 | 실제 진행 분량 기록 | 비Root 신원·학습 Network·CloudShell 관리 통로 → DB Subnet Group·Runtime 정책 대조 → RDS 생성 거부 확인 | 노트·실행 보고서 정리. 실제 DB·App 연결은 미수행, 요청과 정책의 불일치 항목은 미확인 |
 | 10/14 수 회차 | 실제 진행 분량 기록 | RDS 조회·생성 조건 대조, Private TLS·App 계정 → ECS의 DB 인증 실패·설정 수정·Migration → ACM·ALB·DNS·HTTPS 기본 응답 | 회차 노트·보고서 정리. 자정 이후 실제 실행일은 10/15 유지. 실제 로그인·업무 Row·전체 AI·복구는 이월 |
 | 10/15 목 회차 | 실제 진행 분량 기록 | HTTPS 로그인·Cookie·CSRF 접수/SQL Row, HTTP 301·개인정보 검증/후보 평가·Cloud Log/Metric, Task 교체 권한 준비 | 10/15 노트·보고서 정리. 자정 이후 Version 6의 실제 적용일은 10/16 유지. Task 교체·재로그인 미실행 |
-| 10/16 금 재개 | 실제 가용 시간에 맞춰 진행 | AGENT 기준 조회 → 승인한 Draining·같은 Image/명세 Task 교체·기존 문의/재로그인 → 남은 복구·관측·전체 AI·Route 53 | 완료한 권한 보완과 기초 실험은 반복하지 않음. 기존 전체 범위를 유지하고 잔여량을 실제 결과로 갱신 |
-| 10/17 토 연장 | 실제 진행 분량 기록 | B→P 최종 대조 → RDS 유지·psql 17 전환 → 로컬 `/proc`·cgroup·Log Pipeline | 실제 접속·Hash·Client 준비와 로컬 수치 기록. 다음은 메모리/Log 문답과 남은 관측·전체 AI 선행 구현이며 학습 범위는 줄이지 않음 |
+| 10/16 금 회차와 연장 실습 | 실제 진행 분량 기록 | 중지 환경 재개·Snapshot 별도 복원·원본 복귀·B→P/V8 보존 → psql 17·Process/Log 관찰 | 실제 실행일 17일은 보고서에 두고 16일 노트에 통합. 메모리/Log 설명 검증·전체 AI·남은 관측/마감은 미완료 |
+| 10/17 토·10/18 일 | 휴무 | 새 학습·구현·평가 배정 없음 | 16일 회차의 기록 정리와 실행 보고서 날짜를 별도 학습일로 세지 않음 |
+| 10/19 월 재개 | 취업 일정·가용시간 확인 후 배치 | 메모리/Log 문답·실행/비용 기준 → 남은 관측·개인정보 처리와 전체 AI 선행 구현 | 위 재개 순서대로 작은 Block 진행. 한 번에 전체 마감을 강제하지 않고 실제 잔여량을 갱신 |
 
 ### 10월 8일 목요일 실행 환경과 데이터 보존
 
@@ -385,7 +409,7 @@ ALB는 중지 기능이 없어 유지했다. RDS 저장/백업·ECR Image·Log �
 
 이어 승인한 B→P 실험도 완료했다. 고정 B `3fdbdeb`의 Java 704개·JavaScript 254개·Lint·Build와 동일 Image ECR 전달을 확인하고, 실제 P :4에서 Image만 바꾼 :5를 대조했다. 기존 P의 300초 Draining·종료 코드 143 뒤 단일 B가 기동했다. 원본 RDS의 V8 적용·기존 여섯 Table의 Hash 보존·Target Healthy·HTTPS를 확인했다. 별도 합성 SQL은 로컬 PostgreSQL Test를 통과한 뒤 새 실패 두 건만 추가했으며 실제 AI 실행 자료가 아니다. B의 AGENT 조회 뒤 같은 300초 정리·B STOPPED를 확인하고 P :4 한 개로 복귀했다. 10/17 KST의 P 기동·Target Healthy·HTTPS Health UP과 재로그인 후 기존 문의/Job·새 실패 코드 조회까지 확인했다. 복귀 전·P 기동 뒤·인증 조회 뒤 일곱 Table 건수/Hash가 모두 같았다. [B→P 실행 보고서](./lab-reports/2026-10-16-image-rollback-cloud.md)에 결과와 합성 자료 범위를 기록한다. IAM·DNS·Secret·보안 그룹은 변경하지 않았고 Provider·Worker도 켜지 않았다. 전체 AI·자원 측정·최종 회귀·WIL은 남아 있다.
 
-토요일에 남은 배포·HTTPS·Browser 검증을 먼저 이어간다. 일요일 야간 재개 여부와 실제 진도에 따라 아래 실험의 날짜를 조정한다. 복구·회귀·설명·WIL의 초기 분량을 줄여 끼워 넣지 않고, 완료하지 못한 항목과 필요한 추가 시간을 마감 때 확인한다.
+아래는 초기에 배정한 복구·마감 분량이다. 복원과 Image Rollback은 16일 회차에 검증했으므로 전체를 다시 수행하는 일정이 아니다. 남은 관측·회귀·설명·WIL은 19일 이후 현재 재개 순서와 취업 우선 시간 경계 안에서 배치한다.
 
 1. **재개와 장애 관찰 2시간:** 중지한 환경을 복원하고, 학습용 권한 부족 또는 DB 연결 설정 실패를 한 번에 하나씩 재현한다. CloudWatch의 Log·Health·Request/Error/Latency Metric을 대조한다. Application 오류와 ALB가 반환한 오류를 구분하며 공개 고의 실패 API를 추가하지 않는다.
 2. **Rollback과 Backup 3시간:** 같은 RDS를 유지한 Task 교체 후 기존 Ticket·Job·제안이 남는지 확인한다. DB Schema를 바꾸지 않은 학습용 실패 배포를 이전 정상 Image Digest로 되돌린다. Snapshot은 원본을 덮어쓰지 않는 별도 임시 DB로 복원해 대표 Row를 확인하고, 앱 Version 복귀와 DB 복구의 차이를 기록한다. 복원용 추가 리소스 비용도 사전 승인 범위에 포함한다.
@@ -474,7 +498,7 @@ ALB는 중지 기능이 없어 유지했다. RDS 저장/백업·ECR Image·Log �
   - [실제 Image Rollback](./lab-reports/2026-10-16-image-rollback-cloud.md): B의 V8 적용·합성 새 실패 코드, P 복귀 뒤 일곱 Table과 인증 조회 보존
   - [Private CloudShell psql 17](./lab-reports/2026-10-17-cloudshell-psql17.md): 공식 Client 분리·기존 16 보존, RDS 17.11 TLS·Schema/Hash 대조
   - [Process·cgroup·Log Pipeline](./lab-reports/2026-10-17-proc-cgroup-log-pipeline.md): 실제 로컬 JVM 수치와 Container 제한, 합성 시작 Marker/HTTP 응답
-- `wil.md`: 주간 결과와 이해 변화, 직접 판단한 부분과 AI 도움을 받은 부분을 정리한다. 실제 결과가 생긴 뒤 작성한다.
+- `wil.md`: Week 8–9의 통합 결과와 이해 변화, 직접 판단한 부분과 AI 도움을 받은 부분을 한 회고에 정리한다. 미완료 결과를 먼저 완료로 작성하지 않는다.
 - Lab Repository: Dockerfile·Compose·Workflow·배포 설정·관련 Test·실행/복구 안내를 관리한다. WIL과 구현 변경은 별도 Commit으로 나눈다.
 
 ## 완료 체크
@@ -497,7 +521,7 @@ ALB는 중지 기능이 없어 유지했다. RDS 저장/백업·ECR Image·Log �
 
 ## 진도 점검과 기간 연장
 
-4일 집중 계획을 먼저 실행한다. 10/12는 첫 마감 목표이며, 필수 학습이 남아 있는데 날짜만 맞춰 완료 처리하는 기한은 아니다. 매일 종료 때 완료한 항목, 남은 항목, 지연 원인, 다음에 필요한 시간을 확인한다.
+초기 4일 계획의 첫 마감 목표는 10/12였으나 선택 범위를 유지하며 더 진행했다. 현재는 Week 8–9 통합 과정으로 관리하고, 매 학습 회차 종료 때 실제 완료·잔여량·다음 필요한 시간을 확인한다.
 
 | 점검 시점 | 확인할 것 | 부족할 때 조정 |
 |---|---|---|
@@ -510,12 +534,13 @@ ALB는 중지 기능이 없어 유지했다. RDS 저장/백업·ECR Image·Log �
 | 10/14 DB·ECS 연결 | RDS·TLS·App 계정 준비, Cluster·명세 등록. 첫 DB 인증 실패 뒤 지정 암호 Parameter 수정으로 같은 Image의 JDBC·Migration 7개·Spring 기동 성공. Task 중지 | 다음은 HTTPS·Health·Session·Role·CSRF·접수/조회·업무 Row. 전체 AI·관측·재배포·DB 복원과 마감 범위 유지 |
 | 10/14 회차 마감 | 연장 실습에서 ACM·두 CNAME·ALB·새 App Task를 연결. Target Healthy·Health 200/UP·로그인 페이지 200·익명 API 401 확인 | 10/15 실제 로그인·보안 계약·접수/SQL Row부터 재개. 마지막 확인 시 실행 리소스가 남아 있으므로 비용과 중지·정리 범위를 먼저 확인 |
 | 10/15 회차 마감 | HTTPS 접수·SQL Row·HTTP 301·Cloud 관측 확인. 개인정보 후보 채택 보류, Edge V6의 교체 권한 준비 완료 | 10/16 새 AGENT 기준 조회·승인한 Task 교체부터. 이전 Image 복귀·별도 복원·전체 AI·남은 관측/DNS·최종 회귀와 WIL 유지 |
+| 10/16 회차와 연장 실습 마감 | Snapshot 복원·원본 복귀·B→P/V8·업무 Hash/코드 보존, psql 17·Process 수치 확인 | 17/18 휴무 뒤 19일 재개. 설명 미검증·실제 개인정보 처리/전체 AI·남은 관측/DNS·마감은 통합 과정의 잔여로 유지 |
 
 연장은 이미 허용한 진행 방식이므로, 시간이 부족하다는 이유로 다시 학습 범위를 줄이는 안을 만들지 않는다. 다만 추가 날짜를 임의로 확정하지는 않는다. 필요해진 학습·구현·검증 시간과 Cloud 대기를 구분해 제시하고, 실제 사용할 수 있는 날짜에 남은 순서를 배치한다. 하루 10시간을 넘겨야만 계획을 지킨 것으로 평가하지 않는다.
 
 10/11 일요일 낮에는 과업을 배정하지 않고, 야간은 작성자가 선택한 재개 후보로만 둔다. 야간에 진행하지 않으면 10/12부터 같은 순서를 이어간다. 도메인·계정·권한·비용 승인이 늦어지면 로컬 실험과 CI 학습을 먼저 하되 이를 Cloud 배포 완료로 대체하지 않는다. 설정 작업이 오래 걸려도 개념 설명·실패 실험·Backup 복원·복습을 생략하지 않는다.
 
-기간을 연장하는 동안 Week 8은 `In Progress`로 유지하고, 각 미수행 실험은 `NOT_RUN`, 일부만 검증한 항목은 부분 완료로 구분한다. 남은 내용을 Week 9 학습으로 이름만 바꾸어 넘기지 않는다. Week 9~12의 취업 우선 원칙은 유지하며, Week 8의 실제 종료일에 맞춰 후속 일정의 날짜만 조정한다. 기존 상위 계획의 완료 기준을 충족하기 전에는 수평 기능 확장을 시작하지 않는다.
+통합 과정은 `In Progress`로 유지하고 미수행은 `NOT_RUN`, 일부만 확인한 항목은 부분 완료로 구분한다. Week 8–9라는 이름은 실제 기간을 반영한 것이며 완료 기준을 바꾼 것이 아니다. Week 10에는 초기 Week 9의 취업 Baseline과 맞춤 지원을 합치고 Week 11·12 및 전체 12주 틀을 자동 연장하지 않는다. 취업 기간의 잔여 수직 학습·Project 보완·마감 후 확장은 합쳐 주 6시간 이내다. 수직 Gate를 통과하기 전에는 새 수평 기능을 시작하지 않는다.
 
 ## 계획 변경 기록
 
@@ -539,6 +564,7 @@ ALB는 중지 기능이 없어 유지했다. RDS 저장/백업·ECR Image·Log �
 | 2026-10-15 | RDS·ECS 첫 기동 확인, HTTPS 연결과 업무 요청 미완료 | 10/14 회차의 ACM·DNS·ALB/App·HTTPS 기본 응답까지 기록하고 실제 로그인·업무 Row 등 잔여 과업을 10/15로 이월 | 사용자 회차 마감·기록·Commit 요청. 실제 실행일은 보고서에 유지. 전 학습 범위·최소 비용·승인 경계를 유지하고 Week 8은 In Progress |
 | 2026-10-16 | 10/15에 업무 접수·Cloud 관측·전체 AI·복구를 이어가던 상태 | 10/15 노트를 작성하고 실제 교체 전 중단 지점을 기록. 미실행 Task 교체·재로그인과 나머지 전체 범위를 10/16으로 이동 | 사용자 기록·재개 요청. 정책 V6 적용·V1 보관/삭제는 완료, V2~5 유지. Task·DB·DNS·Secret은 변경하지 않고 당일 문서 작업만 진행. 학습량과 최소 비용 원칙 유지 |
 | 2026-10-17 | DB 복원 뒤 A→P→B 전환, 관리 Client 16·서버 17의 차이 | P Image 복귀·V8/데이터 보존 확인, 공식 psql 17 분리·실제 TLS 접속과 로컬 Process/Log 관찰 | 사용자 Client만 교체·목적별 Commit·학습 계속 요청. RDS/IAM/Network는 그대로 두며 전체 AI·남은 관측·Route 53·마감 범위 유지. 추가 Push·Cloud 활성화는 하지 않음 |
+| 2026-10-17 | Week 8만 연장, 17일 별도 노트와 학습일 표시 | Week 8–9·`week8-9`로 통합, 16일 연장 회차에 노트 통합·실제 실행일 보존. 17/18 휴무·19일 재개 | 사용자 기간·폴더·계획 조정 요청. 전 학습 범위와 미완료 상태 유지, Week 10 취업 Baseline 합류·Week 11/12 유지. 경로 이동·상위 계획·재개 순서를 목적별 수정/Commit |
 
 ## 관련 기준
 
@@ -546,5 +572,6 @@ ALB는 중지 기능이 없어 유지했다. RDS 저장/백업·ECR Image·Log �
 - [주차별 Roadmap](../plan/weekly-roadmap.md)
 - [학습 및 기술 콘텐츠 계획](../plan/learning-and-content-plan.md)
 - [깊은 수직 학습 범위 결정](../plan/decisions/0002-depth-first-ai-assisted-expansion.md)
+- [8–9주차 통합과 취업 일정 조정](../plan/decisions/0004-combined-week8-9-deployment-learning.md)
 - [Week 7 완료 결과](../week7/wil.md)
 - [10월 14일 RDS 조회 권한과 생성 요청 진단](./lab-reports/2026-10-14-rds-console-permission-diagnostics.md)

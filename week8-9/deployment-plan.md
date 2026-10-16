@@ -1,9 +1,11 @@
-# Week 8 AWS 배포와 비용 초안
+# Week 8–9 AWS 배포와 비용 계획
 
 > 상태: 일부 검증 — HTTPS·DB 복원·원본 복귀와 A→P·B 적용·P Image 복귀 완료. V8·업무 Hash 보존과 재로그인 조회 확인. 전체 AI와 남은 마감은 미완료
 > 요금 확인일: 2026-10-12, 2026-10-14 첫 Fargate 실행 요금 재확인
 > 진행 반영: 10/16 학습 회차, P 복귀·최종 대조는 10/17 KST — B :5 적용 뒤 같은 RDS V8을 유지한 P :4로 복귀했다. 일곱 Table의 전후 건수/Hash·Target Healthy·HTTPS Health UP과 AGENT 재로그인 뒤 기존 문의·새 실패 코드 두 건 조회를 확인했다. AI 비활성 유지
-> 계획 수정일: 2026-10-16 — 복원 실험을 마치고 Image Rollback의 현재 설정·DB 호환성을 점검. 임시 DB는 중지 후 최종 승인으로 삭제. 전체 AI 등 남은 범위·최소 비용·Log 365일 보존·기존 승인 경계 유지
+> 계획 수정일: 2026-10-17 — Week 8–9 통합·16일 연장 회차 기록·17/18 휴무·19일 재개 반영. 기존 최소 비용·보안·Log 365일 보존과 승인 경계 유지
+
+배포 학습의 범위는 그대로 유지하고 기록을 `week8-9`에 통합한다. 실제 10/17의 연장 실습은 16일 회차에 포함하며, 17·18일에는 새 학습을 배정하지 않고 19일에 재개한다. 실제 Cloud 실행 상태·남는 비용은 휴무 일정과 별개다. 이번 문서 변경으로 App·RDS·ALB를 중지하거나 새로 실행하지 않았으며, 재개 전 현재 상태와 필요한 실행/보관 범위를 확인한다. [현재 재개 순서](./weekly-plan.md#10월-19일-재개와-남은-학습)
 
 10/17에는 원본 RDS·Schema V8·계정·Network를 그대로 두고 Private CloudShell의 관리용 psql만 17.11로 맞췄다. 공식 Client를 별도 임시 경로에서 선택해 기존 16.15를 보존했으며 RDS 17.11·TLS 1.3·SQL/메타 명령과 일곱 Table Hash 불변을 확인했다. [접속 도구 보고서](./lab-reports/2026-10-17-cloudshell-psql17.md). 추가 유료 리소스·NAT·권한·App 설정 변경은 없다. 새 VPC 세션에서는 도구와 공개 CA를 다시 준비한다.
 
@@ -14,7 +16,7 @@
 - 최대 12개월 동안 학습 환경을 보관하되, 실습할 때만 실행해도 된다.
 - AWS 월 지출 상한은 최대 3만 원이다. 이 금액을 채우거나 근처까지 사용하는 목표가 아니다. 학습·Application의 목적을 달성하는 범위에서 지출을 최소화한다. 외부 AI 호출은 별도 당일 승인 범위로 관리한다.
 - 학습용 주소는 `helpdesk.hmyoon.com`이며 기존 DNS는 Cloudflare에서 관리한다.
-- AWS Console 접근과 OIDC·ECR·Image 업로드 Role을 구성했다. 이후 Standard Parameter 여섯 개·ECS Execution Role·1년 보존 Log Group과 비Root 배포 사용자·학습 Network·DB 관리 통로·Subnet Group을 승인 범위에서 적용했다. 10/14에는 RDS·Private TLS·DB 계정을 준비하고 Cluster·Task Definition을 등록했다. 첫 DB 인증 실패 뒤 지정 Parameter 한 개를 맞춰 같은 Image의 JDBC·Migration 7개·Spring 기동을 확인했다. 10/15에는 ALB·App·두 CNAME과 HTTPS 업무 접수/SQL Row·HTTP 301·Cloud 관측을 확인했고, 연장 구간에 교체 권한을 준비했다. 실제 Task 교체·전체 AI·복구·실습 종료는 남아 있으며 기존 승인을 벗어나는 권한·리소스 변경은 별도로 확인한다.
+- AWS Console 접근과 OIDC·ECR·Image 업로드 Role을 구성했다. Standard Parameter 여섯 개·ECS Execution Role·1년 보존 Log Group과 비Root 사용자·학습 Network·Private RDS·TLS·App DB 계정을 승인 범위에서 적용했다. DB 인증 실패를 지정 Parameter 수정으로 복구했고, ALB·DNS·HTTPS 보안과 실제 접수/SQL Row·HTTP 301·Cloud 관측을 확인했다. 16일 연장 회차에는 Task/Session 비교·Snapshot 별도 복원·원본 복귀와 B→P/V8·데이터 보존을 검증했다. 전체 AI·남은 관측·최종 종료/보관 검토는 남아 있으며 기존 승인을 벗어나는 권한·리소스 변경은 별도 확인한다.
 
 ECR·ECS Fargate·RDS·ALB·DNS·HTTPS·Backup 복원은 [주간 계획](./weekly-plan.md)의 학습 범위를 그대로 유지한다. 비용을 줄이기 위해 해당 학습을 다른 서비스로 대체하거나 생략하지 않는다.
 
