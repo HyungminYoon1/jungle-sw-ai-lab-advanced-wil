@@ -1,6 +1,7 @@
 # JVM의 Process 메모리와 Container 메모리·Log Pipeline 관찰
 
 > 실행일: 2026-10-17 KST
+> 학습 회차: 10월 16일의 연장. [통합 학습노트](../study-notes/2026-10-16-study-questions.md)
 > 결과: 실제 로컬 Container의 허용된 Process 항목·cgroup 제한·합성 Log Marker와 HTTP 응답 확인
 
 ## 범위와 방법

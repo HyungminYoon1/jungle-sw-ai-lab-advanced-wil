@@ -1,6 +1,7 @@
 # RDS는 유지하고 Private CloudShell의 psql만 17로 맞추기
 
 > 실행일: 2026-10-17 KST
+> 학습 회차: 10월 16일의 연장. [통합 학습노트](../study-notes/2026-10-16-study-questions.md)
 > 결과: 실제 psql 17.11·RDS 17.11·TLS 1.3·SQL/메타 명령·일곱 Table Hash 불변 확인
 
 ## 변경 범위

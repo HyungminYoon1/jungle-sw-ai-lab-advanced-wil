@@ -90,7 +90,7 @@ OIDC Provider·ECR·업로드 Role은 초기 설정 승인을 받아 생성했�
 
 ## 학습 진행 현황
 
-[10월 17일 노트](./study-notes/2026-10-17-study-questions.md)에는 psql·DB Engine·Migration 버전과 메모리 관찰 항목을 구분했다. [psql 전환 보고서](./lab-reports/2026-10-17-cloudshell-psql17.md)는 Private 경로를 유지한 공식 Client 분리와 실제 접속·Hash 대조, [Process 관찰 보고서](./lab-reports/2026-10-17-proc-cgroup-log-pipeline.md)는 Test 전용 로컬 JVM의 VmSize/RSS·cgroup 제한·Log Marker와 HTTP 결과를 기록한다. 현재 JavaScript 전체 262개·ESLint가 통과했다. 원격 CI·추가 Push·Image 업로드는 이 회차에서 실행하지 않았다.
+[10월 16일 노트](./study-notes/2026-10-16-study-questions.md)에 자정을 넘겨 이어진 psql·DB Engine·Migration 버전과 메모리 관찰까지 통합했다. [psql 전환 보고서](./lab-reports/2026-10-17-cloudshell-psql17.md)는 Private 경로를 유지한 공식 Client 분리와 실제 접속·Hash 대조, [Process 관찰 보고서](./lab-reports/2026-10-17-proc-cgroup-log-pipeline.md)는 Test 전용 로컬 JVM의 VmSize/RSS·cgroup 제한·Log Marker와 HTTP 결과를 기록한다. 두 실험의 실제 실행일은 10/17로 유지한다. 현재 JavaScript 전체 262개·ESLint가 통과했다. 원격 CI·추가 Push·Image 업로드는 이 회차에서 실행하지 않았다.
 
 [10월 8일 학습 노트](./study-notes/2026-10-08-study-questions.md)에 이번 회차의 개념과 이해 변화를 정리했다. 학습 회차는 10/8로 묶고, 실제 실험의 실행일은 각 보고서의 10/8~10/9 기록을 유지한다.
 
@@ -448,8 +448,7 @@ ALB는 중지 기능이 없어 유지했다. RDS 저장/백업·ECR Image·Log �
   - [10월 13일 노트](./study-notes/2026-10-13-study-questions.md): IAM·Network·관리 통로, 생성 요청과 정책 조건, Console 오류 구분과 다음 학습
   - [10월 14일 노트](./study-notes/2026-10-14-study-questions.md): RDS·TLS·App DB 계정, ECS의 DB 인증 복구, 두 CNAME·ALB·HTTPS와 Health/업무 성공 구분
   - [10월 15일 노트](./study-notes/2026-10-15-study-questions.md): Session/CSRF·접수/SQL Row, SELECT/Commit·Redirect, 개인정보 품질·Log/Metric과 App/DB 복구, 16일 재개 기준
-  - [10월 16일 노트](./study-notes/2026-10-16-study-questions.md): Snapshot 별도 복원·원본 복귀, A/P/B의 읽기 호환성과 실제 Image Rollback
-  - [10월 17일 노트](./study-notes/2026-10-17-study-questions.md): psql과 RDS·V8, Process/Container 메모리·합성 Log 관찰
+  - [10월 16일 노트](./study-notes/2026-10-16-study-questions.md): Snapshot 별도 복원·원본 복귀, A/P/B의 읽기 호환성과 실제 Image Rollback, 연장 구간의 psql·Process 메모리·Log 관찰
 - `lab-reports/`: 실행 환경·명령·예상·결과·실패 원인과 재현 방법을 묶는다. 로컬·CI·Cloud 근거는 구분한다.
   - [실제 CI 실패·복구](./lab-reports/2026-10-09-process-health-and-ci-baseline.md): 최초 운영체제 의존 실패와 별도 Branch의 UI 오류·복구, main 검증
   - [AWS OIDC·ECR 초기 설정](./lab-reports/2026-10-10-aws-oidc-ecr-baseline.md): 초기 생성·정책 대조와 당시 미실행 상태, 후속 업로드 보고서 연결

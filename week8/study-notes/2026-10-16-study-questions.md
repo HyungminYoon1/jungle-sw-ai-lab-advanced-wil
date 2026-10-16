@@ -1,4 +1,6 @@
-# 중지한 Cloud 환경 재개와 IAM 조회 오류
+# 10월 16일 Cloud 환경 재개와 DB 및 Image 복구
+
+> 10월 17일 새벽에 이어진 psql 전환·Process 관찰까지 16일 학습 회차로 묶었다. 실행 보고서의 실제 날짜는 그대로 유지한다.
 
 ## App과 DB를 다시 켜는 의미
 
@@ -124,9 +126,21 @@ P로 돌아갈 때 DB도 V7로 되돌리는 것은 아니다. V8과 B 단계에�
 
 ## 접속 도구와 DB 및 Schema의 버전을 구분하기
 
-`psql 16.15, server 17.11` 경고는 접속 도구와 DB 엔진의 주 버전이 다르다는 뜻이다. DB 자체가 고장 났다는 메시지가 아니다. 일반 SQL 조회는 동작할 수 있지만 `\d` 같은 도구 명령의 호환성에는 주의해야 한다. 관리 도구를 psql 17.x로 맞추는 안과 정상 RDS의 엔진을 바꾸는 작업은 별개다. 이번에는 SQL 대조를 진행했으며 도구를 설치하거나 DB 엔진을 변경하지 않았다.
+`psql 16.15, server 17.11` 경고는 접속 도구와 DB 엔진의 주 버전이 다르다는 뜻이다. DB 자체가 고장 났다는 메시지가 아니다. 일반 SQL 조회는 동작할 수 있지만 `\d` 같은 도구 명령의 호환성에는 주의해야 한다. 처음에는 기존 Client로 SQL 대조를 진행했고, 이후 RDS를 그대로 둔 채 관리용 psql만 17.11로 맞췄다.
 
 Flyway의 V8은 PostgreSQL 17.11과 다른 번호다. 전자는 Helpdesk의 테이블 변경 이력이고 후자는 DB 서버 프로그램의 버전이다. P Image를 실행해도 이 둘이 자동으로 이전 상태가 되지 않는다. Spring App이 사용하는 JDBC Driver와 사람이 접속할 때 사용하는 psql도 구분한다. [복구 학습자료의 버전 설명](../study-docs/database-and-application-recovery.md#관리-도구와-db-엔진-및-schema-버전은-다르다)
+
+Private CloudShell의 인터넷을 열거나 DB를 공개하는 대신, 로컬에서 준비한 공식 Client만 별도 경로에서 사용했다. 기본 psql 16.15는 남겨 두었다. App DB 암호는 내가 직접 입력했고, Codex가 Client 17.11·서버 17.11·TLS 1.3과 `\d` 실행을 확인했다. 기존 일곱 Table의 건수와 Hash도 같았다. 관리 도구의 교체가 DB 엔진·Schema·App Image의 변경을 뜻하지 않는다는 점을 실제로 비교했다. [psql 전환 보고서](../lab-reports/2026-10-17-cloudshell-psql17.md)
+
+CloudShell VPC 세션은 영구 작업 공간이 아니다. 세션이 끝나면 임시 Client·CA·PATH를 다시 준비해야 한다. 암호를 스크립트에 넣는 대신 도구·공개 CA 준비와 Password 직접 입력을 분리한 재접속 절차를 사용한다.
+
+## JVM과 Container의 메모리 숫자는 다르다
+
+Codex가 로컬 JVM의 Process와 Container 수치를 비교했다. VmSize는 약 3.34 GiB, VmRSS는 약 197 MiB, Container의 memory.current는 약 238 MiB였고 상한은 512 MiB였다.
+
+VmSize는 가상 주소 공간이므로 그만큼의 RAM을 실제 사용한다는 뜻은 아니다. VmRSS는 JVM Process의 상주 메모리이며 Container 전체 사용량도 아니다. 지금의 사용량이 낮다는 결과만으로 개인정보 모델과 AI 처리를 추가한 구성의 Peak까지 확인한 것은 아니다. 이 구분은 설명을 들은 단계이며, 다음 학습에서 내 말로 판단하는 문답을 이어갈 예정이다.
+
+합성 요청의 시작 Marker는 Log Pipeline에서 1개였고 실제 응답도 별도로 200을 확인했다. 시작 기록을 찾는 것과 요청 완료·DB 저장·AI 성공의 확인은 서로 다르다. DB와 AI는 이번 로컬 실험에 포함하지 않았다. [Process 관찰 보고서](../lab-reports/2026-10-17-proc-cgroup-log-pipeline.md)
 
 ## 핵심 질문
 
@@ -162,5 +176,9 @@ Flyway의 V8은 PostgreSQL 17.11과 다른 번호다. 전자는 Helpdesk의 테�
 30. psql 16.15·PostgreSQL 17.11·Flyway V8은 각각 무엇의 버전인가?
 31. 관리 도구의 주 버전 경고를 해결하려고 정상 RDS를 이전 버전으로 낮춰야 하는가?
 32. P로 복귀한 뒤에도 V8의 새 실패 코드와 기존 업무 Hash를 다시 확인하는 이유는 무엇인가?
+33. psql만 17로 바꿨을 때 App의 JDBC Driver·RDS Engine·Flyway V8도 바뀌는가?
+34. 새 CloudShell 세션에서 CA 파일이 없어졌다면 TLS 검증을 끄는 대신 무엇을 다시 준비해야 하는가?
+35. VmSize가 512 MiB보다 큰 것만으로 Container의 실제 메모리 상한 초과를 단정할 수 있는가? VmRSS와 memory.current는 무엇이 다른가?
+36. 시작 Marker 1개만으로 요청 완료·DB 저장까지 판단할 수 있는가?
 
 실제 Task·Target·HTTPS와 기존 문의의 재개 후 결과는 실행 보고서에 따로 정리한다. 준비한 설정이나 시작 요청만으로 재개 검증 전체를 완료 처리하지 않는다.
