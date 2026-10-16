@@ -3,7 +3,7 @@
 > 상태: Accepted — 정책 승인. 관계 보존·문맥 판정의 실행 구현은 미완료
 > 결정일: 2026-10-15
 > 결정 책임자: 프로젝트 작성자
-> 관련 자료: [개인정보 학습자료](../../week8/study-docs/privacy-detection-and-minimal-masking.md), [Week 8 계획](../../week8/weekly-plan.md)
+> 관련 자료: [개인정보 학습자료](../../week8-9/study-docs/privacy-detection-and-minimal-masking.md), [Week 8 계획](../../week8-9/weekly-plan.md)
 
 ## Context
 
@@ -64,7 +64,7 @@ DB의 접수 원문은 유지한다. 외부 AI가 업무를 수행하는 데 불
 
 ## Affected Files
 
-- WIL: 이 결정 문서, `week8/study-docs/privacy-detection-and-minimal-masking.md`, `week7/study-docs/ai-suggestion-trust-boundaries.md`, `week8/weekly-plan.md`
+- WIL: 이 결정 문서, `week8-9/study-docs/privacy-detection-and-minimal-masking.md`, `week7/study-docs/ai-suggestion-trust-boundaries.md`, `week8-9/weekly-plan.md`
 - Lab: `README.md`의 정책과 구현 상태 안내
 - 후속 대상: 범위 계약·검사 Adapter의 관계 표현과 문맥 판정. 현재 변경 대상은 아님
 

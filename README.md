@@ -59,7 +59,7 @@ Week 9~12에는 취업 활동을 우선하면서 검증된 기반 위에 AI를 �
 | 5 | Browser JavaScript·Frontend·E2E·품질 기초 | Partially Completed | [Week 5 학습 계획](./week5/weekly-plan.md) · [WIL](./week5/wil.md) |
 | 6 | Browser·PostgreSQL·Test 수직 마감 | Completed — Local 수직 검증, 독립 재설명, 블로그·포럼 게시 완료 | [Week 6 학습 계획](./week6/weekly-plan.md) · [WIL](./week6/wil.md) |
 | 7 | LLM Structured Output·평가·Guardrail | Completed — 10/7 학습·평가·회귀 확인과 블로그 게시·포럼 등록 완료. 10/5 회차 이후 2일 추가 진행 | [Week 7 학습 계획](./week7/weekly-plan.md) · [WIL](./week7/wil.md) · [10/7 학습 노트](./week7/study-notes/2026-10-07-study-questions.md) |
-| 8 | Docker·CI·System·AWS Cloud·HTTPS | In Progress — RDS·Private TLS·Migration 7개·같은 Image의 ECS 기동·Target Healthy·HTTPS Health 200/UP 확인. 실제 로그인·업무 Row·전체 AI·복구는 10/15 재개 | [Week 8 학습 계획](./week8/weekly-plan.md) · [10/14 학습 노트](./week8/study-notes/2026-10-14-study-questions.md) · [HTTPS 연결 근거](./week8/lab-reports/2026-10-15-cloud-https-baseline.md) · [배포·비용 계획](./week8/deployment-plan.md) |
+| 8 | Docker·CI·System·AWS Cloud·HTTPS | In Progress — RDS·Private TLS·Migration 7개·같은 Image의 ECS 기동·Target Healthy·HTTPS Health 200/UP 확인. 실제 로그인·업무 Row·전체 AI·복구는 10/15 재개 | [Week 8 학습 계획](./week8-9/weekly-plan.md) · [10/14 학습 노트](./week8-9/study-notes/2026-10-14-study-questions.md) · [HTTPS 연결 근거](./week8-9/lab-reports/2026-10-15-cloud-https-baseline.md) · [배포·비용 계획](./week8-9/deployment-plan.md) |
 | 9 | 취업 Baseline·Portfolio 근거 정리 | Not Started | 주차 시작 시 추가 |
 | 10 | 맞춤 지원·기술 면접 보완 | Not Started | 주차 시작 시 추가 |
 | 11 | 면접·과제 대응과 취약 개념 재학습 | Not Started | 주차 시작 시 추가 |
@@ -82,30 +82,30 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [Week 6 WIL](./week6/wil.md): Browser·Session·CSRF·PostgreSQL 수직 흐름과 블로그·포럼 게시 기록
 - [Week 7 AI Native 학습 계획](./week7/weekly-plan.md): Structured Output·평가·Guardrail과 Suggestion 영속성 일정
 - [Week 7 WIL](./week7/wil.md): AI 출력의 형식·내용 평가, 문의 보존과 비동기 처리의 이해 변화. 10/7 블로그 게시·포럼 등록 완료 확인
-- [Week 8 배포 학습 계획](./week8/weekly-plan.md): 10/14 회차의 RDS·ECS·HTTPS 기본 연결을 기록하고 10/15 실제 로그인·접수/SQL Row부터 재개. 전체 AI·관측·복구 범위 유지
-- [10월 8일 학습 노트](./week8/study-notes/2026-10-08-study-questions.md): JAR·Container·Volume·Session과 설정의 수명, Cache·Secret 전달의 이해 변화와 핵심 질문
-- [10월 9일 학습 노트](./week8/study-notes/2026-10-09-study-questions.md): 설정·Bean 조립, 개인정보 탐지·치환, 종료·Health·CI와 AWS 권한의 이해 변화와 핵심 질문
-- [10월 10일 학습 노트](./week8/study-notes/2026-10-10-study-questions.md): ECR·Task·Role·Network·TLS와 Cookie, Health·HttpOnly의 오해 수정과 실제 Image 업로드
-- [10월 12일 학습 노트](./week8/study-notes/2026-10-12-study-questions.md): 설정·객체·인증·자원·TLS와 Secret 전달, CI·Image 업로드와 실제 배포의 차이, 다음 학습
-- [10월 13일 학습 노트](./week8/study-notes/2026-10-13-study-questions.md): IAM·Network·관리 통로와 요청 조건, Console 오류·생성 거부의 구분, 다음 학습
-- [10월 14일 학습 노트](./week8/study-notes/2026-10-14-study-questions.md): Private RDS·TLS·DB 계정, 같은 Image의 인증 복구, 두 CNAME과 ALB·HTTPS 응답의 의미
-- [10월 16일 학습 노트](./week8/study-notes/2026-10-16-study-questions.md): Snapshot·App 복원, Session과 데이터 보존, 읽기 준비 P·CI·ECR 전달
-- [Snapshot과 별도 RDS 복원 검증](./week8/lab-reports/2026-10-16-rds-snapshot-restore.md): Row·Migration 대조, 같은 Image의 App 전환·재로그인·원본 복귀
-- [준비 P의 CI와 ECR 업로드](./week8/lab-reports/2026-10-16-prepare-image-ci-ecr.md): 고정 P Source·원격 Test·검증 Image 전달과 Manifest Digest
-- [프로그램과 Cloud DB를 연결하는 자료](./week8/study-docs/cloud-database-and-application-connection.md): psql·JDBC, AWS·DB·App 신원, 설정값 전달·Migration과 업무 요청
-- [Process·Health·CI 자료](./week8/study-docs/process-health-and-ci.md): 종료 Signal과 요청 완료, Health·Job 상태, HTTP Metric과 CI의 역할
-- [DB와 App 서버 복구 자료](./week8/study-docs/database-and-application-recovery.md): 재시작·Image Rollback·Snapshot 복원, Session과 영속 데이터, 안전한 Job 재개와 복습 질문
-- [AWS OIDC·ECR 초기 설정](./week8/lab-reports/2026-10-10-aws-oidc-ecr-baseline.md): 초기 생성·main 제한·한 ECR의 Push 권한 대조, 후속 업로드 보고서 연결
-- [검증 Image의 ECR 업로드](./week8/lab-reports/2026-10-10-verified-image-ecr-publish.md): 수동 Publish·실제 OIDC 인증, CI Image 전달과 ECR Tag·Digest 대조
-- [배포 준비 변경의 CI·ECR 업로드](./week8/lab-reports/2026-10-13-deployment-image-ecr-publish.md): Java 578개·JavaScript 173개, 새 검증 Image 한 개 추가·기존 Image 유지. Cloud 실행은 별도 승인
-- [배포 신원과 정책](./week8/lab-reports/2026-10-13-deployer-identity-and-policies.md): 비Root 사용자·MFA·제한된 정책과 저장 JSON 대조
-- [학습 Network와 Security Group](./week8/lab-reports/2026-10-13-learning-network-and-security-groups.md): Public/Private 경로·ALB→App→RDS 규칙 확인, 실제 연결은 별도
-- [Private DB 관리 통로](./week8/lab-reports/2026-10-13-private-db-bootstrap.md): CloudShell VPC·정확한 환경 권한·psql 준비
-- [DB Subnet Group·Runtime 정책·RDS 생성 거부](./week8/lab-reports/2026-10-14-rds-subnet-group-and-runtime-policy.md): 10/13 회차 연장 구간의 실제 실행 결과, 요청 조건 대조와 DB 연결은 미완료
-- [RDS 생성과 Private TLS 검증](./week8/lab-reports/2026-10-14-rds-console-permission-diagnostics.md): 조회 보조 정책·기존 생성 조건, 비Root 생성과 관리자/App DB 접속·권한 확인
-- [ECS 첫 기동과 DB 암호 전달 수정](./week8/lab-reports/2026-10-14-ecs-first-cloud-startup.md): DB 인증 실패 후 같은 Image의 JDBC·Migration 7개·Spring 기동 성공
-- [ALB·App·DNS와 첫 HTTPS 응답](./week8/lab-reports/2026-10-15-cloud-https-baseline.md): 10/14 회차 연장 구간의 Target Healthy·브라우저 화면·익명 HTTP 결과. 로그인 이후 업무 검증은 미완료
-- [Week 8 AWS 배포·비용 계획](./week8/deployment-plan.md): 서울·월 3만 원·실습 시 실행 조건, 완료한 초기 설정과 남은 생성 범위·실행·보관 비용
+- [Week 8 배포 학습 계획](./week8-9/weekly-plan.md): 10/14 회차의 RDS·ECS·HTTPS 기본 연결을 기록하고 10/15 실제 로그인·접수/SQL Row부터 재개. 전체 AI·관측·복구 범위 유지
+- [10월 8일 학습 노트](./week8-9/study-notes/2026-10-08-study-questions.md): JAR·Container·Volume·Session과 설정의 수명, Cache·Secret 전달의 이해 변화와 핵심 질문
+- [10월 9일 학습 노트](./week8-9/study-notes/2026-10-09-study-questions.md): 설정·Bean 조립, 개인정보 탐지·치환, 종료·Health·CI와 AWS 권한의 이해 변화와 핵심 질문
+- [10월 10일 학습 노트](./week8-9/study-notes/2026-10-10-study-questions.md): ECR·Task·Role·Network·TLS와 Cookie, Health·HttpOnly의 오해 수정과 실제 Image 업로드
+- [10월 12일 학습 노트](./week8-9/study-notes/2026-10-12-study-questions.md): 설정·객체·인증·자원·TLS와 Secret 전달, CI·Image 업로드와 실제 배포의 차이, 다음 학습
+- [10월 13일 학습 노트](./week8-9/study-notes/2026-10-13-study-questions.md): IAM·Network·관리 통로와 요청 조건, Console 오류·생성 거부의 구분, 다음 학습
+- [10월 14일 학습 노트](./week8-9/study-notes/2026-10-14-study-questions.md): Private RDS·TLS·DB 계정, 같은 Image의 인증 복구, 두 CNAME과 ALB·HTTPS 응답의 의미
+- [10월 16일 학습 노트](./week8-9/study-notes/2026-10-16-study-questions.md): Snapshot·App 복원, Session과 데이터 보존, 읽기 준비 P·CI·ECR 전달
+- [Snapshot과 별도 RDS 복원 검증](./week8-9/lab-reports/2026-10-16-rds-snapshot-restore.md): Row·Migration 대조, 같은 Image의 App 전환·재로그인·원본 복귀
+- [준비 P의 CI와 ECR 업로드](./week8-9/lab-reports/2026-10-16-prepare-image-ci-ecr.md): 고정 P Source·원격 Test·검증 Image 전달과 Manifest Digest
+- [프로그램과 Cloud DB를 연결하는 자료](./week8-9/study-docs/cloud-database-and-application-connection.md): psql·JDBC, AWS·DB·App 신원, 설정값 전달·Migration과 업무 요청
+- [Process·Health·CI 자료](./week8-9/study-docs/process-health-and-ci.md): 종료 Signal과 요청 완료, Health·Job 상태, HTTP Metric과 CI의 역할
+- [DB와 App 서버 복구 자료](./week8-9/study-docs/database-and-application-recovery.md): 재시작·Image Rollback·Snapshot 복원, Session과 영속 데이터, 안전한 Job 재개와 복습 질문
+- [AWS OIDC·ECR 초기 설정](./week8-9/lab-reports/2026-10-10-aws-oidc-ecr-baseline.md): 초기 생성·main 제한·한 ECR의 Push 권한 대조, 후속 업로드 보고서 연결
+- [검증 Image의 ECR 업로드](./week8-9/lab-reports/2026-10-10-verified-image-ecr-publish.md): 수동 Publish·실제 OIDC 인증, CI Image 전달과 ECR Tag·Digest 대조
+- [배포 준비 변경의 CI·ECR 업로드](./week8-9/lab-reports/2026-10-13-deployment-image-ecr-publish.md): Java 578개·JavaScript 173개, 새 검증 Image 한 개 추가·기존 Image 유지. Cloud 실행은 별도 승인
+- [배포 신원과 정책](./week8-9/lab-reports/2026-10-13-deployer-identity-and-policies.md): 비Root 사용자·MFA·제한된 정책과 저장 JSON 대조
+- [학습 Network와 Security Group](./week8-9/lab-reports/2026-10-13-learning-network-and-security-groups.md): Public/Private 경로·ALB→App→RDS 규칙 확인, 실제 연결은 별도
+- [Private DB 관리 통로](./week8-9/lab-reports/2026-10-13-private-db-bootstrap.md): CloudShell VPC·정확한 환경 권한·psql 준비
+- [DB Subnet Group·Runtime 정책·RDS 생성 거부](./week8-9/lab-reports/2026-10-14-rds-subnet-group-and-runtime-policy.md): 10/13 회차 연장 구간의 실제 실행 결과, 요청 조건 대조와 DB 연결은 미완료
+- [RDS 생성과 Private TLS 검증](./week8-9/lab-reports/2026-10-14-rds-console-permission-diagnostics.md): 조회 보조 정책·기존 생성 조건, 비Root 생성과 관리자/App DB 접속·권한 확인
+- [ECS 첫 기동과 DB 암호 전달 수정](./week8-9/lab-reports/2026-10-14-ecs-first-cloud-startup.md): DB 인증 실패 후 같은 Image의 JDBC·Migration 7개·Spring 기동 성공
+- [ALB·App·DNS와 첫 HTTPS 응답](./week8-9/lab-reports/2026-10-15-cloud-https-baseline.md): 10/14 회차 연장 구간의 Target Healthy·브라우저 화면·익명 HTTP 결과. 로그인 이후 업무 검증은 미완료
+- [Week 8 AWS 배포·비용 계획](./week8-9/deployment-plan.md): 서울·월 3만 원·실습 시 실행 조건, 완료한 초기 설정과 남은 생성 범위·실행·보관 비용
 - [9월 30일 학습 노트](./week7/study-notes/2026-09-30-study-questions.md): 판단 보류 표현, 문의 보존, Ticket·Message와 AI 처리 상태의 구분
 - [10월 5일 학습 노트](./week7/study-notes/2026-10-05-study-questions.md): AI 입력·판단, 접수·예약·결과 Transaction과 실제 Java AI 저장, 10/6 재개 경계
 - [10월 6일 학습 노트](./week7/study-notes/2026-10-06-study-questions.md): 재시도 대기·현재 Attempt·최종 실패, 선택 Worker와 제한된 DB 저장 재시도
