@@ -4,6 +4,8 @@
 
 [Image 전달 자료](./image-publishing-and-ecs-execution.md)와 [Network와 HTTPS 자료](./aws-network-dns-and-https.md)의 흐름을 기준으로, 실패한 위치를 찾고 복구 결과를 확인한다.
 
+App 재시작·Image Rollback·Snapshot 복원을 기초부터 비교하려면 [DB와 App 서버 복구](./database-and-application-recovery.md)를 먼저 읽는다. Session 소실·새 Endpoint·데이터 대조·AI Job 재개 판단을 예제와 질문으로 정리했다.
+
 ## 실행 상태와 업무 결과
 
 | 관찰 | 확인하는 대상 |
@@ -109,6 +111,38 @@ Rollback할 대상을 준비할 때 Image Digest만 보관하지 않는다. Task
 
 복구 연습에서는 DB Schema를 바꾸지 않는 실패를 먼저 사용하면 프로그램 교체의 효과를 따로 관찰할 수 있다. 새 JVM에서 기존 메모리 Session이 사라져 재로그인이 필요한 것과, 문의 데이터가 손실된 것은 다른 결과다.
 
+### 이전 Image와 이전 정상 Image는 다르다
+
+오래된 Image가 Registry에 남아 있다는 사실만으로 현재 환경의 복귀 대상이 되는 것은 아니다. 현재 실행 설정에 필요한 파일·Profile·사용자 구성과 현재 DB Schema를 지원해야 한다.
+
+예를 들어 실행 설정이 `sslmode=verify-full`과 Image 내부 CA 파일을 요구하는데 이전 Image에 그 파일이 없다면, Image Pull에 성공해도 DB 연결은 실패할 수 있다. 이를 해결하기 위해 인증서 검증을 끄는 것은 정상 버전 복귀가 아니라 보안 조건 변경이다. 필요한 배포 구성이 있는 정상 Image를 복귀 기준으로 선택한다.
+
+Image 안에 Migration 파일이 있다는 사실과 현재 DB에 적용된 Migration 이력도 구분한다. 새 Image가 Schema를 변경했다면 이전 코드의 조회·저장, 상태값 해석과 Migration 검증이 여전히 가능한지 확인한다. 단순히 새 Column이 추가됐다는 이유만으로 모든 이전 코드와 호환된다고 가정하지 않는다.
+
+### Task Definition 개정과 프로그램 버전은 다르다
+
+Task Definition의 개정 번호는 실행 명세의 버전이다. 같은 Image에서 DB Endpoint나 메모리만 바꿔도 새 개정이 생길 수 있다. 따라서 명세 :2에서 :1로 돌아갔다는 사실만으로 Image Rollback을 증명할 수 없다. 교체 전후 실제 Image Digest가 무엇인지 대조해야 한다.
+
+기준 Image A와 후보 Image B는 서로 다른 프로그램 산출물이며, 각 Digest와 대응하는 Source·검증 결과를 보관한다. 후보 실행 후 A로 복귀할 때에는 같은 RDS·접근 제한·TLS·Secret 참조와 활성 기능을 유지하고, 프로그램 변경의 결과를 따로 확인한다. 이번 구성이 단독 Task라면 ECS Service의 자동 Rollback이 아니라 승인된 수동 교체 절차를 사용한다. [ECS의 Image Digest와 배포 설명](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/deployment-type-ecs.html)
+
+복귀 확인은 실제 Digest → Spring·DB 연결 → Target Healthy → 이전 Session 거부·재로그인 → 기존 문의·Job 조회 순서로 나눈다. HTTP Health 성공만으로 업무 데이터 보존까지 확인한 것은 아니다. 새 배포에 결함이 없어도 B → A 복귀 절차는 연습할 수 있지만, 그 결과를 실제 장애 복구나 무중단 배포 성공으로 바꾸어 기록하지 않는다.
+
+### 읽는 프로그램을 먼저 준비하고 새 값의 저장을 나중에 활성화한다
+
+DB Column을 삭제하지 않아도 Rollback이 깨질 수 있다. 예를 들어 이전 프로그램의 실패 코드 Enum에 `PROVIDER_REFUSED`만 있고, 새 프로그램이 `PRIVACY_SCAN_TIMEOUT`을 저장한다면 이전 프로그램은 새 문자열을 Enum으로 바꾸지 못할 수 있다. Row가 남아 있다는 사실과 이전 프로그램이 그 Row를 올바르게 읽는다는 사실은 다르다. Browser의 응답 검증기가 허용하는 코드 목록도 함께 확인한다.
+
+이 경우에는 읽기 준비와 새 값의 쓰기를 나누어 배포할 수 있다.
+
+1. **기존 A:** 현재 값을 읽고 저장하지만 새 실패 코드는 모른다.
+2. **준비 P:** 기존 값과 명시한 새 실패 코드를 모두 읽는다. 새 실패 코드를 만들어 저장하는 처리 로직은 아직 활성화하지 않는다.
+3. **후속 B:** 준비한 코드와 DB 제약을 사용해 새 실패 코드도 저장한다.
+
+P의 기동·기존 업무·새 값 읽기를 확인한 다음 B를 배포한다. B가 새 값을 저장한 뒤의 복귀 대상은 P다. 새 값을 모르는 A로 두 단계 모두 되돌리는 것은 별도의 호환성 검증 없이 안전하다고 할 수 없다. Amazon의 Prepare·Activate 두 단계 배포도 먼저 읽기를 준비하고 이후 새 형식의 쓰기를 활성화하는 순서를 설명한다. 이 원칙을 선택했다고 다중 서버나 무중단 배포까지 구현한 것은 아니다. [Amazon의 Rollback 안전성 설명](https://aws.amazon.com/builders-library/ensuring-rollback-safety-during-deployments/)
+
+준비 P는 어떤 문자열이나 정상값으로 받아들이는 버전이 아니다. 계약으로 정한 두 코드를 추가로 해석할 뿐, 알 수 없는 코드를 `null`·`UNDETERMINED`나 다른 실패 원인으로 바꾸지 않는다. Rollback을 쉽게 하려고 DB의 실패 사유를 덮어쓰거나 Row를 지우지도 않는다.
+
+검증은 실제 이전 산출물과 준비·후속 산출물을 같은 PostgreSQL에 차례로 연결해 진행한다. Migration 이력 검증·새 실패 코드 조회·기존 문의와 제안 보존·Browser 계약을 확인한다. Enum의 단독 변환 확인은 이 통합 검증의 한 부분이며, Cloud Rollback 성공을 대신하지 않는다.
+
 ## Database Backup과 복원
 
 Snapshot은 특정 시점의 DB 상태를 복구하기 위한 Backup이다. RDS Snapshot 복원은 기존 DB를 덮어쓰는 작업이 아니라 **새 DB Instance를 만드는 작업**이다. [RDS Snapshot 복원 설명](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_RestoreFromSnapshot.html)
@@ -185,6 +219,11 @@ RDS 복원 시에는 원래 VPC·Subnet Group·Security Group·DB Parameter Grou
 4. `desiredCount=0`만으로 ALB·RDS·보관 비용도 중단됐다고 말할 수 있는가? 마지막 Snapshot 뒤에도 접수를 허용하면 어떤 데이터가 사라질 수 있는가?
 5. 현재 Task의 기동이 20시간 전인데 최근 1시간의 Log가 비어 있다면 먼저 무엇을 확인할 것인가? 검색창의 기동 문구와 실제 기동 Event는 무엇이 다른가?
 6. 익명 API의 의도한 `401`은 정상 요청 흐름에서 발생할 수 있는가? 이 응답을 ALB 자체의 `5xx`와 같은 장애로 볼 수 있는가?
+7. 이전 Image에 현재 실행 설정이 요구하는 CA 파일이나 Profile 구성이 없다면 왜 바로 복귀 대상으로 쓸 수 없는가?
+8. Task Definition 개정 번호 변경과 실제 Image Digest 변경은 각각 무엇을 바꾼 것인가?
+9. Image B가 DB Schema를 변경했다면 A로 돌아가기 전에 무엇을 확인해야 하는가?
+10. 새 실패 코드를 B가 이미 저장했다면, 그 코드를 모르는 A와 읽기 준비를 마친 P 중 어느 버전으로 복귀해야 하는가?
+11. Rollback 뒤 조회 오류를 없애려고 새 실패 코드를 다른 기존 실패 코드로 고쳐도 되는가?
 
 ## 핵심 질문 해설
 
@@ -194,3 +233,8 @@ RDS 복원 시에는 원래 VPC·Subnet Group·Security Group·DB Parameter Grou
 4. **그럴 수 없다.** 실행 Task와 ALB·DB·Storage는 별개다. Snapshot 뒤의 새 쓰기는 해당 Snapshot에 없으므로 마지막 보관 전에 접수와 쓰기를 중단해야 한다.
 5. **기간과 현재 Task의 Stream부터 확인한다.** 검색어 입력은 조회 조건일 뿐이며, 결과 Event·시각을 확인해야 기동 기록을 관찰한 것이다.
 6. **발생할 수 있다.** 익명 접근을 차단하는 계약이라면 의도한 결과다. 응답 생성 계층과 요청 조건이 다르므로 ELB 장애와 나누어 본다.
+7. **현재 환경에서 동작할 조건이 없기 때문이다.** 저장된 과거 산출물과 현재 DB·TLS·사용자 설정에서 확인한 정상 산출물은 다를 수 있다.
+8. **실행 명세와 프로그램 산출물을 나눈다.** Endpoint만 바꿔도 명세 개정은 늘어날 수 있으므로 실제 프로그램 교체는 Digest로 확인한다.
+9. **이전 코드와 현재 Schema의 호환성이다.** Migration 검증·조회·저장·상태값 처리를 확인하며 Image 복귀가 DB 변경까지 취소한다고 가정하지 않는다.
+10. **검증을 마친 P다.** B가 쓴 데이터를 읽을 수 있어야 하며, 단지 더 오래된 버전이라는 이유로 A까지 되돌리지 않는다.
+11. **그럴 수 없다.** 실패 원인의 의미가 바뀐다. 데이터를 고치는 대신 그 의미를 읽을 수 있는 프로그램과 검증된 배포 순서를 준비한다.

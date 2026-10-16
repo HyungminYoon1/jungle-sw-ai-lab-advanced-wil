@@ -91,6 +91,7 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [10월 14일 학습 노트](./week8/study-notes/2026-10-14-study-questions.md): Private RDS·TLS·DB 계정, 같은 Image의 인증 복구, 두 CNAME과 ALB·HTTPS 응답의 의미
 - [프로그램과 Cloud DB를 연결하는 자료](./week8/study-docs/cloud-database-and-application-connection.md): psql·JDBC, AWS·DB·App 신원, 설정값 전달·Migration과 업무 요청
 - [Process·Health·CI 자료](./week8/study-docs/process-health-and-ci.md): 종료 Signal과 요청 완료, Health·Job 상태, HTTP Metric과 CI의 역할
+- [DB와 App 서버 복구 자료](./week8/study-docs/database-and-application-recovery.md): 재시작·Image Rollback·Snapshot 복원, Session과 영속 데이터, 안전한 Job 재개와 복습 질문
 - [AWS OIDC·ECR 초기 설정](./week8/lab-reports/2026-10-10-aws-oidc-ecr-baseline.md): 초기 생성·main 제한·한 ECR의 Push 권한 대조, 후속 업로드 보고서 연결
 - [검증 Image의 ECR 업로드](./week8/lab-reports/2026-10-10-verified-image-ecr-publish.md): 수동 Publish·실제 OIDC 인증, CI Image 전달과 ECR Tag·Digest 대조
 - [배포 준비 변경의 CI·ECR 업로드](./week8/lab-reports/2026-10-13-deployment-image-ecr-publish.md): Java 578개·JavaScript 173개, 새 검증 Image 한 개 추가·기존 Image 유지. Cloud 실행은 별도 승인

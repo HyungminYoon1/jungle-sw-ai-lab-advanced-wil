@@ -168,6 +168,32 @@ Secret을 누가 읽는지도 구분한다. ECS가 Task 설정의 Secret을 가�
 
 Console의 JavaScript 경고·메타데이터 조회 실패·실제 생성 요청 실패는 따로 본다. HTTP Status와 서비스 주소만으로 정확한 Action이나 실패 조건을 판정하지 않고, 응답의 오류 코드·설명과 요청의 비밀값 없는 필드를 대조한다. 전체 요청 Body·Header·HAR에는 Password·Credential·Token이 포함될 수 있으므로 공개하지 않는다.
 
+## Console의 부가 조회가 거부돼도 다른 작업은 가능할 수 있다
+
+AWS Console의 한 화면은 여러 API를 호출한다. 화면 전체에 하나의 허용·거부 결정이 내려지는 것이 아니라 각 요청의 Action·Resource·Condition을 따로 평가한다.
+
+일반 PostgreSQL 인스턴스 상세 화면에서 다음 오류가 표시되는 경우를 생각해보자.
+
+```text
+rds:DescribeGlobalClusters
+no identity-based policy allows the action
+```
+
+`DescribeGlobalClusters`는 **Aurora Global Database 클러스터 정보를 조회**하는 API다. 일반 PostgreSQL 인스턴스의 Row 조회나 DB 사용자 Password 인증이 아니다. [AWS의 API 대상 설명](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeGlobalClusters.html)
+
+| 요청 | 묻는 내용 | 별도로 확인할 결과 |
+|---|---|---|
+| `DescribeGlobalClusters` | Aurora 글로벌 클러스터 정보 | 해당 메타데이터 조회의 허용 여부 |
+| `DescribeDBInstances` | 지정 DB 인스턴스의 상태·설정 | 상세 상태를 실제로 읽을 수 있는가 |
+| `StartDBInstance` | 중지한 DB를 시작 | 시작 요청과 실제 사용 가능 상태 |
+| JDBC·psql 연결 | PostgreSQL 계정으로 DB 사용 | Network·TLS·DB 인증·SQL 결과 |
+
+첫 요청이 거부됐다고 다른 세 요청도 모두 실패했다고 판단하지 않는다. 반대로 상세 화면을 읽을 수 있다는 사실만으로 시작·SQL 접속까지 허용됐다고 판단하지도 않는다.
+
+불필요한 글로벌 목록 조회 오류를 없애기 위해 모든 RDS 조회나 관리자 권한을 추가하지 않는다. 현재 학습·업무에 필요한 작업인지, 지정 대상의 직접 조회와 승인된 작업이 실제로 가능한지 먼저 확인한다. Console을 조작하는 사람의 IAM 권한 문제를 ECS Execution Role이나 App의 Task Role 수정으로 해결하지도 않는다.
+
+오류에 표시된 `global-cluster:*`는 요청 대상의 패턴이다. 그 문자열이 보인다고 요청자에게 모든 클러스터 권한이 있다는 뜻은 아니다. 실제 허용은 적용되는 정책으로 결정된다.
+
 ## 핵심 질문
 
 1. `contents: read`와 `id-token: write`만으로 ECR Push가 허용되는가? AWS에서 추가로 어떤 결정을 내려야 하는가?
@@ -176,3 +202,4 @@ Console의 JavaScript 경고·메타데이터 조회 실패·실제 생성 요�
 4. GitHub Actions의 업로드 Role, ECS Execution Role, Application의 Task Role은 각각 누가 사용하는가?
 5. DB 생성 Action이 정책에 있어도 Project 태그나 암호화 조건이 맞지 않으면 요청은 허용되는가?
 6. 참조하는 Subnet Group의 태그와 이번 DB 생성 요청의 태그는 같은 값인가?
+7. 일반 PostgreSQL 상세 화면의 `DescribeGlobalClusters` 거부는 DB Password 인증 실패를 의미하는가? DB 상태 조회·시작·SQL 연결은 어떻게 나누어 확인하는가?

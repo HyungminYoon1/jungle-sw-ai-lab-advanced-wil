@@ -114,6 +114,16 @@ Browser에서 실제 업무 흐름 확인
 
 배포 기록에는 Commit·CI 실행·Tag·Registry Digest·실행 Platform·Task Definition Revision과 실행 Task의 Image 정보를 연결한다. Image 자체에는 DB Password·AI Key를 넣지 않는다. 실행 설정과 Secret의 주입은 [Spring 설정과 Bean 자료](./spring-settings-bean-and-secret-wiring.md)에서 다룬다.
 
+### Workflow의 Commit과 프로그램 Source의 Commit
+
+보통은 Workflow를 실행한 Commit과 Build할 Source의 Commit이 같지만 반드시 그래야 하는 것은 아니다. 예를 들어 main에서 관리하는 Workflow가 검토한 준비 버전 P의 특정 Commit을 별도로 Checkout해 Test·Build할 수 있다.
+
+이때 AWS OIDC의 main 조건은 **어떤 실행 문맥이 Role을 사용할 수 있는지**를 검사한다. Checkout한 모든 파일이 main에서 왔는지나 그 Image가 안전한지를 AWS가 대신 검사하는 것은 아니다. 따라서 별도 Source를 허용하는 경로에는 정확한 Commit·기준 버전과의 관계·변경 경로·Hash 검증이 필요하다. [GitHub의 OIDC 실행 문맥](https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-aws)
+
+학습 구성의 P 전달은 main에 고정한 Manifest가 Source를 결정한다. 임의 Branch나 SHA를 입력받지 않으며, 지정한 P의 운영 변경 두 파일과 검증 자료만 허용한다. P의 Test와 Build는 AWS 권한 없는 Job에서 수행하고, Publish Job은 그 실행의 Image Artifact를 확인한 뒤 기존 Role을 사용한다. Publish Job에서 P 코드를 실행하거나 Image를 다시 Build하지 않는다.
+
+전달 이력에는 Workflow Commit과 P Source Commit을 따로 적는다. Image의 Revision Label은 프로그램 Source인 P Commit을 가리켜야 한다. 이전 로컬 Build와 새 CI Build는 Source의 내용이 같더라도 Label·Build 시점 등이 다를 수 있으므로, 로컬 Image ID를 새 CI Image의 Digest라고 기록하지 않는다.
+
 ## 첫 연결용 Task Definition 읽기
 
 Lab의 `deploy/ecs/task-definition.template.json`은 AI를 끈 첫 접속용 초안이다. 실행 명세는 프로그램 파일을 다시 만드는 것이 아니라 선택한 Image에 실행 조건을 전달한다. 새 Java 코드를 넣었다면 먼저 새 Image를 검증해야 하지만, 설정값만 교체할 때는 같은 Image로 새 객체를 만들 수 있다.
@@ -166,6 +176,7 @@ Registry에 파일이 있다는 것과 프로그램이 실행된다는 것을 �
 4. Image의 표시 Size와 Task의 `memory`는 같은 대상을 측정하는가? 새 Task에 넣을 `image` Digest는 어디에서 확인해야 하는가?
 5. Container의 전체 메모리와 JVM Heap은 왜 다르며, 현재 사용량과 최고 사용량은 무엇이 다른가?
 6. CPU Throttling과 메모리 부족은 같은 현상인가? AI를 끈 순차 조회만으로 전체 AI Task의 사양까지 확정할 수 있는가?
+7. main OIDC 인증을 통과하면 Image의 모든 Source도 main 코드라고 보증되는가? P를 별도로 Build했다면 어떤 두 Commit을 나누어 기록해야 하는가?
 
 ## 핵심 질문 해설
 
@@ -175,6 +186,7 @@ Registry에 파일이 있다는 것과 프로그램이 실행된다는 것을 �
 4. **파일 계층과 실행 메모리이므로 다르다.** 실행 메모리는 대표 작업을 포함해 별도로 측정하며, 배포 Digest는 검증 뒤 업로드한 ECR Manifest와 대조한다. Local Image ID만으로 이를 대신하지 않는다.
 5. **Heap 밖의 메모리와 Cache도 사용한다.** 현재 값은 관찰 시점의 사용량이고 최고치는 기동 중 일시적인 증가까지 포함해 기록한 값이다.
 6. **서로 다르다.** CPU는 실행 시간을 제한하고 메모리는 사용할 공간을 제한한다. 전체 AI 사양은 개인정보 검사·Provider·Worker와 실제 실행 조건을 포함해 다시 측정한다.
+7. **아니다.** OIDC는 실행 신원을 확인한다. 별도 Source는 따로 고정·검증하고 Workflow Commit과 실제 P Source Commit을 구분해 Image와 연결한다.
 
 ## 함께 읽을 자료
 
