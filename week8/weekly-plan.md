@@ -2,10 +2,10 @@
 
 > 작성일: 2026-10-07
 > 최종 수정일: 2026-10-16
-> 상태: In Progress — HTTPS 접수·업무 SQL Row·HTTP 301과 Cloud Log·ALB Metric 확인. 10/16 Target 0개·App 실행 0개·RDS 일시중지 확인. ALB 유지. 새 Task·재로그인·전체 AI·Rollback·DB 복원은 미완료.
+> 상태: In Progress — HTTPS 접수·업무 SQL Row·HTTP 301과 Cloud 관측, 별도 RDS의 SQL/App 복원·원본 복귀·Session 비교 완료. 임시 DB·해당 자동 Backup 삭제 후 원본·검증 Snapshot 유지. 읽기 준비 P의 로컬/원격 CI·ECR 전달도 완료. P의 Cloud 실행·이전 Image Rollback·전체 AI와 나머지 마감은 미완료.
 > 1차 목표 기간: 2026-10-08 목요일 ~ 2026-10-12 월요일. 미완료 항목이 남으면 Week 8 기간 연장
 > 초기 학습일: 10/8·10/9·10/10·10/12, 총 4일
-> 현재 진행: 10/15 회차의 Session Cookie·CSRF 접수 403/201·SQL Row·HTTP 301·Cloud 관측과 로컬 개인정보 검증/모델 평가를 기록했다. Edge V6·V1 보관/삭제 뒤 별도 비용 중지 요청에 따라 기존 Target 해제·App 종료·RDS 중지를 진행했다. ALB·보관 비용은 남으며 새 Task·교체 후 조회는 실행하지 않았다. 재개 때 RDS→새 Task→Target 연결과 재로그인을 먼저 확인한다. 기존 검증 Image·Migration 7개·AI 비활성과 전체 미완료 학습 범위는 유지한다.
+> 현재 진행: 10/16에는 중지 환경을 재개하고 같은 Image의 단일 App을 원본 → 복원 DB → 원본 순서로 전환했다. 복원 DB의 일곱 Table 건수/Hash, 실제 Browser의 Ticket 1/2·OPEN·PENDING Job과 두 전환의 Session 거부·재로그인 조회를 확인했다. App 순차 전환 중에는 기존 300초 Draining·Migration 7개·AI 비활성을 유지했고 추가 IAM·Secret·DNS 변경은 없었다. 임시 DB는 중지 후 별도 최종 승인으로 삭제했고 원본 DB·검증 Snapshot은 사용 가능 상태로 유지됐다. 다음 Image Rollback은 현재 정상 Image와 후보의 호환성부터 확인한다. 이전 Image Rollback·전체 AI·최종 회귀와 WIL 등 남은 전체 범위는 유지한다.
 > 초기 순학습 시간 배분: 하루 10시간, 총 40시간. 휴식·식사와 단순 대기 시간 제외. 완료에 필요한 시간의 상한은 아님
 > 모드: `DEEP_LEARNING_MODE`
 > 핵심 질문: 이미 검증한 문의 접수와 AI 제안 흐름을 Cloud의 HTTPS 환경에 배포하고, 실패 원인을 찾으며 이전 실행 상태로 복구할 수 있는가?
@@ -364,7 +364,19 @@ ALB는 중지 기능이 없어 유지했다. RDS 저장/백업·ECR Image·Log �
 
 다음 실습은 RDS 시작/사용 가능 확인 → 같은 검증 Image·명세의 새 Task → 새 Private IP:8080 등록/Healthy → HTTPS·재로그인·기존 문의 조회부터 이어간다. 실제 중지 뒤 데이터 보존·Session 비교는 아직 검증하지 않았다. 정식 Task 교체 비교의 인증 기준은 복구 후 새로 확보한다. 이전 Image 복귀·Snapshot 복원·전체 AI·Route 53·System·관측·회귀·WIL의 범위는 그대로 남긴다.
 
+### 10월 16일 중지 환경 재개 결과
+
+위 일시중지 이후 RDS 사용 가능 → 같은 검증 Image·명세의 새 단독 Task 한 개 → 실제 Private IP:8080 등록/Target Healthy → HTTPS 기본 응답 → AGENT 재로그인·기존 문의 조회 순서로 재개했다. Ticket 1·2는 OPEN, 각 AI Job은 PENDING으로 조회됐다. DB·Schema·DNS·Secret·IAM은 변경하지 않았고 AI도 켜지 않았다. [재개 보고서](./lab-reports/2026-10-16-cloud-resource-resume.md)와 [10/16 노트](./study-notes/2026-10-16-study-questions.md)에 실행과 개념을 구분했다.
+
+재개 전 인증 Session의 유효성을 확보한 전후 비교는 아니므로 정식 Session 소실 실험은 남긴다. 현재 AGENT 조회를 교체 기준으로 사용할 수 있다. 같은 Image 재실행을 이전 Image Rollback으로 바꾸어 기록하지 않는다. 다음은 Session 전후 비교·이전 Image 복귀와 별도 Snapshot 복원의 차이를 설명하고 필요한 실행 범위·비용·승인을 확인하는 단계다. 남은 Route 53·System/관측·개인정보 검사 Adapter·전체 AI·자원 측정·회귀·WIL은 생략하지 않는다.
+
+복원 학습에서는 Snapshot 시점·새 Endpoint, Worker 비활성과 실제 Row 비교를 설명할 수 있음을 확인했다. Lab의 별도 복원 Policy·실행/정리 안내와 로컬 구조 Test를 준비했다. 관련 38개와 SQL Source 보호를 합친 Focused 41개·JavaScript 전체 246개·ESLint가 통과했다. 이후 승인한 복원 전용 Policy Version 1을 AWS에서 검증·생성하고 별도 연결 승인을 받아 지정 사용자 한 명에게 연결했다. 기존 다섯 정책·Role은 유지했다. 비Root에서 원본 SQL 기준과 지정 Snapshot의 Available·비공개·암호화·태그를 확인했다. 최초 복원 요청의 IAM 거부 뒤 승인한 Root 단건 진단으로 정확한 불일치 조건은 확인하지 못했다. 추가 승인한 세 조건만 V2에서 조정하고 V1·지정 Snapshot/Subnet·나머지 보안/비용 제한은 보존했다. Root 로그아웃·비Root MFA 후 같은 임시 DB 한 개의 재요청은 수락됐고 사용 가능·보안 설정·TLS와 일곱 Table의 원본 건수/Hash 일치를 확인했다. 같은 Image의 App 명세 :2는 JDBC Host만 바꿔 등록했다. 이후 단일 App 순차 전환·Session 전후 비교·AGENT 재로그인·원본 복귀와 업무 조회까지 완료했다. 임시 DB는 중지 후 별도 최종 승인으로 삭제했으며 원본 DB와 검증 Snapshot은 유지했다. [복원 실행 보고서](./lab-reports/2026-10-16-rds-snapshot-restore.md)에 단계별 결과를 기록한다. V2 변경 뒤 전체 246개·ESLint도 다시 통과했다. 승인 외 조건 변경·Root로 복원 실행·원본 DB/Snapshot 삭제·AI 호출은 하지 않았다.
+
 ### 10월 12일 이후 실패 추적과 복구
+
+10/16에는 기준 Source `2e2cc40`의 별도 `codex/week8-rollback-prepare` Branch에서 읽기 준비 P를 구성했다. 운영 변경은 새 실패 코드 두 개의 Java Enum·UI 허용값뿐이며 V8은 Test Fixture로 분리했다. 로컬 PostgreSQL V7/V8의 P 기동·기존 데이터 보존·새 실패 코드 HTTP 200/FAILED 조회·신규 접수와 보안 계약을 확인했다. 관련 Java 56개·JAR 포장에 이어 P Docker Image를 빌드하고, 0.25 vCPU·512 MiB의 실제 Container/JVM·HTTP로 같은 호환 흐름과 재로그인을 검증했다. 추가 안전장치 Test를 포함한 P JavaScript 전체 181개·ESLint도 통과했다. V8은 외부 Test 단계에서만 적용하고 정상 P 실행 때 Mount·추가 설정을 제거했다. 실제 Browser·AI·후속 B·Cloud Rollback과는 구분하며 [P 사전 검증 보고서](./lab-reports/2026-10-16-image-rollback-preflight.md)에 결과를 기록했다.
+
+이후 승인한 Commit·Push와 P의 원격 CI·ECR 전달을 완료했다. main의 고정 Manifest에서 P `77359c9`만 선택해 전체 Java 579개·JavaScript 181개·ESLint·Image Build를 통과한 동일 Image 한 개를 기존 ECR에 추가했다. main의 별도 CI도 Java 704개·JavaScript 254개·ESLint·Build에 성공했다. 기존 main Workflow·IAM과 App·RDS·ALB·DNS·Secret은 변경하지 않았다. [P CI·ECR 보고서](./lab-reports/2026-10-16-prepare-image-ci-ecr.md)에 두 Commit·Run·Tag·Digest를 연결했다. 다음은 P의 실제 Cloud 실행과 후속 B 활성화·B→P 복귀 범위를 검토하는 단계이며, 현재 업로드만으로 그 단계를 완료 처리하지 않는다.
 
 토요일에 남은 배포·HTTPS·Browser 검증을 먼저 이어간다. 일요일 야간 재개 여부와 실제 진도에 따라 아래 실험의 날짜를 조정한다. 복구·회귀·설명·WIL의 초기 분량을 줄여 끼워 넣지 않고, 완료하지 못한 항목과 필요한 추가 시간을 마감 때 확인한다.
 
@@ -419,6 +431,7 @@ ALB는 중지 기능이 없어 유지했다. RDS 저장/백업·ECR Image·Log �
   - [AWS 배포에서 프로그램과 DB를 연결하는 순서](./study-docs/cloud-database-and-application-connection.md): Image·CloudShell·App·RDS의 역할, 여러 계정과 Secret 전달·TLS·Migration을 한 흐름으로 연결한다.
   - [AWS Network와 DNS 그리고 HTTPS 요청 흐름](./study-docs/aws-network-dns-and-https.md): VPC·Subnet·Route·Security Group, DNS·ACM·ALB와 TLS 종료, Session·CSRF의 역할을 나눈다.
   - [배포 장애 관찰과 복구](./study-docs/deployment-observability-and-recovery.md): ALB·App·Job의 실패를 Log·Metric에서 구분하고, Application Rollback과 별도 DB 복원·비용 관리를 이해한다.
+  - [DB와 App 서버 복구](./study-docs/database-and-application-recovery.md): 같은 Image의 재시작·Image Rollback·Snapshot 복원을 예제로 비교하고 Session·Row·Migration·AI 재개와 정리 판단을 복습한다.
 - `study-notes/`: 각 학습일의 핵심 질문과 오해를 수정한 내용을 1인칭으로 정리한다. 대화 전체를 옮긴 로그는 남기지 않는다.
 
   - [10월 8일 노트](./study-notes/2026-10-08-study-questions.md): 실행·저장·설정의 수명, Cache와 Secret 전달의 이해 변화와 핵심 질문

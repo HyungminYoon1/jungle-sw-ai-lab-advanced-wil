@@ -89,6 +89,9 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [10월 12일 학습 노트](./week8/study-notes/2026-10-12-study-questions.md): 설정·객체·인증·자원·TLS와 Secret 전달, CI·Image 업로드와 실제 배포의 차이, 다음 학습
 - [10월 13일 학습 노트](./week8/study-notes/2026-10-13-study-questions.md): IAM·Network·관리 통로와 요청 조건, Console 오류·생성 거부의 구분, 다음 학습
 - [10월 14일 학습 노트](./week8/study-notes/2026-10-14-study-questions.md): Private RDS·TLS·DB 계정, 같은 Image의 인증 복구, 두 CNAME과 ALB·HTTPS 응답의 의미
+- [10월 16일 학습 노트](./week8/study-notes/2026-10-16-study-questions.md): Snapshot·App 복원, Session과 데이터 보존, 읽기 준비 P·CI·ECR 전달
+- [Snapshot과 별도 RDS 복원 검증](./week8/lab-reports/2026-10-16-rds-snapshot-restore.md): Row·Migration 대조, 같은 Image의 App 전환·재로그인·원본 복귀
+- [준비 P의 CI와 ECR 업로드](./week8/lab-reports/2026-10-16-prepare-image-ci-ecr.md): 고정 P Source·원격 Test·검증 Image 전달과 Manifest Digest
 - [프로그램과 Cloud DB를 연결하는 자료](./week8/study-docs/cloud-database-and-application-connection.md): psql·JDBC, AWS·DB·App 신원, 설정값 전달·Migration과 업무 요청
 - [Process·Health·CI 자료](./week8/study-docs/process-health-and-ci.md): 종료 Signal과 요청 완료, Health·Job 상태, HTTP Metric과 CI의 역할
 - [DB와 App 서버 복구 자료](./week8/study-docs/database-and-application-recovery.md): 재시작·Image Rollback·Snapshot 복원, Session과 영속 데이터, 안전한 Job 재개와 복습 질문

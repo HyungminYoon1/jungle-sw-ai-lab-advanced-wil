@@ -1,9 +1,9 @@
 # Week 8 AWS 배포와 비용 초안
 
-> 상태: 일부 실행·비용 중지 — HTTPS 접수/SQL Row·HTTP 301·Cloud 관측 확인. 10/16 Target 0개·App 실행 0개·RDS 일시중지 확인. ALB 유지. 새 Task·재로그인·전체 AI·이전 Image 복귀·DB 복원은 미완료
+> 상태: 일부 검증 — HTTPS 접수/SQL Row·HTTP 301·Cloud 관측과 별도 RDS의 SQL/App 복원·원본 복귀·Session 비교 완료. 임시 DB·해당 자동 Backup 삭제 후 원본 DB·검증 Snapshot 유지. 읽기 준비 P의 로컬/원격 CI·ECR 전달도 완료. P의 Cloud 실행·이전 Image 복귀·전체 AI와 남은 마감은 미완료
 > 요금 확인일: 2026-10-12, 2026-10-14 첫 Fargate 실행 요금 재확인
-> 진행 반영일: 2026-10-16 — 10/15 회차의 업무 요청·관측과 자정 이후 Edge V6·V1 JSON 보관/삭제 반영. Task 교체는 NOT_RUN
-> 계획 수정일: 2026-10-16 — 리소스 중지 상태에서 RDS·새 Task·Target 연결/재로그인부터 복구. 남은 전체 학습·최소 비용·Log 365일 보존·기존 승인 경계 유지
+> 진행 반영일: 2026-10-16 — 원본 → 복원 DB → 원본 순서의 단일 App 전환·AGENT 재로그인·기존 문의와 Job 보존, 임시 DB 삭제 후 원본 DB·검증 Snapshot 사용 가능 확인
+> 계획 수정일: 2026-10-16 — 복원 실험을 마치고 Image Rollback의 현재 설정·DB 호환성을 점검. 임시 DB는 중지 후 최종 승인으로 삭제. 전체 AI 등 남은 범위·최소 비용·Log 365일 보존·기존 승인 경계 유지
 
 ## 확인한 조건
 
@@ -109,6 +109,32 @@ App·ALB·RDS는 현재 실행 중이며 비용도 계속 발생한다. App과 �
 ALB는 일시정지할 수 없어 삭제하지 않았다. ALB·공인 IPv4와 RDS 저장/백업·Image·Log 비용은 계속 별도로 발생할 수 있다. RDS는 최대 7일 뒤 자동 재시작하므로 확인창의 10/23 00:57 KST 안내도 남긴다. ALB 삭제·재생성과 장기 비용 절감 방식은 이번 중지와 구분해 추가 승인·보존 조건을 확인한다.
 
 실습 재개는 RDS 시작/사용 가능 확인 → 같은 검증 Image·명세의 새 Task → 새 Target Healthy → HTTPS·재로그인·기존 문의 조회 순서다. 중지된 Fargate Task 자체를 다시 시작하지 않는다. 복구 후 인증된 교체 전 기준을 새로 확보하고 정식 Task 교체·Session 비교를 진행한다.
+
+### 10월 16일 환경 재개
+
+비Root 신원으로 지정 RDS를 시작해 사용 가능을 확인하고 같은 Image Digest·`helpdesk-learning:1`의 단독 Fargate Task 한 개를 실행했다. 새 Private IP:8080을 기존 Target Group에 등록해 Healthy를 확인했다. 익명 HTTPS Health 200·UP, 로그인 200·보호 API 401과 AGENT 재로그인 뒤 기존 Ticket 1·2의 OPEN 및 각 PENDING Job 조회가 확인됐다. 새 문의나 AI 실행은 없었으며 RDS·App의 실행 과금은 재개됐다.
+
+RDS Console의 `DescribeGlobalClusters` 거부는 Aurora 글로벌 클러스터용 부가 조회다. 기존 PostgreSQL 시작·상태 조회와 구분하고 불필요한 IAM 권한을 추가하지 않았다. Schema·Secret·DNS·보안 규칙·실행 Image는 유지했다. 이 재개 단계만으로 SQL 예약 수·본문 보존이나 Session 전후 비교까지 확인한 것은 아니며, 후속 실제 복원·전환 결과는 아래에 별도로 기록한다. [재개 보고서](./lab-reports/2026-10-16-cloud-resource-resume.md)에 초기 근거를 기록한다.
+
+### Snapshot 복원 실험 준비
+
+10/16에는 Snapshot 뒤의 신규 문의가 복원 DB에 없고 App Endpoint 변경이 별도라는 점, 검증 Worker 비활성과 실제 Row 비교가 필요한 이유를 문답으로 확인했다. 기존 자료의 복원 절차를 유지하고 Lab의 `deploy/iam/db-recovery.md`·복원 Policy Template·구조 Test를 준비했다. 이후 승인한 전용 Policy Version 1을 AWS에서 검증·생성하고 지정 사용자 한 명에게 연결했다. 기존 다섯 Policy·Role은 유지했으며 Root 로그아웃·비Root MFA 후 Snapshot 목록 조회를 확인했다. 원본 SQL에서 Ticket·Message·PENDING Job 각 2건과 일곱 Table의 건수/Hash를 확보하고 지정 Snapshot 한 개의 Available·비공개·암호화·Project 태그를 확인했다. V2 적용 후 별도 Private DB의 사용 가능·보안/비용 설정과 verify-full/TLS 1.3 접속을 확인했다. 원본과 같은 Read-only·Repeatable Read SQL에서 일곱 Table의 건수/Hash·관계·예약 수·V1~V7·Sequence가 일치했다. 같은 Image의 명세 :2는 JDBC Host만 복원 DB로 바꿔 등록했다.
+
+이후 기존 300초 Draining과 이전 Task STOPPED를 지키며 원본 → 복원 DB → 원본으로 App을 한 개씩 순차 실행했다. 복원 App의 실제 DB 연결·Target Healthy·기존 Session 거부·AGENT 재로그인 뒤 Ticket 1/2의 제목·OPEN·PENDING Job을 확인했다. 다시 :1로 돌아와 원본 Endpoint·Migration 7개·Target Healthy·Session 거부와 재로그인 업무 조회까지 확인했다. 전환 중 새 Image·추가 IAM·Secret·DNS·원본 Schema 변경이나 외부 AI 호출은 없었다.
+
+원본과 검증 Snapshot 보존을 재확인한 뒤 작성자는 임시 DB를 삭제하지 않고 중지하도록 선택했다. 삭제창을 취소하고 지정 임시 DB만 추가 Snapshot 없이 중지 요청했으며 18:22 KST에 일시적으로 중지됨·연결 0개를 확인했다. 원본 App·RDS·ALB는 계속 실행 중이며 Job 조회와 단일 Target Healthy를 유지했다. 임시 DB가 중지돼도 20 GiB Storage·Backup 비용은 남고 연속 최대 7일 뒤 자동으로 다시 시작한다. 확인창에는 10/23 18:12 KST가 표시됐다. 삭제·추가 자동화는 이 선택에 포함하지 않는다. [RDS 중지 안내](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_StopInstance.html)
+
+이후 작성자가 임시 DB·해당 자동 Backup만 삭제하도록 선택을 변경하고 최종 확인했다. 추가 최종 Snapshot·자동 Backup 보존 없이 삭제했으며 목록에 원본 DB 한 개만 사용 가능 상태로 남고 검증 Snapshot도 사용 가능인 것을 재확인했다. 원본 App·RDS·Snapshot·DNS·Secret·IAM은 유지했다. 다음 Image Rollback은 현재 Cloud에서 확인한 정상 Image를 복귀 기준으로 보존하고 후보의 TLS 파일·Profile·현재 Schema 호환성을 확인한 뒤 진행한다. 새 Image 업로드·Task 교체는 아직 하지 않았다.
+
+원본 DB·Schema·DNS·Secret을 유지하고 복원 DB에서 SQL과 같은 검증 Image의 App 조회를 확인하는 안이다. 기존 단일 실행 조건에 맞춰 App은 순차 교체하며 잠깐의 중단·재로그인 뒤 원본 DB 연결로 복귀한다. 임시 DB 정리 권한도 지정 복원 DB 한 개에만 포함하되 실제 삭제는 원본·Snapshot 보존 및 검증 완료 뒤 별도로 확인한다. 원본 DB·Snapshot 삭제와 외부 AI 호출은 제외한다.
+
+그 뒤 Image Rollback 준비 P의 로컬 검증을 승인받았다. 기존 Source의 별도 Branch에서 새 두 실패 코드의 읽기만 준비하고 V8은 Test 전용으로 적용했다. 실제 PostgreSQL V7/V8·Spring Context·MockMvc·UI Test에서 기동·새 코드 조회·원문/작성자/예약/제안 보존·접수·보안을 확인했다. 관련 Java 56개·JAR 포장 뒤 Docker Image도 빌드했다. 로컬 0.25 vCPU·512 MiB의 같은 P Image를 V7/V8 DB에서 실행해 실제 HTTP·새 JVM 교체·Session 소실/재로그인을 확인했으며, V8 Test Mount·추가 설정은 정상 P 재실행 전에 제거했다. 추가 소스 안전장치 Test를 포함한 P JavaScript 전체 181개·ESLint도 통과했다. 현재 main은 이미 V8과 개인정보 처리 변경을 포함하므로 그대로 P라고 배포하지 않는다.
+
+추가 승인 뒤 P Branch와 main의 복원 자료·선택형 Workflow를 적절한 단위로 Commit·Push했다. 기존 main Workflow·AWS IAM을 유지하고, main의 고정 Manifest가 P `77359c9`의 Source·계보·변경 범위·Hash를 확인한 뒤 전체 Java 579개·JavaScript 181개·ESLint·Build를 실행했다. 같은 CI Image를 기존 ECR에 한 번 업로드하고 Manifest Digest `sha256:7369d0471d58ed27add9b6a9fc1d9fb28c99e9de7e006620127fd01ecea3933b`를 대조했다. main CI의 Java 704개·JavaScript 254개·ESLint·Build도 별도로 통과했다. [P CI·ECR 보고서](./lab-reports/2026-10-16-prepare-image-ci-ecr.md)에 Source/Workflow Commit과 산출물 관계를 정리한다. App·RDS·ALB·DNS·Secret·IAM은 이 전달 단계에서 변경하지 않았다. P의 실제 Cloud 실행·후속 B 활성화·B→P 복귀·전체 AI는 남아 있다.
+
+적용 전 Console에서는 DescribeDBSnapshots의 snapshot:* 거부를 확인했다. 그때의 스냅샷 (0) 표시는 실제 Backup 부재의 증거로 쓰지 않는다. 승인 후 Snapshot 목록 조회는 서울의 같은 계정 메타데이터까지 가능하며 다른 프로젝트의 이름·설정도 보일 수 있다. 생성·변경은 지정 대상만 허용하고 모든 문장에 MFA·서울 조건을 둔다.
+
+새 구조 Test 9개·기존 정책 Test 29개와 JavaScript 전체 243개가 통과했다. SQL Source 보호 3개를 더한 Focused 41개·JavaScript 전체 246개·ESLint도 통과했다. AWS 편집기의 보안·오류·경고·추천은 각각 0이었고 저장 JSON 전체가 승인한 적용본과 일치했다. 최초 복원 요청의 IAM 거부 뒤 별도 승인한 Root 읽기 전용 진단에서는 MFA=true만 확인했고 요청 옵션은 null이라 정확한 불일치 조건은 확인하지 못했다. 추가 승인을 받아 지정 DB 문장의 엔진·암호화·VPC 세 조건만 조정한 V2를 적용하고 V1을 보존했다. 지정 Snapshot·Subnet과 MFA·서울·태그·Private·최소 Class/용량·Single-AZ 제한은 유지했다. Root 로그아웃·비Root MFA 후 같은 임시 DB 한 개의 재요청은 수락돼 사용 가능과 SQL 대조까지 확인했다. V2 변경 후에도 전체 246개·ESLint가 통과했다. 실제 단계별 결과는 [복원 실행 보고서](./lab-reports/2026-10-16-rds-snapshot-restore.md)에서 구분한다. 서울 공식 요금에서 복원 후보 db.t4g.micro 0.025 USD/시간·gp3 0.131 USD/GB·월을 다시 확인했다. 2시간의 Instance 예시는 0.05 USD이며 Snapshot·Storage·기존 실행·보관·기타 요금·세금은 별도다. 총비용 상한으로 표현하지 않으며 월 3만 원 최대·목적 달성 범위의 최소 지출 원칙을 유지한다.
 
 Root의 MFA 활성화와 활성 Access Key 부재를 확인했다. 일상 배포용 IAM 사용자와 제한된 정책을 생성·연결한 뒤 본인이 Password·MFA를 등록하고 비Root 신원으로 로그인했다. Root Access Key를 CI에 제공하는 방식은 사용하지 않는다. [AWS Root 사용 권고](https://docs.aws.amazon.com/IAM/latest/UserGuide/root-user-best-practices.html)
 
