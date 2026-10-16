@@ -95,6 +95,10 @@ Flyway는 Migration 파일과 적용 이력을 검증한다. DB에 적용된 버
 
 Spring App은 psql이 아니라 JDBC Driver로 DB와 통신한다. 관리용 psql만 교체하는 일은 App Image 교체나 Flyway 이력 변경과 별개다. 반대로 App Image를 되돌려도 DB 엔진과 이미 적용한 V8이 자동으로 이전 버전으로 돌아가지는 않는다.
 
+Private CloudShell에서 Client를 맞추려고 DB를 공개하거나 인터넷 경로를 새로 열 필요는 없다. 인터넷을 사용할 수 있는 로컬 환경에서 공식 Client를 준비한 뒤 검증한 파일만 전달하고, 기존 도구는 보존한 채 별도 경로에서 실행할 수 있다. Hash와 실행 Version을 확인하는 절차도 필요하다.
+
+CloudShell VPC 환경의 파일·Shell 변수는 영구 저장 상태가 아니다. 세션이 끝나면 준비했던 Client·CA·PATH가 사라질 수 있다. 따라서 도구·공개 CA를 다시 준비하는 절차와 Password 직접 입력을 분리해 재현한다. Client 준비 완료는 DB 인증 성공과 다르며, 접속한 뒤 서버 버전·TLS·SQL 조회를 따로 확인한다.
+
 ## 5 Snapshot으로 DB를 복원하기
 
 Snapshot은 특정 시점의 DB 상태를 보관한 Backup이다. RDS의 Snapshot 복원은 기존 DB를 덮어쓰는 작업이 아니라 **새 DB Instance를 만드는 작업**이다. 새 Instance에는 별도 Endpoint가 생긴다. [AWS의 Snapshot 복원 설명](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_RestoreFromSnapshot.html)

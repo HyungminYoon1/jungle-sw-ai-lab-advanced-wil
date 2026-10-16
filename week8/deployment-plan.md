@@ -5,6 +5,8 @@
 > 진행 반영: 10/16 학습 회차, P 복귀·최종 대조는 10/17 KST — B :5 적용 뒤 같은 RDS V8을 유지한 P :4로 복귀했다. 일곱 Table의 전후 건수/Hash·Target Healthy·HTTPS Health UP과 AGENT 재로그인 뒤 기존 문의·새 실패 코드 두 건 조회를 확인했다. AI 비활성 유지
 > 계획 수정일: 2026-10-16 — 복원 실험을 마치고 Image Rollback의 현재 설정·DB 호환성을 점검. 임시 DB는 중지 후 최종 승인으로 삭제. 전체 AI 등 남은 범위·최소 비용·Log 365일 보존·기존 승인 경계 유지
 
+10/17에는 원본 RDS·Schema V8·계정·Network를 그대로 두고 Private CloudShell의 관리용 psql만 17.11로 맞췄다. 공식 Client를 별도 임시 경로에서 선택해 기존 16.15를 보존했으며 RDS 17.11·TLS 1.3·SQL/메타 명령과 일곱 Table Hash 불변을 확인했다. [접속 도구 보고서](./lab-reports/2026-10-17-cloudshell-psql17.md). 추가 유료 리소스·NAT·권한·App 설정 변경은 없다. 새 VPC 세션에서는 도구와 공개 CA를 다시 준비한다.
+
 ## 확인한 조건
 
 - AWS 계정과 기존 도메인이 있다.
