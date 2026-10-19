@@ -291,6 +291,40 @@ Processor는 `ScanTimeoutException`과 `InvalidScanResultException`을 타입으
 
 자동 Worker의 조립에는 `AiScannedInputPreparer`를 명시적으로 제공해야 한다. 기존 알려진 문자열 Guard만 있다고 빈 검사기를 자동 생성하지 않는다. 검사 전처리기가 없는데 Worker를 켰다면 Spring 객체 조립 단계에서 실패한다. 이는 이미 실행 중인 Job의 `FAILED`와 다른 실패다. Test 전용 빈 결과 Fixture가 Main의 기본 검사기가 되어서는 안 된다.
 
+## 로컬 검사 Process의 실행과 회수
+
+호출 Thread가 기다리기를 그만두는 것과 검사 프로그램이 종료되는 것은 다르다. Java가 로컬 검사기를 별도 Process로 실행했다면, Timeout 예외를 던진 뒤에도 그 Process가 CPU·메모리를 사용할 수 있다. 실행을 중단하고 자원을 회수했는지는 별도로 확인해야 한다.
+
+`ProcessAiPrivacyScanner`는 `AiPrivacyScanner` Port 뒤에서 단일 전경 Process를 실행하는 Transport다. 전경 실행은 결과를 반환한 뒤 그 실행이 끝나는 방식이며, 뒤에서 별도 작업을 계속하는 Daemon이나 자식 Process 실행은 이 Transport의 계약에 포함하지 않는다. 실제 탐지 모델을 선택하거나 Spring Bean을 자동 등록하는 클래스는 아니다.
+
+### 원문과 결과를 전달하는 통로
+
+| 통로 | 역할 |
+|---|---|
+| 표준 입력 `stdin` | 제목·본문을 UTF-8 JSON의 `title`·`body`로 전달 |
+| 표준 출력 `stdout` | 검사 결과 JSON만 반환 |
+| 표준 오류 `stderr` | 별도 크기 제한을 두고 버림. 앱 Log나 응답 JSON에 합치지 않음 |
+
+실행 파일과 인자 목록은 관리자가 고정한다. Shell을 추가하거나 문의 본문으로 명령을 만들지 않고, 원문은 명령행 인자·임시 파일·Log에 넣지 않는다. App의 API Key·DB 암호 같은 환경 변수도 자식에게 복사하지 않는다. 이 구성 자체가 검사 프로그램의 Network·파일 접근을 막는 Sandbox는 아니므로, 신뢰할 실행 파일과 Container 제한을 함께 사용해야 한다.
+
+Pipe는 두 Process 사이에서 데이터를 전달하는 통로이며 저장 공간이 무한하지 않다. 부모가 결과를 읽지 않으면 자식의 출력이 막힐 수 있고, 자식이 입력을 읽지 않으면 부모의 쓰기가 막힐 수 있다. 입력 쓰기·결과 읽기·오류 읽기·종료 대기를 별도 보조 Thread에서 진행하고 주 호출부는 하나의 제한 시간을 관리한다. [Java Process의 입출력 주의사항](https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Process.html)
+
+### JSON 출력과 정상 완료를 구분한다
+
+유효해 보이는 JSON이 출력됐더라도 그것만으로 결과를 사용하지 않는다. 응답을 끝까지 읽고, Process가 Exit Code 0으로 종료했으며, 시간 조건을 지켜야 Transport가 결과 문자열을 반환한다. 이후 전처리기가 JSON 필드·완료 여부·위치와 종류를 검사하고 마스킹한다.
+
+예를 들어 JSON을 출력한 뒤 멈춘 실행은 Timeout이다. JSON 뒤에 계속 데이터를 내보내 응답 상한을 넘으면 결과를 거부한다. 표준 출력에 정상 JSON이 있어도 Exit Code가 7이라면 실행 실패다. 종료 코드 0과 JSON 검증 통과도 탐지 정확성을 보장하지는 않는다.
+
+### 종료를 요청한 뒤 실제 종료를 확인한다
+
+Timeout·입출력 실패·호출 Thread 중단에서는 이번 호출이 직접 만든 `Process`만 종료한다. `python`이나 `java`라는 이름으로 다른 Process를 찾아 일괄 종료하지 않는다.
+
+`destroyForcibly()`를 호출한 직후에는 짧은 시간 동안 Process가 살아 있을 수도 있다. 종료 요청 뒤 실제 종료를 기다리고 Pipe와 보조 Thread까지 정리한다. [Java의 강제 종료 설명](https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Process.html#destroyForcibly())
+
+검사 제한 시간과 종료 확인 예산은 구분한다. 검사 시간이 끝나면 결과를 더 기다리거나 외부 AI로 전송하지 않고, 별도의 짧은 예산으로 회수를 확인한다. 확인하지 못했다면 고정 내부 오류로 거부하며 자원 회수 성공이나 빈 정상 결과로 취급하지 않는다. 호출 Thread의 Interrupt 표시도 보존한다.
+
+정상 종료와 자원 회수, 탐지 정확도, DB의 실패 저장은 각각 다른 검증이다. 실행 Test에서는 중단 뒤 Process와 보조 Thread가 남지 않는지 확인한다. Pipeline Test에서는 그 실패 뒤 원문·예약이 유지되고 제안이나 외부 요청이 생기지 않는지 확인한다. 실제 모델 평가는 이름 누락·오탐·관계 보존을 따로 확인한다.
+
 ## 전송 직전과 원문 보존을 함께 확인한다
 
 마스킹 함수의 반환값이 올바르더라도 요청 생성 코드가 DB 원문을 다시 넣으면 개인정보가 전송될 수 있다. 검사는 실제 HTTP 요청 Body를 대상으로 하고, 검사한 Body를 그대로 전송해야 한다. 이 확인도 사용하는 탐지 규칙과 모델의 범위 안에서 해석한다.
@@ -326,6 +360,9 @@ Job 처리 Test에서는 두 실패 코드와 `FAILED`의 실제 저장, 원문 
 21. 업무 마감·영향 인원을 보존하면서 이름을 가려야 하는 이유는 무엇인가? 탐지 누락을 숨기려고 문장 전체를 지우면 어떤 정보가 사라지는가?
 22. 두 사람의 이름을 같은 표시로 바꾸면 어떤 사건의 의미가 사라질 수 있는가? 같은 이름만으로 동일인을 확정할 수 있는가?
 23. 이름인지 일반명사인지 모호한 표현을 일반명사로 해석하는 것과, 검사 Timeout을 무시하는 것은 왜 다른가?
+24. 유효한 JSON을 출력한 Process가 종료하지 않거나 비정상 종료했다면 왜 결과를 채택하지 않는가?
+25. Timeout 예외 발생·강제 종료 요청·실제 Process 종료·보조 Thread 종료는 각각 어떤 사실을 뜻하는가?
+26. 검사 Process를 종료할 때 이름 대신 직접 만든 Process를 대상으로 삼아야 하는 이유는 무엇인가?
 
 ## 함께 읽을 자료
 

@@ -25,13 +25,17 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 
 19일에는 메모리·Log 문답과 실제 실행 상태·비용부터 확인한다. 먼저 개념을 짧게 설명하고 핵심 질문 2~3개로 이해를 확인한 뒤 작은 구현과 Test를 진행한다. 이미 확인한 로그인·복원·Image 전환 전체를 처음부터 반복하지 않는다.
 
-19일 재개에서는 가상/실제 메모리와 전체 AI의 Peak 측정 필요, HTTP/AI 시간과 Job/Attempt 구분을 문답으로 확인했다. 접수 Commit·Handler·Worker Log의 식별자를 로컬에서 연결하고 핵심 Test 44개·전체 Java 724개를 통과했다. 이어 실제 자식 JVM 강제 종료의 DB 연결·Lock 정리와 미완료 변경 취소, Commit된 Job·Attempt·예약 보존을 확인했고 재시작 Class 전체 6개가 통과했다. [학습노트](./study-notes/2026-10-19-study-questions.md)·[Log 검증](./lab-reports/2026-10-19-request-job-log-correlation.md)·[종료 관찰](./lab-reports/2026-10-19-process-db-connection-shutdown.md)에 연결한다. 새 Log의 Cloud 배포·현재 AWS 실행 상태/비용·AGENT App Metric·전체 AI의 자원 측정은 남아 있으며 관측 전체를 완료 처리하지 않는다.
+19일 재개에서는 가상/실제 메모리와 전체 AI의 Peak 측정 필요, HTTP/AI 시간과 Job/Attempt 구분을 문답으로 확인했다. 접수 Commit·Handler·Worker Log의 식별자를 로컬에서 연결하고 당시 핵심 Test 44개·전체 Java 724개를 통과했다. 이어 실제 자식 JVM 강제 종료의 DB 연결·Lock 정리와 미완료 변경 취소, Commit된 Job·Attempt·예약 보존을 확인했고 재시작 Class 전체 6개가 통과했다. [학습노트](./study-notes/2026-10-19-study-questions.md)·[Log 검증](./lab-reports/2026-10-19-request-job-log-correlation.md)·[종료 관찰](./lab-reports/2026-10-19-process-db-connection-shutdown.md)에 연결한다.
+
+이후 실제 AWS의 P Task 1개·Target Healthy·HTTPS Health UP·RDS 사용 가능, 명세의 AI 비활성과 AGENT HTTP Metric을 확인했다. 전체/Health/Job 조회의 집계 범위, 누적 Count·시간과 시간 구간 MAX, 조회 성공과 AI 성공의 차이를 구분했다. 새 Log의 Cloud 배포·대표 실패 추적·실제 누적 비용/저장량·전체 AI 자원 측정은 남아 있다.
+
+로컬 검사 실행에는 `ProcessAiPrivacyScanner`를 추가했다. 원문의 stdin 전달·Byte/시간 제한·해당 Process와 I/O Thread 회수, PostgreSQL의 정상 저장·실패 저장·원문/예약 보존을 확인했다. 핵심 150개·최종 전체 Java 754개가 통과했으며 [실행 보고서](./lab-reports/2026-10-19-privacy-process-transport.md)와 [결정 기록](../plan/decisions/0005-local-privacy-process-transport.md)에 범위를 정리했다. 검사 응답은 Test Fixture이며 실제 모델·관계 보존 계약·Linux 실행과 Main 조립은 미완료다. AWS·실제 AI·Image는 변경하지 않았다.
 
 | 순서 | 남은 학습과 구현 | 확인할 결과 |
 |---|---|---|
-| 1. 재개 기준과 메모리/Log | 현재 Task·Target·RDS·비용·도구 상태 확인, VmSize/RSS/cgroup·시작 Marker의 의미 문답 | 새 CloudShell 세션이면 psql 17·공개 CA를 다시 준비. Snapshot·Image 호환성의 기존 근거는 보존하고 확인하지 않은 현재 상태는 단정하지 않음 |
-| 2. 남은 관측·종료 | 허용된 Request/Job 식별자의 Log 연결·AGENT App Metric·HTTP/Job 지연 구분, 종료 중 DB Connection·Job/Attempt 결과 확인 | CLI의 시작 기록과 실제 응답·DB Commit·Job 결과를 따로 대조. Secret·원문은 Log에서 제외하고 정상/실패 한 조건씩 비교 |
-| 3. 실행용 개인정보 처리 | 한국어 탐지 후보·관계 보존 계약과 Adapter, JSON/위치·Code Point 검증, Timeout·Process 취소·자원 회수·Main Bean | 불필요한 실명은 가리고 인물 관계·복구 사실·인원/마감은 보존. 모호한 이름은 승인 정책을 따르며 검사 실패를 빈 정상 결과로 우회하지 않음 |
+| 1. 재개 기준과 비용 | 확인한 Task·Target·RDS/Health 기준선을 유지하고 미확인 실제 과금·저장량·보관 비용 검토 | 새 CloudShell 세션이면 psql 17·공개 CA를 다시 준비. Snapshot·Image 호환성의 기존 근거를 보존하고 확인하지 않은 현재 상태는 단정하지 않음 |
+| 2. 남은 관측·종료 | 새 Request/Job Log의 Cloud 배포·대표 실패 추적과 관측 근거 설명 | AGENT HTTP Metric과 Windows JVM의 DB Connection/Job 종료는 확인. Linux·Cloud의 남은 범위를 구분하고 Secret·원문을 제외한 정상/실패 대조 유지 |
+| 3. 실행용 개인정보 처리 | 한국어 탐지 후보·관계 보존 계약·모델 실행 설정, JSON/위치·Code Point 검증 유지, Linux 취소/회수·Main Bean | 로컬 Process Transport·실제 JVM/PG Test는 완료. 불필요한 실명은 가리되 관계·복구 사실·인원/마감은 보존하고 검사 실패를 빈 정상 결과로 우회하지 않음 |
 | 4. 전체 AI 조립·로컬 자원 | 개인정보 처리기→Provider→출력 검증→Worker→PostgreSQL을 실행 설정으로 조립. 통제된 정상/실패와 전체 CPU·Peak 메모리 측정 | 원문·현재 Attempt·예약·실행 기한 유지. 모델 단독이나 AI 비활성 App의 수치로 0.25 vCPU/512 MiB의 충분함을 대신 판단하지 않음 |
 | 5. Cloud 실제 AI | 검증 Image/명세·Secret 참조·필요 사양을 확인한 뒤 합성 접수 한 흐름을 실제 AI·RDS·AGENT 화면으로 연결 | 당일 호출 범위/비용·리소스 변경 승인 후 진행. 기존 PENDING의 기한·예약을 초기화하지 않고 새 검증 문의의 접수/처리/제안·Ticket OPEN을 대조 |
 | 6. DNS 비교 | 기존 Cloudflare 서비스 DNS는 유지하고 Route 53 Hosted Zone·NS·Alias와 직접 조회를 별도 실험 | 기존 메인 DNS 이전 없이 책임을 비교. 새 Zone 등 유료 리소스 생성은 범위·비용 승인 뒤 실행 |

@@ -1,4 +1,4 @@
-# 10월 19일 메모리 수치와 HTTP 및 AI 작업의 Log
+# 10월 19일 메모리와 HTTP 지표 및 개인정보 검사 Process
 
 ## 메모리의 숫자가 가리키는 대상을 구분한다
 
@@ -34,6 +34,30 @@ DB Commit 뒤 Log를 쓰기 전에 Process가 종료되면, 완료 Log가 없어
 
 재시작 Class 전체 6개가 통과했다. 실행 조건과 전후 대조는 [종료 관찰 보고서](../lab-reports/2026-10-19-process-db-connection-shutdown.md)에 정리했다.
 
+## 조회한 Job 상태와 현재 Worker 실행은 다르다
+
+DB에서 `RUNNING`을 읽었다고 실제 Worker가 지금도 작업 중이라고 확정할 수 없다. 이 상태는 실행권을 얻은 Transaction에서 저장한 업무 상태다. 마지막 조회 요청이 `RUNNING`을 다시 저장했다는 뜻도 아니다. 현재 조회 API는 DB 상태를 읽을 뿐 Worker의 생존 여부를 직접 검사하지 않는다.
+
+실행하던 App이 종료된 뒤 새 App이 같은 DB를 조회하면 기존 `RUNNING`이 보일 수 있다. 상태 조회가 HTTP 200이라는 사실은 조회가 성공했다는 뜻이며, 해당 AI 실행이 계속되고 있다는 근거와 구분한다.
+
+## HTTP 평균과 MAX를 읽는다
+
+AGENT 로그인 뒤 기존 P 배포본의 `http.server.requests`를 확인했다. 각 조회 시점의 전체 요청은 15,633회·평균 약 2.61ms, Health GET 200은 15,608회, Job 조회 GET 200은 6회·평균 약 110.04ms였다. 대부분이 짧은 Health 조회인 전체 평균을 특정 업무 API의 평균으로 사용하면 안 된다.
+
+Job 조회를 한 번 더 실행하자 횟수는 6회에서 7회, 누적 시간은 약 660.22ms에서 720.78ms로 바뀌었다. 추가된 약 60.56ms는 Job 상태 조회 HTTP의 서버 처리 시간이다. 읽힌 Job 1은 `PENDING`이고 제안은 없었으므로 AI 생성 시간으로 해석하지 않는다.
+
+처음 `MAX=0`을 보고 측정이 실패해 `null` 대신 0이 들어간 것일 수 있다고 추측했다. 하지만 `COUNT`·`TOTAL_TIME`은 누적값이고 `MAX`는 최근 시간 구간의 최대값이므로 기록 범위가 다르다. 과거 기록이 누적값에 남아 있어도 최근 측정값이 만료되면 MAX는 0이 될 수 있다. 새 조회 뒤 MAX는 약 60.56ms였다. [Micrometer Timer 설명](https://docs.micrometer.io/micrometer/reference/concepts/timers.html)
+
+HTTP 지표의 `SUCCESS`와 AI Job의 성공도 다르다. 상태 조회가 HTTP 200으로 `FAILED`를 반환할 수 있으므로 HTTP 오류율만으로 AI 실패율까지 알 수 없다. 이번 AWS 확인에서는 Task 1개 실행·P Image, ALB Target Healthy·HTTPS Health UP·RDS 사용 가능과 명세의 Provider/Worker 비활성을 확인했다. 새 로컬 Log Code를 Cloud에 배포한 결과는 아니다. 누적 실제 비용·저장량 검토는 남아 있다.
+
+## Timeout과 실제 검사 종료를 구분한다
+
+Timeout 오류가 나도 검사 Process가 계속 실행 중이라면 자원 회수는 끝난 것이 아니다. 종료할 대상은 이번 검사 요청에서 직접 시작한 Process이며, 같은 이름의 다른 Python·Java Process를 모두 종료해서는 안 된다.
+
+이 경계를 `ProcessAiPrivacyScanner`로 구현했다. 원문은 표준 입력의 JSON으로 전달하고 표준 출력·표준 오류는 별도로 읽는다. 입력·응답 크기와 실행 시간을 제한하며, 실패 시 직접 만든 Process의 실제 종료와 Stream·보조 Thread 회수를 확인한다. JSON을 출력했더라도 비정상 종료하거나 제한 시간 안에 끝나지 않으면 결과를 채택하지 않는다.
+
+실제 자식 JVM은 통제된 검사 응답을 만드는 Fixture였다. 이를 PostgreSQL 처리 흐름에 연결해 정상 저장과 Timeout·잘못된 응답의 실패 저장, 원문·예약 보존·외부 전송 차단을 확인했다. 실제 탐지 모델의 정확도 검증과 Main Bean 조립은 별도로 남아 있다. [실행 보고서](../lab-reports/2026-10-19-privacy-process-transport.md)에 핵심 150개·전체 Java 754개 통과와 실행 범위를 정리했다.
+
 ## 핵심 질문
 
 1. 가상 주소 공간이 3.34 GiB라면 512 MiB Container가 반드시 메모리 상한을 위반한 것인가?
@@ -45,7 +69,11 @@ DB Commit 뒤 Log를 쓰기 전에 Process가 종료되면, 완료 Log가 없어
 7. 재시작 후에는 어떤 DB 상태를 확인해야 하며, Log가 없다는 이유로 예약 횟수를 초기화하거나 외부 AI를 다시 호출해도 되는가?
 8. Connection 10개는 Job 10개나 Provider 10회 호출을 뜻하는가?
 9. App 종료 뒤 Lock이 풀린 것과 다음 Worker가 외부 호출 권한을 얻은 것은 같은가?
+10. DB의 `RUNNING`과 조회 HTTP 200만으로 해당 Worker가 살아 있다고 판단할 수 있는가?
+11. 누적 횟수·시간이 남아 있는데 MAX가 0일 수 있는 이유는 무엇인가? 전체 HTTP 평균을 업무 API의 평균으로 사용할 수 있는가?
+12. HTTP `SUCCESS`와 `job.status=FAILED`는 왜 동시에 나올 수 있는가?
+13. Timeout 예외만으로 검사 자원 회수가 끝났다고 볼 수 있는가? 왜 직접 만든 Process만 종료해야 하는가?
 
 ## 이어갈 학습
 
-Connection·Transaction·Job 상태와 Lock 해제·호출 허가의 차이를 설명해본다. 현재 Cloud 실행 상태·AGENT App Metric·비용을 확인하고 개인정보 처리 Adapter와 전체 AI 자원 측정을 이어간다. 복원·Image Rollback의 기존 검증을 처음부터 반복하지 않는다.
+실제 탐지 모델과 관계 보존 계약·실행 설정을 검토하고 Linux 종료·Main Bean 조립·전체 AI 자원 측정을 이어간다. Cloud 실행 상태와 AGENT HTTP Metric의 이번 근거는 유지하되 새 Log의 배포·대표 실패 추적과 실제 비용 검토는 남아 있다. 복원·Image Rollback의 기존 검증을 처음부터 반복하지 않는다.
