@@ -5,7 +5,7 @@
 > 상태: In Progress — HTTPS·DB 복원과 원본 복귀, A→P·B 적용·P Image 복귀 검증 완료. V8·업무 Hash 보존과 재로그인 조회를 확인했다. 전체 AI·나머지 마감은 미완료.
 > 초기 목표 기간: 2026-10-08 목요일 ~ 2026-10-12 월요일. 실제 연장을 반영해 Week 8–9 통합으로 변경
 > 초기 학습일: 10/8·10/9·10/10·10/12, 총 4일
-> 현재 진행: 10/16 회차의 연장 구간에서 A→P→B→P와 같은 RDS V8·업무 Hash·원래 실패 코드·재로그인 조회를 확인했다. 실제 10/17의 psql 17·TLS·메타 명령과 로컬 JVM `/proc`·cgroup·Log 관찰까지 16일 노트에 통합했다. Cloud AI Provider·Worker는 비활성이며 전체 AI·남은 관측·최종 마감은 미완료
+> 현재 진행: HTTPS 접수·RDS 복원·Image Rollback과 HTTP Metric을 확인했다. 개인정보 V2와 모델 고도화는 후속 과업으로 분리하고 실행 설정·Linux 종료·자원·Cloud 관측과 비용 검토로 복귀한다. Cloud 실제 AI·최종 마감은 미완료
 > 휴무와 재개: 10/17 토요일·10/18 일요일에는 새 학습을 배정하지 않는다. 남은 과업은 10/19 월요일부터 재개하며 종료일은 실제 잔여량을 보고 정한다.
 > 초기 순학습 시간 배분: 하루 10시간, 총 40시간. 휴식·식사와 단순 대기 시간 제외. 완료에 필요한 시간의 상한은 아님
 > 모드: `DEEP_LEARNING_MODE`
@@ -33,19 +33,38 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 
 이어 Exit Code의 기본 개념을 보완하고 다른 한국어 개인정보 후보를 같은 합성 12건으로 비교했다. 실제 Linux 모델 실험은 종료 코드 0·OOM 없음이었지만 후보 처리 흐름은 5건 통과·4건 BIO 거부였고 이름 누락·오탐이 남아 채택하지 않았다. 새 Decoder Test 18개와 기존 정책 Test 10개는 통과했다. [후보 비교 보고서](./lab-reports/2026-10-19-koelectra-privacy-probe.md)·[분리 평가 결정](../plan/decisions/0006-offline-privacy-model-comparison.md)에 기록한다. Linux에서 모델을 실행한 것과 Java Transport의 Linux 종료·회수, Main 연결·전체 AI 자원 검증은 다르다. 기존 Dataset·Java Main·AWS·배포 Image는 유지했다.
 
-인물 관계 V2는 등장 번호와 SAME·DIFFERENT·UNDETERMINED를 분리한 구조 검증기와 독립 치환기까지 구현했다. 명시적 판단 보류는 보존하고 관계 누락·참조 오류·모순은 거부한다. SAME 집합은 표시를 공유하며 다른 표시 사이의 미확인 관계도 남긴다. 치환 Test 37개와 앞선 핵심 402개를 합친 439개가 통과했다. [V2 검증 보고서](./lab-reports/2026-10-19-person-relation-v2-validation.md)의 PostgreSQL 결과는 V1 회귀이며 V2→DB 연결이 아니다. Guard/Provider·모델 정확도·Main 조립·Cloud 연결은 남아 있다. 실제 모델 후보의 5/12 성적과 직전 전체 Java 754개를 이 핵심 회귀 결과로 대체하지 않는다.
+인물 관계 V2는 등장 번호와 SAME·DIFFERENT·UNDETERMINED를 분리한 구조 검증기와 독립 치환기까지 구현했다. 치환 Test 37개와 앞선 핵심 402개를 합친 439개가 통과했다. [V2 검증 보고서](./lab-reports/2026-10-19-person-relation-v2-validation.md)의 PostgreSQL 결과는 V1 회귀이며 V2→DB 연결이 아니다. 실제 모델 후보의 5/12 성적과 직전 전체 Java 754개도 각각의 실행 근거로 유지한다. 이후 V2 전송 연결과 모델 정확도 고도화는 아래 후속 과업으로 분리한다.
+
+### 배포 학습으로 복귀하는 기준
+
+8–9주차의 중심은 같은 업무 코드를 Cloud에서 실행하고 실패·관측·복구를 이해하는 것이다. 10/19 사용자 승인에 따라 인물 관계 V2와 개인정보 모델 고도화를 배포의 공통 선행 조건에서 분리한다. 기존 구현·정책·평가 결과는 보존하며 완료로 바꾸거나 버리지 않는다. [배포와 후속 고도화의 분리 결정](../plan/decisions/0009-deployment-first-and-deferred-privacy-enhancement.md)을 따른다.
+
+최소 선행 작업은 실행할 부품의 명시적 조립, 필수 설정 누락의 기동 거부, Linux에서의 Process·Pipe·Timeout/회수, 제한 자원 아래의 동작 확인이다. 인물 관계 판정·새 Placeholder·새 모델의 일반 정확도 개선을 이 작업 앞에 계속 추가하지 않는다.
+
+실제 AI 배포 실험은 고정 합성 문의만 대상으로 분리한다. 합성 전용 구성은 허용한 입력과 실행 범위를 강제해야 하며, 임의 문의를 빈 검사기로 통과시키는 Main 기본값이 되어서는 안 된다. 통제된 검사 응답의 실행 검증과 실제 탐지 품질은 따로 기록한다. 일반 입력의 AI 활성화·실사용 개인정보 보호 완료를 이 실험의 성공으로 주장하지 않는다.
+
+기존 V1 JSON·위치 검증과 Known Fragment Guard, 실패 시 외부 전송 중단, Ticket·Message·예약·현재 Attempt 보존은 유지한다. 전체 AI 연결 전에 필요한 최소 구성과 실제 전송 직전 Body 검사는 확인하되, V2를 먼저 연결할 의무는 없다. 외부 AI·AWS 변경은 그날의 실행 범위와 비용을 별도로 확인한다.
 
 | 순서 | 남은 학습과 구현 | 확인할 결과 |
 |---|---|---|
-| 1. 재개 기준과 비용 | 확인한 Task·Target·RDS/Health 기준선을 유지하고 미확인 실제 과금·저장량·보관 비용 검토 | 새 CloudShell 세션이면 psql 17·공개 CA를 다시 준비. Snapshot·Image 호환성의 기존 근거를 보존하고 확인하지 않은 현재 상태는 단정하지 않음 |
-| 2. 남은 관측·종료 | 새 Request/Job Log의 Cloud 배포·대표 실패 추적과 관측 근거 설명 | AGENT HTTP Metric과 Windows JVM의 DB Connection/Job 종료는 확인. Linux·Cloud의 남은 범위를 구분하고 Secret·원문을 제외한 정상/실패 대조 유지 |
-| 3. 실행용 개인정보 처리 | 한국어 탐지 후보·관계 보존 계약·모델 실행 설정, JSON/위치·Code Point 검증 유지, Linux 취소/회수·Main Bean | 로컬 Process Transport·실제 JVM/PG Test는 완료. 불필요한 실명은 가리되 관계·복구 사실·인원/마감은 보존하고 검사 실패를 빈 정상 결과로 우회하지 않음 |
-| 4. 전체 AI 조립·로컬 자원 | 개인정보 처리기→Provider→출력 검증→Worker→PostgreSQL을 실행 설정으로 조립. 통제된 정상/실패와 전체 CPU·Peak 메모리 측정 | 원문·현재 Attempt·예약·실행 기한 유지. 모델 단독이나 AI 비활성 App의 수치로 0.25 vCPU/512 MiB의 충분함을 대신 판단하지 않음 |
-| 5. Cloud 실제 AI | 검증 Image/명세·Secret 참조·필요 사양을 확인한 뒤 합성 접수 한 흐름을 실제 AI·RDS·AGENT 화면으로 연결 | 당일 호출 범위/비용·리소스 변경 승인 후 진행. 기존 PENDING의 기한·예약을 초기화하지 않고 새 검증 문의의 접수/처리/제안·Ticket OPEN을 대조 |
+| 1. Linux 실행과 회수 | 기존 Process Transport를 Linux에서도 실행해 정상 완료·실패·Timeout·호출 중단·소유 Process만 회수 검증 | 기존 Windows Test와 Linux 실행을 구분. 실제 모델·Provider·DB 없이도 실행 환경 차이를 확인할 수 있음 |
+| 2. 최소 실행 설정 | 합성 전용 입력 범위·검사 실행 설정·V1 검증/Guard·Provider·Worker·Secret을 명시적으로 조립 | 누락 시 기동 거부·기본 AI 비활성 유지. 일반 입력을 빈 정상 검사로 우회하지 않고 V2는 연결하지 않음 |
+| 3. 전체 조립과 자원 | 위 구성과 PostgreSQL로 정상·실패 흐름, CPU·메모리 현재값/Peak·Timeout 뒤 자원 회수 측정 | 원문·현재 Attempt·예약·처리 기한 유지. 실행한 구성만 평가하고 미탑재 모델의 자원까지 검증했다고 하지 않음 |
+| 4. Cloud 관측과 비용 | 새 Request/Job Log·대표 실패·HTTP/AI 지표와 실제 과금·저장/보관 비용 확인 | 확인한 Task·Target·RDS 기준을 재확인하며 전체 복원·Rollback을 반복하지 않음. 새 배포는 CI·Image Digest·기존 승인 범위 확인 후 실행 |
+| 5. Cloud 실제 AI | 합성 전용 구성·검증 Image/명세·Secret 참조·필요 사양 확인 후 실제 AI·RDS·AGENT 화면 연결 | 당일 호출 범위/비용·리소스 변경 승인 후 진행. 임의 사용자 원문은 대상에서 제외하고 기존 PENDING의 기한·예약을 초기화하지 않음 |
 | 6. DNS 비교 | 기존 Cloudflare 서비스 DNS는 유지하고 Route 53 Hosted Zone·NS·Alias와 직접 조회를 별도 실험 | 기존 메인 DNS 이전 없이 책임을 비교. 새 Zone 등 유료 리소스 생성은 범위·비용 승인 뒤 실행 |
 | 7. 최종 마감 | 변경 Code의 Local/CI 회귀·Cloud Browser 재검증, 자료 없는 설명·직접 설정 수정·재현/비용/보관 검토·통합 WIL | 실제 결과와 미완료 상태를 유지. 블로그/포럼은 작성자 확인 뒤 각각 완료 처리 |
 
-2번과 6번처럼 독립적으로 가능한 배포 실험은 개인정보 모델 검토와 병행할 수 있다. 다만 5번의 실제 외부 전송 전에는 3·4번을 마친다. 모델 품질이 부족하면 채택 보류·남은 실패 Case를 명시하고 전송 검사를 생략하지 않는다.
+4번과 6번처럼 독립적으로 가능한 배포 실험은 앞선 설정·자원 검증과 병행할 수 있다. 5번 전에는 1~3번에서 그 실험 구성의 실행·입력 범위·전송 검사를 확인한다. 후보 모델의 채택 보류를 해제하거나 개인정보 검사를 생략한 것으로 기록하지 않는다.
+
+### 배포 마감 이후의 후속 과업
+
+| 후속 과업 | 보존한 결과 | 재개할 때 확인할 것 |
+|---|---|---|
+| 인물 관계 V2 연결 | 독립 구조 검증·치환과 439개 핵심 회귀 | Guard와 생성 표시의 충돌, 관계를 잃지 않는 Provider 입력, 실제 전송 Body·DB/Worker 회귀 |
+| 개인정보 모델 고도화 | 기존 두 후보의 고정 합성 평가·누락/오탐과 채택 보류 | 명시적 채택 기준·일반화 평가·관계 보존·License/의존성·모델을 포함한 전체 자원 |
+
+후속 과업은 일반 입력의 AI 처리를 확장하기 전에 검토한다. 배포 학습의 남은 관측·DNS·회귀·WIL을 이 고도화 때문에 계속 미루지 않는다. Week 10–12 취업 일정과 Project 주 6시간 상한을 유지하며 후속 시작 날짜는 자동 확정하지 않는다.
 
 **완료한 기준선:** HTTPS 로그인·Role·CSRF 접수/SQL Row, 별도 Snapshot/RDS의 SQL/App 복원·원본 복귀, A→P→B→P와 V8/업무 Hash·원래 실패 코드 보존, psql 17.11 TLS와 로컬 Process/Log 관찰이다. 복원·Rollback은 필요 변경의 회귀 범위로만 확인하며 새 전체 재실험을 자동 배정하지 않는다.
 
@@ -83,7 +102,7 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 |---|---|---|
 | 업무 흐름 | 최초 Message·Job의 접수 원자성, 별도 AI 처리·제안 저장, AGENT 조회 구현 | 같은 Controller·Service·Repository 경계를 유지해 배포 |
 | 회귀 근거 | Java 461개·JavaScript 145개·ESLint, 별도 실제 Browser·AI 연결 실험 | Container·CI·Cloud 변경 뒤 다시 실행하고 환경별 결과를 구분 |
-| 실제 AI 실행 | 격리된 실험에서 Spring AI와 자동 Worker 연결 확인 | Test 전용 구성이 아닌 배포용 Provider·개인정보 처리·검증기·Worker 설정 연결 |
+| 실제 AI 실행 | 격리된 실험에서 Spring AI와 자동 Worker 연결 확인 | 입력 범위를 강제한 합성 전용 배포 실험에서 Provider·검증/Guard·Worker·Secret 연결. 일반 입력의 개인정보 품질은 후속 Gate |
 | 사용자와 Session | `local-browser`의 In-memory 사용자와 서버 메모리 Session | 학습용 배포 계정·Secret 주입을 분리하고 재시작 후 재로그인 확인 |
 | 데이터 | PostgreSQL Adapter·Flyway와 같은 DB를 유지한 Process 재시작 검증 | Compose Container 재생성·Volume 유지, 같은 RDS를 유지한 Application 재배포와 Backup 확인 |
 | 배포·관측 | Dockerfile·Compose, 최소 Health·HTTP Metric·종료 설정과 로컬 Test 확인. 실제 Actions 실패·복구·OIDC 인증·ECR 업로드 확인 | 권한 거부·Cloud 실행·관측과 HTTPS 검증을 이어간다 |
@@ -118,6 +137,8 @@ OIDC Provider·ECR·업로드 Role은 초기 설정 승인을 받아 생성했�
 ### 통합 과정에서 추가하지 않을 것
 
 후속 대화·공식 답변·검색·알림·Dashboard·UI 장식, 여러 Provider 비교, 새로운 AI 평가 Dataset은 추가하지 않는다. Kubernetes·Terraform·Auto Scaling·WAF·CloudFront·분산 Queue·전체 관측 Stack·Multi-AZ 고가용성·무중단 배포는 기존 제외 범위를 유지한다.
+
+인물 관계 V2의 Guard/Provider 연결과 개인정보 모델의 추가 비교·정확도 개선도 현재 배포 마감의 선행 과업으로 추가하지 않는다. 기존 보호 규칙을 없애는 것이 아니라, 제한된 합성 배포 실험과 일반 입력으로의 확장을 분리한다.
 
 ## 학습 회차별 실행 기록
 
@@ -267,7 +288,7 @@ Docker·Compose의 기초와 저장·재시작·설정 비교까지 진행했다
 | 10/15 목 회차 | 실제 진행 분량 기록 | HTTPS 로그인·Cookie·CSRF 접수/SQL Row, HTTP 301·개인정보 검증/후보 평가·Cloud Log/Metric, Task 교체 권한 준비 | 10/15 노트·보고서 정리. 자정 이후 Version 6의 실제 적용일은 10/16 유지. Task 교체·재로그인 미실행 |
 | 10/16 금 회차와 연장 실습 | 실제 진행 분량 기록 | 중지 환경 재개·Snapshot 별도 복원·원본 복귀·B→P/V8 보존 → psql 17·Process/Log 관찰 | 실제 실행일 17일은 보고서에 두고 16일 노트에 통합. 메모리/Log 설명 검증·전체 AI·남은 관측/마감은 미완료 |
 | 10/17 토·10/18 일 | 휴무 | 새 학습·구현·평가 배정 없음 | 16일 회차의 기록 정리와 실행 보고서 날짜를 별도 학습일로 세지 않음 |
-| 10/19 월 재개 | 취업 일정·가용시간 확인 후 배치 | 메모리/Log 문답·실행/비용 기준 → 남은 관측·개인정보 처리와 전체 AI 선행 구현 | 위 재개 순서대로 작은 Block 진행. 한 번에 전체 마감을 강제하지 않고 실제 잔여량을 갱신 |
+| 10/19 월 재개 | 취업 일정·가용시간 확인 후 배치 | 메모리/Log 문답·실행 기준 → Linux 실행/회수·최소 조립·자원·관측/비용 → 합성 전용 전체 AI | V2와 모델 고도화는 후속으로 분리. 작은 배포 Block을 검증하고 실제 잔여량을 갱신 |
 
 ### 10월 8일 목요일 실행 환경과 데이터 보존
 
@@ -575,6 +596,7 @@ ALB는 중지 기능이 없어 유지했다. RDS 저장/백업·ECR Image·Log �
 | 2026-10-16 | 10/15에 업무 접수·Cloud 관측·전체 AI·복구를 이어가던 상태 | 10/15 노트를 작성하고 실제 교체 전 중단 지점을 기록. 미실행 Task 교체·재로그인과 나머지 전체 범위를 10/16으로 이동 | 사용자 기록·재개 요청. 정책 V6 적용·V1 보관/삭제는 완료, V2~5 유지. Task·DB·DNS·Secret은 변경하지 않고 당일 문서 작업만 진행. 학습량과 최소 비용 원칙 유지 |
 | 2026-10-17 | DB 복원 뒤 A→P→B 전환, 관리 Client 16·서버 17의 차이 | P Image 복귀·V8/데이터 보존 확인, 공식 psql 17 분리·실제 TLS 접속과 로컬 Process/Log 관찰 | 사용자 Client만 교체·목적별 Commit·학습 계속 요청. RDS/IAM/Network는 그대로 두며 전체 AI·남은 관측·Route 53·마감 범위 유지. 추가 Push·Cloud 활성화는 하지 않음 |
 | 2026-10-17 | Week 8만 연장, 17일 별도 노트와 학습일 표시 | Week 8–9·`week8-9`로 통합, 16일 연장 회차에 노트 통합·실제 실행일 보존. 17/18 휴무·19일 재개 | 사용자 기간·폴더·계획 조정 요청. 전 학습 범위와 미완료 상태 유지, Week 10 취업 Baseline 합류·Week 11/12 유지. 경로 이동·상위 계획·재개 순서를 목적별 수정/Commit |
+| 2026-10-19 | V2 인물 관계·개인정보 모델 고도화가 전체 AI 배포의 선행 작업으로 확대됨 | V2·모델 고도화는 후속으로 보존하고 Linux 실행/회수·최소 조립·자원·관측/비용·합성 전용 AI 배포로 복귀 | 사용자 분리·계획 수정 승인. 기존 V1 검증/Guard·실패 시 전송 중단·원문/예약/실행권 보존, 일반 입력 비활성과 별도 비용·AWS 승인 유지 |
 
 ## 관련 기준
 
@@ -583,5 +605,6 @@ ALB는 중지 기능이 없어 유지했다. RDS 저장/백업·ECR Image·Log �
 - [학습 및 기술 콘텐츠 계획](../plan/learning-and-content-plan.md)
 - [깊은 수직 학습 범위 결정](../plan/decisions/0002-depth-first-ai-assisted-expansion.md)
 - [8–9주차 통합과 취업 일정 조정](../plan/decisions/0004-combined-week8-9-deployment-learning.md)
+- [배포 검증과 개인정보 후속 고도화 분리](../plan/decisions/0009-deployment-first-and-deferred-privacy-enhancement.md)
 - [Week 7 완료 결과](../week7/wil.md)
 - [10월 14일 RDS 조회 권한과 생성 요청 진단](./lab-reports/2026-10-14-rds-console-permission-diagnostics.md)

@@ -1,7 +1,9 @@
 # 개인정보 검사 결과의 인물 관계 계약 초안
 
-> 상태: Draft — 독립 구조 검증·관계 보존 치환은 Test 완료. Guard·Provider 전송 계약과 Main 조립은 검토 중
+> 상태: Deferred — 독립 구조 검증·관계 보존 치환은 Test 완료. Guard·Provider 전송 계약과 Main 조립은 배포 마감 이후 후속 과업
 > 기준: [ADR 0003의 실명 최소화와 관계 보존 정책](./decisions/0003-contextual-person-masking.md)
+
+10/19 승인한 [배포 우선 결정](./decisions/0009-deployment-first-and-deferred-privacy-enhancement.md)에 따라 후속 구현을 분리한다. 계약과 구현·평가 근거는 보존하며, 제한된 합성 배포 실험을 위해 V2를 먼저 연결하지 않는다. 일반 입력으로 AI 처리를 확장할 때 다시 검토한다.
 
 ## 목적과 현재 계약
 
