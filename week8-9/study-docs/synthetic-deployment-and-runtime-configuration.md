@@ -52,6 +52,20 @@ App JVM과 검사 자식 JVM은 서로 다른 Process다. 자식에 `-Xmx64m`을
 
 Task·Container 크기를 정할 때는 App·Worker·검사 Process를 함께 실행한 현재 메모리와 Peak를 확인해야 한다. CPU 제한·반복 처리·Timeout 뒤 실제 Process와 Thread 회수도 함께 관찰한다. 모델이 없는 합성 실험의 측정값은 향후 실제 모델을 넣은 구성의 사양을 보장하지 않는다.
 
+### 모델을 어디에서 실행하는지 구분한다
+
+여기서 추가 자원 검증이 필요한 모델은 Task 안에서 실행할 로컬 개인정보 탐지 모델이다. 합성 검사기는 정해 둔 이메일 위치만 반환하므로 모델 가중치를 읽거나 추론하지 않는다. 이를 실제 로컬 모델로 교체하면 모델 로딩과 추론의 RAM·CPU가 추가되므로 같은 입력 길이만으로 자원 사용량이 같다고 볼 수 없다.
+
+반면 OpenAI API의 요약 모델은 Provider 서버에서 실행한다. Helpdesk Task가 그 모델의 가중치를 다운로드해 올리는 것은 아니다. Task에서는 HTTP 요청·응답 처리, JSON 검증과 저장에 필요한 자원을 사용한다. 외부 API를 호출하는 경우와 로컬 모델을 함께 실행하는 경우의 Task 사양을 구분해야 한다.
+
+### 현재 사용량과 최고 사용량을 구분한다
+
+`memory.current`는 읽는 시점의 cgroup 사용량이고, `memory.peak`는 최고 사용량이다. 부모 App과 자식 JVM이 같은 Container에 있으면 해당 cgroup이 관리하는 메모리를 함께 관찰할 수 있다. Heap 밖의 메모리와 파일 Cache도 고려해야 한다. [Linux cgroup v2 메모리 Counter](https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html#memory-interface-files)
+
+검사 자식이 종료된 뒤 현재 사용량이 줄어도 Peak는 높은 값으로 남을 수 있다. 처리 전보다 사용량이 조금 높다는 사실만으로 누수라고 단정하지 않는다. 초기화가 늦게 이루어지는 Client·JIT·Cache·아직 회수하지 않은 객체 등이 있을 수 있다. 반복 처리 추세와 실제 살아 있는 Process·Thread를 함께 확인한다.
+
+Memory와 Memory+Swap 상한을 같은 값으로 주면 추가 Swap을 허용하지 않는 Docker 설정이 된다. 한도 안에서 한 번 성공한 결과만으로 장시간·동시 처리까지 보장하지는 않는다. [Docker 메모리와 Swap 제한](https://docs.docker.com/engine/containers/resource_constraints/#--memory-swap-details)
+
 ## 검증 결과를 어디까지 읽어야 하는가
 
 Unit Test는 입력 제한과 개별 규칙을 확인한다. JAR를 패키징한 뒤의 Integration Test는 JAR 안의 자식 실행과 Spring 개인정보 Bean·수동 Worker Tick·실제 PostgreSQL·로컬 HTTP를 연결한다.
@@ -65,3 +79,5 @@ Unit Test는 입력 제한과 개별 규칙을 확인한다. JAR를 패키징한
 3. 외부 요청 0회인데 Attempt·예약은 1회로 남을 수 있는가? 이때 접수 원문은 어떻게 되는가?
 4. 자식의 `-Xmx64m`은 App과 자식 Process를 합친 전체 메모리 상한인가?
 5. 수동 Worker Tick과 로컬 HTTP Test의 성공으로 자동 Scheduler·실제 AI·Cloud 실행까지 확인했다고 말할 수 있는가?
+6. 로컬 개인정보 모델과 외부 OpenAI 모델은 각각 어느 서버의 RAM·CPU로 추론하는가?
+7. 자식 Process가 종료됐는데 Peak가 그대로 남았다는 이유만으로 메모리 누수라고 볼 수 있는가?

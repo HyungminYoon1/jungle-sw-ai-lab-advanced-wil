@@ -112,6 +112,18 @@ Exit Code가 7이라는 말만으로는 어떤 오류인지 알기 어려웠다.
 
 전체 `verify`는 Java 1,004개와 패키징 후 2개, JavaScript는 268개가 통과했다. 마지막으로 Provider 호출 횟수와 HTTP 횟수를 각각 확인하도록 통합 Test 두 Case를 보강해 다시 통과했다. [실행 보고서](../lab-reports/2026-10-19-synthetic-deployment-configuration.md)에 Windows 자식 JVM·수동 Tick·로컬 응답과 미실행 Linux Image·전체 자동 조립·실제 AI·Cloud를 구분했다.
 
+## 모델 실행 위치와 전체 자원을 구분한다
+
+자식 `-Xmx64m`이 App 전체 메모리를 제한하느냐는 질문에는 아니라고 답했다. 합성 검사기의 측정값으로 실제 모델까지 포함한 Task 사양을 확정할 수 있느냐는 질문에는 아직 잘 모르겠다고 답했다.
+
+추가 설명에서는 모델의 실행 위치부터 구분했다. Task 안에서 실행할 로컬 개인정보 탐지 모델은 해당 Task의 RAM·CPU를 사용한다. 외부 OpenAI 요약 모델은 Provider 서버에서 실행하며 가중치를 Helpdesk Task에 올리지 않는다. 합성 검사기는 정해 둔 위치만 반환하므로 로컬 모델의 로딩·추론 자원이 빠져 있다.
+
+새 Image에서 자동 Worker·합성 검사 자식 JVM·PostgreSQL을 연결한 독립 실험 두 번을 진행했다. 외부 AI 대신 로컬 응답을 사용했다. 각 실행에서 문의 세 건은 자동 성공하고 범위 밖 한 건은 전송 없이 실패했다. 원문·합성 작성자·예약은 유지했다. Service 직접 접수이므로 인증 작성자 선택이나 Browser 흐름을 새로 검증한 것은 아니다.
+
+0.25 CPU·512 MiB에서 최고 메모리는 310.79·290.21 MiB였고 OOM은 없었다. 처리 뒤 검사 자식 Process와 개인정보 I/O Thread도 남지 않았다. 현재 사용량이 줄어도 Peak는 이전 최고값으로 남을 수 있고, 처리 전후의 차이만으로 메모리 누수나 개선 효과를 단정하지 않는다.
+
+실제 값과 측정 범위는 [자원 실행 보고서](../lab-reports/2026-10-19-synthetic-runtime-resources.md), 실행 위치·메모리 해석은 [개념 자료](../study-docs/synthetic-deployment-and-runtime-configuration.md)에 정리했다. Java 관련 회귀 124개·JavaScript 전체 276개도 통과했다. 이번에는 전체 Java·원격 CI·실제 AI·AWS를 다시 실행하지 않았다.
+
 ## 핵심 질문
 
 1. 가상 주소 공간이 3.34 GiB라면 512 MiB Container가 반드시 메모리 상한을 위반한 것인가?
@@ -137,7 +149,9 @@ Exit Code가 7이라는 말만으로는 어떤 오류인지 알기 어려웠다.
 21. 개인정보 Bean을 등록하면 Provider와 Worker도 자동으로 실행되는가?
 22. 검사 거부로 외부 요청이 0회인데도 Attempt·예약은 1회로 남을 수 있는가? 접수 원문도 취소해야 하는가?
 23. 자식 JVM의 `-Xmx64m`만으로 App·자식을 합친 전체 메모리 상한을 판단할 수 있는가?
+24. 로컬 개인정보 모델과 외부 OpenAI 모델의 추론 자원은 각각 어디에서 사용되는가?
+25. 합성 검사기의 Peak로 실제 로컬 모델을 포함한 사양을 확정할 수 있는가? 현재 메모리와 Peak의 차이는 무엇인가?
 
 ## 이어갈 학습
 
-다음은 합성 전용 설정을 포함한 새 Image의 전체 자동 조립·실행 자원과 새 Log의 Cloud 검증이다. 이번에 확인한 수동 Worker Tick·로컬 HTTP와 자동 Scheduler·실제 AI·Cloud 결과를 구분한다. 기존 V1 검증·Guard·실패 차단을 유지하며 V2·추가 모델 고도화는 배포 마감 뒤 후속으로 남긴다. 실제 비용·보관량과 남은 DNS·회귀·WIL도 확인한다. 복원·Image Rollback의 기존 검증을 처음부터 반복하지 않는다.
+다음은 남은 통합 Timeout/비정상 종료의 자원 확인, 새 Log의 Cloud 검증과 실제 비용·보관량, 남은 DNS·회귀·WIL이다. 새 Image의 합성 구성에서는 자동 Worker·자식 정상 실행과 자원을 확인했지만 일반 Provider Configuration/실제 Key·로컬 개인정보 모델·실제 AI·Cloud의 결과와는 구분한다. V1 검증·Guard·실패 차단을 유지하며 V2·모델 고도화는 후속으로 남긴다. 새 Push·CI/ECR·Cloud 변경은 실행 범위를 확인한 뒤 진행하며 복원·Image Rollback 전체를 처음부터 반복하지 않는다.

@@ -43,7 +43,9 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 
 첫 선행 검증으로 기존 Process Test 24개를 실제 Linux에서 CPU 1개와 0.25개로 각각 통과했다. 관련 Windows 63개·JavaScript 전체 268개도 통과했다. [Linux 실행 보고서](./lab-reports/2026-10-19-linux-process-transport.md)에 현재 Class의 Mount 실행과 배포 Image·전체 App 검증의 차이를 정리했다.
 
-이어 [고정 합성 전용 구성](../plan/decisions/0010-fixed-synthetic-deployment-configuration.md)의 조건부 개인정보 Bean·입력 제한·같은 JAR의 자식 실행을 연결했다. 새 Unit Test 41개와 실제 JAR·Spring 개인정보 Bean·수동 Worker Tick·PostgreSQL·로컬 HTTP의 두 Case가 통과했다. 범위 밖 입력은 외부 전송 없이 기존 실패 코드로 기록하고 원문·예약을 유지했다. 전체 Java `verify` 1,004개 + 패키징 후 2개, JavaScript 268개도 통과했다. [합성 구성 실행 보고서](./lab-reports/2026-10-19-synthetic-deployment-configuration.md)에 근거와 재검증을 정리한다. Provider·Worker의 기본 비활성과 V1 검증/Guard를 유지하며 V2·모델은 추가 연결하지 않았다. 다음은 새 Image의 전체 자동 조립과 자원 검증이다.
+이어 [고정 합성 전용 구성](../plan/decisions/0010-fixed-synthetic-deployment-configuration.md)의 조건부 개인정보 Bean·입력 제한·같은 JAR의 자식 실행을 연결했다. 새 Unit Test 41개와 실제 JAR·Spring 개인정보 Bean·수동 Worker Tick·PostgreSQL·로컬 HTTP의 두 Case가 통과했다. 범위 밖 입력은 외부 전송 없이 기존 실패 코드로 기록하고 원문·예약을 유지했다. 전체 Java `verify` 1,004개 + 패키징 후 2개, JavaScript 268개도 통과했다. [합성 구성 실행 보고서](./lab-reports/2026-10-19-synthetic-deployment-configuration.md)에 근거와 재검증을 정리한다. Provider·Worker의 기본 비활성과 V1 검증/Guard를 유지하며 V2·모델은 추가 연결하지 않았다.
+
+새 Image에서 자동 Worker·합성 검사 자식·PostgreSQL·통제된 Spring AI HTTP를 연결한 자원 실험 두 번도 통과했다. 0.25 CPU·512 MiB의 최고 메모리는 310.79·290.21 MiB였고 OOM은 없었다. 각 실행의 자동 성공 3건·범위 밖 실패 1건, 원문/예약 보존·자식 회수를 확인했다. [자동 실행 자원 보고서](./lab-reports/2026-10-19-synthetic-runtime-resources.md)에 Main JAR 실행·Test 전용 Provider Factory와 일반 Provider 구성의 차이를 기록했다. 이번 관련 Java 124개·JavaScript 전체 276개도 통과했다. 다음은 새 Log의 Cloud 확인·실제 비용/보관량과 남은 DNS 비교이며 실제 AI 활성화는 별도 실행 범위를 확인한다.
 
 실제 AI 배포 실험은 고정 합성 문의만 대상으로 분리한다. 합성 전용 구성은 허용한 입력과 실행 범위를 강제해야 하며, 임의 문의를 빈 검사기로 통과시키는 Main 기본값이 되어서는 안 된다. 통제된 검사 응답의 실행 검증과 실제 탐지 품질은 따로 기록한다. 일반 입력의 AI 활성화·실사용 개인정보 보호 완료를 이 실험의 성공으로 주장하지 않는다.
 
@@ -53,7 +55,7 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 |---|---|---|
 | 1. Linux 실행과 회수 | 기존 Process 24개를 CPU 1개·0.25개에서 각각 통과. 정상/비정상·Timeout·중단·다른 Process 보존·회수 확인 | 이 독립 실행 Gate는 확인. Spring App·Worker·실제 모델·DB를 포함한 전체 실행/자원은 2~3번에서 검증 |
 | 2. 최소 실행 설정 | 합성 전용 입력 제한·검사 JAR/시간 필수 설정·V1 Preparer/Guard Bean을 구현. Unit 41개·패키징 후 PG 2개 통과 | Provider·Worker 스위치는 별도 유지. 수동 Tick·로컬 HTTP 검증과 전체 자동 조립·실제 AI를 구분하며 후자는 미완료 |
-| 3. 전체 조립과 자원 | Provider·Worker·Secret·합성 검사 구성과 PostgreSQL을 자동 조립해 정상·실패 흐름, CPU·메모리 현재값/Peak·Timeout 뒤 자원 회수 측정 | 원문·현재 Attempt·예약·처리 기한 유지. 실행한 구성만 평가하고 미탑재 모델의 자원까지 검증했다고 하지 않음 |
+| 3. 전체 조립과 자원 | 새 Image의 자동 Worker·합성 검사·PG·통제된 Spring AI 구성 두 번 통과. 0.25 CPU/512 MiB·최고 310.79/290.21 MiB·OOM 없음·정상 처리 뒤 자식 회수 확인 | 전체 App 구성의 고의 Timeout·비정상 종료 뒤 자원 측정은 남음. 독립 Transport의 Linux Timeout/회수 Test와 구분. 일반 Provider/실제 Key·Cloud는 5번에서 확인하고 미탑재 모델의 자원으로 확대하지 않음 |
 | 4. Cloud 관측과 비용 | 새 Request/Job Log·대표 실패·HTTP/AI 지표와 실제 과금·저장/보관 비용 확인 | 확인한 Task·Target·RDS 기준을 재확인하며 전체 복원·Rollback을 반복하지 않음. 새 배포는 CI·Image Digest·기존 승인 범위 확인 후 실행 |
 | 5. Cloud 실제 AI | 합성 전용 구성·검증 Image/명세·Secret 참조·필요 사양 확인 후 실제 AI·RDS·AGENT 화면 연결 | 당일 호출 범위/비용·리소스 변경 승인 후 진행. 임의 사용자 원문은 대상에서 제외하고 기존 PENDING의 기한·예약을 초기화하지 않음 |
 | 6. DNS 비교 | 기존 Cloudflare 서비스 DNS는 유지하고 Route 53 Hosted Zone·NS·Alias와 직접 조회를 별도 실험 | 기존 메인 DNS 이전 없이 책임을 비교. 새 Zone 등 유료 리소스 생성은 범위·비용 승인 뒤 실행 |

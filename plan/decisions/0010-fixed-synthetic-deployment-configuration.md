@@ -43,3 +43,11 @@ JAR 절대 경로·검사 시간·회수 시간을 필수 설정으로 요구한
 `test`의 Unit 검증과 패키징 뒤 `verify`의 실제 자식 JAR·Spring 개인정보 Bean·수동 Worker Tick·PostgreSQL·Loopback HTTP를 구분한다. 자동 Scheduler·Provider Bean을 포함한 전체 실행, CPU/메모리 Peak, 새 Image의 Linux 실행·CI·ECR·Cloud·실제 AI는 별도 확인한다. `-Xmx64m`으로 App 전체 메모리를 판단하지 않는다.
 
 V2와 일반 모델 정확도 고도화는 계속 후속으로 남긴다. 기존 호출 한도·기한·실행권·원문 보존·최소 비용·별도 Cloud 승인 원칙도 유지한다.
+
+## 로컬 자원 검증 구성
+
+실제 유료 AI·새 Main URL 설정 대신 Test 전용 Factory의 기존 Loopback 생성자를 사용한다. 같은 Spring AI Adapter를 제공하되 일반 Provider Configuration과 실제 Key는 사용하지 않는다. 자동 Worker·V1 Preparer·자식 프로그램·업무 계층은 Image의 Main JAR를 그대로 실행한다. Test Launcher와 Bridge만 별도로 Mount해 Main 코드나 배포용 기본 구성을 변경하지 않는다.
+
+실행마다 새 Project·새 PostgreSQL·합성 Secret 파일을 사용한다. App과 DB는 외부 경로 없는 내부 Network 한 개에만 연결하고 Host Port는 공개하지 않는다. 실행 전에 Network·CPU/Memory 제한·실험 소유권을 검증한다. 끝난 뒤 해당 Project의 Container·Network와 합성 Secret 파일만 제거하고 DB Volume·Image는 보존한다. 이 선택은 원문이나 기존 사용자의 데이터를 정리하는 절차가 아니다.
+
+Service 직접 접수의 합성 작성자 보존과 자동 Scheduler·로컬 HTTP·자원 검증을 확인한다. Browser 인증 작성자 선택·실제 AI·RDS TLS·일반 개인정보 모델 품질은 각자의 검증 범위로 유지한다. 자원 결과는 App cgroup 기준이며 별도 PostgreSQL Container의 메모리를 포함하지 않는다.
