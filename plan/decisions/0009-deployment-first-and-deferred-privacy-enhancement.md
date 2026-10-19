@@ -38,3 +38,5 @@ AWS 변경·유료 AI·DNS·새 권한·삭제는 이번 계획 승인에 포함
 ## Follow-up Review
 
 먼저 기존 Process Transport의 Linux 실행과 자원 회수를 검증한다. 합성 전용 전체 AI 구성은 허용 입력 강제·설정 누락 거부·비밀값 비출력·원문/실행권 보존을 확인한 뒤 실제 외부 호출 범위를 정한다. 일반 입력 확대나 후속 모델 채택은 별도 검토한다.
+
+첫 실행 검증은 Lab `cf4b732`의 Test 전용 Launcher와 읽기 전용 Class Mount로 진행했다. 같은 기존 24개를 CPU 1개·0.25개에서 각각 통과했고 실험 Container도 제거했다. 새 Launcher 의존성은 Test Scope이며 Main 설정·업무 계층·V2·DB·AWS는 변경하지 않았다. 결과는 [Linux 실행 보고서](../../week8-9/lab-reports/2026-10-19-linux-process-transport.md)에 기록한다.
