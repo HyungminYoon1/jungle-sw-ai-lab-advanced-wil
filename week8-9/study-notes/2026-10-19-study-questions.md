@@ -24,6 +24,16 @@
 
 핵심 Test 44개와 전체 Java 724개가 통과했다. [검증 보고서](../lab-reports/2026-10-19-request-job-log-correlation.md)에 실행 범위를 정리했다. 이 결과는 로컬 구현·회귀 검증이며 AWS의 새 Log나 실제 AI 처리까지 확인한 것은 아니다.
 
+## Log가 없다는 이유로 접수나 예약을 초기화하지 않는다
+
+DB Commit 뒤 Log를 쓰기 전에 Process가 종료되면, 완료 Log가 없어도 Ticket·Message·Job이 남아 있을 수 있다. 재시작한 Worker가 기존 예약을 발견했을 때도 Log의 부재를 근거로 예약을 0으로 만들고 다시 호출하면 안 된다.
+
+이어 Test 전용 자식 JVM과 실제 PostgreSQL로 연결·Lock·미완료 변경을 관찰했다. 접수와 예약을 먼저 Commit한 뒤 별도 Transaction에서 제목 변경과 Job Row Lock을 유지하고 해당 JVM만 강제 종료했다. DB 연결은 10개에서 0개로 줄고 Lock을 다시 얻을 수 있었으며 미완료 제목 변경은 반영되지 않았다. 먼저 저장한 원문·Job `RUNNING`·Attempt와 예약 1회·제안 0건은 유지됐다.
+
+연결이 정리된 것과 업무 상태가 바뀐 것은 다르다. DB 연결 수는 Job 수나 외부 AI 호출 횟수도 아니다. 이 차이를 바탕으로 다음 Worker가 실제로 무엇을 확인해야 하는지 이어서 살펴본다. 이번 관찰은 실제 Windows JVM 강제 종료이며 Linux Signal이나 Cloud 실행 결과와 구분한다.
+
+재시작 Class 전체 6개가 통과했다. 실행 조건과 전후 대조는 [종료 관찰 보고서](../lab-reports/2026-10-19-process-db-connection-shutdown.md)에 정리했다.
+
 ## 핵심 질문
 
 1. 가상 주소 공간이 3.34 GiB라면 512 MiB Container가 반드시 메모리 상한을 위반한 것인가?
@@ -33,7 +43,9 @@
 5. Service의 마지막 INSERT가 끝났어도 왜 Commit 실패가 가능한가? 접수 완료 Log는 언제 남겨야 하는가?
 6. Commit 직후 Log를 쓰기 전에 Process가 종료되면, 완료 Log가 없다는 이유로 접수 Row도 없다고 볼 수 있는가?
 7. 재시작 후에는 어떤 DB 상태를 확인해야 하며, Log가 없다는 이유로 예약 횟수를 초기화하거나 외부 AI를 다시 호출해도 되는가?
+8. Connection 10개는 Job 10개나 Provider 10회 호출을 뜻하는가?
+9. App 종료 뒤 Lock이 풀린 것과 다음 Worker가 외부 호출 권한을 얻은 것은 같은가?
 
 ## 이어갈 학습
 
-Log의 부재와 DB 상태의 차이부터 설명해보고, 종료 중 DB Connection·Job·Attempt·예약을 관찰한다. 현재 Cloud 실행 상태·AGENT App Metric·비용을 확인하고 개인정보 처리 Adapter와 전체 AI 자원 측정을 이어간다. 복원·Image Rollback의 기존 검증을 처음부터 반복하지 않는다.
+Connection·Transaction·Job 상태와 Lock 해제·호출 허가의 차이를 설명해본다. 현재 Cloud 실행 상태·AGENT App Metric·비용을 확인하고 개인정보 처리 Adapter와 전체 AI 자원 측정을 이어간다. 복원·Image Rollback의 기존 검증을 처음부터 반복하지 않는다.

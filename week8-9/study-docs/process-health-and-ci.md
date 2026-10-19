@@ -136,6 +136,25 @@ AI Job의 경우 HTTP 요청이 끝난 뒤에도 Worker가 처리 중일 수 있
 
 연결이 끊겼다는 사실만으로 DB Commit 여부를 단정하지 않는다. 이미 Commit한 Row인지, 아직 처리 중인 Transaction인지 DB에서 확인한다. 외부 AI의 실행과 DB Transaction도 하나의 원자적 작업이 아니다.
 
+### Connection과 Transaction 그리고 Job 상태
+
+DB Connection은 Application과 PostgreSQL이 SQL을 주고받는 연결이다. 하나의 JVM이 Connection Pool에 여러 연결을 준비하고 재사용할 수 있다. 연결 10개는 사용자 10명·Job 10개·AI 호출 10회를 뜻하지 않는다.
+
+Transaction은 여러 DB 변경을 함께 Commit하거나 Rollback하는 단위다. PostgreSQL이 끊어진 연결을 정리하면 진행 중이던 Transaction의 미완료 변경도 취소되고 그 Transaction의 Row Lock이 풀린다. 앞선 다른 Transaction에서 이미 Commit한 Row는 유지된다. [PostgreSQL Transaction](https://www.postgresql.org/docs/17/tutorial-transactions.html), [Row Lock의 수명](https://www.postgresql.org/docs/17/explicit-locking.html#LOCKING-ROWS)
+
+Job의 `RUNNING`은 Application이 DB에 기록한 업무 상태다. JVM의 Process 상태나 연결 상태와 같은 값이 아니므로 Worker가 종료된 뒤에도 남을 수 있다. DB는 App의 연결이 끊겼다는 이유만으로 이 업무 상태를 자동 변경하지 않는다.
+
+| 대상 | App 강제 종료 뒤의 의미 |
+|---|---|
+| App의 DB Connection | DB가 종료를 감지하고 정리 |
+| 진행 중 Transaction의 변경·Row Lock | 변경은 취소되고 Lock 해제 |
+| 앞서 Commit한 Ticket·Message·Job·예약 | Row와 저장한 상태 유지 |
+| `RUNNING` Job | 자동 성공·실패가 아니라 기존 복구 정책으로 판단할 대상 |
+
+관측에는 `pg_stat_activity`의 `application_name` 같은 표식을 사용할 수 있다. 표식은 연결을 구분하기 위한 값이며 인증이나 권한 증명이 아니다. 연결 수만 필요하다면 다른 Session의 Query·원문·사용자 정보를 함께 출력하지 않는다. [PostgreSQL 연결 관측](https://www.postgresql.org/docs/17/monitoring-stats.html#MONITORING-PG-STAT-ACTIVITY-VIEW)
+
+Row Lock 해제와 다음 Provider 호출 허가는 별개다. 재시작한 Worker는 기존 결과·Job 상태·현재 Attempt·예약 한도·Lease·처리 기한·실패별 재시도 정책을 확인해야 한다. 관측 Test가 Lock을 일부러 유지한 것과 달리 실제 Worker는 예약 Transaction을 Commit해 Lock을 풀고 외부 AI를 호출한다.
+
 ## Health는 무엇을 알려주는가
 
 Health는 등록된 점검 항목을 통해 Application의 현재 상태를 알려주는 Endpoint다. Endpoint는 상태를 조회하는 HTTP 주소이고, Health Indicator는 개별 점검을 수행하는 객체다. DB 연결 점검이나 디스크 여유 공간 점검 등이 여기에 해당한다. 최소 응답은 다음과 같다.
@@ -287,3 +306,5 @@ CI에서 사용한 설정과 배포 환경의 설정은 다를 수 있다. 같�
 7. 접수 Service의 마지막 INSERT 성공과 Service Proxy의 정상 반환 사이에는 어떤 실패가 가능한가? 접수 Commit Log는 어느 쪽에서 남겨야 하는가?
 8. `STORAGE_PENDING`·`STORED`·`NOT_CURRENT`는 각각 무엇을 뜻하는가? Worker Tick의 시간은 Job 전체의 처리 시간인가?
 9. Commit Log가 없다는 사실만으로 접수 Row가 없다고 판단하거나 Provider를 다시 호출해도 되는가?
+10. 하나의 App에 DB Connection이 10개라면 Provider도 10번 호출한 것인가? Connection·Transaction·Job은 각각 무엇인가?
+11. App 종료 뒤 Row Lock이 풀렸다면 다음 Worker가 바로 Provider를 호출해도 되는가? `RUNNING` Row만으로 Worker가 지금 살아 있다고 판단할 수 있는가?

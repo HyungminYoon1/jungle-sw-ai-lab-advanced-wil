@@ -25,7 +25,7 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 
 19일에는 메모리·Log 문답과 실제 실행 상태·비용부터 확인한다. 먼저 개념을 짧게 설명하고 핵심 질문 2~3개로 이해를 확인한 뒤 작은 구현과 Test를 진행한다. 이미 확인한 로그인·복원·Image 전환 전체를 처음부터 반복하지 않는다.
 
-19일 재개에서는 가상/실제 메모리와 전체 AI의 Peak 측정 필요, HTTP/AI 시간과 Job/Attempt 구분을 문답으로 확인했다. 접수 Commit·Handler·Worker Log의 식별자를 로컬에서 연결하고 핵심 Test 44개·전체 Java 724개를 통과했다. [학습노트](./study-notes/2026-10-19-study-questions.md)와 [검증 보고서](./lab-reports/2026-10-19-request-job-log-correlation.md)에 연결한다. 새 Log의 Cloud 배포·현재 AWS 실행 상태/비용·AGENT App Metric·종료 중 DB/Job 관찰은 남아 있으며 관측 전체를 완료 처리하지 않는다.
+19일 재개에서는 가상/실제 메모리와 전체 AI의 Peak 측정 필요, HTTP/AI 시간과 Job/Attempt 구분을 문답으로 확인했다. 접수 Commit·Handler·Worker Log의 식별자를 로컬에서 연결하고 핵심 Test 44개·전체 Java 724개를 통과했다. 이어 실제 자식 JVM 강제 종료의 DB 연결·Lock 정리와 미완료 변경 취소, Commit된 Job·Attempt·예약 보존을 확인했고 재시작 Class 전체 6개가 통과했다. [학습노트](./study-notes/2026-10-19-study-questions.md)·[Log 검증](./lab-reports/2026-10-19-request-job-log-correlation.md)·[종료 관찰](./lab-reports/2026-10-19-process-db-connection-shutdown.md)에 연결한다. 새 Log의 Cloud 배포·현재 AWS 실행 상태/비용·AGENT App Metric·전체 AI의 자원 측정은 남아 있으며 관측 전체를 완료 처리하지 않는다.
 
 | 순서 | 남은 학습과 구현 | 확인할 결과 |
 |---|---|---|
