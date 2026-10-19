@@ -96,6 +96,22 @@ Exit Code가 7이라는 말만으로는 어떤 오류인지 알기 어려웠다.
 
 이번 실행은 현재 컴파일 Class를 읽기 전용으로 Mount했다. 기존 Image의 JAR에 새 코드가 포함됐다는 확인과는 다르다. 28.988초·42.016초도 각 JVM 기동과 Test 24개 전체 시간이지 개인정보 검사 한 번의 시간은 아니다. [Linux 실행 보고서](../lab-reports/2026-10-19-linux-process-transport.md)에 조건과 재현 명령을 정리했다. 전체 Spring App·Worker·모델의 자원 검증은 별도로 남아 있다.
 
+## 합성 전용 실행 구성을 연결한다
+
+새 코드를 포함한 배포에는 새 Image와 Task가 필요하다. 현재 Class를 Mount한 Test를 통과했다고 기존 ECR Image까지 바뀌는 것은 아니다. AI 전송을 거부하는 경우에도 먼저 Commit한 Ticket·Message는 유지해야 한다고 설명할 수 있었다.
+
+배포에 필요한 최소 구성은 `postgres,deployment,synthetic-ai` Profile과 별도 활성 값이 모두 있을 때만 등록했다. 제목·본문 전체가 고정 합성 문의와 정확히 일치해야 하며, 범위 밖 입력은 자식 Process 실행 전에 거부한다. Provider와 Worker는 별도 활성 설정이므로 개인정보 Bean 등록만으로 자동 호출이 시작되지 않는다.
+
+고정 합성 이메일 위치를 반환하는 자식 Java 프로그램을 같은 JAR에 넣었다. 실제 탐지 모델을 채택한 것이 아니라 실행 경로를 확인하기 위한 구성이다. V1 JSON·위치 검증과 Guard는 유지했고 V2는 연결하지 않았다.
+
+새 Unit Test 41개와 패키징한 JAR·Spring 개인정보 Bean·수동 Worker Tick·실제 PostgreSQL·로컬 HTTP를 연결한 두 Case가 통과했다. 허용한 문의는 이메일이 가려진 요청과 제안 1건을 확인했다. 범위 밖 문의는 HTTP 0회·제안 0건이고, 원문·작성자·Ticket OPEN·Attempt/예약 1회가 남았다. 반복 Tick에서도 새 호출은 없었다.
+
+예약과 실제 호출은 다른 기록이다. 개인정보 검사 전에 한 회분 예약을 Commit했기 때문에 검사에서 거부돼도 예약이 남을 수 있다. 이를 초기화하거나 접수 원문을 취소하지 않는다. 허용 범위 밖 입력은 기존 내부 `ADAPTER_CONFIGURATION_ERROR`로 기록하며 JSON 오류나 Timeout으로 바꾸지 않는다.
+
+자식의 `-Xmx64m`은 자식 Heap의 상한이다. App JVM과 자식의 Heap 밖 메모리까지 합친 Task 전체 상한은 아니다. 다음은 새 Image에서 전체 실행 조립과 자원을 확인하는 단계다. [합성 구성 학습자료](../study-docs/synthetic-deployment-and-runtime-configuration.md)와 [구성 결정](../../plan/decisions/0010-fixed-synthetic-deployment-configuration.md)에 개념과 적용 범위를 정리했다.
+
+전체 `verify`는 Java 1,004개와 패키징 후 2개, JavaScript는 268개가 통과했다. 마지막으로 Provider 호출 횟수와 HTTP 횟수를 각각 확인하도록 통합 Test 두 Case를 보강해 다시 통과했다. [실행 보고서](../lab-reports/2026-10-19-synthetic-deployment-configuration.md)에 Windows 자식 JVM·수동 Tick·로컬 응답과 미실행 Linux Image·전체 자동 조립·실제 AI·Cloud를 구분했다.
+
 ## 핵심 질문
 
 1. 가상 주소 공간이 3.34 GiB라면 512 MiB Container가 반드시 메모리 상한을 위반한 것인가?
@@ -118,7 +134,10 @@ Exit Code가 7이라는 말만으로는 어떤 오류인지 알기 어려웠다.
 18. 다른 치환 표시와 UNDETERMINED가 함께 있다면 무엇을 알고 무엇은 모르는 상태인가? 후속 치환이 표시를 바꾸면 관계표도 그대로 읽을 수 있는가?
 19. 현재 Class를 읽기 전용 Mount해 Linux Test에 성공했다면, 기존 ECR Image 안의 JAR도 새 Code를 포함한다고 말할 수 있는가?
 20. JVM 기동과 24개 Test 전체의 시간을 개인정보 검사 1회의 Timeout 설정에 그대로 사용해도 되는가?
+21. 개인정보 Bean을 등록하면 Provider와 Worker도 자동으로 실행되는가?
+22. 검사 거부로 외부 요청이 0회인데도 Attempt·예약은 1회로 남을 수 있는가? 접수 원문도 취소해야 하는가?
+23. 자식 JVM의 `-Xmx64m`만으로 App·자식을 합친 전체 메모리 상한을 판단할 수 있는가?
 
 ## 이어갈 학습
 
-다음은 입력 범위를 강제한 합성 전용 최소 조립, 전체 실행 자원과 새 Log의 Cloud 검증이다. 기존 V1 검증·Guard·실패 차단을 유지하며 V2·추가 모델 고도화는 배포 마감 뒤 후속으로 남긴다. 실제 비용·보관량과 남은 DNS·회귀·WIL도 확인한다. 복원·Image Rollback의 기존 검증을 처음부터 반복하지 않는다.
+다음은 합성 전용 설정을 포함한 새 Image의 전체 자동 조립·실행 자원과 새 Log의 Cloud 검증이다. 이번에 확인한 수동 Worker Tick·로컬 HTTP와 자동 Scheduler·실제 AI·Cloud 결과를 구분한다. 기존 V1 검증·Guard·실패 차단을 유지하며 V2·추가 모델 고도화는 배포 마감 뒤 후속으로 남긴다. 실제 비용·보관량과 남은 DNS·회귀·WIL도 확인한다. 복원·Image Rollback의 기존 검증을 처음부터 반복하지 않는다.

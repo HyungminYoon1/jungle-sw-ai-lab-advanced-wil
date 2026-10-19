@@ -93,6 +93,7 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [준비 P의 CI와 ECR 업로드](./week8-9/lab-reports/2026-10-16-prepare-image-ci-ecr.md): 고정 P Source·원격 Test·검증 Image 전달과 Manifest Digest
 - [프로그램과 Cloud DB를 연결하는 자료](./week8-9/study-docs/cloud-database-and-application-connection.md): psql·JDBC, AWS·DB·App 신원, 설정값 전달·Migration과 업무 요청
 - [Process·Health·CI 자료](./week8-9/study-docs/process-health-and-ci.md): 종료 Signal과 요청 완료, Health·Job 상태, HTTP Metric과 CI의 역할
+- [합성 배포 실험과 실행 설정](./week8-9/study-docs/synthetic-deployment-and-runtime-configuration.md): 코드·설정·Image의 차이, 조건부 Bean과 실행, 원문·예약 보존과 전체 메모리 측정
 - [DB와 App 서버 복구 자료](./week8-9/study-docs/database-and-application-recovery.md): 재시작·Image Rollback·Snapshot 복원, Session과 영속 데이터, 안전한 Job 재개와 복습 질문
 - [AWS OIDC·ECR 초기 설정](./week8-9/lab-reports/2026-10-10-aws-oidc-ecr-baseline.md): 초기 생성·main 제한·한 ECR의 Push 권한 대조, 후속 업로드 보고서 연결
 - [검증 Image의 ECR 업로드](./week8-9/lab-reports/2026-10-10-verified-image-ecr-publish.md): 수동 Publish·실제 OIDC 인증, CI Image 전달과 ECR Tag·Digest 대조

@@ -36,6 +36,8 @@
 - [학습 우선 범위 전환 Decision](./decisions/0001-learning-first-scope.md)
 - [깊은 수직 학습과 AI 보조 수평 확장 Decision](./decisions/0002-depth-first-ai-assisted-expansion.md)
 - [8–9주차 통합과 취업 일정 조정](./decisions/0004-combined-week8-9-deployment-learning.md)
+- [배포 검증과 개인정보 고도화 분리](./decisions/0009-deployment-first-and-deferred-privacy-enhancement.md)
+- [고정 합성 입력의 최소 배포 구성](./decisions/0010-fixed-synthetic-deployment-configuration.md)
 - [AgentOps Lab 보류 안내](./agentops-lab-12-week-plan.md)
 
 AI Helpdesk Learning Lab은 공지 학습 주제를 관찰하는 공통 실습 대상이다. 수직 학습에서는 기능 수보다 Browser·Security·Application·PostgreSQL·AI·배포의 실제 연결을 우선한다. 독립 실험은 PostgreSQL 영속성·API 흐름·배포를 대체하지 않는다. 수직 마감 전에는 수평 확장을 시작하지 않고, Week 10–12에는 취업 활동을 우선하면서 필요한 AI 보조 확장만 수행한다.
