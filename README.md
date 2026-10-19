@@ -3,7 +3,7 @@
 > 상태: Active
 > 시작일: 2026-08-18
 > 전체 기간: 12주 유지 — 기술 학습 Week 1–9, 취업 우선 Week 10–12. 배포 과정은 Week 8–9 통합
-> 현재 단계: Week 1·2·3·4·6·7 완료 — Week 5 부분 완료·공개 제출 완료. Week 8–9는 HTTPS 보안·접수/DB Row, Snapshot 복원·원본 복귀와 B→P Image 복귀까지 확인. 전체 AI·남은 관측·최종 마감은 진행 중. 16일 연장 회차를 정리하고 10/17·18 휴무 뒤 10/19 재개
+> 현재 단계: Week 1·2·3·4·6·7 완료 — Week 5 부분 완료·공개 제출 완료. Week 8–9는 HTTPS·DB 복원·Image 복귀와 로컬 합성 구성의 자동 Worker·자원 측정까지 확인. Cloud 실제 AI·남은 관측·최종 마감은 진행 중. 10/19 회차를 마감하고 10/20 재개
 
 이 저장소는 SW AI Lab 심화과정에서 선택한 기술을 학습하고, 이해가 바뀐 과정과 재현 가능한 근거를 주차별로 기록한다. 목표는 큰 제품을 기간 안에 완성하는 것이 아니라 AI/AX·Java Backend 직무에 필요한 개념을 직접 설명하고, 작은 실험과 Test로 검증하며, 필요한 범위만 서비스에 적용할 수 있는 역량을 만드는 것이다.
 
@@ -59,7 +59,7 @@ Week 8–9는 같은 배포 학습을 이어온 기간으로 통합한다. Week 
 | 5 | Browser JavaScript·Frontend·E2E·품질 기초 | Partially Completed | [Week 5 학습 계획](./week5/weekly-plan.md) · [WIL](./week5/wil.md) |
 | 6 | Browser·PostgreSQL·Test 수직 마감 | Completed — Local 수직 검증, 독립 재설명, 블로그·포럼 게시 완료 | [Week 6 학습 계획](./week6/weekly-plan.md) · [WIL](./week6/wil.md) |
 | 7 | LLM Structured Output·평가·Guardrail | Completed — 10/7 학습·평가·회귀 확인과 블로그 게시·포럼 등록 완료. 10/5 회차 이후 2일 추가 진행 | [Week 7 학습 계획](./week7/weekly-plan.md) · [WIL](./week7/wil.md) · [10/7 학습 노트](./week7/study-notes/2026-10-07-study-questions.md) |
-| 8–9 | Docker·CI·System·AWS Cloud·HTTPS 통합 | In Progress — HTTPS 접수·SQL Row, DB 복원·원본 복귀·B→P/V8 보존, psql 17·Process 관찰 확인. 전체 AI·남은 관측·최종 회귀/WIL은 미완료. 10/19 재개 | [통합 학습 계획](./week8-9/weekly-plan.md) · [16일 통합 노트](./week8-9/study-notes/2026-10-16-study-questions.md) · [Image 복귀 결과](./week8-9/lab-reports/2026-10-16-image-rollback-cloud.md) · [배포·비용 계획](./week8-9/deployment-plan.md) |
+| 8–9 | Docker·CI·System·AWS Cloud·HTTPS 통합 | In Progress — HTTPS·DB 복원·B→P/V8 보존과 로컬 합성 자동 실행·자원 두 번 확인. 통합 고의 실패·새 코드 Cloud·비용/DNS·최종 회귀/WIL은 남아 10/20 재개 | [통합 학습 계획](./week8-9/weekly-plan.md) · [19일 노트](./week8-9/study-notes/2026-10-19-study-questions.md) · [자원 측정 결과](./week8-9/lab-reports/2026-10-19-synthetic-runtime-resources.md) · [배포·비용 계획](./week8-9/deployment-plan.md) |
 | 10 | 취업 Baseline·Portfolio 근거와 맞춤 지원·기술 면접 | Planned — 초기 Week 9의 취업 과업을 함께 배치. 지원·면접은 기술 마감을 기다리지 않음 | [12주 Roadmap](./plan/weekly-roadmap.md#10주차--취업-baseline과-맞춤-지원-및-기술-면접) |
 | 11 | 면접·과제 대응과 취약 개념 재학습 | Not Started | 주차 시작 시 추가 |
 | 12 | 취업 결과 정리와 최종 회고 | Not Started | 주차 시작 시 추가 |
@@ -81,7 +81,7 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [Week 6 WIL](./week6/wil.md): Browser·Session·CSRF·PostgreSQL 수직 흐름과 블로그·포럼 게시 기록
 - [Week 7 AI Native 학습 계획](./week7/weekly-plan.md): Structured Output·평가·Guardrail과 Suggestion 영속성 일정
 - [Week 7 WIL](./week7/wil.md): AI 출력의 형식·내용 평가, 문의 보존과 비동기 처리의 이해 변화. 10/7 블로그 게시·포럼 등록 완료 확인
-- [Week 8–9 통합 배포 학습 계획](./week8-9/weekly-plan.md): 16일 연장 회차 마감과 완료/미완료 구분, 17·18일 휴무 및 19일 재개 순서. 기존 학습 범위 유지
+- [Week 8–9 통합 배포 학습 계획](./week8-9/weekly-plan.md): 19일 합성 자동 실행·자원 검증과 남은 과업, 20일 재개 순서. 배포 중심의 범위와 취업 우선 시간 경계 유지
 - [10월 8일 학습 노트](./week8-9/study-notes/2026-10-08-study-questions.md): JAR·Container·Volume·Session과 설정의 수명, Cache·Secret 전달의 이해 변화와 핵심 질문
 - [10월 9일 학습 노트](./week8-9/study-notes/2026-10-09-study-questions.md): 설정·Bean 조립, 개인정보 탐지·치환, 종료·Health·CI와 AWS 권한의 이해 변화와 핵심 질문
 - [10월 10일 학습 노트](./week8-9/study-notes/2026-10-10-study-questions.md): ECR·Task·Role·Network·TLS와 Cookie, Health·HttpOnly의 오해 수정과 실제 Image 업로드
@@ -89,6 +89,7 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [10월 13일 학습 노트](./week8-9/study-notes/2026-10-13-study-questions.md): IAM·Network·관리 통로와 요청 조건, Console 오류·생성 거부의 구분, 다음 학습
 - [10월 14일 학습 노트](./week8-9/study-notes/2026-10-14-study-questions.md): Private RDS·TLS·DB 계정, 같은 Image의 인증 복구, 두 CNAME과 ALB·HTTPS 응답의 의미
 - [10월 16일 학습 노트](./week8-9/study-notes/2026-10-16-study-questions.md): Snapshot·App 복원, Session·V8과 데이터 보존, B→P 복귀·psql 17·Process 메모리와 남은 문답
+- [10월 19일 학습 노트](./week8-9/study-notes/2026-10-19-study-questions.md): 메모리·HTTP/AI 지표·Log·Process 종료, 합성 전용 자동 Worker와 자원 검증, 20일 이월 과업
 - [Snapshot과 별도 RDS 복원 검증](./week8-9/lab-reports/2026-10-16-rds-snapshot-restore.md): Row·Migration 대조, 같은 Image의 App 전환·재로그인·원본 복귀
 - [준비 P의 CI와 ECR 업로드](./week8-9/lab-reports/2026-10-16-prepare-image-ci-ecr.md): 고정 P Source·원격 Test·검증 Image 전달과 Manifest Digest
 - [프로그램과 Cloud DB를 연결하는 자료](./week8-9/study-docs/cloud-database-and-application-connection.md): psql·JDBC, AWS·DB·App 신원, 설정값 전달·Migration과 업무 요청
@@ -105,7 +106,7 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [RDS 생성과 Private TLS 검증](./week8-9/lab-reports/2026-10-14-rds-console-permission-diagnostics.md): 조회 보조 정책·기존 생성 조건, 비Root 생성과 관리자/App DB 접속·권한 확인
 - [ECS 첫 기동과 DB 암호 전달 수정](./week8-9/lab-reports/2026-10-14-ecs-first-cloud-startup.md): DB 인증 실패 후 같은 Image의 JDBC·Migration 7개·Spring 기동 성공
 - [ALB·App·DNS와 첫 HTTPS 응답](./week8-9/lab-reports/2026-10-15-cloud-https-baseline.md): 10/14 회차 연장 구간의 Target Healthy·브라우저 화면·익명 HTTP 결과. 로그인 이후 업무 검증은 미완료
-- [Week 8–9 AWS 배포·비용 계획](./week8-9/deployment-plan.md): 서울·월 3만 원 상한·최소 비용·실습 시 실행 조건, 실행·보관과 19일 재개 전 확인
+- [Week 8–9 AWS 배포·비용 계획](./week8-9/deployment-plan.md): 서울·월 3만 원 상한·최소 비용·실습 시 실행 조건, 실행·보관과 재개 전 비용 확인
 - [9월 30일 학습 노트](./week7/study-notes/2026-09-30-study-questions.md): 판단 보류 표현, 문의 보존, Ticket·Message와 AI 처리 상태의 구분
 - [10월 5일 학습 노트](./week7/study-notes/2026-10-05-study-questions.md): AI 입력·판단, 접수·예약·결과 Transaction과 실제 Java AI 저장, 10/6 재개 경계
 - [10월 6일 학습 노트](./week7/study-notes/2026-10-06-study-questions.md): 재시도 대기·현재 Attempt·최종 실패, 선택 Worker와 제한된 DB 저장 재시도

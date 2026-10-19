@@ -19,7 +19,9 @@
 
 16일 회차는 실제 17일에 이어진 Image 복귀·psql 17·Process 관찰까지 [16일 노트](../week8-9/study-notes/2026-10-16-study-questions.md)에 합쳤다. 실제 실행 보고서는 해당 날짜를 유지한다. HTTPS 접수/SQL Row·Snapshot 별도 복원·원본 복귀·B→P와 V8/데이터 보존은 확인했고, 전체 AI·나머지 관측·최종 회귀·복습·WIL은 남아 있다.
 
-**10/17·10/18은 휴무, 10/19 월요일에 재개한다.** Week 10에는 기존 Week 9의 취업 Baseline과 맞춤 지원을 함께 진행하며 Week 11·12는 뒤로 밀지 않는다. 취업 기간의 잔여 수직 학습·Project 보완·마감 후 수평 확장은 합쳐 주 6시간 이내다. [일정 통합 결정](./decisions/0004-combined-week8-9-deployment-learning.md)을 따른다.
+10/17·10/18 휴무 뒤 19일에는 메모리·HTTP/AI 지표·Log·Process 종료를 학습하고, 로컬 합성 Image의 자동 Worker·자원 실험 두 번을 확인했다. 이해 변화와 마감 기준은 [19일 노트](../week8-9/study-notes/2026-10-19-study-questions.md)에 기록했다. 실제 개인정보 모델·Cloud 실제 AI의 완료 근거와는 구분하며 V2·모델 고도화는 후속으로 둔다.
+
+**남은 과업은 10/20 화요일에 이어간다.** 전체 App의 고의 Timeout·비정상 종료 후 자원/DB 확인부터 시작하고, 새 코드의 Cloud 관측·실제 비용/보관량·합성 실제 AI·DNS·회귀·WIL을 남은 순서로 유지한다. 전부를 하루에 끝내는 일정은 아니다. Week 10에는 기존 Week 9의 취업 Baseline과 맞춤 지원을 함께 진행하며 Week 11·12는 뒤로 밀지 않는다. 취업 기간의 잔여 수직 학습·Project 보완·마감 후 수평 확장은 합쳐 주 6시간 이내다. [일정 통합 결정](./decisions/0004-combined-week8-9-deployment-learning.md)을 따른다.
 
 ### 초기 계획과 실행 근거
 

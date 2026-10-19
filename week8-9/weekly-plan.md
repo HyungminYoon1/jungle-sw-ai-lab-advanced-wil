@@ -5,8 +5,8 @@
 > 상태: In Progress — HTTPS·DB 복원과 원본 복귀, A→P·B 적용·P Image 복귀 검증 완료. V8·업무 Hash 보존과 재로그인 조회를 확인했다. 전체 AI·나머지 마감은 미완료.
 > 초기 목표 기간: 2026-10-08 목요일 ~ 2026-10-12 월요일. 실제 연장을 반영해 Week 8–9 통합으로 변경
 > 초기 학습일: 10/8·10/9·10/10·10/12, 총 4일
-> 현재 진행: HTTPS 접수·RDS 복원·Image Rollback과 HTTP Metric을 확인했다. 개인정보 V2와 모델 고도화는 후속 과업으로 분리하고 실행 설정·Linux 종료·자원·Cloud 관측과 비용 검토로 복귀한다. Cloud 실제 AI·최종 마감은 미완료
-> 휴무와 재개: 10/17 토요일·10/18 일요일에는 새 학습을 배정하지 않는다. 남은 과업은 10/19 월요일부터 재개하며 종료일은 실제 잔여량을 보고 정한다.
+> 현재 진행: HTTPS·DB 복원·Image Rollback·HTTP Metric과 로컬 합성 구성의 자동 Worker·자원 측정까지 확인했다. 개인정보 V2·모델 고도화는 후속으로 분리한다. 전체 App의 고의 실패 자원 실험·새 코드의 Cloud 검증·실제 비용/보관량·DNS·최종 마감은 남아 있다.
+> 휴무와 재개: 10/17·10/18 휴무 뒤 10/19 회차를 마감했다. 남은 과업은 10/20 화요일에 이어가며 종료일은 실제 잔여량을 보고 정한다.
 > 초기 순학습 시간 배분: 하루 10시간, 총 40시간. 휴식·식사와 단순 대기 시간 제외. 완료에 필요한 시간의 상한은 아님
 > 모드: `DEEP_LEARNING_MODE`
 > 핵심 질문: 이미 검증한 문의 접수와 AI 제안 흐름을 Cloud의 HTTPS 환경에 배포하고, 실패 원인을 찾으며 이전 실행 상태로 복구할 수 있는가?
@@ -19,11 +19,11 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 
 40시간은 초기 배분을 위한 추정치였다. 설정 문제에 시간이 들었다고 개념 설명·실패 실험·복구·복습을 생략하지 않는다. 미완료 학습은 같은 통합 과정의 잔여로 추적하며, 기간이 지났다는 이유로 완료 처리하지 않는다.
 
-초기 10/11의 야간 선택 재개 여부는 당시 일정 기록으로 남긴다. **현재 확정 일정은 10/17·10/18 휴무, 10/19 재개**다. 19일에 남은 전체 분량을 끝내도록 압축하지 않는다. Week 10–12의 취업 과업은 뒤로 밀지 않고, 취업 우선 기간에는 잔여 기술 학습·Project 보완·마감 후 수평 확장을 합쳐 주 6시간 이내에서 나눈다.
+초기 10/11의 야간 선택 재개 여부와 10/17·10/18 휴무는 당시 일정 기록으로 남긴다. **10/19 회차를 마감하고 남은 학습은 10/20에 이어간다.** 하루에 남은 전체 분량을 끝내도록 압축하지 않는다. Week 10–12의 취업 과업은 뒤로 밀지 않고, 취업 우선 기간에는 잔여 기술 학습·Project 보완·마감 후 수평 확장을 합쳐 주 6시간 이내에서 나눈다.
 
-## 10월 19일 재개와 남은 학습
+## 10월 19일 마감과 10월 20일 재개
 
-19일에는 메모리·Log 문답과 실제 실행 상태·비용부터 확인한다. 먼저 개념을 짧게 설명하고 핵심 질문 2~3개로 이해를 확인한 뒤 작은 구현과 Test를 진행한다. 이미 확인한 로그인·복원·Image 전환 전체를 처음부터 반복하지 않는다.
+19일에는 메모리·Log 문답, 기존 Cloud의 HTTP Metric과 로컬 합성 구성의 실행·자원을 확인했다. 남은 과업은 아래 순서로 20일에 이어간다. 개념을 짧게 설명하고 핵심 질문 2~3개로 이해를 확인한 뒤 작은 구현과 Test를 진행하며, 이미 확인한 로그인·복원·Image 전환 전체를 처음부터 반복하지 않는다.
 
 19일 재개에서는 가상/실제 메모리와 전체 AI의 Peak 측정 필요, HTTP/AI 시간과 Job/Attempt 구분을 문답으로 확인했다. 접수 Commit·Handler·Worker Log의 식별자를 로컬에서 연결하고 당시 핵심 Test 44개·전체 Java 724개를 통과했다. 이어 실제 자식 JVM 강제 종료의 DB 연결·Lock 정리와 미완료 변경 취소, Commit된 Job·Attempt·예약 보존을 확인했고 재시작 Class 전체 6개가 통과했다. [학습노트](./study-notes/2026-10-19-study-questions.md)·[Log 검증](./lab-reports/2026-10-19-request-job-log-correlation.md)·[종료 관찰](./lab-reports/2026-10-19-process-db-connection-shutdown.md)에 연결한다.
 
@@ -45,7 +45,7 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 
 이어 [고정 합성 전용 구성](../plan/decisions/0010-fixed-synthetic-deployment-configuration.md)의 조건부 개인정보 Bean·입력 제한·같은 JAR의 자식 실행을 연결했다. 새 Unit Test 41개와 실제 JAR·Spring 개인정보 Bean·수동 Worker Tick·PostgreSQL·로컬 HTTP의 두 Case가 통과했다. 범위 밖 입력은 외부 전송 없이 기존 실패 코드로 기록하고 원문·예약을 유지했다. 전체 Java `verify` 1,004개 + 패키징 후 2개, JavaScript 268개도 통과했다. [합성 구성 실행 보고서](./lab-reports/2026-10-19-synthetic-deployment-configuration.md)에 근거와 재검증을 정리한다. Provider·Worker의 기본 비활성과 V1 검증/Guard를 유지하며 V2·모델은 추가 연결하지 않았다.
 
-새 Image에서 자동 Worker·합성 검사 자식·PostgreSQL·통제된 Spring AI HTTP를 연결한 자원 실험 두 번도 통과했다. 0.25 CPU·512 MiB의 최고 메모리는 310.79·290.21 MiB였고 OOM은 없었다. 각 실행의 자동 성공 3건·범위 밖 실패 1건, 원문/예약 보존·자식 회수를 확인했다. [자동 실행 자원 보고서](./lab-reports/2026-10-19-synthetic-runtime-resources.md)에 Main JAR 실행·Test 전용 Provider Factory와 일반 Provider 구성의 차이를 기록했다. 이번 관련 Java 124개·JavaScript 전체 276개도 통과했다. 다음은 새 Log의 Cloud 확인·실제 비용/보관량과 남은 DNS 비교이며 실제 AI 활성화는 별도 실행 범위를 확인한다.
+새 Image에서 자동 Worker·합성 검사 자식·PostgreSQL·통제된 Spring AI HTTP를 연결한 자원 실험 두 번도 통과했다. 0.25 CPU·512 MiB의 최고 메모리는 310.79·290.21 MiB였고 OOM은 없었다. 각 실행의 자동 성공 3건·범위 밖 실패 1건, 원문/예약 보존·자식 회수를 확인했다. [자동 실행 자원 보고서](./lab-reports/2026-10-19-synthetic-runtime-resources.md)에 Main JAR 실행·Test 전용 Provider Factory와 일반 Provider 구성의 차이를 기록했다. 이번 관련 Java 124개·JavaScript 전체 276개도 통과했다. 마감 문답에서는 로컬 모델이 Task 메모리를 사용하며 Peak는 현재 사용량과 달리 유지될 수 있음을 설명했다. 다음은 전체 App의 고의 실패 자원 실험이며, 새 Log의 Cloud 확인·실제 비용/보관량·DNS와 실제 AI는 남은 순서로 유지한다.
 
 실제 AI 배포 실험은 고정 합성 문의만 대상으로 분리한다. 합성 전용 구성은 허용한 입력과 실행 범위를 강제해야 하며, 임의 문의를 빈 검사기로 통과시키는 Main 기본값이 되어서는 안 된다. 통제된 검사 응답의 실행 검증과 실제 탐지 품질은 따로 기록한다. 일반 입력의 AI 활성화·실사용 개인정보 보호 완료를 이 실험의 성공으로 주장하지 않는다.
 
@@ -54,7 +54,7 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 | 순서 | 배포 학습과 구현 | 현재 근거와 다음 확인 |
 |---|---|---|
 | 1. Linux 실행과 회수 | 기존 Process 24개를 CPU 1개·0.25개에서 각각 통과. 정상/비정상·Timeout·중단·다른 Process 보존·회수 확인 | 이 독립 실행 Gate는 확인. Spring App·Worker·실제 모델·DB를 포함한 전체 실행/자원은 2~3번에서 검증 |
-| 2. 최소 실행 설정 | 합성 전용 입력 제한·검사 JAR/시간 필수 설정·V1 Preparer/Guard Bean을 구현. Unit 41개·패키징 후 PG 2개 통과 | Provider·Worker 스위치는 별도 유지. 수동 Tick·로컬 HTTP 검증과 전체 자동 조립·실제 AI를 구분하며 후자는 미완료 |
+| 2. 최소 실행 설정 | 합성 전용 입력 제한·검사 JAR/시간 필수 설정·V1 Preparer/Guard Bean을 구현. Unit 41개·패키징 후 PG 2개 통과 | Provider·Worker 스위치는 별도 유지. 로컬 자동 실행은 3번에서 확인. 일반 Provider Configuration/실제 Key·Cloud 실제 AI는 5번에 남음 |
 | 3. 전체 조립과 자원 | 새 Image의 자동 Worker·합성 검사·PG·통제된 Spring AI 구성 두 번 통과. 0.25 CPU/512 MiB·최고 310.79/290.21 MiB·OOM 없음·정상 처리 뒤 자식 회수 확인 | 전체 App 구성의 고의 Timeout·비정상 종료 뒤 자원 측정은 남음. 독립 Transport의 Linux Timeout/회수 Test와 구분. 일반 Provider/실제 Key·Cloud는 5번에서 확인하고 미탑재 모델의 자원으로 확대하지 않음 |
 | 4. Cloud 관측과 비용 | 새 Request/Job Log·대표 실패·HTTP/AI 지표와 실제 과금·저장/보관 비용 확인 | 확인한 Task·Target·RDS 기준을 재확인하며 전체 복원·Rollback을 반복하지 않음. 새 배포는 CI·Image Digest·기존 승인 범위 확인 후 실행 |
 | 5. Cloud 실제 AI | 합성 전용 구성·검증 Image/명세·Secret 참조·필요 사양 확인 후 실제 AI·RDS·AGENT 화면 연결 | 당일 호출 범위/비용·리소스 변경 승인 후 진행. 임의 사용자 원문은 대상에서 제외하고 기존 PENDING의 기한·예약을 초기화하지 않음 |
@@ -62,6 +62,15 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 | 7. 최종 마감 | 변경 Code의 Local/CI 회귀·Cloud Browser 재검증, 자료 없는 설명·직접 설정 수정·재현/비용/보관 검토·통합 WIL | 실제 결과와 미완료 상태를 유지. 블로그/포럼은 작성자 확인 뒤 각각 완료 처리 |
 
 4번과 6번처럼 독립적으로 가능한 배포 실험은 앞선 설정·자원 검증과 병행할 수 있다. 5번 전에는 1~3번에서 그 실험 구성의 실행·입력 범위·전송 검사를 확인한다. 후보 모델의 채택 보류를 해제하거나 개인정보 검사를 생략한 것으로 기록하지 않는다.
+
+### 10월 20일 재개 순서
+
+1. **전체 App의 실패와 회수:** 기존 합성 Image·통제된 Provider 구성을 기준으로 고의 Timeout·검사 자식의 비정상 종료를 비교한다. 남은 Process·I/O Thread, 현재/최고 메모리, 실패 Job·원문·예약과 전송 횟수를 확인한다. 정상 처리 자원 측정이나 독립 Transport Test를 이 통합 실패 실험의 결과로 대신하지 않는다.
+2. **Cloud 관측과 비용:** 현재 Task·Target·RDS와 실행/보관 비용을 먼저 확인한다. 새 Log를 확인할 배포는 변경 검토·Push·CI·ECR 전달·정확한 Digest와 실행 범위를 확인한 뒤 진행한다. Request/Job/Attempt와 대표 실패를 추적하고 실제 사용량·365일 Log 보관 등 남는 비용을 정리한다.
+3. **합성 입력의 실제 AI 배포:** 앞선 실행 조건을 충족하면 별도 승인한 입력·호출/비용·Secret 참조·Task 명세로 실제 AI·RDS·AGENT 화면을 확인한다. 로컬 응답 Fixture나 기존 P 배포본의 Health를 이 결과로 바꾸어 기록하지 않는다. 일반 입력과 개인정보 모델 고도화는 활성화하지 않는다.
+4. **DNS와 최종 마감:** Cloudflare DNS를 유지한 Route 53 비교·별도 조회, 변경 Code의 Local/CI·Cloud Browser 회귀, 자료 없는 설명·설정 수정과 WIL을 이어간다. 유료 리소스 생성·게시·삭제는 각각의 실행 범위를 확인한다.
+
+20일은 남은 학습을 재개하는 날이지 모든 항목의 완료 기한이 아니다. 첫 구현은 1번으로 두고 이후는 선행 조건·승인·실제 가용시간에 맞춰 나눈다. 취업 우선 일정과 주간 기술 과업 6시간 상한을 유지하며, 추가 날짜는 회차 마감 때 조정한다. 오늘 문서 마감에서는 AWS 실행 리소스를 중지하거나 새 AI 호출을 시작하지 않는다.
 
 ### 배포 마감 이후의 후속 과업
 
@@ -148,7 +157,7 @@ OIDC Provider·ECR·업로드 Role은 초기 설정 승인을 받아 생성했�
 
 ## 학습 회차별 실행 기록
 
-이 절은 각 회차 당시의 계획·확인 결과를 보존한다. 이후 완료된 복원·Image 전환 등을 당시의 미실행 상태로 읽지 않으며, 현재 잔여 과업은 앞의 ‘10월 19일 재개와 남은 학습’을 따른다.
+이 절은 각 회차 당시의 계획·확인 결과를 보존한다. 이후 완료된 복원·Image 전환 등을 당시의 미실행 상태로 읽지 않으며, 현재 잔여 과업은 앞의 ‘10월 19일 마감과 10월 20일 재개’를 따른다.
 
 [10월 16일 노트](./study-notes/2026-10-16-study-questions.md)에 자정을 넘겨 이어진 psql·DB Engine·Migration 버전과 메모리 관찰까지 통합했다. [psql 전환 보고서](./lab-reports/2026-10-17-cloudshell-psql17.md)는 Private 경로를 유지한 공식 Client 분리와 실제 접속·Hash 대조, [Process 관찰 보고서](./lab-reports/2026-10-17-proc-cgroup-log-pipeline.md)는 Test 전용 로컬 JVM의 VmSize/RSS·cgroup 제한·Log Marker와 HTTP 결과를 기록한다. 두 실험의 실제 실행일은 10/17로 유지한다. 현재 JavaScript 전체 262개·ESLint가 통과했다. 원격 CI·추가 Push·Image 업로드는 이 회차에서 실행하지 않았다.
 
@@ -294,7 +303,8 @@ Docker·Compose의 기초와 저장·재시작·설정 비교까지 진행했다
 | 10/15 목 회차 | 실제 진행 분량 기록 | HTTPS 로그인·Cookie·CSRF 접수/SQL Row, HTTP 301·개인정보 검증/후보 평가·Cloud Log/Metric, Task 교체 권한 준비 | 10/15 노트·보고서 정리. 자정 이후 Version 6의 실제 적용일은 10/16 유지. Task 교체·재로그인 미실행 |
 | 10/16 금 회차와 연장 실습 | 실제 진행 분량 기록 | 중지 환경 재개·Snapshot 별도 복원·원본 복귀·B→P/V8 보존 → psql 17·Process/Log 관찰 | 실제 실행일 17일은 보고서에 두고 16일 노트에 통합. 메모리/Log 설명 검증·전체 AI·남은 관측/마감은 미완료 |
 | 10/17 토·10/18 일 | 휴무 | 새 학습·구현·평가 배정 없음 | 16일 회차의 기록 정리와 실행 보고서 날짜를 별도 학습일로 세지 않음 |
-| 10/19 월 재개 | 취업 일정·가용시간 확인 후 배치 | 메모리/Log 문답·실행 기준 → Linux 실행/회수·최소 조립·자원·관측/비용 → 합성 전용 전체 AI | V2와 모델 고도화는 후속으로 분리. 작은 배포 Block을 검증하고 실제 잔여량을 갱신 |
+| 10/19 월 회차 | 실제 진행 분량 기록 | 메모리/HTTP/Job·Log 문답, 종료 관찰·Linux Process 검증 → 합성 전용 구성·새 Image·자동 Worker·자원 측정 두 번 | 마지막 메모리/Peak 문답 확인·노트 정리. V2·모델 고도화는 후속, 통합 고의 실패·새 코드 Cloud·비용/DNS·마감은 이월 |
+| 10/20 화 재개 | 취업 우선·주간 기술 과업 6시간 안에서 배치 | 통합 Timeout·비정상 종료 후 자원/DB 확인부터. 이후 새 코드 Cloud 관측·실제 비용/보관량 → 승인한 합성 AI → DNS·회귀·복습·WIL | 실제 결과와 남은 분량을 갱신. 전부를 하루에 압축하지 않고 미완료는 다음 회차로 유지 |
 
 ### 10월 8일 목요일 실행 환경과 데이터 보존
 
@@ -510,6 +520,7 @@ ALB는 중지 기능이 없어 유지했다. RDS 저장/백업·ECR Image·Log �
   - [10월 14일 노트](./study-notes/2026-10-14-study-questions.md): RDS·TLS·App DB 계정, ECS의 DB 인증 복구, 두 CNAME·ALB·HTTPS와 Health/업무 성공 구분
   - [10월 15일 노트](./study-notes/2026-10-15-study-questions.md): Session/CSRF·접수/SQL Row, SELECT/Commit·Redirect, 개인정보 품질·Log/Metric과 App/DB 복구, 16일 재개 기준
   - [10월 16일 노트](./study-notes/2026-10-16-study-questions.md): Snapshot 별도 복원·원본 복귀, A/P/B의 읽기 호환성과 실제 Image Rollback, 연장 구간의 psql·Process 메모리·Log 관찰
+  - [10월 19일 노트](./study-notes/2026-10-19-study-questions.md): 메모리·HTTP/AI 시간·Log 식별자·Process 종료, 합성 전용 자동 Worker와 자원 검증, 20일 재개 기준
 - `lab-reports/`: 실행 환경·명령·예상·결과·실패 원인과 재현 방법을 묶는다. 로컬·CI·Cloud 근거는 구분한다.
   - [실제 CI 실패·복구](./lab-reports/2026-10-09-process-health-and-ci-baseline.md): 최초 운영체제 의존 실패와 별도 Branch의 UI 오류·복구, main 검증
   - [AWS OIDC·ECR 초기 설정](./lab-reports/2026-10-10-aws-oidc-ecr-baseline.md): 초기 생성·정책 대조와 당시 미실행 상태, 후속 업로드 보고서 연결
@@ -535,6 +546,7 @@ ALB는 중지 기능이 없어 유지했다. RDS 저장/백업·ECR Image·Log �
   - [실제 Image Rollback](./lab-reports/2026-10-16-image-rollback-cloud.md): B의 V8 적용·합성 새 실패 코드, P 복귀 뒤 일곱 Table과 인증 조회 보존
   - [Private CloudShell psql 17](./lab-reports/2026-10-17-cloudshell-psql17.md): 공식 Client 분리·기존 16 보존, RDS 17.11 TLS·Schema/Hash 대조
   - [Process·cgroup·Log Pipeline](./lab-reports/2026-10-17-proc-cgroup-log-pipeline.md): 실제 로컬 JVM 수치와 Container 제한, 합성 시작 Marker/HTTP 응답
+  - [합성 구성의 자동 Worker와 자원 측정](./lab-reports/2026-10-19-synthetic-runtime-resources.md): 새 Main JAR Image·통제된 Provider·실제 PostgreSQL의 독립 실행 두 번, 자원·원문/예약 보존과 남은 통합 실패 실험
 - `wil.md`: Week 8–9의 통합 결과와 이해 변화, 직접 판단한 부분과 AI 도움을 받은 부분을 한 회고에 정리한다. 미완료 결과를 먼저 완료로 작성하지 않는다.
 - Lab Repository: Dockerfile·Compose·Workflow·배포 설정·관련 Test·실행/복구 안내를 관리한다. WIL과 구현 변경은 별도 Commit으로 나눈다.
 
@@ -572,6 +584,7 @@ ALB는 중지 기능이 없어 유지했다. RDS 저장/백업·ECR Image·Log �
 | 10/14 회차 마감 | 연장 실습에서 ACM·두 CNAME·ALB·새 App Task를 연결. Target Healthy·Health 200/UP·로그인 페이지 200·익명 API 401 확인 | 10/15 실제 로그인·보안 계약·접수/SQL Row부터 재개. 마지막 확인 시 실행 리소스가 남아 있으므로 비용과 중지·정리 범위를 먼저 확인 |
 | 10/15 회차 마감 | HTTPS 접수·SQL Row·HTTP 301·Cloud 관측 확인. 개인정보 후보 채택 보류, Edge V6의 교체 권한 준비 완료 | 10/16 새 AGENT 기준 조회·승인한 Task 교체부터. 이전 Image 복귀·별도 복원·전체 AI·남은 관측/DNS·최종 회귀와 WIL 유지 |
 | 10/16 회차와 연장 실습 마감 | Snapshot 복원·원본 복귀·B→P/V8·업무 Hash/코드 보존, psql 17·Process 수치 확인 | 17/18 휴무 뒤 19일 재개. 설명 미검증·실제 개인정보 처리/전체 AI·남은 관측/DNS·마감은 통합 과정의 잔여로 유지 |
+| 10/19 회차 마감 | 메모리·HTTP/AI·Log 문답, 로컬 종료·Linux 검증과 합성 전용 Image의 자동 Worker·자원 두 번 확인. 실제 모델/Cloud 전체 AI 완료와 구분 | 사용자 요청으로 20일 재개. 첫 과업은 통합 고의 실패·자원/DB 확인이며 새 코드 Cloud·실제 비용/보관량·합성 AI·DNS·마감 유지. V2·모델 고도화는 후속 |
 
 연장은 이미 허용한 진행 방식이므로, 시간이 부족하다는 이유로 다시 학습 범위를 줄이는 안을 만들지 않는다. 다만 추가 날짜를 임의로 확정하지는 않는다. 필요해진 학습·구현·검증 시간과 Cloud 대기를 구분해 제시하고, 실제 사용할 수 있는 날짜에 남은 순서를 배치한다. 하루 10시간을 넘겨야만 계획을 지킨 것으로 평가하지 않는다.
 
@@ -603,6 +616,7 @@ ALB는 중지 기능이 없어 유지했다. RDS 저장/백업·ECR Image·Log �
 | 2026-10-17 | DB 복원 뒤 A→P→B 전환, 관리 Client 16·서버 17의 차이 | P Image 복귀·V8/데이터 보존 확인, 공식 psql 17 분리·실제 TLS 접속과 로컬 Process/Log 관찰 | 사용자 Client만 교체·목적별 Commit·학습 계속 요청. RDS/IAM/Network는 그대로 두며 전체 AI·남은 관측·Route 53·마감 범위 유지. 추가 Push·Cloud 활성화는 하지 않음 |
 | 2026-10-17 | Week 8만 연장, 17일 별도 노트와 학습일 표시 | Week 8–9·`week8-9`로 통합, 16일 연장 회차에 노트 통합·실제 실행일 보존. 17/18 휴무·19일 재개 | 사용자 기간·폴더·계획 조정 요청. 전 학습 범위와 미완료 상태 유지, Week 10 취업 Baseline 합류·Week 11/12 유지. 경로 이동·상위 계획·재개 순서를 목적별 수정/Commit |
 | 2026-10-19 | V2 인물 관계·개인정보 모델 고도화가 전체 AI 배포의 선행 작업으로 확대됨 | V2·모델 고도화는 후속으로 보존하고 Linux 실행/회수·최소 조립·자원·관측/비용·합성 전용 AI 배포로 복귀 | 사용자 분리·계획 수정 승인. 기존 V1 검증/Guard·실패 시 전송 중단·원문/예약/실행권 보존, 일반 입력 비활성과 별도 비용·AWS 승인 유지 |
+| 2026-10-19 | 19일 재개 순서에 로컬 합성 자동 실행·자원과 남은 Cloud 과업이 함께 배정됨 | 자동 실행·자원 두 번과 마지막 개념 문답을 기록하고, 미완료 과업은 20일 통합 고의 실패 실험부터 재개 | 사용자 회차 마감·노트/계획 갱신 요청. 학습 범위와 취업 우선·주 6시간 상한 유지. 새 Push·CI/ECR·AWS·실제 AI를 완료 처리하지 않음 |
 
 ## 관련 기준
 
