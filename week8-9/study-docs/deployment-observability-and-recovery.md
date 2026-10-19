@@ -64,6 +64,8 @@ HTTP Request ID
 
 Request ID만 검색하면 HTTP 이후의 비동기 작업을 놓칠 수 있다. 접수 시 생성한 Job과 연결하고, 오래된 Attempt의 응답을 채택했는지도 확인한다. 실제로 연결 가능한 식별자가 각 기록에 있는지 점검해야 한다.
 
+Helpdesk의 접수 Commit·Handler 완료·Worker Tick Event와 시간 범위는 [Request ID로 접수와 Worker Log 연결하기](./process-health-and-ci.md#request-id로-접수와-worker-log-연결하기)에서 다룬다. Worker의 중간 처리 결과를 최종 Job 상태로 읽지 않고, 응답 Header에서 얻은 Request ID를 접수 Log의 Job ID와 연결한다.
+
 Log에는 API Key·DB Password·Cookie·CSRF Token·원문과 Provider 응답 전체를 넣지 않는다. 오류 구분에는 검증 단계와 고정 오류 코드, 식별자·소요 시간 같은 필요한 정보만 사용한다. 전체 환경 변수나 관리 Endpoint를 공개해 진단하지 않는다.
 
 ### 기동 Log와 HTTP Metric을 차례로 읽는다

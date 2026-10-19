@@ -188,6 +188,43 @@ Security에서 거부된 요청은 Controller에 도달하지 않는다. Control
 
 Helpdesk는 `GET /actuator/metrics/http.server.requests`만 AGENT에게 허용한다. 익명은 `401`, USER는 `403`이고, 다른 관리 Endpoint는 AGENT도 사용할 수 없다. 이 Metric은 현재 JVM의 집계다. Process를 재시작하면 이전 집계를 자동으로 이어 가지 않으며 장기 관측은 별도 저장이 필요하다.
 
+### Request ID로 접수와 Worker Log 연결하기
+
+HTTP 요청이 끝난 뒤 Worker가 실행되므로 Request ID 하나만으로 전체 처리를 구분할 수는 없다. 접수 기록에서 Request와 Job을 연결하고, Worker에서는 Job과 실행 차수를 기록한다.
+
+| 식별자 | 구분하는 대상 |
+|---|---|
+| `requestId` | 개별 HTTP 요청 |
+| `ticketId`·`messageId` | 접수한 문의와 원문 메시지 |
+| `jobId`·`attempt` | 특정 AI 작업과 실행권을 확보한 차수 |
+
+Helpdesk는 다음 세 종류의 Event를 구분한다. Log는 필요한 Field만 선택한 `key=value` 형식이며 전체 객체를 출력하지 않는다.
+
+| Event | 기록하는 시점과 의미 |
+|---|---|
+| `TICKET_RECEIPT_COMMITTED` | HTTP Controller가 Transactional Service Proxy의 정상 반환을 받은 뒤 Request·Ticket·Message·Job ID를 연결 |
+| `HANDLER_COMPLETED` | MVC Interceptor의 완료 시점에 Request ID·Handler·HTTP Status·`elapsedNanos` 기록 |
+| `AI_WORKER_TICK_RESULT` | 한 Worker Tick이 반환한 Job ID·Attempt·Outcome·`tickElapsedNanos` 기록 |
+
+`@Transactional` Service 안에서 마지막 INSERT를 마쳤어도 Proxy의 Commit이 실패할 수 있다. 따라서 접수 완료 Log를 Service 메서드의 `return` 직전에 남기지 않는다. 현재 HTTP 경로는 Controller에 바깥 Transaction을 두지 않으므로 Service Proxy가 정상 반환했을 때 접수 Commit이 끝나 있다. 이 기록은 Browser가 응답을 수신했다는 뜻은 아니다.
+
+다음은 실행 순서를 보여주는 예시다. 숫자는 실제 측정값이 아니다.
+
+```text
+event=TICKET_RECEIPT_COMMITTED requestId=550e8400-e29b-41d4-a716-446655440000 ticketId=7 messageId=31 jobId=90
+event=HANDLER_COMPLETED requestId=550e8400-e29b-41d4-a716-446655440000 handler=TicketReceiptController#create status=201 elapsedNanos=120000000
+event=AI_WORKER_TICK_RESULT jobId=90 attempt=1 outcome=STORAGE_PENDING tickElapsedNanos=8000000000
+event=AI_WORKER_TICK_RESULT jobId=90 attempt=1 outcome=STORED tickElapsedNanos=20000000
+```
+
+Handler가 걸린 120ms와 Worker Tick의 시간은 서로 다른 측정이다. Handler 시간에는 Security 이전 단계·Network 왕복이 모두 포함되지 않는다. Tick이 저장만 재시도했다면 그 시간도 Provider 호출 시간이나 대기·여러 Tick을 합친 Job 전체 처리 시간이 아니다.
+
+Worker의 `outcome`은 DB의 `job.status`와 구분한다. `STORAGE_PENDING`은 저장 결과를 확인하거나 같은 검증 객체의 저장을 재시도해야 한다는 뜻이다. `STORED`는 결과 Service의 Commit 성공 또는 저장된 성공 결과의 재확인을 거쳐 반환한다. `NOT_CURRENT`는 해당 Attempt의 결과를 채택하지 않았다는 뜻이지 현재 Job이 실패했다는 뜻이 아니다. 실패 코드와 최종 상태는 Job 조회로 확인한다.
+
+할 일이 없는 `NO_JOB`과 저장 재시도 시각을 기다리는 `STORAGE_RETRY_WAITING` Tick은 기록하지 않는다. 예외가 나면 원문 Message·Cause 대신 기존 고정 경고 `AI_WORKER_TICK_FAILED`만 남긴다. Request ID도 Client Header를 그대로 신뢰하지 않고 서버가 만든 UUID를 사용한다.
+
+MVC에 도달하기 전에 Security가 거부한 요청에는 Handler 완료 Log가 없을 수 있다. HTTP 전체의 Status별 집계는 `http.server.requests`에서 확인한다. 또한 DB Commit과 Log 출력은 하나의 Transaction이 아니다. Commit 직후 Process가 종료되면 Row는 있어도 그 다음 Log는 없을 수 있으므로, Log가 없다는 이유로 재접수·재호출하지 않고 DB 상태부터 확인한다.
+
 ## CI에서 확인하는 것
 
 CI는 Continuous Integration, 즉 지속적 통합이다. 변경한 코드를 공통 저장소에 자주 합치고 Build·Test 등의 자동 검사로 문제를 확인하는 개발 방식이다. GitHub에서만 가능한 기능은 아니며, GitHub Actions는 CI를 실행하는 도구 중 하나다. [GitHub의 CI 설명](https://docs.github.com/en/actions/get-started/continuous-integration)
@@ -247,3 +284,6 @@ CI에서 사용한 설정과 배포 환경의 설정은 다를 수 있다. 같�
 4. CI에서 Test와 Image Build가 성공했다면, AWS에서 HTTPS 접속도 성공했다고 말할 수 있는가?
 5. 512 MiB 제한에서 `VmSize`가 3.34 GiB라면 반드시 메모리 상한 위반인가? `VmRSS`와 `memory.current`는 무엇이 다른가?
 6. Log에서 요청 시작 Marker를 한 번 찾았다는 사실만으로 응답 완료·DB 저장·AI 성공까지 확인한 것인가?
+7. 접수 Service의 마지막 INSERT 성공과 Service Proxy의 정상 반환 사이에는 어떤 실패가 가능한가? 접수 Commit Log는 어느 쪽에서 남겨야 하는가?
+8. `STORAGE_PENDING`·`STORED`·`NOT_CURRENT`는 각각 무엇을 뜻하는가? Worker Tick의 시간은 Job 전체의 처리 시간인가?
+9. Commit Log가 없다는 사실만으로 접수 Row가 없다고 판단하거나 Provider를 다시 호출해도 되는가?
