@@ -31,6 +31,10 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 
 로컬 검사 실행에는 `ProcessAiPrivacyScanner`를 추가했다. 원문의 stdin 전달·Byte/시간 제한·해당 Process와 I/O Thread 회수, PostgreSQL의 정상 저장·실패 저장·원문/예약 보존을 확인했다. 핵심 150개·최종 전체 Java 754개가 통과했으며 [실행 보고서](./lab-reports/2026-10-19-privacy-process-transport.md)와 [결정 기록](../plan/decisions/0005-local-privacy-process-transport.md)에 범위를 정리했다. 검사 응답은 Test Fixture이며 실제 모델·관계 보존 계약·Linux 실행과 Main 조립은 미완료다. AWS·실제 AI·Image는 변경하지 않았다.
 
+이어 Exit Code의 기본 개념을 보완하고 다른 한국어 개인정보 후보를 같은 합성 12건으로 비교했다. 실제 Linux 모델 실험은 종료 코드 0·OOM 없음이었지만 후보 처리 흐름은 5건 통과·4건 BIO 거부였고 이름 누락·오탐이 남아 채택하지 않았다. 새 Decoder Test 18개와 기존 정책 Test 10개는 통과했다. [후보 비교 보고서](./lab-reports/2026-10-19-koelectra-privacy-probe.md)·[분리 평가 결정](../plan/decisions/0006-offline-privacy-model-comparison.md)에 기록한다. Linux에서 모델을 실행한 것과 Java Transport의 Linux 종료·회수, Main 연결·전체 AI 자원 검증은 다르다. 기존 Dataset·Java Main·AWS·배포 Image는 유지했다.
+
+인물 관계 V2는 등장 번호와 SAME·DIFFERENT·UNDETERMINED를 분리한 구조 검증기와 독립 치환기까지 구현했다. 명시적 판단 보류는 보존하고 관계 누락·참조 오류·모순은 거부한다. SAME 집합은 표시를 공유하며 다른 표시 사이의 미확인 관계도 남긴다. 치환 Test 37개와 앞선 핵심 402개를 합친 439개가 통과했다. [V2 검증 보고서](./lab-reports/2026-10-19-person-relation-v2-validation.md)의 PostgreSQL 결과는 V1 회귀이며 V2→DB 연결이 아니다. Guard/Provider·모델 정확도·Main 조립·Cloud 연결은 남아 있다. 실제 모델 후보의 5/12 성적과 직전 전체 Java 754개를 이 핵심 회귀 결과로 대체하지 않는다.
+
 | 순서 | 남은 학습과 구현 | 확인할 결과 |
 |---|---|---|
 | 1. 재개 기준과 비용 | 확인한 Task·Target·RDS/Health 기준선을 유지하고 미확인 실제 과금·저장량·보관 비용 검토 | 새 CloudShell 세션이면 psql 17·공개 CA를 다시 준비. Snapshot·Image 호환성의 기존 근거를 보존하고 확인하지 않은 현재 상태는 단정하지 않음 |
