@@ -122,6 +122,21 @@ Signal을 받는 시점에 요청을 마치기까지 **4초가 더 필요한 상
 
 ### Exit Code를 읽는 방법
 
+Exit Code는 **Process가 종료될 때 남기는 정수 결과**다. 표준 출력에 쓴 JSON이나 HTTP 응답의 Status와는 다른 값이다. 자식 Process를 실행한 Java 프로그램은 `Process.waitFor()`로 종료를 기다린 뒤 이 값을 받을 수 있다. 실행 중에는 아직 최종 종료 코드가 없다. [Java Process](https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Process.html#waitFor())
+
+보통 `0`은 성공에 사용하고, 그 외의 값은 프로그램이 정한 다른 결과를 나타낸다. **숫자의 구체적인 의미는 실행한 프로그램의 계약을 확인해야 한다.** 예를 들어 `grep`은 일치하는 줄이 없을 때도 `1`을 반환한다. 따라서 0이 아니라는 사실만으로 프로그램이 충돌했다고 단정하지 않는다. [GNU grep의 종료 코드](https://www.gnu.org/s/grep/manual/html_node/Exit-Status.html)
+
+이번 개인정보 검사기 계약에서는 `0`만 실행 성공으로 받아들인다. Test Fixture의 `System.exit(7)`은 자식 JVM이 실패 결과를 보고하도록 의도적으로 넣은 코드다. `7`이 모든 프로그램에서 같은 오류를 뜻하거나 HTTP 7번 오류라는 의미는 아니다. 비정상 종료는 충돌뿐 아니라 프로그램이 스스로 오류를 판단해 종료하는 경우도 포함한다. [Java System.exit](https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/System.html#exit(int))
+
+```text
+검사기 자식 Process: JSON 출력 → Exit Code 7로 종료
+Helpdesk 부모 Process: 실행 실패로 처리 → 이 JSON은 사용하지 않음
+```
+
+자식 검사기가 실패했다고 Helpdesk App 전체가 함께 종료되는 것은 아니다. App은 실패를 Job 상태로 저장하고 계속 요청을 받을 수 있다. 이후 상태 조회에서 `HTTP 200`과 `job.status: FAILED`가 함께 반환돼도 모순이 아니다.
+
+반대로 종료 코드가 `0`이어도 JSON 필드·위치 검사와 실제 개인정보 탐지 정확도까지 통과했다는 뜻은 아니다. **실행 완료 → 응답 계약 검증 → 탐지 품질 평가**를 구분한다.
+
 Linux의 OpenJDK는 SIGTERM 처리 시 `128 + 15 = 143`으로 종료할 수 있다. 종료 Hook을 마친 경우에도 이 값이 나올 수 있다. `143`을 무조건 Application 실패로 분류하면 안 된다. [OpenJDK의 종료 Signal 처리](https://github.com/openjdk/jdk/blob/jdk-25-ga/src/java.base/unix/classes/java/lang/Terminator.java)
 
 SIGKILL 종료에서는 흔히 `128 + 9 = 137`이 관찰된다. 다만 `137`만 보고 메모리 부족이라고 판단하지 않는다. 보낸 Signal·종료 제한·`OOMKilled`·요청 결과를 함께 확인해야 한다.
@@ -308,3 +323,4 @@ CI에서 사용한 설정과 배포 환경의 설정은 다를 수 있다. 같�
 9. Commit Log가 없다는 사실만으로 접수 Row가 없다고 판단하거나 Provider를 다시 호출해도 되는가?
 10. 하나의 App에 DB Connection이 10개라면 Provider도 10번 호출한 것인가? Connection·Transaction·Job은 각각 무엇인가?
 11. App 종료 뒤 Row Lock이 풀렸다면 다음 Worker가 바로 Provider를 호출해도 되는가? `RUNNING` Row만으로 Worker가 지금 살아 있다고 판단할 수 있는가?
+12. 검사기가 유효한 JSON을 출력한 뒤 Exit Code 7로 종료했다면 왜 그 결과를 사용하지 않는가? 자식의 종료 코드와 App의 HTTP Status는 같은 값인가?
