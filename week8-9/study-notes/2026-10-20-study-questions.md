@@ -1,6 +1,6 @@
 # 10월 20일 검사 실패와 배포 준비
 
-> 상태: 학습 진행 중. 로컬 통합 실패 검증·CI 실패 복구·새 Image의 ECR 전달을 마쳤으며 새 Task의 Cloud 관측·비용 확인 등은 남아 있다.
+> 상태: 학습 진행 중. 로컬 통합 실패 검증·CI 실패 복구·ECR 전달과 AI 비활성 Task 교체·Cloud Log 확인을 마쳤다. 실제 AI 활성 구성의 Cloud 검증·비용 확인 등은 남아 있다.
 
 ## 오늘 이어갈 범위
 
@@ -36,9 +36,13 @@ JSON 문법이 올바른 것과 검사 실행의 성공도 다르다. 정상 JSO
 
 이후 [수동 ECR 전달](../lab-reports/2026-10-20-ecr-image-publication.md)도 같은 Source를 다시 검증하고 성공했다. 검증 Job이 만든 Image를 재Build 없이 Publish Job으로 옮겼고 ECR 조회 Digest와 Push 결과가 같았다. 새 Manifest Digest는 `sha256:0f53c6ce5532d44b4a0b3e8123c27498aeb466539ee02f00326eb111c9e9296a`다. 기존 Image·Task는 유지했으므로 새 코드의 Cloud Log나 실제 AI 배포까지 확인한 것은 아니다.
 
+그다음 사용자가 AI 비활성 상태의 Task 한 개 교체를 승인했다. 기존 명세 `:4`의 Image만 바꾼 `:6`을 등록하고 새 Task를 기동했다. Cloud Log에서 DB 연결·V8 유지·추가 Migration 없음·Spring 시작을 확인했다. 새 Target의 Healthy를 확인한 뒤 기존 Target의 Draining을 기다리고 기존 Task를 중지했다. 최종 실행 Task는 새 명세 한 개이며 보류 중 Task는 없다.
+
+사용자가 새 App에 AGENT로 재로그인한 뒤 Ticket 1·2의 기존 제목·OPEN 상태와 PENDING Job을 조회했다. 로그인 후 `/`의 404와 보호 API의 로그인 실패는 구분했다. 다만 기존 Session은 교체 전부터 만료돼 있었으므로 이번에는 Session 소실 시점을 증명했다고 하지 않는다. 별도 HTTPS 요청의 `X-Request-Id`와 새 Task의 `HANDLER_COMPLETED` Log도 일치했다. [Task 교체 실행 기록](../lab-reports/2026-10-20-ai-disabled-task-replacement.md)에 변경 범위·검증 필드·Log 검색 문법을 정리했다. RDS·DNS·Secret·IAM과 AI 비활성 설정은 유지했다.
+
 ## 이어갈 배포 학습
 
-- 새 Source의 CI·ECR 전달은 완료했다. 다음은 이번 Digest와 실행 명세 대조, 별도 승인 범위의 AI 비활성 Task 교체·새 Request Log·기존 문의 조회다. 실제 비용·저장/보관량 확인은 남아 있다.
+- 새 Source의 CI·ECR 전달과 Digest·실행 명세 대조, AI 비활성 Task 교체·새 Request Log·기존 문의 조회를 완료했다. 실제 비용·저장/보관량 확인은 남아 있다.
 - 합성 입력의 Cloud 실제 AI는 당일 입력·호출/비용·Secret 참조·Task 명세를 별도로 확인한다. 기존 PENDING의 기한·예약은 초기화하지 않는다.
 - 기존 Cloudflare DNS를 유지한 Route 53 비교, 최종 회귀·직접 설명·설정 수정·WIL과 보관 정리를 남은 순서로 유지한다.
 
