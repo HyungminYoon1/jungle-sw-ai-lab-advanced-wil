@@ -15,6 +15,8 @@
 
 그다음 합성 실제 AI 실험의 Key·권한·단일 Task 실행과 `:6` 복귀를 별도로 승인받았다. 새 `/helpdesk/learning/ai/provider-key` Standard SecureString·기존 `aws/ssm`과 Execution Role의 그 ARN 읽기 한 문장만 추가하는 범위다. 값 입력·저장은 작성자가 직접 한다. 기존 여섯 Parameter·네 정책 문장·Task Role·배포 사용자 권한은 유지한다. 사전 SQL에서는 기존 Ticket 1·2 외 미완료 Job이 없음을 확인했으며, 두 Job의 입력 거부·예약 증가는 허용하되 Ticket·Message 원문을 유지한다. 새 Job 선택 기능·새 Image는 추가하지 않는다. 새 합성 한 건의 생성 한도는 1회·보완 0회이며 실제 실행 결과는 적용 후 별도로 기록한다. RDS 설정/Schema·DNS·기존 Secret 변경은 승인 범위에 없다.
 
+새 Key는 작성자가 직접 등록했고 목록에서 Standard·SecureString과 정확한 이름을 확인했다. 지정 Execution Role의 원래 네 문장을 유지한 채 해당 Parameter 읽기 한 문장을 적용하고 저장된 JSON도 대조했다. [Cloud AI 준비 보고서](./lab-reports/2026-10-20-synthetic-cloud-ai-preflight.md)에 사전 SQL·설정 Test·실제 적용 범위를 기록했다. Root는 로그아웃했으며 실험 Task·실제 호출·비활성 복귀는 이어질 실행 단계다.
+
 ## 확인한 조건
 
 - AWS 계정과 기존 도메인이 있다.

@@ -48,7 +48,9 @@ JSON 문법이 올바른 것과 검사 실행의 성공도 다르다. 정상 JSO
 
 합성 실험용 부분 명세·Parameter 읽기 정책 초안과 설정 결합 Test를 Lab `e01ed83`에 정리했다. Java `verify` 1,014개·패키징 후 2개, JavaScript 286개와 ESLint가 통과했다. Main·Image는 바꾸지 않았고 기존 실행 명세에 설정을 이름별로 병합한다. 이 로컬 결과는 실제 Key 인증·Cloud AI 실행 결과가 아니다.
 
-사용자는 새 Standard SecureString 한 개와 Execution Role의 해당 ARN 읽기 한 문장, 같은 Image·단일 Task의 합성 문의 한 건과 AI 비활성 `:6` 복귀를 승인했다. Private CloudShell의 psql 17.11·TLS 1.3으로 읽기 전용 조회한 결과 미완료는 Ticket 1·2의 PENDING 두 건뿐이고 Attempt·예약은 모두 0이었다. 기존 Ticket·Message Hash도 확보했다. 새 Job은 생성 1회·보완 0회이며 실패 뒤 추가 호출하지 않는다. 현재는 Key·권한 적용 전 준비 단계이고, 실제 Provider 호출·제안 저장은 아직 확인하지 않았다.
+사용자는 새 Standard SecureString 한 개와 Execution Role의 해당 ARN 읽기 한 문장, 같은 Image·단일 Task의 합성 문의 한 건과 AI 비활성 `:6` 복귀를 승인했다. Private CloudShell의 psql 17.11·TLS 1.3으로 읽기 전용 조회한 결과 미완료는 Ticket 1·2의 PENDING 두 건뿐이고 Attempt·예약은 모두 0이었다. 기존 Ticket·Message Hash도 확보했다. 새 Job은 생성 1회·보완 0회이며 실패 뒤 추가 호출하지 않는다.
+
+이어서 작성자가 Helpdesk 전용 Key를 직접 Standard SecureString으로 등록했다. Codex는 값을 열지 않고 목록의 이름·등급·유형을 확인했다. Execution Role의 지정 ARN 읽기 한 문장도 적용했고 저장된 JSON에서 원래 네 문장 보존을 확인했다. Root는 로그아웃했으며 [Cloud AI 사전 준비 보고서](../lab-reports/2026-10-20-synthetic-cloud-ai-preflight.md)에 실제 적용과 다음 검증을 구분했다. 아직 실험 Task 전환·실제 Provider 호출·제안 저장·비활성 복귀는 수행하지 않았다.
 
 ## 이어갈 배포 학습
 

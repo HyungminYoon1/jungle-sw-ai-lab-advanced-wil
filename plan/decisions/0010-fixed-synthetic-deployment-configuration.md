@@ -59,3 +59,11 @@ Service 직접 접수의 합성 작성자 보존과 자동 Scheduler·로컬 HTT
 Test 자식은 Main의 합성 프로그램으로 JSON을 출력한 뒤 실행 증거를 남기고 대기하거나 7로 종료한다. Mode는 실행 도구의 고정 Enum으로만 선택하며 문의 Body·사용자가 보낸 인자로 고르지 않는다. Main의 API·설정·실패 코드·예약 정책·DB Schema에는 변경이 없다. 실패 주입과 정상 실행의 차이를 결과에 명시하며 실제 Cloud·모델 품질의 근거로 확대하지 않는다.
 
 영향 파일은 Lab의 기존 Runtime Experiment·Compose·검증 Script·관련 Test와 README다. 다음 검토는 새 Code의 CI/ECR 전달·Cloud 관측이며, [통합 실패 보고서](../../week8-9/lab-reports/2026-10-20-synthetic-runtime-failure-cleanup.md)의 원문·예약 보존·자원 결과를 기준으로 삼는다.
+
+## Cloud 합성 실험의 설정과 권한
+
+10/20에는 문의 원문 보존과 기존 Job 상태 불변을 구분했다. 새 Job 선택 기능으로 기존 상태를 동결하는 안 대신, 사전 확인한 Ticket 1·2의 입력 거부·예약 증가를 허용하고 원문을 유지하는 제한 실험을 승인받았다. 배포 학습에 새 선택 기능을 추가하지 않기 위한 결정이며 일반 문의 처리를 허용하는 정책은 아니다. 실행 전 그 외 미완료 Job이 있으면 멈추고 재검토한다.
+
+Key를 Image나 일반 Environment에 넣거나 다른 프로젝트의 전역 Key로 대체하지 않는다. 기존 Standard Parameter Store에 Helpdesk 전용 SecureString 한 개를 추가하고 작성자가 직접 값을 저장한다. 기존 Execution Role의 지정 ARN 읽기 한 문장만 추가하며 Task Role·배포 사용자 권한과 원래 네 문장은 유지한다. 이 Key·권한 준비는 적용을 마쳤고 실제 전달·인증은 후속 실행에서 확인한다.
+
+Lab의 부분 명세와 결합 Test는 기존 Main Image의 설정만 병합한다. 생성 1회·보완 0회는 새 Job의 정책으로 고정하고 기존 Job의 Snapshot은 변경하지 않는다. 단일 Task로 검증한 뒤 AI 비활성 `:6`으로 돌아가며 RDS 설정/Schema·DNS·기존 Secret은 유지한다. 실행 근거와 미완료 항목은 [Cloud AI 준비 보고서](../../week8-9/lab-reports/2026-10-20-synthetic-cloud-ai-preflight.md)를 따른다.
