@@ -5,7 +5,7 @@
 > 상태: In Progress — HTTPS·DB 복원과 원본 복귀, A→P·B 적용·P Image 복귀 검증 완료. V8·업무 Hash 보존과 재로그인 조회를 확인했다. 전체 AI·나머지 마감은 미완료.
 > 초기 목표 기간: 2026-10-08 목요일 ~ 2026-10-12 월요일. 실제 연장을 반영해 Week 8–9 통합으로 변경
 > 초기 학습일: 10/8·10/9·10/10·10/12, 총 4일
-> 현재 진행: 10/20 로컬 합성 구성의 통합 실패·자원 회수, CI의 Test 설정 의존성 수정과 새 Image 한 개의 ECR 전달을 확인했다. 개인정보 V2·모델 고도화는 후속으로 유지한다. 새 Task의 Cloud 검증·실제 비용/보관량·Cloud 실제 AI·DNS·최종 마감은 남아 있다.
+> 현재 진행: 10/20 로컬 통합 실패·자원 회수, CI 복구·ECR 전달과 새 Image의 AI 비활성 Task 교체·요청 Log를 확인했다. 개인정보 V2·모델 고도화는 후속으로 유지한다. Cloud 실제 AI·남은 관측/비용·DNS 비교·최종 마감은 남아 있다.
 > 재개 상태: 10/20 화요일 학습 진행 중. 첫 통합 실패 검증을 마쳤으며 종료일은 실제 잔여량을 보고 정한다.
 > 초기 순학습 시간 배분: 하루 10시간, 총 40시간. 휴식·식사와 단순 대기 시간 제외. 완료에 필요한 시간의 상한은 아님
 > 모드: `DEEP_LEARNING_MODE`
@@ -55,6 +55,8 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 
 수동 Run `39398031412`의 [ECR 전달](./lab-reports/2026-10-20-ecr-image-publication.md)도 성공했다. 이 실행의 전체 Test·Lint·Image Build 뒤 같은 검증 Image를 재사용해 기존 Repository에 한 개 추가하고 Manifest Digest를 대조했다. 두 저장소 Push·CI·Image 전달은 완료했지만 실행 Task는 교체하지 않았으며 새 Code의 Cloud Log·업무 기능 검증으로 계산하지 않는다.
 
+그 뒤 별도 승인을 받아 [AI 비활성 Task 교체](./lab-reports/2026-10-20-ai-disabled-task-replacement.md)를 마쳤다. 기존 명세의 Image만 바꾼 `:6`을 실행하고 새 Target의 Healthy 뒤 기존 Target·Task를 제외했다. AGENT 재로그인 후 Ticket 1·2와 PENDING Job을 조회했고 실제 HTTPS 응답의 요청 ID가 새 Task의 완료 Log와 일치했다. RDS·DNS·Secret·IAM과 AI 비활성은 유지했다. 다음 실제 AI 실험 전에는 기존 Job이 임의로 Claim·예약·실패 처리되지 않도록 실행 대상 제한도 확인한다.
+
 기존 V1 JSON·위치 검증과 Known Fragment Guard, 실패 시 외부 전송 중단, Ticket·Message·예약·현재 Attempt 보존은 유지한다. 전체 AI 연결 전에 필요한 최소 구성과 실제 전송 직전 Body 검사는 확인하되, V2를 먼저 연결할 의무는 없다. 외부 AI·AWS 변경은 그날의 실행 범위와 비용을 별도로 확인한다.
 
 | 순서 | 배포 학습과 구현 | 현재 근거와 다음 확인 |
@@ -62,7 +64,7 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 | 1. Linux 실행과 회수 | 기존 Process 24개를 CPU 1개·0.25개에서 각각 통과. 정상/비정상·Timeout·중단·다른 Process 보존·회수 확인 | 이 독립 실행 Gate는 확인. Spring App·Worker·실제 모델·DB를 포함한 전체 실행/자원은 2~3번에서 검증 |
 | 2. 최소 실행 설정 | 합성 전용 입력 제한·검사 JAR/시간 필수 설정·V1 Preparer/Guard Bean을 구현. Unit 41개·패키징 후 PG 2개 통과 | Provider·Worker 스위치는 별도 유지. 로컬 자동 실행은 3번에서 확인. 일반 Provider Configuration/실제 Key·Cloud 실제 AI는 5번에 남음 |
 | 3. 전체 조립과 자원 | 19일 정상 처리 두 번에 이어 20일 정상·고의 Timeout·비정상 종료의 전체 App 검증 통과. 0.25 CPU/512 MiB·OOM 없음, 실패의 원문/예약 보존·HTTP 0회·Process/Thread 회수 확인 | 로컬 합성 구성의 이 단계는 확인. Test 전용 실패 Scanner·통제된 HTTP를 사용했으며 일반 Provider/실제 Key·Cloud는 5번에 남음. 실제 모델·장기 부하의 자원으로 확대하지 않음 |
-| 4. Cloud 관측과 비용 | 새 Source의 CI·ECR 전달 완료. 다음은 새 Task의 Request/Job Log·대표 실패·HTTP/AI 지표와 실제 과금·저장/보관 비용 확인 | 이번 Manifest Digest와 명세를 대조하고 별도 승인 범위의 AI 비활성 Task 교체부터 진행. 전체 복원·Rollback을 반복하지 않음. 실제 비용은 미확인 |
+| 4. Cloud 관측과 비용 | 새 Source의 CI·ECR 전달·명세/Digest 대조·AI 비활성 Task 교체 완료. 재로그인·기존 문의 조회와 실제 요청 ID의 새 Cloud Log 대조 확인 | Job/Attempt의 대표 실패·HTTP/AI 지표와 실제 과금·저장/보관 비용 확인은 남음. 전체 복원·Rollback을 반복하지 않음. 실제 비용은 미확인 |
 | 5. Cloud 실제 AI | 합성 전용 구성·검증 Image/명세·Secret 참조·필요 사양 확인 후 실제 AI·RDS·AGENT 화면 연결 | 당일 호출 범위/비용·리소스 변경 승인 후 진행. 임의 사용자 원문은 대상에서 제외하고 기존 PENDING의 기한·예약을 초기화하지 않음 |
 | 6. DNS 비교 | 기존 Cloudflare 서비스 DNS는 유지하고 Route 53 Hosted Zone·NS·Alias와 직접 조회를 별도 실험 | 기존 메인 DNS 이전 없이 책임을 비교. 새 Zone 등 유료 리소스 생성은 범위·비용 승인 뒤 실행 |
 | 7. 최종 마감 | 변경 Code의 Local/CI 회귀·Cloud Browser 재검증, 자료 없는 설명·직접 설정 수정·재현/비용/보관 검토·통합 WIL | 실제 결과와 미완료 상태를 유지. 블로그/포럼은 작성자 확인 뒤 각각 완료 처리 |
@@ -72,11 +74,11 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 ### 10월 20일 재개 순서
 
 1. **전체 App의 실패와 회수 완료:** 기존 합성 Image·통제된 Provider 구성에서 정상·고의 Timeout·비정상 종료 세 실행을 마쳤다. 실패 Job·원문·예약·전송 0회와 Process/Thread 회수를 실제 PostgreSQL·cgroup에서 확인했다. 결과와 제한은 위 보고서를 따른다.
-2. **Cloud 관측과 비용:** 현재 실행 상태를 조회했고 새 Source의 Push·CI·ECR 전달과 정확한 Digest를 확인했다. 다음은 실행 명세 대조와 별도 승인 범위의 AI 비활성 Task 교체·새 Request Log·기존 문의 조회다. 이후 Request/Job/Attempt와 대표 실패를 추적한다. 비용 조회는 접근 거부로 남아 있으며 이번 Image 전달만 선행 조건을 해제했다. 실제 사용량·365일 Log 보관 등 남는 비용 확인은 별도로 유지한다.
-3. **합성 입력의 실제 AI 배포:** 앞선 실행 조건을 충족하면 별도 승인한 입력·호출/비용·Secret 참조·Task 명세로 실제 AI·RDS·AGENT 화면을 확인한다. 로컬 응답 Fixture나 기존 P 배포본의 Health를 이 결과로 바꾸어 기록하지 않는다. 일반 입력과 개인정보 모델 고도화는 활성화하지 않는다.
+2. **Cloud 관측과 비용:** 새 Source의 CI·ECR 전달·명세/Digest 대조와 AI 비활성 Task 교체를 마쳤다. 재로그인·기존 문의 조회와 실제 요청 ID의 새 Cloud Log도 확인했다. 남은 관측은 Job/Attempt·대표 실패와 HTTP/AI 지표다. 비용 조회는 접근 거부로 남아 있으며 이번 Image 전달만 선행 조건을 해제했다. 실제 사용량·365일 Log 보관 등 남는 비용 확인은 별도로 유지한다.
+3. **합성 입력의 실제 AI 배포:** 문의 원문 보존과 Job 상태 불변을 구분한다. 기존 Ticket 1·2의 Job은 입력 거부·예약 증가를 허용하되 원문은 유지하는 범위를 승인받았으므로 새 Job 선택 기능은 추가하지 않는다. 읽기 전용 조회에서 미완료 두 건과 그 외 대상 0건을 확인했다. 다음은 승인한 새 Key 한 개·Execution Role 한 문장, 같은 Image·단일 Task의 합성 한 건(새 Job 생성 1회·보완 0회) 검증과 AI 비활성 `:6` 복귀다. 일반 입력·개인정보 모델 고도화·RDS 설정/Schema·DNS·기존 Secret은 변경하지 않는다.
 4. **DNS와 최종 마감:** Cloudflare DNS를 유지한 Route 53 비교·별도 조회, 변경 Code의 Local/CI·Cloud Browser 회귀, 자료 없는 설명·설정 수정과 WIL을 이어간다. 유료 리소스 생성·게시·삭제는 각각의 실행 범위를 확인한다.
 
-20일은 남은 학습을 재개하는 날이지 모든 항목의 완료 기한이 아니다. 1번을 마쳤고 다음은 2번의 현재 Cloud 상태·비용과 새 Log 검증 준비다. 이후는 선행 조건·승인·실제 가용시간에 맞춰 나눈다. 취업 우선 일정과 주간 기술 과업 6시간 상한을 유지하며, 추가 날짜는 회차 마감 때 조정한다. 이번 로컬 검증에서는 AWS 실행 리소스·권한·Secret을 변경하거나 실제 AI를 호출하지 않았다.
+20일은 남은 학습을 재개하는 날이지 모든 항목의 완료 기한이 아니다. 1번과 2번의 새 Task·요청 Log 검증을 마쳤고 다음 핵심은 별도 승인한 합성 AI 실험이다. 새 실행 대상 선택 기능을 공통 선행 작업으로 늘리지 않는다. 이후는 선행 조건·승인·실제 가용시간에 맞춰 나눈다. 취업 우선 일정과 주간 기술 과업 6시간 상한을 유지하며, 추가 날짜는 회차 마감 때 조정한다. AI 비활성 교체 승인과 실제 AI 활성화·새 Key 변경 승인은 구분해 기록한다.
 
 ### 배포 마감 이후의 후속 과업
 

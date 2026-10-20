@@ -40,6 +40,16 @@ JSON 문법이 올바른 것과 검사 실행의 성공도 다르다. 정상 JSO
 
 사용자가 새 App에 AGENT로 재로그인한 뒤 Ticket 1·2의 기존 제목·OPEN 상태와 PENDING Job을 조회했다. 로그인 후 `/`의 404와 보호 API의 로그인 실패는 구분했다. 다만 기존 Session은 교체 전부터 만료돼 있었으므로 이번에는 Session 소실 시점을 증명했다고 하지 않는다. 별도 HTTPS 요청의 `X-Request-Id`와 새 Task의 `HANDLER_COMPLETED` Log도 일치했다. [Task 교체 실행 기록](../lab-reports/2026-10-20-ai-disabled-task-replacement.md)에 변경 범위·검증 필드·Log 검색 문법을 정리했다. RDS·DNS·Secret·IAM과 AI 비활성 설정은 유지했다.
 
+다음 실제 AI 실험을 준비하며 Worker의 실행 대상을 확인했다. 현재 SQL은 오래된 PENDING부터 선택하고 실행권·예약을 Commit한 뒤 입력 검사를 한다. 따라서 합성 입력 제한만으로 기존 Job의 상태 불변을 보장하지는 못한다. 새 실험 Job만 선택하는 안을 제시했으며, Claim뿐 아니라 복구·기한 만료 처리의 범위도 함께 확인해야 한다고 설명했다. 이 차이는 [합성 배포 학습자료](../study-docs/synthetic-deployment-and-runtime-configuration.md#job-선택과-외부-전송-전-검사는-다르다)에 추가했다.
+
+기존 실행권·예약 PostgreSQL Integration Test 18개, Worker 구성 8개, 합성 입력 제한 9개를 로컬에서 다시 실행해 총 35개가 통과했다. 이는 현재 동작의 회귀 결과이며 새 Job 선택 제한을 구현한 결과는 아니다. 새 AWS 변경·실제 AI 호출은 하지 않았다.
+
+이후 문답에서 Job 실패는 AI 처리 작업의 실패이며, Job 상태가 바뀌어도 원문이 남아 있으면 문의는 보존된다고 답했다. 이 두 답은 맞다. 기존 Job의 상태 불변까지 요구하는 것과 구분했으며, 새 Job 선택 기능을 추가하지 않고 승인한 두 기존 Job의 입력 거부를 허용하는 최소 실험으로 진행한다.
+
+합성 실험용 부분 명세·Parameter 읽기 정책 초안과 설정 결합 Test를 Lab `e01ed83`에 정리했다. Java `verify` 1,014개·패키징 후 2개, JavaScript 286개와 ESLint가 통과했다. Main·Image는 바꾸지 않았고 기존 실행 명세에 설정을 이름별로 병합한다. 이 로컬 결과는 실제 Key 인증·Cloud AI 실행 결과가 아니다.
+
+사용자는 새 Standard SecureString 한 개와 Execution Role의 해당 ARN 읽기 한 문장, 같은 Image·단일 Task의 합성 문의 한 건과 AI 비활성 `:6` 복귀를 승인했다. Private CloudShell의 psql 17.11·TLS 1.3으로 읽기 전용 조회한 결과 미완료는 Ticket 1·2의 PENDING 두 건뿐이고 Attempt·예약은 모두 0이었다. 기존 Ticket·Message Hash도 확보했다. 새 Job은 생성 1회·보완 0회이며 실패 뒤 추가 호출하지 않는다. 현재는 Key·권한 적용 전 준비 단계이고, 실제 Provider 호출·제안 저장은 아직 확인하지 않았다.
+
 ## 이어갈 배포 학습
 
 - 새 Source의 CI·ECR 전달과 Digest·실행 명세 대조, AI 비활성 Task 교체·새 Request Log·기존 문의 조회를 완료했다. 실제 비용·저장/보관량 확인은 남아 있다.

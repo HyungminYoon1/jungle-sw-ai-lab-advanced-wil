@@ -3,13 +3,17 @@
 > 상태: 일부 검증 — HTTPS·DB 복원·원본 복귀와 A→P·B 적용·P Image 복귀 완료. V8·업무 Hash 보존과 재로그인 조회 확인. 전체 AI와 남은 마감은 미완료
 > 요금 확인일: 2026-10-12, 2026-10-14 첫 Fargate 실행 요금 재확인
 > 진행 반영: 10/16 학습 회차, P 복귀·최종 대조는 10/17 KST — B :5 적용 뒤 같은 RDS V8을 유지한 P :4로 복귀했다. 일곱 Table의 전후 건수/Hash·Target Healthy·HTTPS Health UP과 AGENT 재로그인 뒤 기존 문의·새 실패 코드 두 건 조회를 확인했다. AI 비활성 유지
-> 계획 수정일: 2026-10-20 — 새 main의 CI·ECR 전달 반영. 실행 App은 교체하지 않았으며 기존 최소 비용·보안·Log 365일 보존과 승인 경계 유지
+> 계획 수정일: 2026-10-20 — 새 main의 CI·ECR 전달과 AI 비활성 Task 교체·Cloud 요청 Log 반영. 기존 최소 비용·보안·Log 365일 보존과 승인 경계 유지
 
 배포 학습의 범위는 그대로 유지하고 기록을 `week8-9`에 통합한다. 실제 10/17의 연장 실습은 16일 회차에 포함하며, 17·18일에는 새 학습을 배정하지 않고 19일에 재개한다. 실제 Cloud 실행 상태·남는 비용은 휴무 일정과 별개다. 이번 문서 변경으로 App·RDS·ALB를 중지하거나 새로 실행하지 않았으며, 재개 전 현재 상태와 필요한 실행/보관 범위를 확인한다. [현재 재개 순서](./weekly-plan.md#10월-19일-마감과-10월-20일-재개)
 
 10/17에는 원본 RDS·Schema V8·계정·Network를 그대로 두고 Private CloudShell의 관리용 psql만 17.11로 맞췄다. 공식 Client를 별도 임시 경로에서 선택해 기존 16.15를 보존했으며 RDS 17.11·TLS 1.3·SQL/메타 명령과 일곱 Table Hash 불변을 확인했다. [접속 도구 보고서](./lab-reports/2026-10-17-cloudshell-psql17.md). 추가 유료 리소스·NAT·권한·App 설정 변경은 없다. 새 VPC 세션에서는 도구와 공개 CA를 다시 준비한다.
 
 10/20에는 새 main `d8ca65f`의 CI와 [ECR 전달](./lab-reports/2026-10-20-ecr-image-publication.md)을 완료했다. 로그 검증 Test의 설정 의존성만 수정한 뒤 전체 회귀·Image Build를 통과했고 기존 ECR에 검증 Image 한 개를 추가했다. 비용 조회가 거부된 뒤 사용자가 이번 전달의 선행 조건을 해제했으므로 실제 누계는 미확인으로 남긴다. App·RDS·ALB·IAM·DNS·Secret·AI 활성화는 변경하지 않았다. 다음은 이번 Manifest Digest를 사용한 별도 승인 범위의 AI 비활성 Task·새 Log 검증이다.
+
+이후 별도 승인한 [AI 비활성 Task 교체](./lab-reports/2026-10-20-ai-disabled-task-replacement.md)를 마쳤다. 새 명세 `:6`은 기존 `:4`에서 Image만 바꾸었고 Task·Healthy Target 각 한 개로 정리했다. 새 App의 RDS V8 연결·AGENT 재로그인·기존 Ticket 1/2와 Job 조회, 실제 응답과 같은 요청 ID의 Cloud Log를 확인했다. RDS·DNS·Secret·IAM은 변경하지 않았다. 실제 AI는 아직 비활성이며 다음 활성 실험의 입력·대상 Job·호출/비용·Secret 참조 범위는 별도로 확정한다.
+
+그다음 합성 실제 AI 실험의 Key·권한·단일 Task 실행과 `:6` 복귀를 별도로 승인받았다. 새 `/helpdesk/learning/ai/provider-key` Standard SecureString·기존 `aws/ssm`과 Execution Role의 그 ARN 읽기 한 문장만 추가하는 범위다. 값 입력·저장은 작성자가 직접 한다. 기존 여섯 Parameter·네 정책 문장·Task Role·배포 사용자 권한은 유지한다. 사전 SQL에서는 기존 Ticket 1·2 외 미완료 Job이 없음을 확인했으며, 두 Job의 입력 거부·예약 증가는 허용하되 Ticket·Message 원문을 유지한다. 새 Job 선택 기능·새 Image는 추가하지 않는다. 새 합성 한 건의 생성 한도는 1회·보완 0회이며 실제 실행 결과는 적용 후 별도로 기록한다. RDS 설정/Schema·DNS·기존 Secret 변경은 승인 범위에 없다.
 
 ## 확인한 조건
 
