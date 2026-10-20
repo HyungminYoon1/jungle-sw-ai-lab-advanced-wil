@@ -51,6 +51,8 @@ Docker·CI·System·관측·IAM·ECS·ECR·RDS·DNS·HTTPS·복구를 모두 유
 
 20일 첫 검증에서는 같은 Main Image의 정상·Timeout·비정상 종료를 분리 실행해 모두 통과했다. 실패 자식이 정상 JSON을 출력한 지점과 실제 종료를 대조했고 HTTP/제안 0건·원문/예약 보존·Process/Thread 회수를 확인했다. [통합 실패 보고서](./lab-reports/2026-10-20-synthetic-runtime-failure-cleanup.md)의 최고 메모리는 정상 300.26·Timeout 460.54·비정상 종료 265.88 MiB이며 OOM은 없었다. 처리 전 수치도 달라 실패 Mode 하나의 효과로 비교하지 않는다. 관련 Java 129개·JavaScript 전체 279개 통과, 실제 AI·AWS·Push/CI/ECR은 미실행이다. [20일 노트](./study-notes/2026-10-20-study-questions.md)의 설명과 이해 확인 질문에서 이어간다.
 
+추가 [전달 준비](./lab-reports/2026-10-20-deployment-delivery-preflight.md)에서는 전체 로컬 `verify`의 Java 1,009개·패키징 후 2개가 통과했다. 문답에서도 부모 App과 검사 자식, ECR 업로드와 새 Task를 구분했다. 승인 후 첫 Push의 CI는 로그 검증 Test 1개가 실행 순서에 의존해 실패했다. 로컬에서 재현한 뒤 Test 설정만 분리했고 순서 고정 28개가 통과했다. 수정 Commit `d8ca65f`의 CI는 Java 1,010개·패키징 후 2개·JavaScript 279개·Lint·Image Build까지 통과했다. 비Root 조회에서는 Task 1개 실행·RDS 사용 가능·ALB 활성을 확인했다. Billing 비용은 접근 거부로 미확인이며 사용자가 이번 Image 한 개의 비용 조회 선행 조건을 해제해 ECR 전달을 이어간다. 리소스·권한·Secret·AI 활성화는 변경하지 않는다.
+
 기존 V1 JSON·위치 검증과 Known Fragment Guard, 실패 시 외부 전송 중단, Ticket·Message·예약·현재 Attempt 보존은 유지한다. 전체 AI 연결 전에 필요한 최소 구성과 실제 전송 직전 Body 검사는 확인하되, V2를 먼저 연결할 의무는 없다. 외부 AI·AWS 변경은 그날의 실행 범위와 비용을 별도로 확인한다.
 
 | 순서 | 배포 학습과 구현 | 현재 근거와 다음 확인 |

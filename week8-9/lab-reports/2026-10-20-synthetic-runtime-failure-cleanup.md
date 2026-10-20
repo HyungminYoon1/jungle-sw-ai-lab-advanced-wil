@@ -51,7 +51,9 @@ Timeout 실행은 Job 전부터 현재 사용량이 높았다. 이 결과만으�
 
 ## 회귀와 재현
 
-새 Mode 계약 Unit Test 5개와 기존 관련 Test를 합친 Java 129개가 16:38:02 KST에 실패·오류·건너뜀 없이 통과했다. JavaScript 전체 279개, 변경 JS의 ESLint 10.11.0·PowerShell 문법·Diff 공백 검사도 통과했다. 전체 Java `verify`와 원격 CI는 이번에 실행하지 않았다.
+새 Mode 계약 Unit Test 5개와 기존 관련 Test를 합친 Java 129개가 16:38:02 KST에 실패·오류·건너뜀 없이 통과했다. JavaScript 전체 279개, 변경 JS의 ESLint 10.11.0·PowerShell 문법·Diff 공백 검사도 통과했다.
+
+이후 배포 전달 준비에서 전체 Java `verify`도 실행했다. 17:22:56 KST에 Surefire 1,009개와 패키징 후 Failsafe 2개가 실패·오류·건너뜀 없이 통과했다. 이는 추가 로컬 회귀다. 이후 승인받은 Push·CI 진행과 비용 조회에 따른 ECR 보류는 [전달 전 확인](./2026-10-20-deployment-delivery-preflight.md)에 따로 기록한다.
 
 ```powershell
 .\mvnw.cmd -B -ntp test-compile

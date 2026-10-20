@@ -12,7 +12,13 @@ Timeout은 기다림의 한도가 끝났다는 뜻이지 Process가 이미 종�
 
 JSON 문법이 올바른 것과 검사 실행의 성공도 다르다. 정상 JSON을 출력했더라도 종료하지 않거나 현재 계약의 정상 종료 코드 0을 만족하지 못하면 결과를 사용하지 않는다. 검사 실패가 별도 Transaction으로 접수한 Ticket·Message까지 취소하는 것은 아니다.
 
-개념과 추가 복습 질문은 [합성 실행 학습자료](../study-docs/synthetic-deployment-and-runtime-configuration.md)에 보완했다. 아래 질문의 독립 답변은 아직 확인하지 않았다.
+개념과 추가 복습 질문은 [합성 실행 학습자료](../study-docs/synthetic-deployment-and-runtime-configuration.md)에 보완했다.
+
+## 문답에서 구분한 실행 대상과 배포 산출물
+
+처음에는 검사기의 Exit Code 7을 Helpdesk App 전체의 종료로 받아들여, App이 없어 답변을 받을 수 없으므로 외부 요청을 보내면 안 된다고 답했다. 이번에 종료된 것은 별도 검사 자식 Process이며 외부 AI 요청도 아직 보내기 전이라는 설명을 들었다. 이어진 확인에서는 부모 App이 Job 실패를 DB에 기록하고 다른 요청을 처리할 수 있다고 답했다.
+
+새 Code의 Cloud 확인에는 Source를 전달·교체해야 한다고 답했지만 배포하는 산출물이 구체적이지 않았다. Source의 Test·Build → JAR를 포함한 Image → ECR 업로드 → 새 Task 실행 순서를 설명한 뒤, ECR 업로드만으로 기존 Task가 바뀌지 않으며 새 Image로 새 Task를 실행해야 한다고 답했다.
 
 ## 실제 실행으로 확인한 것
 
@@ -21,6 +27,12 @@ JSON 문법이 올바른 것과 검사 실행의 성공도 다르다. 정상 JSO
 최고 메모리는 정상 300.26 MiB·Timeout 460.54 MiB·비정상 종료 265.88 MiB였다. Timeout 구성은 처리 전부터 사용량이 높았으므로 차이를 Timeout 하나의 효과나 누수로 단정하지 않는다. 실제 모델이 없는 제한 실험의 값이며 Cloud 사양을 새로 확정하지 않았다.
 
 관련 Java 129개·JavaScript 전체 279개가 통과했다. [실행 보고서](../lab-reports/2026-10-20-synthetic-runtime-failure-cleanup.md)에 조건·DB 결과·자원·회귀 범위를 정리했다. Provider 응답은 통제된 로컬 HTTP이며 실제 AI·AWS·Browser 결과가 아니다.
+
+이어서 전체 로컬 `verify`의 Java 1,009개·패키징 후 2개도 통과했다. 처음 원격은 이전 Source였으므로 그 CI 성공을 새 코드의 결과로 읽지 않았다. [전달 준비](../lab-reports/2026-10-20-deployment-delivery-preflight.md)에서는 일반 Push의 검증과 수동 ECR 업로드, 업로드와 새 Task 실행을 구분했다.
+
+사용자는 두 저장소 Push·CI와 비용 확인 후 Image 한 개의 조건부 ECR 추가를 승인했다. 비Root AWS 조회에서는 기존 Task 1개 실행·RDS 사용 가능·ALB 활성을 확인했지만 월간 누계와 예상 비용은 접근 거부로 읽지 못했다. 처음에는 ECR을 보류했고, 이후 사용자가 비용 조회를 뒤로 미루고 진행하도록 요청해 이번 한 개의 전달을 이어간다. 리소스·권한·Secret·AI 활성화는 변경하지 않았으며 비용 조회 실패를 비용 0원으로 해석하지 않는다.
+
+첫 Push의 CI는 Java 1,009개 중 로그 검증 1개가 실패해 Image Build 전에 멈췄다. 앞선 Spring Test의 `WARN` 설정 때문에 다음 Unit Test가 기대한 `INFO` 로그를 받지 못한 문제를 같은 순서의 로컬 실행으로 재현했다. 두 로그 Test가 필요한 수준을 직접 설정하고 이전 값을 복원하도록 고쳤으며 운영 코드는 바꾸지 않았다. 수정 뒤 순서 고정 Test 28개가 통과했고 수정 Commit `d8ca65f`의 원격 CI도 Java 1,010개·패키징 후 2개·JavaScript 279개·Lint·Image Build까지 통과했다. 이는 AWS 장애나 IAM 오류의 수정과는 다른 Source 검증 단계다.
 
 ## 이어갈 배포 학습
 
