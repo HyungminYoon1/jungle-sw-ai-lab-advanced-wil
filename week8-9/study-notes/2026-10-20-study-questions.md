@@ -1,6 +1,6 @@
 # 10월 20일 검사 실패와 배포 준비
 
-> 상태: 학습 진행 중. 첫 로컬 통합 실패 검증을 마쳤으며 Cloud 관측·비용 확인 등은 남아 있다.
+> 상태: 학습 진행 중. 로컬 통합 실패 검증·CI 실패 복구·새 Image의 ECR 전달을 마쳤으며 새 Task의 Cloud 관측·비용 확인 등은 남아 있다.
 
 ## 오늘 이어갈 범위
 
@@ -34,9 +34,11 @@ JSON 문법이 올바른 것과 검사 실행의 성공도 다르다. 정상 JSO
 
 첫 Push의 CI는 Java 1,009개 중 로그 검증 1개가 실패해 Image Build 전에 멈췄다. 앞선 Spring Test의 `WARN` 설정 때문에 다음 Unit Test가 기대한 `INFO` 로그를 받지 못한 문제를 같은 순서의 로컬 실행으로 재현했다. 두 로그 Test가 필요한 수준을 직접 설정하고 이전 값을 복원하도록 고쳤으며 운영 코드는 바꾸지 않았다. 수정 뒤 순서 고정 Test 28개가 통과했고 수정 Commit `d8ca65f`의 원격 CI도 Java 1,010개·패키징 후 2개·JavaScript 279개·Lint·Image Build까지 통과했다. 이는 AWS 장애나 IAM 오류의 수정과는 다른 Source 검증 단계다.
 
+이후 [수동 ECR 전달](../lab-reports/2026-10-20-ecr-image-publication.md)도 같은 Source를 다시 검증하고 성공했다. 검증 Job이 만든 Image를 재Build 없이 Publish Job으로 옮겼고 ECR 조회 Digest와 Push 결과가 같았다. 새 Manifest Digest는 `sha256:0f53c6ce5532d44b4a0b3e8123c27498aeb466539ee02f00326eb111c9e9296a`다. 기존 Image·Task는 유지했으므로 새 코드의 Cloud Log나 실제 AI 배포까지 확인한 것은 아니다.
+
 ## 이어갈 배포 학습
 
-- 현재 AWS 실행 상태·실제 비용·저장/보관량을 확인하고 새 Code의 CI·ECR 전달·Cloud Log 검증으로 이어간다. Push·리소스 변경은 승인한 실행 범위를 확인한다.
+- 새 Source의 CI·ECR 전달은 완료했다. 다음은 이번 Digest와 실행 명세 대조, 별도 승인 범위의 AI 비활성 Task 교체·새 Request Log·기존 문의 조회다. 실제 비용·저장/보관량 확인은 남아 있다.
 - 합성 입력의 Cloud 실제 AI는 당일 입력·호출/비용·Secret 참조·Task 명세를 별도로 확인한다. 기존 PENDING의 기한·예약은 초기화하지 않는다.
 - 기존 Cloudflare DNS를 유지한 Route 53 비교, 최종 회귀·직접 설명·설정 수정·WIL과 보관 정리를 남은 순서로 유지한다.
 

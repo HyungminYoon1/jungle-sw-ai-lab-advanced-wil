@@ -2,7 +2,7 @@
 
 > 확인일: 2026-10-20 KST
 > Lab Source: 최초 전달 `57c4334`, Test 설정 분리 수정 `d8ca65f`
-> 결과: 최초 CI의 Test 설정 의존성을 재현·수정하고 새 Source의 CI·Image Build 통과. AWS 비용은 접근 거부로 미확인이며, 사용자가 이번 Image 한 개의 비용 조회 선행 조건을 해제해 ECR 전달을 이어감
+> 결과: 최초 CI의 Test 설정 의존성을 재현·수정하고 새 Source의 CI·Image Build·ECR 전달 완료. AWS 비용은 접근 거부로 미확인이며 사용자가 이번 한 개의 비용 조회 선행 조건을 해제함. 새 Task는 실행하지 않음
 
 ## 로컬과 원격 Source
 
@@ -68,3 +68,7 @@ Lab main을 `57c433476902d97095ebd0613ec6a8aa8eb5ef33`까지 Fast-forward Push�
 ECS의 Container Health는 `알 수 없음`이었다. Task의 실행 상태와 ALB의 활성 상태만으로 새 Code·Target Health·업무 기능을 검증했다고 보지 않는다. RDS 화면의 `DescribeGlobalClusters` 거부도 남아 있지만 지정 DB의 `사용 가능` 상태와 구성은 읽을 수 있었다. 이번에는 DB 접속·Row 조회·새 Cloud Log 실험을 수행하지 않았다.
 
 비용 화면의 접근 거부는 비용 0원이나 리소스 중지를 의미하지 않는다. 기존 Task·RDS·ALB가 유지되고 있어 실제 누계와 월 3만 원 상한의 비교는 미확인이다. Root 사용·IAM 확대·자동 중지/삭제는 하지 않았다. 처음 승인 조건에 따라 ECR을 보류한 뒤 사용자가 비용 조회를 뒤로 미루고 진행하도록 요청했다. 이에 이번 Image 한 개의 업로드에는 비용 조회를 선행 조건으로 두지 않는다. 월 상한을 충족했다고 기록하거나 이 요청을 무제한 리소스 실행·AI 호출 승인으로 넓히지 않는다.
+
+## 이어진 ECR 전달
+
+두 저장소 Push와 위 CI 확인 후 같은 Source의 수동 Run `39398031412`를 실행했다. 전체 검증·Image Build와 기존 ECR에 한 개의 추가가 성공했고, 같은 실행의 검증 Image 재사용·Manifest Digest 일치를 확인했다. [ECR 전달 보고서](./2026-10-20-ecr-image-publication.md)에 정확한 산출물과 실행 범위를 기록한다. Task·RDS·ALB·IAM·DNS·Secret·AI 활성화는 변경하지 않았다.
