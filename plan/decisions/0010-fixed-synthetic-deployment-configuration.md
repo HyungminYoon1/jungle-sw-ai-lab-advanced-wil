@@ -51,3 +51,11 @@ V2와 일반 모델 정확도 고도화는 계속 후속으로 남긴다. 기존
 실행마다 새 Project·새 PostgreSQL·합성 Secret 파일을 사용한다. App과 DB는 외부 경로 없는 내부 Network 한 개에만 연결하고 Host Port는 공개하지 않는다. 실행 전에 Network·CPU/Memory 제한·실험 소유권을 검증한다. 끝난 뒤 해당 Project의 Container·Network와 합성 Secret 파일만 제거하고 DB Volume·Image는 보존한다. 이 선택은 원문이나 기존 사용자의 데이터를 정리하는 절차가 아니다.
 
 Service 직접 접수의 합성 작성자 보존과 자동 Scheduler·로컬 HTTP·자원 검증을 확인한다. Browser 인증 작성자 선택·실제 AI·RDS TLS·일반 개인정보 모델 품질은 각자의 검증 범위로 유지한다. 자원 결과는 App cgroup 기준이며 별도 PostgreSQL Container의 메모리를 포함하지 않는다.
+
+### 통합 실패를 위한 Test 전용 선택
+
+10/20에는 같은 Main Image에서 Timeout·비정상 종료 후 자원·DB 결과를 확인하기 위해 Test 전용 Mode를 추가했다. Main 프로그램에 실패 옵션을 넣는 안과, 개별 Transport Test만으로 전체 App 실패를 대신하는 안은 선택하지 않았다. Test Configuration의 Primary Scanner만 교체해 고정 입력 제한·패키징된 Process Transport·Preparer·자동 Worker·실제 PostgreSQL을 유지한다.
+
+Test 자식은 Main의 합성 프로그램으로 JSON을 출력한 뒤 실행 증거를 남기고 대기하거나 7로 종료한다. Mode는 실행 도구의 고정 Enum으로만 선택하며 문의 Body·사용자가 보낸 인자로 고르지 않는다. Main의 API·설정·실패 코드·예약 정책·DB Schema에는 변경이 없다. 실패 주입과 정상 실행의 차이를 결과에 명시하며 실제 Cloud·모델 품질의 근거로 확대하지 않는다.
+
+영향 파일은 Lab의 기존 Runtime Experiment·Compose·검증 Script·관련 Test와 README다. 다음 검토는 새 Code의 CI/ECR 전달·Cloud 관측이며, [통합 실패 보고서](../../week8-9/lab-reports/2026-10-20-synthetic-runtime-failure-cleanup.md)의 원문·예약 보존·자원 결과를 기준으로 삼는다.

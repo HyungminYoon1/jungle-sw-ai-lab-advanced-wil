@@ -66,6 +66,14 @@ Task·Container 크기를 정할 때는 App·Worker·검사 Process를 함께 �
 
 Memory와 Memory+Swap 상한을 같은 값으로 주면 추가 Swap을 허용하지 않는 Docker 설정이 된다. 한도 안에서 한 번 성공한 결과만으로 장시간·동시 처리까지 보장하지는 않는다. [Docker 메모리와 Swap 제한](https://docs.docker.com/engine/containers/resource_constraints/#--memory-swap-details)
 
+## 검사 결과와 실행 완료를 함께 확인한다
+
+현재 Process Transport는 결과를 끝까지 읽고 자식의 정상 종료까지 확인해야 문자열을 반환한다. JSON을 출력했지만 stdout을 열어 둔 채 계속 실행한다면 아직 끝난 검사가 아니다. 정상 JSON 뒤 Exit Code 7로 끝나도 현재 계약의 실행 성공 조건인 0을 만족하지 못하므로 채택하지 않는다.
+
+Timeout은 기다릴 수 있는 시간이 끝났다는 뜻이지 자식의 종료를 보장하는 명령이 아니다. 직접 시작한 Process의 실제 종료, Pipe 닫힘과 보조 Thread 회수를 확인해야 한다. 예외 하나가 발생한 것과 자원 회수가 끝난 것은 구분한다.
+
+실패 처리는 접수와 별개다. 원래 Ticket·Message는 유지하고 현재 Job의 실패를 별도 Transaction으로 저장하며, 검사를 통과하지 않은 입력은 Provider로 보내지 않는다. 실패 저장의 Commit도 확인해야 하며 예약을 임의로 초기화하지 않는다. App이 계속 응답하는 것과 해당 AI Job이 성공한 것도 다른 판단이다.
+
 ## 검증 결과를 어디까지 읽어야 하는가
 
 Unit Test는 입력 제한과 개별 규칙을 확인한다. JAR를 패키징한 뒤의 Integration Test는 JAR 안의 자식 실행과 Spring 개인정보 Bean·수동 Worker Tick·실제 PostgreSQL·로컬 HTTP를 연결한다.
@@ -81,3 +89,4 @@ Unit Test는 입력 제한과 개별 규칙을 확인한다. JAR를 패키징한
 5. 수동 Worker Tick과 로컬 HTTP Test의 성공으로 자동 Scheduler·실제 AI·Cloud 실행까지 확인했다고 말할 수 있는가?
 6. 로컬 개인정보 모델과 외부 OpenAI 모델은 각각 어느 서버의 RAM·CPU로 추론하는가?
 7. 자식 Process가 종료됐는데 Peak가 그대로 남았다는 이유만으로 메모리 누수라고 볼 수 있는가?
+8. 정상 JSON을 출력한 뒤 종료하지 않거나 Exit Code 7로 끝났다면 왜 결과를 채택할 수 없는가? Timeout 예외만으로 자원 회수를 완료 처리해도 되는가?
