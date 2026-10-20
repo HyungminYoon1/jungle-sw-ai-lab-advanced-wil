@@ -1,8 +1,24 @@
-# 10월 20일 검사 실패와 배포 준비
+# 10월 20일 검사 실패와 Cloud AI 배포 검증
 
-> 상태: 학습 진행 중. 로컬 통합 실패 검증·CI 실패 복구·ECR 전달과 AI 비활성 Task 교체·Cloud Log 확인을 마쳤다. 실제 AI 활성 구성의 Cloud 검증·비용 확인 등은 남아 있다.
+> 상태: 학습 진행 중. 로컬 실패 검증·CI 복구·ECR/Task 전달 뒤 고정 합성 문의의 Cloud AI 처리·제안 저장·AGENT 조회를 확인했다. 10/21 연장 실행에서 AI 비활성 복귀·재로그인·기존 문의와 제안 보존 검증까지 마쳤으며 비용 확인 등은 남아 있다.
 
-## 오늘 이어갈 범위
+## 이번 연장 실행의 진행상황
+
+10월 20일에 시작한 학습을 자정 이후에도 이어갔다. 아래 문의 접수·AI 저장·복귀 검증의 실제 실행일은 10월 21일 KST다.
+
+| 확인한 흐름 | 실제 결과 |
+|---|---|
+| 실험 구성 | 같은 검증 Image의 명세 :7, 단일 Task에서 Provider·Worker·고정 합성 검사 활성화 |
+| 문의 접수 | 실제 HTTPS 화면에서 합성 문의 한 건만 생성. Ticket·Message·Job 5, 접수 201 |
+| AI 제안 | Job 5 SUCCEEDED, 생성 한도 1·보완 0·예약 1, Suggestion 1건 저장 |
+| 저장한 제안 조회 | ACCOUNT·UNDETERMINED·PENDING_REVIEW. DB와 AGENT 화면 일치, Ticket은 OPEN 유지 |
+| 기존 문의 | Ticket 1·2와 Message 1·2의 Row Hash 유지. 기존 Job 두 건은 합성 범위 밖 입력 거부로 FAILED·예약 1 |
+| 실험 종료와 복귀 | 실험 Task STOPPED·종료 코드 143. AI 비활성 명세 :6의 새 Task와 Healthy Target 한 개 확인 |
+| 재로그인 검증 | 이전 Session 거부 뒤 AGENT 재로그인. Ticket 1·2와 Job 1·2·5 조회 및 새 Task의 Handler 200 확인 |
+
+추가 문의 접수·AI 재호출은 하지 않았다. RDS 설정·V8 Schema·DNS·기존 Secret도 유지했다. 현재 App의 Provider·Worker는 비활성이지만 DB에 저장한 제안은 계속 조회할 수 있다. 이번 실험의 예약 1건을 외부 HTTP 요청 횟수의 직접 계측값으로 읽지는 않는다.
+
+## 회차 시작 때 정한 범위
 
 어제 정상 처리 뒤 자식 Process가 남지 않는 것을 확인했다. 오늘은 전체 App에서 Timeout·비정상 종료가 발생해도 자원을 정리하고, 접수 원문과 예약을 유지하며 외부 전송을 막는지부터 확인한다. 개인정보 탐지 모델·인물 관계 V2 고도화는 후속으로 유지한다.
 
@@ -50,12 +66,18 @@ JSON 문법이 올바른 것과 검사 실행의 성공도 다르다. 정상 JSO
 
 사용자는 새 Standard SecureString 한 개와 Execution Role의 해당 ARN 읽기 한 문장, 같은 Image·단일 Task의 합성 문의 한 건과 AI 비활성 `:6` 복귀를 승인했다. Private CloudShell의 psql 17.11·TLS 1.3으로 읽기 전용 조회한 결과 미완료는 Ticket 1·2의 PENDING 두 건뿐이고 Attempt·예약은 모두 0이었다. 기존 Ticket·Message Hash도 확보했다. 새 Job은 생성 1회·보완 0회이며 실패 뒤 추가 호출하지 않는다.
 
-이어서 작성자가 Helpdesk 전용 Key를 직접 Standard SecureString으로 등록했다. Codex는 값을 열지 않고 목록의 이름·등급·유형을 확인했다. Execution Role의 지정 ARN 읽기 한 문장도 적용했고 저장된 JSON에서 원래 네 문장 보존을 확인했다. Root는 로그아웃했으며 [Cloud AI 사전 준비 보고서](../lab-reports/2026-10-20-synthetic-cloud-ai-preflight.md)에 실제 적용과 다음 검증을 구분했다. 아직 실험 Task 전환·실제 Provider 호출·제안 저장·비활성 복귀는 수행하지 않았다.
+이어서 작성자가 Helpdesk 전용 Key를 직접 Standard SecureString으로 등록했다. Codex는 값을 열지 않고 목록의 이름·등급·유형을 확인했다. Execution Role의 지정 ARN 읽기 한 문장도 적용했고 저장된 JSON에서 원래 네 문장 보존을 확인했다. Root는 로그아웃했다.
+
+같은 Image로 합성 실행 명세 `:7`을 등록하고 단일 Task를 실행했다. 첫 요청은 태그 전파만 선택해 RunTask의 직접 요청 태그 조건에서 거부됐고, 이전 기록과 대조해 `Project=helpdesk-learning`을 직접 넣어 해결했다. IAM을 넓히지 않았다. 기존 Job 1·2는 입력 범위 거부로 FAILED·예약 1이 됐지만 Ticket·Message Hash는 유지됐다. 따라서 ‘문의 원문 보존’과 ‘AI Job 상태 불변’은 다른 조건이라는 점을 실제 DB로 확인했다.
+
+10/21 00:02 KST의 연장 실행에서 AGENT로 로그인한 뒤 고정 합성 문의 한 건만 접수했다. Ticket·Message·Job 5가 저장되고 접수 Handler는 201을 남겼다. 별도 Worker는 Job 5를 SUCCEEDED로 완료하고 제안 한 건을 저장했다. DB와 실제 AGENT 화면의 요약·ACCOUNT·UNDETERMINED·PENDING_REVIEW가 같았으며 원문과 Ticket OPEN도 유지됐다. 접수 약 0.928초와 Worker Tick 약 27.516초는 서로 다른 구간으로 읽는다.
+
+실험 Task는 중지했고 AI 비활성 `:6`의 새 Task를 실행했다. Spring 기동·V8·Target Healthy와 읽기 전용 SQL의 데이터 보존을 확인했다. 이전 Session은 거부됐고, 작성자가 재로그인한 뒤 기존 Ticket 1·2와 Job 1·2·5를 다시 조회했다. 새 Task의 Handler Log도 모두 200이었다. 저장한 제안을 읽는 데는 Worker를 다시 켜거나 AI를 재호출할 필요가 없었다. [Cloud AI 실행 보고서](../lab-reports/2026-10-20-synthetic-cloud-ai-preflight.md)에 실제 시각·Row·관측 범위를 정리했다. 일반 개인정보 모델·인물 관계 V2는 켜지 않았으며 Token 사용량·원격 HTTP 횟수는 이번 Cloud Log에서 직접 계측하지 않았다.
 
 ## 이어갈 배포 학습
 
 - 새 Source의 CI·ECR 전달과 Digest·실행 명세 대조, AI 비활성 Task 교체·새 Request Log·기존 문의 조회를 완료했다. 실제 비용·저장/보관량 확인은 남아 있다.
-- 합성 입력의 Cloud 실제 AI는 당일 입력·호출/비용·Secret 참조·Task 명세를 별도로 확인한다. 기존 PENDING의 기한·예약은 초기화하지 않는다.
+- 고정 합성 문의의 실제 Cloud AI 처리·제안 저장과 AI 비활성 복귀 뒤 재로그인·데이터 보존까지 확인했다. 기존 기한·예약은 초기화하지 않았다.
 - 기존 Cloudflare DNS를 유지한 Route 53 비교, 최종 회귀·직접 설명·설정 수정·WIL과 보관 정리를 남은 순서로 유지한다.
 
 ## 이해 확인 질문
