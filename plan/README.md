@@ -17,11 +17,15 @@
 
 [Week 8–9 통합 학습 계획](../week8-9/weekly-plan.md)은 Docker·CI·System·AWS·HTTPS·AI 연결·관측·복구의 기존 범위를 유지한다. 초기 4일·40시간 배분을 넘겨 사용한 기간을 통합 명칭에 반영했으며, 미완료 과업을 완료 처리한 것은 아니다.
 
-16일 회차는 실제 17일에 이어진 Image 복귀·psql 17·Process 관찰까지 [16일 노트](../week8-9/study-notes/2026-10-16-study-questions.md)에 합쳤다. 실제 실행 보고서는 해당 날짜를 유지한다. HTTPS 접수/SQL Row·Snapshot 별도 복원·원본 복귀·B→P와 V8/데이터 보존은 확인했고, 전체 AI·나머지 관측·최종 회귀·복습·WIL은 남아 있다.
+16일 회차는 실제 17일에 이어진 Image 복귀·psql 17·Process 관찰까지 [16일 노트](../week8-9/study-notes/2026-10-16-study-questions.md)에 합쳤다. 실제 실행 보고서는 해당 날짜를 유지한다. 당시 HTTPS 접수/SQL Row·Snapshot 별도 복원·원본 복귀·B→P와 V8/데이터 보존을 확인했으며, 이후 AI·관측·DNS 결과와 현재 잔여 과업은 아래 최신 회차를 따른다.
 
 10/17·10/18 휴무 뒤 19일에는 메모리·HTTP/AI 지표·Log·Process 종료를 학습하고, 로컬 합성 Image의 자동 Worker·자원 실험 두 번을 확인했다. 이해 변화와 마감 기준은 [19일 노트](../week8-9/study-notes/2026-10-19-study-questions.md)에 기록했다. 실제 개인정보 모델·Cloud 실제 AI의 완료 근거와는 구분하며 V2·모델 고도화는 후속으로 둔다.
 
-**10/20 화요일 학습 진행 중이다.** 같은 Main Image의 정상·Timeout·비정상 종료를 분리 실행해 전체 App의 실패·자원/DB 보존을 확인했다. [20일 노트](../week8-9/study-notes/2026-10-20-study-questions.md)에서 이어가며, 다음은 현재 Cloud 상태·실제 비용과 새 코드 관측 준비다. 합성 실제 AI·DNS·회귀·WIL도 남은 순서로 유지한다. 전부를 하루에 끝내는 일정은 아니다. Week 10에는 기존 Week 9의 취업 Baseline과 맞춤 지원을 함께 진행하며 Week 11·12는 뒤로 밀지 않는다. 취업 기간의 잔여 수직 학습·Project 보완·마감 후 수평 확장은 합쳐 주 6시간 이내다. [일정 통합 결정](./decisions/0004-combined-week8-9-deployment-learning.md)을 따른다.
+20일에는 통합 실패·자원/DB 보존과 CI·ECR·Task 전달을 확인했다. 자정 이후 실제 Cloud 합성 AI 처리·제안 저장과 비활성 복귀도 마쳤다. [20일 노트](../week8-9/study-notes/2026-10-20-study-questions.md)에 시작 회차와 실제 실행일을 구분했다.
+
+**10/21 회차를 마감하고 남은 내용은 10/22에 이어간다.** [21일 노트](../week8-9/study-notes/2026-10-21-study-questions.md)에 성공/실패 Job 관측·Route 53 직접 조회 비교·최신 Snapshot의 일곱 Table 복원 대조를 기록했다. 임시 DB 삭제·원본과 두 Snapshot 보존 확인은 실제 10/22에 완료했으며, App은 중지 상태다. 남은 것은 최종 복습·변경분 회귀/전달·장기 보관 결정·통합 WIL이다. 실제 월간 비용은 미확인으로 유지하고 리소스 정리는 별도 승인한다.
+
+Week 10에는 기존 Week 9의 취업 Baseline과 맞춤 지원을 함께 진행하며 Week 11·12는 뒤로 밀지 않는다. 취업 기간의 잔여 수직 학습·Project 보완·마감 후 수평 확장은 합쳐 주 6시간 이내다. [일정 통합 결정](./decisions/0004-combined-week8-9-deployment-learning.md)을 따르며 인물 관계 V2·개인정보 모델 고도화는 이번 마감 선행 조건으로 되돌리지 않는다.
 
 ### 초기 계획과 실행 근거
 

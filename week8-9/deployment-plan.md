@@ -1,11 +1,33 @@
 # Week 8–9 AWS 배포와 비용 계획
 
-> 상태: 일부 검증 — HTTPS·DB 복원·원본 복귀와 A→P·B 적용·P Image 복귀 완료. V8·업무 Hash 보존과 재로그인 조회 확인. 전체 AI와 남은 마감은 미완료
+> 상태: 핵심 배포 실험 확인 — HTTPS·Cloud 합성 AI·DNS 비교·Image Rollback·최신 DB 복원 완료. 최종 복습·회귀/전달·장기 보관 결정·WIL은 미완료
 > 요금 확인일: 2026-10-12, 2026-10-14 첫 Fargate 실행 요금 재확인
-> 진행 반영: 10/16 학습 회차, P 복귀·최종 대조는 10/17 KST — B :5 적용 뒤 같은 RDS V8을 유지한 P :4로 복귀했다. 일곱 Table의 전후 건수/Hash·Target Healthy·HTTPS Health UP과 AGENT 재로그인 뒤 기존 문의·새 실패 코드 두 건 조회를 확인했다. AI 비활성 유지
-> 계획 수정일: 2026-10-20 — 새 main의 CI·ECR 전달과 AI 비활성 Task 교체·Cloud 요청 Log 반영. 기존 최소 비용·보안·Log 365일 보존과 승인 경계 유지
+> 진행 반영: 10/21 회차의 Route 53 비교·최신 Snapshot 복원과 실제 10/22 임시 DB 삭제·보존 확인. 원본 DB·두 Snapshot 유지, App STOPPED
+> 계획 수정일: 2026-10-22 — 완료한 AI·관측·DNS·복원과 남은 보관/마감 구분. 기존 최소 비용·보안·Log 365일 보존과 승인 경계 유지
 
-배포 학습의 범위는 그대로 유지하고 기록을 `week8-9`에 통합한다. 실제 10/17의 연장 실습은 16일 회차에 포함하며, 17·18일에는 새 학습을 배정하지 않고 19일에 재개한다. 실제 Cloud 실행 상태·남는 비용은 휴무 일정과 별개다. 이번 문서 변경으로 App·RDS·ALB를 중지하거나 새로 실행하지 않았으며, 재개 전 현재 상태와 필요한 실행/보관 범위를 확인한다. [현재 재개 순서](./weekly-plan.md#10월-19일-마감과-10월-20일-재개)
+배포 학습의 범위는 그대로 유지하고 기록을 `week8-9`에 통합한다. 실제 10/17의 연장 실습은 16일 회차에 포함했고, 17·18일 휴무 뒤 19일에 재개했다. 현재는 10/21 회차를 마감하고 남은 내용을 10/22에 이어간다. 실제 Cloud 실행 상태·남는 비용은 학습 일정과 별개이며, 이번 문서 변경으로 리소스를 추가 실행하거나 정리하지 않았다. [현재 재개 순서](./weekly-plan.md#10월-21일-마감과-10월-22일-재개)
+
+## 10월 21일 마감과 10월 22일 재개
+
+같은 검증 Image의 고정 합성 문의 한 건으로 Cloud AI·제안 저장·AGENT 조회와 AI 비활성 `:6` 복귀를 마쳤다. 이후 Job 1·2의 실패와 Job 5의 성공, jobId·attempt의 Worker Log와 HTTP 조회 Metric을 확인했다. HTTP 시간과 Worker Tick 시간을 구분하며 일반 개인정보 모델·인물 관계 V2는 후속으로 유지한다.
+
+[Route 53 비교](./lab-reports/2026-10-21-route53-direct-query.md)는 별도 Zone·TXT/Alias A 생성, 생성 권한 회수, 권한 서버 직접 응답과 일반 Resolver의 NXDOMAIN까지 확인했다. Cloudflare의 NS·서비스 CNAME은 유지했다. [최신 Snapshot 복원](./lab-reports/2026-10-21-latest-snapshot-restore.md)은 문의 5건·제안/Category 각 1건을 포함한 일곱 Table의 건수/Hash·관계·V1~V8·Sequence가 일치했다.
+
+최신 Snapshot을 만들기 전 App Task 한 개를 중지했고 새 Task는 실행하지 않았다. 실제 10/22에는 별도 최종 승인으로 임시 DB `helpdesk-learning-restore-20261021`만 추가 최종 Snapshot·자동 Backup 보존 없이 삭제했다. 원본 DB와 두 수동 Snapshot의 Available을 재확인했다. 이번 최신 복원에서는 App 전환·AI 호출을 하지 않았다.
+
+| 마지막 확인 대상 | 상태와 남은 결정 |
+|---|---|
+| App | 명세 :6의 Task STOPPED. 재개가 필요하면 별도 실행 범위 확인 |
+| 원본 RDS | Available, 기존 자동 Backup 7일 유지. 장기 보관/정리 결정은 남음 |
+| 수동 Snapshot | `helpdesk-learning-20261016-recovery`·`helpdesk-learning-20261021-final` 모두 Available로 보존 |
+| ALB·Route 53 실습 Zone | 유지 중. App 중지·임시 DB 삭제와 별도로 비용/정리 검토 |
+| Image·Parameter·IAM·ACM·Log | 기존 보관 유지. Log는 365일 조건 유지 |
+
+10/22에는 최종 복습·변경분 회귀/전달 확인·장기 보관 결정·통합 WIL을 진행한다. 이미 확인한 Cloud AI·DNS·전체 복원·Image Rollback을 자동 반복하지 않는다. 실제 월간 비용은 미확인으로 남기며, 요금표 확인일도 새로 확인한 것처럼 바꾸지 않는다. 원본 DB·ALB·실습 Zone 삭제, DNS 변경·App 재실행·Push는 각각 필요한 범위의 승인을 받는다. [21일 학습노트](./study-notes/2026-10-21-study-questions.md)에 이해 확인과 잔여 과업을 정리했다.
+
+## 배포와 복구의 실행 기록
+
+아래 준비·중간 결과는 각 회차 당시의 기록이다. 현재 실행·보관 상태와 남은 작업은 위 10/21 마감 항목을 따른다.
 
 10/17에는 원본 RDS·Schema V8·계정·Network를 그대로 두고 Private CloudShell의 관리용 psql만 17.11로 맞췄다. 공식 Client를 별도 임시 경로에서 선택해 기존 16.15를 보존했으며 RDS 17.11·TLS 1.3·SQL/메타 명령과 일곱 Table Hash 불변을 확인했다. [접속 도구 보고서](./lab-reports/2026-10-17-cloudshell-psql17.md). 추가 유료 리소스·NAT·권한·App 설정 변경은 없다. 새 VPC 세션에서는 도구와 공개 CA를 다시 준비한다.
 
@@ -15,7 +37,7 @@
 
 그다음 합성 실제 AI 실험의 Key·권한·단일 Task 실행과 `:6` 복귀를 별도로 승인받았다. 새 `/helpdesk/learning/ai/provider-key` Standard SecureString·기존 `aws/ssm`과 Execution Role의 그 ARN 읽기 한 문장만 추가하는 범위다. 값 입력·저장은 작성자가 직접 한다. 기존 여섯 Parameter·네 정책 문장·Task Role·배포 사용자 권한은 유지한다. 사전 SQL에서는 기존 Ticket 1·2 외 미완료 Job이 없음을 확인했으며, 두 Job의 입력 거부·예약 증가는 허용하되 Ticket·Message 원문을 유지한다. 새 Job 선택 기능·새 Image는 추가하지 않는다. 새 합성 한 건의 생성 한도는 1회·보완 0회이며 실제 실행 결과는 적용 후 별도로 기록한다. RDS 설정/Schema·DNS·기존 Secret 변경은 승인 범위에 없다.
 
-새 Key는 작성자가 직접 등록했고 목록에서 Standard·SecureString과 정확한 이름을 확인했다. 지정 Execution Role의 원래 네 문장을 유지한 채 해당 Parameter 읽기 한 문장을 적용하고 저장된 JSON도 대조했다. [Cloud AI 준비 보고서](./lab-reports/2026-10-20-synthetic-cloud-ai-preflight.md)에 사전 SQL·설정 Test·실제 적용 범위를 기록했다. Root는 로그아웃했으며 실험 Task·실제 호출·비활성 복귀는 이어질 실행 단계다.
+새 Key는 작성자가 직접 등록했고 목록에서 Standard·SecureString과 정확한 이름을 확인했다. 지정 Execution Role의 원래 네 문장을 유지한 채 해당 Parameter 읽기 한 문장을 적용하고 저장된 JSON도 대조했다. Root 로그아웃·비Root MFA 뒤 실제 :7 실험과 :6 복귀까지 마쳤다. [Cloud AI 실행 보고서](./lab-reports/2026-10-20-synthetic-cloud-ai-preflight.md)에 사전 SQL·설정 Test·실제 적용·Job 5 제안 저장과 기존 원문/복귀 결과를 구분했다. 새 합성 문의 한 건의 실제 실행일은 10/21 KST이며 같은 날 후속 Snapshot 검증 때 App을 중지했다.
 
 ## 확인한 조건
 
@@ -24,7 +46,7 @@
 - 최대 12개월 동안 학습 환경을 보관하되, 실습할 때만 실행해도 된다.
 - AWS 월 지출 상한은 최대 3만 원이다. 이 금액을 채우거나 근처까지 사용하는 목표가 아니다. 학습·Application의 목적을 달성하는 범위에서 지출을 최소화한다. 외부 AI 호출은 별도 당일 승인 범위로 관리한다.
 - 학습용 주소는 `helpdesk.hmyoon.com`이며 기존 DNS는 Cloudflare에서 관리한다.
-- AWS Console 접근과 OIDC·ECR·Image 업로드 Role을 구성했다. Standard Parameter 여섯 개·ECS Execution Role·1년 보존 Log Group과 비Root 사용자·학습 Network·Private RDS·TLS·App DB 계정을 승인 범위에서 적용했다. DB 인증 실패를 지정 Parameter 수정으로 복구했고, ALB·DNS·HTTPS 보안과 실제 접수/SQL Row·HTTP 301·Cloud 관측을 확인했다. 16일 연장 회차에는 Task/Session 비교·Snapshot 별도 복원·원본 복귀와 B→P/V8·데이터 보존을 검증했다. 전체 AI·남은 관측·최종 종료/보관 검토는 남아 있으며 기존 승인을 벗어나는 권한·리소스 변경은 별도 확인한다.
+- AWS Console 접근과 OIDC·ECR·Image 업로드 Role을 구성했다. 첫 Standard Parameter 여섯 개와 별도 승인한 AI Key 한 개, ECS Execution Role·1년 보존 Log Group·비Root 사용자·학습 Network·Private RDS·TLS·App DB 계정을 적용했다. DB 인증 설정 복구·HTTPS 접수/SQL Row·HTTP 301·Cloud 관측·Image Rollback과 실제 합성 AI를 확인했다. 21일에는 DNS 비교·최신 Snapshot 복원을 마쳤고 임시 DB는 실제 22일 정리했다. 남은 것은 최종 복습·회귀/전달·장기 보관 결정·WIL이며, 기존 승인을 벗어나는 변경은 별도 확인한다.
 
 ECR·ECS Fargate·RDS·ALB·DNS·HTTPS·Backup 복원은 [주간 계획](./weekly-plan.md)의 학습 범위를 그대로 유지한다. 비용을 줄이기 위해 해당 학습을 다른 서비스로 대체하거나 생략하지 않는다.
 
