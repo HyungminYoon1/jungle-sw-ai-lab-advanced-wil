@@ -3,7 +3,7 @@
 > 상태: Active
 > 시작일: 2026-08-18
 > 전체 기간: 12주 유지 — 기술 학습 Week 1–9, 취업 우선 Week 10–12. 배포 과정은 Week 8–9 통합
-> 현재 단계: Week 1·2·3·4·6·7 완료 — Week 5 부분 완료·공개 제출 완료. Week 8–9는 Cloud 합성 AI·관측·Route 53 비교·Image 복귀·최신 Snapshot 복원까지 확인. 10/21 회차를 마감하고 실제 10/22 임시 DB 삭제·원본/두 Snapshot 보존 결과를 반영했다. 최종 복습·회귀/전달·보관 결정·WIL은 10/22에 이어감
+> 현재 단계: Week 1·2·3·4·6·7 완료 — Week 5 부분 완료·공개 제출 완료. Week 8–9는 핵심 배포 실험에 이어 10/22 최종 복습·직접 설정 수정 근거·로컬 회귀를 확인했다. 최신 변경의 원격 CI·장기 보관/정리·WIL은 진행 중이며 개인정보 고도화는 후속으로 유지
 
 이 저장소는 SW AI Lab 심화과정에서 선택한 기술을 학습하고, 이해가 바뀐 과정과 재현 가능한 근거를 주차별로 기록한다. 목표는 큰 제품을 기간 안에 완성하는 것이 아니라 AI/AX·Java Backend 직무에 필요한 개념을 직접 설명하고, 작은 실험과 Test로 검증하며, 필요한 범위만 서비스에 적용할 수 있는 역량을 만드는 것이다.
 
@@ -59,7 +59,7 @@ Week 8–9는 같은 배포 학습을 이어온 기간으로 통합한다. Week 
 | 5 | Browser JavaScript·Frontend·E2E·품질 기초 | Partially Completed | [Week 5 학습 계획](./week5/weekly-plan.md) · [WIL](./week5/wil.md) |
 | 6 | Browser·PostgreSQL·Test 수직 마감 | Completed — Local 수직 검증, 독립 재설명, 블로그·포럼 게시 완료 | [Week 6 학습 계획](./week6/weekly-plan.md) · [WIL](./week6/wil.md) |
 | 7 | LLM Structured Output·평가·Guardrail | Completed — 10/7 학습·평가·회귀 확인과 블로그 게시·포럼 등록 완료. 10/5 회차 이후 2일 추가 진행 | [Week 7 학습 계획](./week7/weekly-plan.md) · [WIL](./week7/wil.md) · [10/7 학습 노트](./week7/study-notes/2026-10-07-study-questions.md) |
-| 8–9 | Docker·CI·System·AWS Cloud·HTTPS 통합 | In Progress — Cloud 합성 AI·대표 Job 관측·DNS 비교·최신 제안 포함 복원과 임시 DB 정리 확인. App은 중지, 원본 DB·두 Snapshot 보존. 최종 복습·회귀/전달·장기 보관·WIL은 남음 | [통합 학습 계획](./week8-9/weekly-plan.md) · [21일 노트](./week8-9/study-notes/2026-10-21-study-questions.md) · [최신 복원·정리](./week8-9/lab-reports/2026-10-21-latest-snapshot-restore.md) · [배포·비용 계획](./week8-9/deployment-plan.md) |
+| 8–9 | Docker·CI·System·AWS Cloud·HTTPS 통합 | In Progress — 핵심 배포·AI·DNS·복원과 최종 복습·로컬 회귀 확인. 최신 원격 CI·장기 보관/정리·WIL은 남음 | [통합 학습 계획](./week8-9/weekly-plan.md) · [22일 노트](./week8-9/study-notes/2026-10-22-study-questions.md) · [최신 복원·정리](./week8-9/lab-reports/2026-10-21-latest-snapshot-restore.md) · [배포·비용 계획](./week8-9/deployment-plan.md) |
 | 10 | 취업 Baseline·Portfolio 근거와 맞춤 지원·기술 면접 | Planned — 초기 Week 9의 취업 과업을 함께 배치. 지원·면접은 기술 마감을 기다리지 않음 | [12주 Roadmap](./plan/weekly-roadmap.md#10주차--취업-baseline과-맞춤-지원-및-기술-면접) |
 | 11 | 면접·과제 대응과 취약 개념 재학습 | Not Started | 주차 시작 시 추가 |
 | 12 | 취업 결과 정리와 최종 회고 | Not Started | 주차 시작 시 추가 |
@@ -92,6 +92,7 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [10월 19일 학습 노트](./week8-9/study-notes/2026-10-19-study-questions.md): 메모리·HTTP/AI 지표·Log·Process 종료, 합성 전용 자동 Worker와 자원 검증, 20일 이월 과업
 - [10월 20일 학습 노트](./week8-9/study-notes/2026-10-20-study-questions.md): 검사 실행·자원 회수, 통합 실패·CI 복구·ECR 전달과 AI 비활성 Task 교체·요청 Log
 - [10월 21일 학습 노트](./week8-9/study-notes/2026-10-21-study-questions.md): 비용/보관·DNS 위임·인증서·TTL 문답, 실제 성공/실패 관측·최신 Snapshot 복원과 22일 임시 DB 정리, 남은 마감
+- [10월 22일 학습 노트](./week8-9/study-notes/2026-10-22-study-questions.md): 독립 복습 6문항·직접 설정 수정 근거와 Java 1,014+2·JavaScript 295·Lint 회귀, Test JVM 종료 대기·원격 CI·보관/정리의 구분
 - [Route 53 직접 조회 비교](./week8-9/lab-reports/2026-10-21-route53-direct-query.md): Zone·TXT/Alias A 생성, 생성 권한 회수와 권한 서버 응답/일반 NXDOMAIN 비교. Cloudflare 서비스 유지
 - [최신 Snapshot 복원과 임시 DB 정리](./week8-9/lab-reports/2026-10-21-latest-snapshot-restore.md): 문의 5건·제안 1건을 포함한 일곱 Table 대조, 실제 22일 임시 DB 삭제·원본과 두 Snapshot 보존
 - [새 Image의 AI 비활성 Task 교체](./week8-9/lab-reports/2026-10-20-ai-disabled-task-replacement.md): Image만 바꾼 명세·Target 전환·재로그인·기존 Ticket/Job 조회와 요청 ID의 Cloud Log 대조

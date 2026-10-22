@@ -23,7 +23,9 @@
 
 20일에는 통합 실패·자원/DB 보존과 CI·ECR·Task 전달을 확인했다. 자정 이후 실제 Cloud 합성 AI 처리·제안 저장과 비활성 복귀도 마쳤다. [20일 노트](../week8-9/study-notes/2026-10-20-study-questions.md)에 시작 회차와 실제 실행일을 구분했다.
 
-**10/21 회차를 마감하고 남은 내용은 10/22에 이어간다.** [21일 노트](../week8-9/study-notes/2026-10-21-study-questions.md)에 성공/실패 Job 관측·Route 53 직접 조회 비교·최신 Snapshot의 일곱 Table 복원 대조를 기록했다. 임시 DB 삭제·원본과 두 Snapshot 보존 확인은 실제 10/22에 완료했으며, App은 중지 상태다. 남은 것은 최종 복습·변경분 회귀/전달·장기 보관 결정·통합 WIL이다. 실제 월간 비용은 미확인으로 유지하고 리소스 정리는 별도 승인한다.
+10/21의 성공/실패 Job 관측·Route 53 조회 비교·최신 Snapshot의 일곱 Table 복원은 [21일 노트](../week8-9/study-notes/2026-10-21-study-questions.md)에 기록했다. 임시 DB 삭제·원본과 두 Snapshot 보존 확인은 실제 10/22에 완료했다. 이후 App을 다시 실행하지 않았다.
+
+**10/22에는 최종 복습과 로컬 회귀를 마쳤다.** [22일 노트](../week8-9/study-notes/2026-10-22-study-questions.md)에 독립 답변 6개·기존 직접 설정 수정 근거, Java 1,014개+패키징 후 2개·JavaScript 295개·Lint 통과를 기록했다. Test JVM 종료 대기 기록은 별도 후속 점검이고 Cloud App 문제로 단정하지 않는다. 최신 변경의 원격 CI·장기 보관/정리 결정·통합 WIL은 남아 있다. 실제 월간 비용은 미확인으로 유지하며 Push·리소스 정리·권한 변경은 별도 승인한다.
 
 Week 10에는 기존 Week 9의 취업 Baseline과 맞춤 지원을 함께 진행하며 Week 11·12는 뒤로 밀지 않는다. 취업 기간의 잔여 수직 학습·Project 보완·마감 후 수평 확장은 합쳐 주 6시간 이내다. [일정 통합 결정](./decisions/0004-combined-week8-9-deployment-learning.md)을 따르며 인물 관계 V2·개인정보 모델 고도화는 이번 마감 선행 조건으로 되돌리지 않는다.
 
