@@ -1,7 +1,7 @@
 # SW AI Lab 심화과정 12주 주차별 Roadmap
 
 > 작성일: 2026-08-18
-> 최종 수정일: 2026-10-17
+> 최종 수정일: 2026-10-22
 > 상태: Active
 > 전체 기간: 12주 유지 — 기술 학습 Week 1–9, 취업 우선 Week 10–12. 배포 과정은 Week 8–9 통합
 > 공통 실습: AI Helpdesk Learning Lab
@@ -322,13 +322,17 @@ Week 5는 Event Loop·Rendering·Promise의 일부 실행 근거를 확보했지
 
 ## 8–9주차 — DevOps·System·AWS Cloud·HTTPS 수직 배포
 
-현재 기준은 [통합 주간 계획](../week8-9/weekly-plan.md)과 [일정 결정](./decisions/0004-combined-week8-9-deployment-learning.md)이다. 기존 학습 범위를 유지하고 실행 보고서·Source·Image 식별자는 바꾸지 않는다. 16일 회차의 연장 실습까지 통합 기록했으며 **10/17·10/18 휴무 뒤 10/19 월요일에 재개**한다.
+현재 기준은 [통합 주간 계획](../week8-9/weekly-plan.md)과 [일정 결정](./decisions/0004-combined-week8-9-deployment-learning.md)이다. 기존 학습 범위와 실행 보고서·Source·Image 식별자는 유지한다. 10/17·10/18 휴무 뒤 19일에 재개했고, 22일에는 최종 복습·로컬 회귀와 실행 리소스 정리까지 마쳤다. 현재는 전달·공개 점검·통합 WIL 마감 단계다.
 
 | 현재 확인 | 다음에 남은 것 |
 |---|---|
-| HTTPS 로그인·Role·CSRF 접수와 RDS 업무 Row | 개인정보 탐지·관계 보존의 실행용 Adapter와 전체 AI 조립·실제 Cloud AI·Peak 자원 측정 |
-| 별도 Snapshot/RDS 복원·원본 복귀, B→P와 V8/데이터 보존 | Request/Job 연결·App Metric·종료 중 DB/Job과 남은 Route 53 비교 |
-| psql 17.11·TLS, 로컬 Process/cgroup·합성 Log 관찰 | 메모리/Log 설명 검증·최종 Local/CI/Cloud 회귀·직접 설정 수정·통합 WIL |
+| HTTPS 보안 계약·실제 합성 AI·제안 저장, CI/ECR/Task 연결·자원 측정·대표 성공/실패 관측 | 최신 로컬 변경의 Push·원격 CI와 Source/Image 근거 대조 |
+| 별도 Snapshot/RDS 복원·원본 복귀·B→P/V8·Route 53 비교·최종 복습/로컬 회귀 | 통합 WIL과 공개 자료·Secret/개인정보·링크·재현 절차 최종 점검 |
+| 원본 RDS·ALB/리스너·실습 DNS 정리, 두 수동 Snapshot·Secret/Log/Image·인증서·네트워크 보존 | 통합 WIL 한 편 작성·작성자 검토·블로그 게시·포럼 등록 |
+
+[22일 노트](../week8-9/study-notes/2026-10-22-study-questions.md)와 [정리 보고서](../week8-9/lab-reports/2026-10-22-deployment-resource-closeout.md)에 실제 결과를 기록했다. App Task·Service는 0개이며 두 Snapshot은 개별 상세에서 Available을 확인했다. 다음 구현은 로컬에서 진행하고 Cloud가 필요해질 때 최신 검증 Snapshot에서 새 Private DB를 복원한다. 이미 끝낸 배포·AI·DNS·복원을 다시 배정하지 않는다.
+
+정리 권한 회수·실제 보관 비용·Test JVM 종료 대기 진단과 인물 관계 V2·개인정보 모델 고도화는 후속으로 구분한다. 일반 입력의 AI 활성화를 이번 합성 실험의 완료로 취급하지 않는다. Week 10–12 취업 우선과 기술 작업 주 6시간 경계는 그대로다.
 
 이하 날짜별 문단은 초기 계획과 당시 확인 결과다. 현재 완료 여부와 재개 순서는 위 통합 계획을 따른다.
 
@@ -482,3 +486,4 @@ Weekly Plan의 Baseline 이후 학습 항목을 조용히 추가하거나 완료
 | 2026-10-14 | 10/13 회차의 IAM·Network·DB 관리 통로·Subnet Group과 RDS 생성 거부를 기록하고 10/14 재개로 갱신 | 사용자의 회차 마감·노트·계획·Commit 요청 | 실제 요청의 불일치 조건은 미확인으로 유지. 요청·정책 대조 뒤 Private DB·AI 비활성 App·HTTPS·전체 AI·관측·복구·마감 범위를 그대로 이어감 |
 | 2026-10-15 | 10/14 회차의 RDS·ECS·HTTPS 기본 응답을 기록하고 잔여 과업을 10/15 재개로 갱신 | 사용자의 회차 마감·진행 문서·Commit 요청 | 실제 실행일은 보고서에 유지. 로그인·업무 Row·전체 AI·관측·복구·마감 범위 유지, Week 8 In Progress·Week 9 자동 이월 없음. 실행 리소스 비용과 정리는 별도 확인 |
 | 2026-10-17 | 배포 학습을 Week 8–9로 통합하고 `week8-9`로 이동. 16일 회차 기록 통합·17/18 휴무·19일 재개 반영 | 실제 기간을 반영한 디렉터리·계획 조정과 회차 기록 요청 | 전 기술 범위·미완료 상태 유지. 초기 Week 9 취업 Baseline은 Week 10과 합치고 Week 11·12/전체 12주는 유지. 취업 기간의 잔여 학습·Project 작업은 합쳐 주 6시간 이내 |
+| 2026-10-22 | 현재 현황표에 실제 AI·관측·DNS·자원·최종 복습과 원본 리소스 정리가 미반영 | 핵심 실험·복습/로컬 회귀·실제 정리 완료를 반영하고 최신 전달/원격 CI·공개 점검·통합 WIL만 주간 마감으로 분리 | 사용자 기록·Commit 요청. 다음 구현은 로컬, 필요 시 Snapshot 기반 재배포. 후속 개인정보 고도화·취업 우선/6시간 경계를 유지하며 새 Cloud 실행·Push·IAM 회수는 하지 않음 |

@@ -1,17 +1,35 @@
 # Week 8–9 AWS 배포와 비용 계획
 
-> 상태: 핵심 배포 실험·최종 복습·로컬 회귀 확인. 최신 원격 CI·장기 보관/정리·WIL은 미완료
+> 상태: 핵심 배포 실험·최종 복습·로컬 회귀·리소스 정리 완료. 최신 원격 CI·공개 자료 최종 점검·통합 WIL은 남아 있음
 > 요금 확인일: 2026-10-12, 2026-10-14 첫 Fargate 실행 요금 재확인
-> 진행 반영: 10/21 회차의 Route 53 비교·최신 Snapshot 복원과 실제 10/22 임시 DB 삭제·보존 확인. 원본 DB·두 Snapshot 유지, App STOPPED
-> 계획 수정일: 2026-10-22 — 완료한 AI·관측·DNS·복원과 남은 보관/마감 구분. 기존 최소 비용·보안·Log 365일 보존과 승인 경계 유지
+> 진행 반영: 10/22 원본 RDS·ALB/리스너·Route 53 실습 Zone/두 Record·Cloudflare 서비스 CNAME 삭제. App Task·Service 0개, 두 수동 Snapshot·Secret·Log·Image·ACM·Target Group·네트워크 보존
+> 계획 수정일: 2026-10-22 — 실제 정리 결과와 Snapshot 기반 재배포 반영. 기존 최소 비용·보안·Log 365일 보존과 승인 경계 유지
 
-배포 학습의 범위는 그대로 유지하고 기록을 `week8-9`에 통합한다. 실제 10/17의 연장 실습은 16일 회차에 포함했고, 17·18일 휴무 뒤 19일에 재개했다. 현재는 10/21 회차를 마감하고 남은 내용을 10/22에 이어간다. 실제 Cloud 실행 상태·남는 비용은 학습 일정과 별개이며, 이번 문서 변경으로 리소스를 추가 실행하거나 정리하지 않았다. [현재 재개 순서](./weekly-plan.md#10월-21일-마감과-10월-22일-재개)
+배포 학습의 범위는 그대로 유지하고 기록을 `week8-9`에 통합한다. 실제 10/17의 연장 실습은 16일 회차에 포함했고, 17·18일 휴무 뒤 19일에 재개했다. 22일에는 원본 데이터를 최신 검증 Snapshot 기준과 대조한 뒤 별도 승인한 장기 휴지기 정리를 마쳤다. 다음 구현은 로컬에서 진행하고 Cloud 배포가 필요해질 때 보존 자료로 재구성한다. 실제 청구액과 보관 비용은 별개이며, 문서 갱신을 위해 Cloud를 재실행하지 않는다. [남은 마감](./weekly-plan.md#10월-22일-리소스-정리와-남은-마감)
+
+## 10월 22일 실제 정리와 현재 보관 상태
+
+[정리 실행 보고서](./lab-reports/2026-10-22-deployment-resource-closeout.md)의 원본 DB 대조는 psql 17.11·verify-full·TLS 1.3·읽기 전용 Repeatable Read·COMMIT으로 완료했다. 일곱 Table의 건수/Hash·Job/예약·참조·V1~V8·Sequence가 최신 Snapshot의 복원 검증 기준과 같았다. 추가 최종 Snapshot·자동 Backup은 남기지 않고 기존 두 수동 Snapshot을 보존하는 옵션을 최종 승인받았다.
+
+| 대상 | 10/22 정리 뒤 상태 |
+|---|---|
+| App Task·Service | 실행/보류 Task 0개·활성 Service 0개 |
+| 원본 RDS `helpdesk-learning` | 삭제 완료. 자동 Backup 미보존은 삭제 옵션으로 확인했으며 별도 목록 조회는 하지 않음 |
+| ALB와 HTTP/HTTPS Listener | 서비스 CNAME 삭제·권한 DNS 부재 확인·TTL 300초 이상 대기 뒤 삭제 완료 |
+| Route 53 실습 Zone·TXT/Alias A | Record를 한 건씩 지우고 NS·SOA만 남은 뒤 Zone 삭제 완료 |
+| Cloudflare | 서비스 CNAME 한 개 삭제. 부모 NS·다른 서비스·ACM 검증 CNAME 유지 |
+| 두 수동 Snapshot | `helpdesk-learning-20261016-recovery`·`helpdesk-learning-20261021-final` 모두 개별 상세에서 manual·Available |
+| Image·Parameter·IAM·ACM·Log·Target Group·네트워크 | 변경하지 않음. Log는 기존 365일 보존 유지 |
+
+Snapshot 목록의 0개 표시와 두 개별 상세의 Available이 달랐다. 차이의 원인은 확정하지 않았으며 개별 상세를 보존 확인 근거로 남겼다. 조회 오류를 없애려고 IAM을 넓히지 않았다. 정리 권한 연결 해제·두 Route 53 예외 회수는 후속 점검이며 실제 삭제 중 IAM은 변경하지 않았다.
+
+보존한 Snapshot·Image·Log의 저장 비용은 남을 수 있고 이번 달 누계는 미확인이다. 아래 요금표는 기존 확인일의 계산 예시이며 이번 정리 뒤 청구액이 아니다. 다음 개발은 로컬에서 진행하고 Cloud 재배포 때는 새 Private DB 복원·Endpoint/TLS·새 ALB/서비스 DNS·AI 비활성 Task/Target·재로그인을 순서대로 확인한다. 보존 Target Group·ACM은 재사용 조건부터 확인한다. 삭제한 DB의 Start로 재개하지 않는다.
 
 ## 10월 22일 최종 복습과 로컬 회귀
 
 [22일 노트](./study-notes/2026-10-22-study-questions.md)에 독립 답변 6개와 기존 Parameter 수정·새 Task 기동 근거를 기록했다. Java 1,014개+패키징 후 2개·JavaScript 295개·Lint의 로컬 회귀는 통과했다. Test JVM의 종료 Hook 대기는 별도 후속 점검이며 운영 Code·Timeout은 변경하지 않았다. 원격 CI 성공은 기존 d8ca65f의 결과이고 최신 로컬 Commit의 Push·CI는 아직이다.
 
-다음은 비Root MFA로 현재 실행/보존 상태를 읽기 전용 확인하고 원본 RDS·ALB·실습 Zone과 관련 Record의 정리 대상·최소 권한·Backup 보존 옵션을 제시하는 것이다. 기존 두 수동 Snapshot·검증/복귀 Image·Parameter·ACM 정보·365일 Log는 보존 기준으로 둔다. 실제 삭제·DNS/권한 변경·Push는 별도 승인하며, 아래 21일의 보존 상태를 현재 재조회 결과로 대신하지 않는다.
+이후 비Root MFA로 현재 실행/보존 상태를 확인하고 최소 정리 권한·Backup 옵션과 실제 실행을 각각 승인받아 위 결과로 정리했다. 다음 주간 마감은 최신 변경의 Push/원격 CI·공개 문서/재현 절차 최종 점검·통합 WIL 작성/검토/게시다. 이미 끝낸 Cloud 실험을 문서 마감 때문에 다시 실행하지 않는다.
 
 ## 10월 21일 마감과 10월 22일 재개
 
@@ -21,7 +39,7 @@
 
 최신 Snapshot을 만들기 전 App Task 한 개를 중지했고 새 Task는 실행하지 않았다. 실제 10/22에는 별도 최종 승인으로 임시 DB `helpdesk-learning-restore-20261021`만 추가 최종 Snapshot·자동 Backup 보존 없이 삭제했다. 원본 DB와 두 수동 Snapshot의 Available을 재확인했다. 이번 최신 복원에서는 App 전환·AI 호출을 하지 않았다.
 
-| 마지막 확인 대상 | 상태와 남은 결정 |
+| 21일 회차 마감 당시 대상 | 당시 상태와 결정 |
 |---|---|
 | App | 명세 :6의 Task STOPPED. 재개가 필요하면 별도 실행 범위 확인 |
 | 원본 RDS | Available, 기존 자동 Backup 7일 유지. 장기 보관/정리 결정은 남음 |
@@ -29,11 +47,11 @@
 | ALB·Route 53 실습 Zone | 유지 중. App 중지·임시 DB 삭제와 별도로 비용/정리 검토 |
 | Image·Parameter·IAM·ACM·Log | 기존 보관 유지. Log는 365일 조건 유지 |
 
-10/22에는 최종 복습·변경분 회귀/전달 확인·장기 보관 결정·통합 WIL을 진행한다. 이미 확인한 Cloud AI·DNS·전체 복원·Image Rollback을 자동 반복하지 않는다. 실제 월간 비용은 미확인으로 남기며, 요금표 확인일도 새로 확인한 것처럼 바꾸지 않는다. 원본 DB·ALB·실습 Zone 삭제, DNS 변경·App 재실행·Push는 각각 필요한 범위의 승인을 받는다. [21일 학습노트](./study-notes/2026-10-21-study-questions.md)에 이해 확인과 잔여 과업을 정리했다.
+21일 마감 당시에는 최종 복습·변경분 회귀/전달·장기 보관 결정·통합 WIL을 22일에 이어가기로 했다. 이후 복습·로컬 회귀·승인한 실제 정리는 완료했으며 전달·공개 점검·WIL만 남았다. 실제 월간 비용은 미확인으로 유지하고 요금표 확인일도 바꾸지 않는다. 완료한 Cloud AI·DNS·전체 복원·Image Rollback은 반복하지 않으며 새 실행·DNS 변경·Push는 필요한 범위를 별도로 확인한다. [21일 학습노트](./study-notes/2026-10-21-study-questions.md)에 당시 이해 확인과 계획을 보존했다.
 
 ## 배포와 복구의 실행 기록
 
-아래 준비·중간 결과는 각 회차 당시의 기록이다. 현재 실행·보관 상태와 남은 작업은 위 10/21 마감 항목을 따른다.
+아래 준비·중간 결과는 각 회차 당시의 기록이다. 현재 실행·보관 상태는 위 10/22 정리 결과를 따른다. 이후 재배포 때는 삭제한 Endpoint·ALB 주소를 현재 대상으로 사용하지 않는다.
 
 10/17에는 원본 RDS·Schema V8·계정·Network를 그대로 두고 Private CloudShell의 관리용 psql만 17.11로 맞췄다. 공식 Client를 별도 임시 경로에서 선택해 기존 16.15를 보존했으며 RDS 17.11·TLS 1.3·SQL/메타 명령과 일곱 Table Hash 불변을 확인했다. [접속 도구 보고서](./lab-reports/2026-10-17-cloudshell-psql17.md). 추가 유료 리소스·NAT·권한·App 설정 변경은 없다. 새 VPC 세션에서는 도구와 공개 CA를 다시 준비한다.
 
@@ -52,7 +70,7 @@
 - 최대 12개월 동안 학습 환경을 보관하되, 실습할 때만 실행해도 된다.
 - AWS 월 지출 상한은 최대 3만 원이다. 이 금액을 채우거나 근처까지 사용하는 목표가 아니다. 학습·Application의 목적을 달성하는 범위에서 지출을 최소화한다. 외부 AI 호출은 별도 당일 승인 범위로 관리한다.
 - 학습용 주소는 `helpdesk.hmyoon.com`이며 기존 DNS는 Cloudflare에서 관리한다.
-- AWS Console 접근과 OIDC·ECR·Image 업로드 Role을 구성했다. 첫 Standard Parameter 여섯 개와 별도 승인한 AI Key 한 개, ECS Execution Role·1년 보존 Log Group·비Root 사용자·학습 Network·Private RDS·TLS·App DB 계정을 적용했다. DB 인증 설정 복구·HTTPS 접수/SQL Row·HTTP 301·Cloud 관측·Image Rollback과 실제 합성 AI를 확인했다. 21일에는 DNS 비교·최신 Snapshot 복원을 마쳤고 임시 DB는 실제 22일 정리했다. 남은 것은 최종 복습·회귀/전달·장기 보관 결정·WIL이며, 기존 승인을 벗어나는 변경은 별도 확인한다.
+- AWS Console 접근과 OIDC·ECR·Image 업로드 Role을 구성했다. 첫 Standard Parameter 여섯 개와 별도 승인한 AI Key 한 개, ECS Execution Role·1년 보존 Log Group·비Root 사용자·학습 Network·Private RDS·TLS·App DB 계정을 적용했다. DB 인증 설정 복구·HTTPS 접수/SQL Row·HTTP 301·Cloud 관측·Image Rollback과 실제 합성 AI를 확인했다. 21일의 DNS 비교·최신 Snapshot 복원 뒤 22일에는 최종 복습·로컬 회귀와 승인한 원본 RDS/ALB/실습 DNS 정리까지 마쳤다. 두 Snapshot·설정·보관 자료를 유지하며 최신 원격 CI·공개 점검·통합 WIL이 남아 있다.
 
 ECR·ECS Fargate·RDS·ALB·DNS·HTTPS·Backup 복원은 [주간 계획](./weekly-plan.md)의 학습 범위를 그대로 유지한다. 비용을 줄이기 위해 해당 학습을 다른 서비스로 대체하거나 생략하지 않는다.
 
@@ -410,14 +428,14 @@ Route 53의 별도 학습 Zone은 조회·NS·Alias 비교를 마친 뒤 정리�
 1. 합성 학습 환경의 접수를 중단한다. Worker는 새 Job을 시작하지 않도록 끄고 진행 중 요청·Attempt 상태를 확인한 뒤 App을 종료한다. Job·예약·실패 기록을 초기화하지 않는다.
 2. Service의 `desiredCount=0`과 실제 Task 종료를 확인한다. 단독 실행 Task·교체 Task와 다른 자동 시작 경로도 남지 않아야 한다. 종료 근거에 Cookie·Token·환경 변수 값을 넣지 않는다.
 3. 더 이상 DB 쓰기가 없음을 확인하고 마지막 Snapshot을 만든다. 원본을 유지한 채 다른 Instance에 복원해 Ticket·Message·Job·Suggestion·Category와 Migration을 확인한다. 검증 App의 AI는 꺼 둔다.
-4. 삭제할 학습용 ALB·Target Group·원본 및 복원 DB Instance를 정확한 ID·Tag로 확인해 승인받는다. 최종 Snapshot이 `available`이고 복원 검증 결과가 있는지 대조한 뒤 삭제한다. 삭제 후에도 Snapshot은 남겨두며 Public 공유하지 않는다. [RDS 삭제와 Backup](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html)
+4. 삭제할 학습용 ALB·원본 및 복원 DB Instance·실습 DNS를 정확한 ID·Tag로 확인해 승인받는다. 최종 Snapshot이 `available`이고 복원 검증 결과가 있는지 대조한 뒤 삭제한다. 이번 10/22 실행에서는 Target Group·ACM/검증 CNAME·네트워크를 보존했다. 삭제 후에도 Snapshot은 남겨두며 Public 공유하지 않는다. [RDS 삭제와 Backup](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html)
 5. 더 이상 실행 Task·ALB·DB Instance가 없는지 재조회하고 남긴 Snapshot·Image·Log·Parameter의 수량과 요금을 확인한다. 쓰지 않는 서비스 DNS Record의 정리와 실제 Cloud 비용 반영도 별도 확인한다. 삭제 승인이나 DNS 변경 승인은 이 절차의 기록만으로 대신하지 않는다.
 
 ### 다음 실습의 재개 순서
 
 1. 필요한 DB를 검증한 Snapshot으로 복원한다. 원래 VPC·DB Subnet Group·Security Group·DB Parameter Group을 명시적으로 연결하고 Public Access를 끈다. 기본 Group이 자동으로 원래 보안 설정을 복원한다고 가정하지 않는다. 새 Endpoint·DB 인증·TLS를 확인하고 복원이 끝나기 전에는 App을 시작하지 않는다. [RDS 복원 설정](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_RestoreFromSnapshot.html)
 2. 같은 Parameter 이름을 유지하되 실제 DB 계정의 Password와 저장소의 값이 맞는지 확인한다. 새 JDBC Endpoint는 Task Definition의 비밀값 없는 설정에 반영한다.
-3. ALB·Target Group·HTTPS Listener와 ACM 연결을 재생성하고, 승인된 서비스 DNS Record를 새 ALB 주소로 맞춘다. ACM 검증 CNAME은 서비스 CNAME과 구분한다.
+3. ALB·HTTPS/Redirect Listener를 새로 준비하고 보존 Target Group·ACM의 재사용 조건을 확인한다. 승인된 서비스 DNS Record를 새 ALB 주소로 맞추며 ACM 검증 CNAME은 서비스 CNAME과 구분한다.
 4. 검증된 ECR Digest로 새 Task를 시작한다. 처음에는 AI를 꺼서 기존 미완료 Job의 추가 호출을 막고 Health·재로그인·기존 Row·Role·CSRF를 확인한다. 메모리 Session은 새로 만들어지므로 재로그인한다.
 5. 필요한 경우에만 그날 승인된 AI 실험·전체 사양 측정을 이어간다. 이전 Job의 정책·예약·처리 기한을 새 값으로 초기화하지 않는다.
 

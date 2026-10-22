@@ -23,9 +23,13 @@
 
 20일에는 통합 실패·자원/DB 보존과 CI·ECR·Task 전달을 확인했다. 자정 이후 실제 Cloud 합성 AI 처리·제안 저장과 비활성 복귀도 마쳤다. [20일 노트](../week8-9/study-notes/2026-10-20-study-questions.md)에 시작 회차와 실제 실행일을 구분했다.
 
-10/21의 성공/실패 Job 관측·Route 53 조회 비교·최신 Snapshot의 일곱 Table 복원은 [21일 노트](../week8-9/study-notes/2026-10-21-study-questions.md)에 기록했다. 임시 DB 삭제·원본과 두 Snapshot 보존 확인은 실제 10/22에 완료했다. 이후 App을 다시 실행하지 않았다.
+10/21의 성공/실패 Job 관측·Route 53 조회 비교·최신 Snapshot의 일곱 Table 복원은 [21일 노트](../week8-9/study-notes/2026-10-21-study-questions.md)에 기록했다. 임시 DB 삭제·당시 원본과 두 Snapshot 보존 확인은 실제 10/22에 완료했다. 그 뒤 장기 휴지기 정리 결과는 아래 최신 상태를 따른다.
 
-**10/22에는 최종 복습과 로컬 회귀를 마쳤다.** [22일 노트](../week8-9/study-notes/2026-10-22-study-questions.md)에 독립 답변 6개·기존 직접 설정 수정 근거, Java 1,014개+패키징 후 2개·JavaScript 295개·Lint 통과를 기록했다. Test JVM 종료 대기 기록은 별도 후속 점검이고 Cloud App 문제로 단정하지 않는다. 최신 변경의 원격 CI·장기 보관/정리 결정·통합 WIL은 남아 있다. 실제 월간 비용은 미확인으로 유지하며 Push·리소스 정리·권한 변경은 별도 승인한다.
+**10/22에는 최종 복습·로컬 회귀와 실제 리소스 정리를 마쳤다.** [22일 노트](../week8-9/study-notes/2026-10-22-study-questions.md)에 독립 답변 6개·기존 직접 설정 수정 근거, Java 1,014개+패키징 후 2개·JavaScript 295개·Lint와 후속 정책 55개/전체 JavaScript 303개 결과를 각각의 검사 시점으로 기록했다. Test JVM 종료 대기는 후속 점검이며 Cloud App 문제로 단정하지 않는다.
+
+별도 최종 승인 뒤 원본 DB·ALB/리스너·실습 Zone/두 Record·서비스 CNAME을 삭제했다. [정리 보고서](../week8-9/lab-reports/2026-10-22-deployment-resource-closeout.md)의 두 수동 Snapshot은 개별 상세에서 Available, App Task·Service는 0개다. Secret·Log·Image·ACM/검증 CNAME·Target Group·네트워크는 보존했다. 다음 구현은 로컬에서 진행하고 필요 시 Snapshot에서 새 DB를 복원해 재배포한다. 실제 월간 비용은 미확인이고 보관 비용은 남을 수 있다.
+
+남은 주간 마감은 최신 변경의 Push·원격 CI, 공개 자료/재현 절차 최종 점검과 통합 WIL 작성·검토·블로그 게시·포럼 등록이다. 정리 권한 회수·보관 비용 확인은 후속 점검이며 현재 문서 갱신으로 Push·새 Cloud 실행·IAM 변경을 하지 않는다.
 
 Week 10에는 기존 Week 9의 취업 Baseline과 맞춤 지원을 함께 진행하며 Week 11·12는 뒤로 밀지 않는다. 취업 기간의 잔여 수직 학습·Project 보완·마감 후 수평 확장은 합쳐 주 6시간 이내다. [일정 통합 결정](./decisions/0004-combined-week8-9-deployment-learning.md)을 따르며 인물 관계 V2·개인정보 모델 고도화는 이번 마감 선행 조건으로 되돌리지 않는다.
 
