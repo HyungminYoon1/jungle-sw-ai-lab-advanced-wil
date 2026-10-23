@@ -1,11 +1,13 @@
 # Week 8–9 AWS 배포와 비용 계획
 
-> 상태: 핵심 배포 실험·최종 복습·로컬 회귀·리소스 정리 완료. 최신 원격 CI·공개 자료 최종 점검·통합 WIL은 남아 있음
+> 상태: 배포 학습과 리소스 정리, 원격 CI 및 통합 WIL 마감 완료. 블로그와 포럼도 10/23 작성자 확인. 운영 점검은 후속
 > 요금 확인일: 2026-10-12, 2026-10-14 첫 Fargate 실행 요금 재확인
 > 진행 반영: 10/22 원본 RDS·ALB/리스너·Route 53 실습 Zone/두 Record·Cloudflare 서비스 CNAME 삭제. App Task·Service 0개, 두 수동 Snapshot·Secret·Log·Image·ACM·Target Group·네트워크 보존
-> 계획 수정일: 2026-10-22 — 실제 정리 결과와 Snapshot 기반 재배포 반영. 기존 최소 비용·보안·Log 365일 보존과 승인 경계 유지
+> 계획 수정일: 2026-10-23 — 주간 공개 마감 완료 반영. 기존 최소 비용·보안·Log 365일 보존과 승인 경계 유지
 
-배포 학습의 범위는 그대로 유지하고 기록을 `week8-9`에 통합한다. 실제 10/17의 연장 실습은 16일 회차에 포함했고, 17·18일 휴무 뒤 19일에 재개했다. 22일에는 원본 데이터를 최신 검증 Snapshot 기준과 대조한 뒤 별도 승인한 장기 휴지기 정리를 마쳤다. 다음 구현은 로컬에서 진행하고 Cloud 배포가 필요해질 때 보존 자료로 재구성한다. 실제 청구액과 보관 비용은 별개이며, 문서 갱신을 위해 Cloud를 재실행하지 않는다. [남은 마감](./weekly-plan.md#10월-22일-리소스-정리와-남은-마감)
+배포 학습의 범위는 그대로 유지하고 기록을 `week8-9`에 통합한다. 실제 10/17의 연장 실습은 16일 회차에 포함했고, 17·18일 휴무 뒤 19일에 재개했다. 22일에는 원본 데이터를 최신 검증 Snapshot 기준과 대조한 뒤 별도 승인한 장기 휴지기 정리를 마쳤다. 다음 구현은 로컬에서 진행하고 Cloud 배포가 필요해질 때 보존 자료로 재구성한다. 실제 청구액과 보관 비용은 별개이며, 문서 갱신을 위해 Cloud를 재실행하지 않는다. [주간 마감 확인](./weekly-plan.md#10월-23일-주간-마감-확인)
+
+10/23 기록 갱신: 두 저장소 Push와 Lab 원격 CI, 통합 WIL 검토 및 Push를 마쳤다. 블로그 작성과 포럼 업로드도 작성자 확인으로 완료 처리했다. 아래 회차별 전달 및 WIL 미완료 표시는 당시 상태이며, 이 갱신으로 실행 리소스나 요금 확인일을 다시 확인하거나 변경한 것은 아니다.
 
 ## 10월 22일 실제 정리와 현재 보관 상태
 
@@ -70,7 +72,7 @@ Snapshot 목록의 0개 표시와 두 개별 상세의 Available이 달랐다. �
 - 최대 12개월 동안 학습 환경을 보관하되, 실습할 때만 실행해도 된다.
 - AWS 월 지출 상한은 최대 3만 원이다. 이 금액을 채우거나 근처까지 사용하는 목표가 아니다. 학습·Application의 목적을 달성하는 범위에서 지출을 최소화한다. 외부 AI 호출은 별도 당일 승인 범위로 관리한다.
 - 학습용 주소는 `helpdesk.hmyoon.com`이며 기존 DNS는 Cloudflare에서 관리한다.
-- AWS Console 접근과 OIDC·ECR·Image 업로드 Role을 구성했다. 첫 Standard Parameter 여섯 개와 별도 승인한 AI Key 한 개, ECS Execution Role·1년 보존 Log Group·비Root 사용자·학습 Network·Private RDS·TLS·App DB 계정을 적용했다. DB 인증 설정 복구·HTTPS 접수/SQL Row·HTTP 301·Cloud 관측·Image Rollback과 실제 합성 AI를 확인했다. 21일의 DNS 비교·최신 Snapshot 복원 뒤 22일에는 최종 복습·로컬 회귀와 승인한 원본 RDS/ALB/실습 DNS 정리까지 마쳤다. 두 Snapshot·설정·보관 자료를 유지하며 최신 원격 CI·공개 점검·통합 WIL이 남아 있다.
+- AWS Console 접근과 OIDC·ECR·Image 업로드 Role을 구성했다. 첫 Standard Parameter 여섯 개와 별도 승인한 AI Key 한 개, ECS Execution Role·1년 보존 Log Group·비Root 사용자·학습 Network·Private RDS·TLS·App DB 계정을 적용했다. DB 인증 설정 복구·HTTPS 접수/SQL Row·HTTP 301·Cloud 관측·Image Rollback과 실제 합성 AI를 확인했다. 21일의 DNS 비교·최신 Snapshot 복원 뒤 22일에는 최종 복습·로컬 회귀와 승인한 원본 RDS/ALB/실습 DNS 정리까지 마쳤다. 두 Snapshot·설정·보관 자료를 유지한다. 원격 CI와 WIL 마감, 작성자가 확인한 블로그 및 포럼 업로드도 완료했다.
 
 ECR·ECS Fargate·RDS·ALB·DNS·HTTPS·Backup 복원은 [주간 계획](./weekly-plan.md)의 학습 범위를 그대로 유지한다. 비용을 줄이기 위해 해당 학습을 다른 서비스로 대체하거나 생략하지 않는다.
 
