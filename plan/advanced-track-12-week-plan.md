@@ -1,7 +1,7 @@
 # SW AI Lab 심화과정 12주 학습 계획
 
 > 작성일: 2026-08-18
-> 최종 수정일: 2026-10-17
+> 최종 수정일: 2026-10-23
 > 상태: Active
 > 대상 기간: 전체 12주 유지 — 기술 학습 Week 1–9(배포 Week 8–9 통합), 취업 우선 Week 10–12
 > 대상 직무: AI/AX 개발자, Java Backend 개발자, AI Platform·LLMOps Backend 개발자
@@ -140,6 +140,7 @@ Week 8–9 통합 학습의 마감 전에는 다음 최소 흐름을 실제 환�
 - AI를 활용해 후속 Message·공식 답변, 상태 변경, 검색, 알림과 Dashboard 같은 수평 기능을 빠르게 확장할 수 있다.
 - 잔여 기술 학습·Project 보완·마감 후 수평 확장을 합쳐 주 6시간 이내로 제한하고 지원·면접 일정을 침해하지 않는다. 범위는 유지하되 실제 가용시간에 나누며, 기간 끝에 남은 항목은 후속 과제로 구분한다.
 - AI 생성 Code 전체를 직접 작성한 것으로 표현하지 않고, 사용자가 검토한 Architecture·보안·데이터·Test·운영 범위를 구분한다.
+- 10–12주차 블로그는 통합 한 편으로 작성하고 각 주의 활동 요약과 필요한 학습 및 구현 기록은 유지한다. [10/23 기록 주기 결정](./decisions/0011-combined-week10-12-blog.md)을 따르며 취업 우선과 시간 상한은 바꾸지 않는다.
 
 ## 9. 학습 완료 기준
 
@@ -176,7 +177,8 @@ Git 운영 Baseline은 위 핵심 주제 완료 기준을 별도로 적용하지
 
 ## 12. 최종 산출물
 
-- Week 1–7의 WIL과 Week 8–9의 통합 WIL, 각 계획 대비 결과. 취업 기간은 별도 활동 요약으로 기록
+- Week 1–7의 WIL과 Week 8–9의 통합 WIL, 각 계획 대비 결과. 취업 기간은 주간 활동 요약과 필요한 학습 및 구현 기록 유지
+- Week 10–12의 통합 블로그 한 편. 주간 기록과 실제 검증 근거를 바탕으로 작성하고 발행 시점은 별도 확인
 - 핵심 개념별 Learning Note와 재현 가능한 Lab Report
 - Java·Spring·PostgreSQL·Security·AI Native의 대표 실패 Test
 - Query Plan, HTTP Trace, 평가 Dataset과 CI 실행 근거
@@ -200,4 +202,5 @@ Git 운영 Baseline은 위 핵심 주제 완료 기준을 별도로 적용하지
 - [학습 우선 범위 전환 Decision](./decisions/0001-learning-first-scope.md)
 - [깊은 수직 학습과 AI 보조 수평 확장 Decision](./decisions/0002-depth-first-ai-assisted-expansion.md)
 - [8–9주차 통합과 취업 일정 조정](./decisions/0004-combined-week8-9-deployment-learning.md)
+- [10–12주차 통합 블로그와 주간 기록 유지](./decisions/0011-combined-week10-12-blog.md)
 - [AgentOps Lab 보류 안내](./agentops-lab-12-week-plan.md)
