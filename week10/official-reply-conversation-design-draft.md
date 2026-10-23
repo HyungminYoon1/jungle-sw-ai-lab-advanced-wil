@@ -5,7 +5,7 @@
 > 구현 전 조사 기준: Lab Source `832b1b74ab7666a5bf50c9aa702b14f97b517d59`, Flyway V1~V8
 > 일정: [10/23, 24, 26 학습 및 구현 계획](./weekly-plan.md)
 
-이 문서는 구현 전 조사와 P1~P8 정책 합의, 이후 기술 계약 및 구현 결과를 연결한다. 사용자가 10/23 남은 기술 설계와 작은 단위의 구현, Test 및 Commit을 요청해 착수했다. 정책 합의 자체가 아니라 이 별도 요청을 구현 근거로 삼았다. 새 AWS 실행, Push와 실제 AI 호출은 포함하지 않았다.
+이 문서는 구현 전 조사와 P1~P8 정책 합의, 이후 기술 계약 및 구현 결과를 연결한다. 사용자가 10/23 남은 기술 설계와 작은 단위의 구현, Test 및 Commit을 요청해 착수했다. 정책 합의 자체가 아니라 이 별도 요청을 구현 근거로 삼았다. 그 구현 요청에는 새 AWS 실행, Push와 실제 AI 호출을 포함하지 않았으며, 이후 학습 마감 요청에서 두 저장소 Push를 별도로 승인했다.
 
 ## 확정한 기술 계약과 현재 구현
 
@@ -16,7 +16,7 @@
 - `GET /api/tickets/{id}/messages`와 `POST /api/tickets/{id}/replies`를 추가했다. 작성자와 종류는 서버가 정하며, 답변 요청의 추가 필드와 잘못된 자료형은 거부한다. 기존 Ticket 및 AI 제안 조회는 AGENT 전용으로 유지했다.
 - `/conversation.html`에서 답변과 정정, 제한된 대화 조회를 제공한다. 본문은 textContent로 표시하고 결과 미확인 제출은 같은 ID로만 명시적으로 재확인한다. Ticket 변경 후 늦은 응답은 이전 화면을 되살리지 못한다.
 
-구체적인 SQL, API와 결정 이유는 Lab의 `docs/official-replies.md`에 기록했다. [실행 보고서](./lab-reports/2026-10-23-official-reply-conversation-lab.md)에 Commit, 실행 명령과 검증 한계를 구분한다. 아래 기존 코드 표는 구현 전 기준선이며 현재 Schema와 혼동하지 않는다.
+구체적인 SQL, API와 결정 이유는 Lab의 `docs/official-replies.md`에 기록했다. [실행 보고서](./lab-reports/2026-10-23-official-reply-conversation-lab.md)에 Commit, 실행 명령과 검증 한계를 구분하며 [학습 노트](./study-notes/2026-10-23-study-questions.md)에는 실제 코드 기반 문답을 기록했다. 아래 기존 코드 표는 구현 전 기준선이며 현재 Schema와 혼동하지 않는다.
 
 ## 목적과 범위
 
@@ -189,7 +189,7 @@ V9와 Repository를 함께 검증하며 과거 Image가 새 DB에서 안전하�
 
 새 답변 DTO에서 허용하지 않은 필드는 거부하는 안이다. 기존 문의 접수의 추가 필드 처리까지 전역 설정으로 바꾸지 않는다. 본문은 기존 Message와 같은 앞뒤 공백 제외 최대 2,000 Unicode Code Point, 비공백 조건을 적용하고 저장할 원문을 임의로 자르거나 HTML로 변환하지 않는다.
 
-위 요청 예시는 일반 답변 기준이다. correctsMessageId를 생략하거나 null로 보내면 일반 추가 안내이며, 정정일 때는 양의 정수인 기존 공식 답변 ID를 지정한다. 아래 정정 요청도 같은 API를 사용한다. 아직 현재 구현에 이 API가 존재한다는 뜻은 아니다.
+위 요청 예시는 일반 답변 기준이다. correctsMessageId를 생략하거나 null로 보내면 일반 추가 안내이며, 정정일 때는 양의 정수인 기존 공식 답변 ID를 지정한다. 아래 정정 요청도 같은 API를 사용한다. 이 API는 이후 구현 및 로컬 검증을 마쳤으며 운영 배포 여부와는 구분한다.
 
 ```json
 {

@@ -3,7 +3,7 @@
 > 작성일 및 실행일: 2026-10-23 KST
 > 주차: Week 10
 > 영역: Backend, Database, Security, Frontend, Test
-> 상태: Completed — 로컬 구현·회귀 및 마지막 화면 정리 후 Browser·패키징 재검증 완료. 작성자 복습과 운영 적용은 별도
+> 상태: Completed — 로컬 구현·회귀와 Browser 검증 완료. 이후 코드 기반 핵심 문답을 진행했으며 운영 적용과 Week 10 전체 마감은 별도
 
 ## 질문과 범위
 
@@ -11,7 +11,7 @@ AI 제안과 사람이 공개하는 답변을 분리하면서, 고객은 자신�
 
 예상은 답변 Commit 뒤 고객에게 공개되고, 실패한 새 답변은 기존 문의와 AI 결과를 취소하지 않는 것이다. 같은 제출의 재전송은 중복 저장 없이 200, 새 답변은 201이며, 같은 제출 ID에 다른 내용을 넣으면 409로 거부해야 한다.
 
-이번에는 로컬의 합성 계정 및 일회용 PostgreSQL만 사용했다. 회원가입과 Password DB, 고객 후속 메시지, 상태 변경 API, 운영 삭제 및 보관 정책, Cloud 실행과 실제 AI 호출은 포함하지 않았다. 원격 Push와 CI도 실행하지 않았다.
+이번 구현 검증은 로컬의 합성 계정 및 일회용 PostgreSQL만 사용했다. 회원가입과 Password DB, 고객 후속 메시지, 상태 변경 API, 운영 삭제 및 보관 정책, Cloud 실행과 실제 AI 호출은 포함하지 않았다. 구현 당시에는 원격 Push와 CI도 실행하지 않았으며, 이후 학습 마감 요청에 따른 전달 결과는 아래에 분리했다.
 
 ## 구현 전과 후
 
@@ -75,7 +75,7 @@ Windows, PowerShell 7, Java 25, Maven Wrapper 3.9.16, Spring Boot 4.1.1 및 Post
 | 373fa1e | 중복 설정 key 거부, 저장된 AI 결과 보존 Test, V9 이후 회귀 Fixture 보완 |
 | edd2427 | 대화·답변 화면, 미확인 제출 및 페이지 이탈 정리, 실제 Browser와 최종 검증 기록 |
 
-최종 Lab Source는 `edd24278683b9e9042109b3658c03f6c75dbfe30`이다. 새 Commit은 아직 원격에 없으므로 존재하지 않는 공개 Source 링크를 만들지 않는다. 주요 구현 경로는 Lab의 `docs/official-replies.md`, `src/main/java/lab/helpdesk/identity/`, `src/main/java/lab/helpdesk/ticket/` 아래 Application·Repository·Web, `src/main/resources/db/migration/V9__add_conversations_and_durable_identities.sql` 및 `src/main/resources/static/conversation*.mjs`다.
+구현 기준 Source는 [edd2427](https://github.com/HyungminYoon1/ai-helpdesk-learning-lab/commit/edd24278683b9e9042109b3658c03f6c75dbfe30)이다. 이후 `194cca2`는 학습 문답과 전달 범위만 기록한 문서 Commit이다. 주요 구현 경로는 Lab의 `docs/official-replies.md`, `src/main/java/lab/helpdesk/identity/`, `src/main/java/lab/helpdesk/ticket/` 아래 Application·Repository·Web, `src/main/resources/db/migration/V9__add_conversations_and_durable_identities.sql` 및 `src/main/resources/static/conversation*.mjs`다.
 
 ## 실제 검증
 
@@ -121,7 +121,7 @@ npx --yes --package 'eslint@10.11.0' eslint 'src/main/resources/static/*.mjs' 's
 
 ## AI 활용, 검토 범위와 남은 학습
 
-사용자는 공개와 권한, 상태 분리, 정정, 고정 ID와 구형 데이터, 재전송 및 인증 범위의 P1~P8을 결정했다. Codex가 기술 설계, 구현 및 Test 작성과 실행, 화면 확인을 수행했다. 이를 사용자가 직접 모든 Code를 작성하거나 새 코드의 동작을 이미 설명한 것으로 표현하지 않는다.
+사용자는 공개와 권한, 상태 분리, 정정, 고정 ID와 구형 데이터, 재전송 및 인증 범위의 P1~P8을 결정했다. Codex가 기술 설계, 구현 및 Test 작성과 실행, 화면 확인을 수행했다. 이후 사용자는 제시한 코드와 상황에 답하며 고정 ID, 제출 UUID와 Commit 경계, 정정과 권한, 페이지 조회와 화면 실패 처리를 설명했다. 실제 답변과 설명을 보완한 지점은 [23일 학습 노트](../study-notes/2026-10-23-study-questions.md)에 기록했다. 직접 모든 Code를 작성하거나 독립적으로 전체 실습을 재현한 평가와는 구분한다.
 
 이번 Source 검토 범위는 다음과 같다.
 
@@ -134,10 +134,18 @@ npx --yes --package 'eslint@10.11.0' eslint 'src/main/resources/static/*.mjs' 's
 
 PostgreSQL 설계 점검 지침은 FK 및 Unique와 짧은 Transaction 경계를 확인하는 데 사용했다. Supabase나 RLS로 바꾸지 않았으며 Index 성능을 측정한 결과는 아니다. Browser 지침은 기존 Windows CLI 방식과 전용 Session·로컬 산출물로 검증하도록 적용했다.
 
-다음 복습은 세 가지면 충분하다. 아직 답변을 받지 않았으므로 이해 완료로 체크하지 않는다.
+처음 남겨둔 세 가지 복습은 이번 회차에서 다음과 같이 확인했다.
 
-1. 이름이 같아도 고정 account key가 달라지면 이전 문의를 볼 수 없는 이유는 무엇인가?
-2. 답변 Commit은 끝났는데 Browser 응답만 잃었다면 왜 같은 제출 UUID로 재확인해야 하는가?
-3. 새 정정 답변이 실패하거나 Rollback되면 기존 문의, 기존 답변과 AI 제안은 어떻게 되는가?
+1. 같은 이름이라도 내부 사용자 ID가 다르면 기존 문의 소유자가 아니라고 설명했다.
+2. 같은 UUID와 같은 본문 및 정정 대상으로 재확인하면 기존 결과 200을 받고 추가 Row는 없다고 답했다. 새 UUID 자동 재전송은 거부했다.
+3. Commit 실패 시 201을 반환하면 안 되고, 이미 Commit된 문의와 답변 및 AI 제안은 유지된다고 답했다. Row 개수만이 아니라 본문과 참조 값 보존도 별도로 검사해야 한다고 구분했다.
 
-계정 관리, 고객 후속 메시지, 운영 삭제·보관, Cross-tab 즉시 로그아웃, 실제 배포 및 자원 재측정은 후속으로 남긴다. 다음 작업은 [주간 계획](../weekly-plan.md)의 실제 가용시간 안에서 복습과 필요한 수정만 진행한다.
+계정 관리, 고객 후속 메시지, 운영 삭제·보관, Cross-tab 즉시 로그아웃, 실제 배포 및 자원 재측정은 후속으로 남긴다. 오늘의 학습과 구현은 종료하며, 다음 회차는 [주간 계획](../weekly-plan.md)의 실제 가용시간 안에서 필요한 보충과 기록만 검토한다.
+
+## 학습 마감 후 원격 전달, 2026-10-24 KST
+
+학습일은 10/23이고 문서 마감과 Push는 자정을 넘어 진행했다. 별도 마감 요청에 따라 Lab의 구현 네 Commit과 문서 Commit `194cca27675bedc1a6d2b9cac5433ec90ea4d316`을 기존 main에 Push했다. 강제 Push나 다른 Branch 변경은 하지 않았다.
+
+[원격 CI 실행 39974683084](https://github.com/HyungminYoon1/ai-helpdesk-learning-lab/actions/runs/39974683084)는 이 SHA의 push 이벤트이며 최종 success를 확인했다. Java/PostgreSQL Testcontainers, JavaScript Test, Lint와 linux/amd64 Image Build가 모두 통과했다. ECR 업로드 Job은 skipped다. 기존 성공 Run을 이번 Commit의 결과로 사용하지 않았다.
+
+WIL 저장소에는 현재 구성된 GitHub Actions Workflow가 없다. 문서의 링크, 인코딩과 diff를 로컬에서 확인하며 이를 원격 CI 통과로 표현하지 않는다. Lab의 push Workflow는 Java/PostgreSQL, JavaScript와 Lint, Image Build를 실행하지만 명시적 로컬 Browser 실험을 대신하지 않는다. ECR 업로드 Job은 별도 workflow_dispatch 조건이므로 이번 Push에서는 실행하지 않는다. AWS 리소스, Secret과 실제 AI 호출은 변경하지 않는다.

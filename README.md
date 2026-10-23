@@ -3,7 +3,7 @@
 > 상태: Active
 > 시작일: 2026-08-18
 > 전체 기간: 12주 유지 — 기술 학습 Week 1–9, 취업 우선 Week 10–12. 배포 과정은 Week 8–9 통합
-> 현재 단계: Week 1·2·3·4·6·7 완료 — Week 5 부분 완료·공개 제출 완료. Week 8–9는 핵심 실습과 리소스 정리, 원격 CI 및 저장소 WIL 마감을 마쳤고 10/23 블로그와 포럼 완료도 작성자가 확인했다. Week 10은 P1~P8 합의 뒤 공식 답변·정정과 대화 조회를 로컬 구현·검증했다. 새 코드의 작성자 복습과 주간 마감은 남아 있으며 개인정보 고도화는 후속으로 유지
+> 현재 단계: Week 1·2·3·4·6·7 완료 — Week 5 부분 완료·공개 제출 완료. Week 8–9는 핵심 실습과 리소스 정리, 원격 CI 및 저장소 WIL 마감을 마쳤고 10/23 블로그와 포럼 완료도 작성자가 확인했다. Week 10은 공식 답변·정정과 대화 조회의 로컬 검증 및 코드 기반 핵심 문답을 마쳤다. 실제 가용시간 확인과 주간 기록 마감은 남아 있으며 개인정보 고도화는 후속으로 유지
 
 이 저장소는 SW AI Lab 심화과정에서 선택한 기술을 학습하고, 이해가 바뀐 과정과 재현 가능한 근거를 주차별로 기록한다. 목표는 큰 제품을 기간 안에 완성하는 것이 아니라 AI/AX·Java Backend 직무에 필요한 개념을 직접 설명하고, 작은 실험과 Test로 검증하며, 필요한 범위만 서비스에 적용할 수 있는 역량을 만드는 것이다.
 
@@ -60,7 +60,7 @@ Week 8–9는 같은 배포 학습을 이어온 기간으로 통합한다. Week 
 | 6 | Browser·PostgreSQL·Test 수직 마감 | Completed — Local 수직 검증, 독립 재설명, 블로그·포럼 게시 완료 | [Week 6 학습 계획](./week6/weekly-plan.md) · [WIL](./week6/wil.md) |
 | 7 | LLM Structured Output·평가·Guardrail | Completed — 10/7 학습·평가·회귀 확인과 블로그 게시·포럼 등록 완료. 10/5 회차 이후 2일 추가 진행 | [Week 7 학습 계획](./week7/weekly-plan.md) · [WIL](./week7/wil.md) · [10/7 학습 노트](./week7/study-notes/2026-10-07-study-questions.md) |
 | 8–9 | Docker·CI·System·AWS Cloud·HTTPS 통합 | Completed — 핵심 실습과 검증, 리소스 정리, 원격 CI와 저장소 WIL 마감. 블로그 작성과 포럼 업로드도 10/23 작성자 확인 | [통합 학습 계획](./week8-9/weekly-plan.md), [WIL](./week8-9/wil.md), [정리 결과](./week8-9/lab-reports/2026-10-22-deployment-resource-closeout.md), [배포 계획](./week8-9/deployment-plan.md) |
-| 10 | 취업 우선과 공식 답변 및 대화 조회의 첫 확장 | In Progress — P1~P8 합의 뒤 V9·인증 연결·답변 API·화면의 로컬 PostgreSQL/Browser 검증. 작성자 코드 복습은 남음. 취업 활동은 병행 | [주차 안내](./week10/README.md), [계획](./week10/weekly-plan.md), [설계](./week10/official-reply-conversation-design-draft.md), [검증 보고서](./week10/lab-reports/2026-10-23-official-reply-conversation-lab.md) |
+| 10 | 취업 우선과 공식 답변 및 대화 조회의 첫 확장 | In Progress — P1~P8 합의, 로컬 PostgreSQL/Browser 검증과 코드 기반 핵심 문답 완료. 실제 가용시간과 주간 기록 마감은 별도 | [주차 안내](./week10/README.md), [계획](./week10/weekly-plan.md), [설계](./week10/official-reply-conversation-design-draft.md), [검증 보고서](./week10/lab-reports/2026-10-23-official-reply-conversation-lab.md), [학습 노트](./week10/study-notes/2026-10-23-study-questions.md) |
 | 11 | 면접·과제 대응과 취약 개념 재학습 | Not Started | 주차 시작 시 추가 |
 | 12 | 취업 결과 정리와 최종 회고 | Not Started | 주차 시작 시 추가 |
 
@@ -82,7 +82,7 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [Week 7 AI Native 학습 계획](./week7/weekly-plan.md): Structured Output·평가·Guardrail과 Suggestion 영속성 일정
 - [Week 7 WIL](./week7/wil.md): AI 출력의 형식·내용 평가, 문의 보존과 비동기 처리의 이해 변화. 10/7 블로그 게시·포럼 등록 완료 확인
 - [Week 8–9 통합 배포 학습 계획](./week8-9/weekly-plan.md): 배포 중심의 범위와 당시 진행 기록. 핵심 검증과 원격 CI, 저장소 WIL 및 작성자가 확인한 블로그와 포럼 마감 완료
-- [Week 10 학습 및 구현 계획](./week10/weekly-plan.md): 10/23 구현 결과와 24, 26의 복습 및 잔여 검토. 취업 우선과 기술 작업 시간 경계 유지
+- [Week 10 학습 및 구현 계획](./week10/weekly-plan.md): 10/23 구현과 핵심 문답 결과, 24, 26의 필요한 보충과 주간 기록. 취업 우선과 기술 작업 시간 경계 유지
 - [공식 답변과 대화 조회 설계](./week10/official-reply-conversation-design-draft.md): 합의한 공개·소유권·상태 분리·정정 및 기술 계약. 실제 SQL과 실행 근거는 Lab과 보고서로 연결
 - [10월 8일 학습 노트](./week8-9/study-notes/2026-10-08-study-questions.md): JAR·Container·Volume·Session과 설정의 수명, Cache·Secret 전달의 이해 변화와 핵심 질문
 - [10월 9일 학습 노트](./week8-9/study-notes/2026-10-09-study-questions.md): 설정·Bean 조립, 개인정보 탐지·치환, 종료·Health·CI와 AWS 권한의 이해 변화와 핵심 질문
@@ -95,6 +95,7 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [10월 20일 학습 노트](./week8-9/study-notes/2026-10-20-study-questions.md): 검사 실행·자원 회수, 통합 실패·CI 복구·ECR 전달과 AI 비활성 Task 교체·요청 Log
 - [10월 21일 학습 노트](./week8-9/study-notes/2026-10-21-study-questions.md): 비용/보관·DNS 위임·인증서·TTL 문답, 실제 성공/실패 관측·최신 Snapshot 복원과 22일 임시 DB 정리, 남은 마감
 - [10월 22일 학습 노트](./week8-9/study-notes/2026-10-22-study-questions.md): 독립 복습·직접 설정 수정·로컬 회귀, 최소 권한과 원본 데이터 대조·실제 리소스 정리·두 Snapshot 보존, 남은 마감
+- [10월 23일 학습 노트](./week10/study-notes/2026-10-23-study-questions.md): 고정 사용자 ID, 제출 UUID와 Commit, 정정과 권한, 페이지 조회 및 화면 실패 처리의 이해 확인
 - [배포 리소스 정리와 복구 자료 보존](./week8-9/lab-reports/2026-10-22-deployment-resource-closeout.md): 원본 RDS·ALB/리스너·실습 DNS 삭제, CNAME/TTL 순서·Snapshot 개별 확인과 로컬 개발/재배포 조건
 - [Route 53 직접 조회 비교](./week8-9/lab-reports/2026-10-21-route53-direct-query.md): Zone·TXT/Alias A 생성, 생성 권한 회수와 권한 서버 응답/일반 NXDOMAIN 비교. Cloudflare 서비스 유지
 - [최신 Snapshot 복원과 임시 DB 정리](./week8-9/lab-reports/2026-10-21-latest-snapshot-restore.md): 문의 5건·제안 1건을 포함한 일곱 Table 대조, 실제 22일 임시 DB 삭제·원본과 두 Snapshot 보존

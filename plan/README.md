@@ -29,11 +29,11 @@
 
 별도 최종 승인 뒤 원본 DB·ALB/리스너·실습 Zone/두 Record·서비스 CNAME을 삭제했다. [정리 보고서](../week8-9/lab-reports/2026-10-22-deployment-resource-closeout.md)의 두 수동 Snapshot은 개별 상세에서 Available, App Task·Service는 0개다. Secret·Log·Image·ACM/검증 CNAME·Target Group·네트워크는 보존했다. 다음 구현은 로컬에서 진행하고 필요 시 Snapshot에서 새 DB를 복원해 재배포한다. 실제 월간 비용은 미확인이고 보관 비용은 남을 수 있다.
 
-이후 두 저장소 Push와 Lab 원격 CI, 공개 자료 및 저장소 WIL 최종 검토와 Push를 마쳤다. 블로그 작성과 포럼 업로드도 10/23 작성자 확인으로 완료 처리했다. 정리 권한 회수와 보관 비용 확인은 후속 점검이며 이번 문서 갱신으로 Push, 새 Cloud 실행이나 IAM 변경을 하지 않는다.
+이후 두 저장소 Push와 Lab 원격 CI, 공개 자료 및 저장소 WIL 최종 검토와 Push를 마쳤다. 블로그 작성과 포럼 업로드도 10/23 작성자 확인으로 완료 처리했다. 정리 권한 회수와 보관 비용 확인은 후속 점검이며 Week 10 문서 마감 때문에 새 Cloud 실행이나 IAM 변경을 하지 않는다.
 
 Week 10에는 기존 Week 9의 취업 Baseline과 맞춤 지원을 함께 진행하며 Week 11·12는 뒤로 밀지 않는다. 취업 기간의 잔여 수직 학습·Project 보완·마감 후 수평 확장은 합쳐 주 6시간 이내다. [일정 통합 결정](./decisions/0004-combined-week8-9-deployment-learning.md)을 따르며 인물 관계 V2·개인정보 모델 고도화는 이번 마감 선행 조건으로 되돌리지 않는다.
 
-10/23에는 [공식 답변과 대화 조회 설계](../week10/official-reply-conversation-design-draft.md)의 P1~P8을 합의하고 별도 구현 요청으로 기술 계약과 V9, 고정 ID 연결, 답변·정정 API 및 대화 화면을 추가했다. 로컬 PostgreSQL과 Browser 결과는 [실행 보고서](../week10/lab-reports/2026-10-23-official-reply-conversation-lab.md)에 기록한다. [Week 10 계획](../week10/weekly-plan.md)의 24, 26일은 이미 수행한 구현을 반복하지 않고 작성자 복습과 잔여 검토에 배정한다. 10–12주차는 주간 기록을 유지하고 블로그만 한 편으로 묶는 [기록 주기 결정](./decisions/0011-combined-week10-12-blog.md)을 따른다. 이번 구현 변경의 Push·CI·Cloud 배포는 하지 않았다.
+10/23에는 [공식 답변과 대화 조회 설계](../week10/official-reply-conversation-design-draft.md)의 P1~P8을 합의하고 별도 구현 요청으로 기술 계약과 V9, 고정 ID 연결, 답변·정정 API 및 대화 화면을 추가했다. 로컬 PostgreSQL과 Browser 결과 및 학습 마감 요청에 따른 Push·CI는 [실행 보고서](../week10/lab-reports/2026-10-23-official-reply-conversation-lab.md)에서 구분한다. 이후 고정 ID·제출 UUID·Commit과 화면 실패 처리의 핵심 문답을 진행해 [23일 노트](../week10/study-notes/2026-10-23-study-questions.md)에 남겼다. [Week 10 계획](../week10/weekly-plan.md)의 24, 26일은 이미 끝낸 구현과 문답을 반복하지 않고 실제 가용시간에 맞춰 필요한 보충과 주간 기록을 검토한다. 10–12주차는 주간 기록을 유지하고 블로그만 한 편으로 묶는 [기록 주기 결정](./decisions/0011-combined-week10-12-blog.md)을 따른다. Cloud 배포와 실제 AI 호출은 하지 않았다.
 
 ### 초기 계획과 실행 근거
 
