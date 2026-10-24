@@ -1,12 +1,12 @@
 # 10/24 배정과 인계 로컬 구현 기록
 
-> 상태: 로컬 구현·전체 회귀와 최신 Browser 재검증 완료. Push/CI/Cloud 미실행
+> 상태: 로컬 구현·전체 회귀와 최신 Browser 재검증 완료. 후속 문서 검토와 Lab Push 및 해당 Commit의 원격 CI 통과. Cloud 미변경
 > 실행 환경: Windows, PowerShell 7, Java 25, Docker의 격리 PostgreSQL 17.6, 별도 로컬 Browser
 > 범위: O1~O6, V10, 직원 배정·인계와 기존 조회/공식 답변 경로의 권한 개정
 
 ## 승인과 정책
 
-작성자는 남은 세 정책에 동의하고 기술 설계 구체화, 작은 구현과 Test 및 적절한 단위의 Commit을 요청했다. 설계에 대한 동의와 실제 구현 요청을 구분한다. Push, AWS/ECR, Credential 변경과 실제 AI 호출은 이번 요청 범위가 아니다.
+작성자는 남은 세 정책에 동의하고 기술 설계 구체화, 작은 구현과 Test 및 적절한 단위의 Commit을 요청했다. 설계에 대한 동의와 실제 구현 요청을 구분한다. 최초 구현 요청은 로컬까지였으며 후속 두 저장소의 문서 검토·Commit·Push 승인은 마지막 절에 별도로 기록한다. AWS/ECR, Credential 변경과 실제 AI 호출은 포함하지 않는다.
 
 - 인계는 상대방 수락 대기 없이 Commit 즉시 적용한다.
 - 같은 서비스의 활성 지원 직원은 미배정과 다른 담당자의 문의, 대화 및 배정 이력을 조회한다. 새 답변과 정정은 현재 담당자만 작성한다.
@@ -25,7 +25,7 @@
 | Application | 자기 담당하기, 현재 담당자/서비스 지원관리자의 인계, 같은 제출의 원래 이벤트와 최신 배정 분리. Controller는 입력 변환과 응답만 담당 |
 | 권한 | 기존 Ticket, 대화, AI 결과 GET/HEAD도 서비스 권한을 재확인. 전역 AGENT Role만으로 우회하지 못함. 고객 소유권과 서비스 직원 권한은 별개 |
 | 동시성 | Ticket FOR UPDATE 후 구성원 ID 순 FOR SHARE. 배정과 이벤트 및 새 답변은 짧은 Transaction. 권한 회수는 구성원 Row에서 직렬화. 외부 호출 없음 |
-| Commit과 재확인 | 신규 배정 Commit 201, 동일 제출 200, 변경된 제출 409. 저장 실패와 Commit 실패는 배정·이력 둘 다 Rollback. 최신 배정은 원래 이벤트와 다를 수 있음 |
+| Commit과 재확인 | 신규 배정 Commit 201, 동일 제출 200, 변경된 제출 409. 확인된 저장/Commit 거부와 Rollback은 이번 배정/이력을 취소. 연결 장애에 따른 Commit 결과 미확인은 별도 재확인. 최신 배정은 원래 이벤트와 다를 수 있음 |
 | 답변 | 신규 expectedAssignmentVersion 필수. 인계 뒤의 새 답변 및 A→B→A 뒤 낡은 초안 거부. 저장된 동일 결과 재확인은 권한 검사 뒤 허용. 구형 NULL 버전 호환은 저장 결과만 대상 |
 | 화면 | 서비스별 미배정/내 담당 목록, 직원 선택과 인계, 이력 및 대화 연결. 50건 단위, 새로고침, textContent, 늦은 응답 무시, 결과 미확인 시 같은 UUID/대상/본문/버전 유지 |
 
@@ -60,7 +60,7 @@ PostgreSQL 설계 지침은 짧은 Transaction, 잠금 순서와 FK/Index 점검
 | Lab | `cd572a7` | 동일 Session 회수, 실제 AI 저장 Row 보존 및 기존 회귀 Fixture 보완 |
 | Lab | `2c8477a` | 실행 결과, 로컬 준비 안내와 운영 경계 |
 
-실행 기록과 준비 안내는 별도 문서 단위로 Commit한다. 위 Commit을 원격에 Push하거나 신규 CI를 확인한 상태는 아니다. Lab의 BUILD SUCCESS는 해당 로컬 실행 근거이며 오래된 Surefire XML을 전부 합산하지 않는다. 과거 명시적 실행의 PackagedIT XML 2건이 Surefire 폴더에 남아 있어 현재 기본 실행 수보다 크게 계산될 수 있음을 확인했다.
+실행 기록과 준비 안내는 별도 문서 단위로 Commit했다. 이 표는 원격 전달 전의 로컬 구현 단계다. 후속 Push와 CI는 마지막 절로 구분한다. Lab의 BUILD SUCCESS는 해당 로컬 실행 근거이며 오래된 Surefire XML을 전부 합산하지 않는다. 과거 명시적 실행의 PackagedIT XML 2건이 Surefire 폴더에 남아 있어 현재 기본 실행 수보다 크게 계산될 수 있음을 확인했다.
 
 ## 확인 범위와 남은 작업
 
@@ -69,8 +69,41 @@ PostgreSQL 설계 지침은 짧은 Transaction, 잠금 순서와 FK/Index 점검
 | WIL 설계·계획의 관련 문서 | VERIFIED: O1~O6과 기존 P1~P8, 일정과 승인 범위를 대조·수정 |
 | Lab의 관련 identity/ticket/support/security/AI 조회 코드, Migration과 Test | VERIFIED: 선택한 관련 경로를 읽고 해당 변경 및 Test 수행 |
 | 두 Repository 전체 | PARTIAL: 파일 목록 및 관련 경로 선택. 전체 Code/Security Audit은 아님 |
-| AWS·ECR·원격 CI·실제 AI 모델 | NOT_INSPECTED/NOT_EXECUTED: 이번 로컬 요청에서 상태 변경이나 신규 검증을 하지 않음 |
+| AWS·ECR·원격 CI·실제 AI 모델 | NOT_INSPECTED/NOT_EXECUTED: 최초 로컬 구현 단계에서는 상태 변경이나 신규 검증을 하지 않음. 후속 원격 CI는 마지막 절로 구분 |
 
-작성자는 UNIQUE와 Commit 순서의 차이, 같은 Ticket 잠금 및 책임 담당자 정책을 검토했다. 코드를 작성하고 자동 Test와 Browser 실험을 수행한 주체는 Codex다. 새 배정 구현을 작성자가 독립적으로 재현하거나 코드 문제로 설명한 증거는 아직 없다.
+구현 마감 시점에 작성자는 UNIQUE와 Commit 순서의 차이, 같은 Ticket 잠금 및 책임 담당자 정책을 검토했다. 코드를 작성하고 자동 Test와 Browser 실험을 수행한 주체는 Codex다. 이후의 코드 기반 문답은 아래 후속 기록으로 구분하며 독립 재구현까지 확인한 것은 아니다.
 
-다음에는 실제 코드의 서비스 권한과 배정 버전, 인계/답변의 Commit 경계를 2~3개 질문으로 묶어 확인할 수 있다. 고객 후속 메시지, 개인별 인증과 계정 전체 폐기, 공개 범위가 다른 내부 문의, 알림·보관/삭제와 운영 인수는 후속 설계다. 이번 기능을 실제 고객에게 공개 가능한 서비스 전체의 완료로 표시하지 않는다.
+### 같은 날의 코드 학습 및 문서 마감
+
+실제 코드의 배정 버전과 Commit, 재확인 및 답변/인계 경쟁을 문답으로 확인했다. 과거 이벤트를 현재 배정으로 오해했던 부분은 추가 사례 뒤 정답을 확인했고, 권한 회수의 두 Transaction 문제는 미응답으로 남겼다. 이후 사용자가 문서화하고 설계를 마무리하도록 요청해 [학습 기록](../study-notes/2026-10-24-study-questions.md)과 [자율 학습 자료](../study-docs/ticket-assignment-and-commit-boundaries.md)를 작성했다.
+
+미구현/후보 표현을 V10과 맞추고 확인된 Rollback과 Commit/HTTP 응답 유실의 차이를 설계에 명시했다. 위 Test 수는 기존 실행 근거이며 이 문서 마감에서 새로 실행하거나 합산하지 않는다. 업무 코드/DB Schema/Cloud/실제 AI를 변경하지 않았다. 문서 확인은 UTF-8, LF, 상대 링크, JSON 예시 및 V10 DDL 대조를 대상으로 한다.
+
+고객 후속 메시지, 개인별 인증과 계정 전체 폐기, 공개 범위가 다른 내부 문의, 알림, 보관/삭제와 운영 인수는 후속 설계다. 이번 기능을 실제 고객에게 공개 가능한 서비스 전체의 완료로 표시하지 않는다.
+
+## 후속 문서 검토와 원격 전달
+
+사용자가 두 저장소의 수정 문서를 검토하고 이상이 없으면 단위별 Commit과 Push를 진행하도록 요청했다. 합의한 설계를 새로 바꾸지 않고 실제 코드와 문서의 일치, 학습 근거 및 공개 범위를 점검했다.
+
+- Lab README의 배정 기능 비범위 문구를 현재 구현에 맞추고, 최초 로컬 요청과 후속 공개 승인을 구분했다.
+- 서비스 지원권한 회수와 계정 전체 비활성화를 구분했다. 확인된 Rollback과 Commit/HTTP 응답 유실도 별도 결과로 유지했다.
+- WIL의 수정 문서 9개에서 상대 링크 147개, JSON 예시 4개, UTF-8 without BOM/LF와 Diff 공백 검사를 통과했다. 설계의 SQL 네 블록은 Lab V10과 주석/공백을 제외하고 일치했다.
+- Lab의 문서 두 개에서 상대 링크 101개와 인코딩/줄바꿈 및 Diff 검사를 통과했다. 코드·Test·Migration·Workflow는 로컬 검증 기준 `2c8477a`와 동일하다. 이번 검토에서 로컬 Test/Browser를 다시 실행하지 않았다.
+- 공개 대상에서 주요 Secret 형식과 개인 로컬 절대 경로의 패턴을 점검했다. 이 제한된 검사를 전체 Secret/Security Audit으로 표현하지 않는다.
+
+| Source | 후속 검토 범위 |
+|---|---|
+| WIL의 수정 설계, 학습 자료/기록, 계획/안내와 보고서 9개 | VERIFIED: 본문과 변경 내용을 검토하고 링크/예시/실제 DDL을 대조 |
+| Lab docs/ticket-assignment.md | VERIFIED: 기술 계약 전체와 변경 내용 검토 |
+| Lab README.md | PARTIAL: 현재 기능 안내와 준비 설정, 비범위 및 개발 규칙 검토. 1,200여 줄의 과거 주차별 실험을 모두 재검증하지 않음 |
+| 두 Repository 전체 | PARTIAL: 관련 파일을 선택한 문서 검토. 전체 업무 코드나 보안 감사가 아님 |
+
+| 저장소 | 새 Commit | 단위 |
+|---|---|---|
+| Lab | `6eed98c` | 배정 기술 계약과 준비 안내의 일치, Commit 결과 미확인 및 공개 경계 |
+| WIL | `7d32052` | 자율 학습 자료와 실제 학습 기록 |
+| WIL | `e63a906` | 배정/인계 기술 설계 확정 및 운영 설계/결정 기록 |
+
+Lab의 원격 main이 `6eed98c461baa67c5f1b2d63461dc8ef35cf353b`와 일치하는 것을 확인했다. [CI Run 40085928714](https://github.com/HyungminYoon1/ai-helpdesk-learning-lab/actions/runs/40085928714)는 같은 SHA의 push 실행으로 completed/success를 확인했다. 실제 PostgreSQL Testcontainers를 사용하는 Java 검증, JavaScript Test와 Lint, Docker Image 빌드가 모두 성공했다. ECR Publish Job은 skipped이며 Cloud 재배포나 실제 AI 호출은 수행하지 않았다. 로컬에서 별도 실행한 Browser 실험을 이 CI에서 다시 수행했다고 기록하지 않는다.
+
+WIL에는 GitHub Actions Workflow가 없으므로 로컬 문서 검사를 원격 CI 통과로 기록하지 않는다. 이 보고서를 포함한 진행 상황과 탐색 링크 정리는 학습 자료 및 설계 확정과 구분한 문서 Commit 단위다.
