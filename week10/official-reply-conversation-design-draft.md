@@ -18,7 +18,7 @@
 
 구체적인 SQL, API와 결정 이유는 Lab의 `docs/official-replies.md`에 기록했다. [실행 보고서](./lab-reports/2026-10-23-official-reply-conversation-lab.md)에 Commit, 실행 명령과 검증 한계를 구분하며 [학습 노트](./study-notes/2026-10-23-study-questions.md)에는 실제 코드 기반 문답을 기록했다. 아래 기존 코드 표는 구현 전 기준선이며 현재 Schema와 혼동하지 않는다.
 
-10/24에는 실제 고객지원 또는 내부 IT 활용을 위한 후속 설계를 요청받았다. 후속 O1의 담당자 전용 새 공식 답변 및 정정, O2의 직접 가져오기와 명시적 인계, O3의 한 조직 안 여러 자사 앱 구분은 사용자 동의로 확정됐다. [실사용 설계 초안](../plan/helpdesk-operational-design-draft.md)의 O4~O6에서 인계 확정 시점, 직원 조회 범위와 지원권한 회수를 추가로 검토하며, [배정과 인계 기술 초안](./ticket-assignment-contract-draft.md)을 이에 맞춰 구체화한다. 현재 P1의 코드 동작을 이미 바꾼 것은 아니다. 이 문서와 V9는 첫 기능의 확정 기준으로 보존하며 후속 API 적용 전에 새 권한과 DTO를 명시적으로 개정한다.
+10/24에는 실제 고객지원 또는 내부 IT 활용을 위한 후속 설계를 요청받았다. O1~O6의 담당자 전용 새 답변, 직접 가져오기/명시적 인계, 한 조직의 서비스 구분, Commit 즉시 인계, 직원 조회와 권한 회수를 모두 합의했다. 별도의 구현 요청을 근거로 [배정과 인계 기술 계약](./ticket-assignment-contract-draft.md)에 따라 V10과 API 및 화면을 개정하고 로컬 검증했다. 아래 P1~P8과 V9는 첫 기능의 당시 기준으로 보존하며 새 계약과 [24일 실행 기록](./lab-reports/2026-10-24-ticket-assignment-lab.md)을 함께 확인한다.
 
 ## 목적과 범위
 

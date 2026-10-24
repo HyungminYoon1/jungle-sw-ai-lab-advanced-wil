@@ -50,7 +50,8 @@ Week 10에는 기존 Week 9의 취업 Baseline과 맞춤 지원을 함께 진행
 ## 범위 결정
 
 - [Helpdesk 실사용 설계 초안](./helpdesk-operational-design-draft.md): 소규모 서비스 고객지원 또는 내부 IT 활용, 담당자 배정과 인계 검토안, 실제 운영 전의 조건. 현재 구현 완료나 정책 합의와 구분
-- [배정과 인계 기술 계약 초안](../week10/ticket-assignment-contract-draft.md): O1~O3 합의와 O4~O6의 추가 정책 검토를 구분한 Schema, API, 재확인 및 실패 Case. 구현과 SQL 실행은 미실행
+- [배정과 인계 기술 계약](../week10/ticket-assignment-contract-draft.md): O1~O6 합의, Schema, API, 재확인과 실패 Case 및 로컬 구현 경계
+- [10/24 배정·인계 실행 기록](../week10/lab-reports/2026-10-24-ticket-assignment-lab.md): 단위별 Commit과 PostgreSQL·Browser 검증. 원격 CI·Cloud와 구분
 - [실사용 후속 목표 결정](./decisions/0012-helpdesk-operational-target.md): 10/24 사용자 요청 반영. 기존 학습과 시간 경계 유지
 - [학습 우선 범위 전환 Decision](./decisions/0001-learning-first-scope.md)
 - [깊은 수직 학습과 AI 보조 수평 확장 Decision](./decisions/0002-depth-first-ai-assisted-expansion.md)
