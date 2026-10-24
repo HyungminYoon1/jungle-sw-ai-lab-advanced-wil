@@ -1,10 +1,12 @@
-# Ticket 배정과 인계: Schema, API 및 실패 계약 초안
+# Ticket 배정과 인계: 확정 기술 설계와 실패 계약
 
 > 작성일: 2026-10-24
-> 상태: O1~O6 Accepted / Locally Verified. 검증 결과는 [24일 실행 기록](./lab-reports/2026-10-24-ticket-assignment-lab.md)
+> 상태: Design Complete / O1~O6 Accepted / 구현 Locally Verified. 운영 준비 전체의 완료는 아님
 > 합의: O1의 담당자 전용 새 공식 답변, O2의 직접 가져오기와 명시적 인계, O3의 한 조직 안 여러 자사 서비스
 > 추가 합의: O4 Commit 즉시 인계, O5 같은 서비스 활성 직원 조회, O6 권한 회수 뒤 이력 보존과 명시적 재배정
-> 기준: Lab 194cca2, V9와 현재 공식 답변 계약. 아래 SQL은 실행하지 않은 설계 예시이며 Migration 파일이 아님
+> 구현 대조 기준: Lab 2c8477a, V10. 아래 DDL은 설계 설명용이며 실제 기준은 Lab의 V10 Migration과 코드
+
+기존 링크를 보존하기 위해 파일명의 draft는 유지한다. 이 기능의 Schema, API, 권한, 같은 제출 재확인, 잠금/Commit 및 화면 실패 처리는 확정했다. [자율 학습 자료](./study-docs/ticket-assignment-and-commit-boundaries.md), [24일 학습 기록](./study-notes/2026-10-24-study-questions.md), [기존 실행 근거](./lab-reports/2026-10-24-ticket-assignment-lab.md)를 분리한다. 이번 설계 마감은 문서 작업이며 새 업무 코드나 Cloud 적용이 아니다.
 
 ## 1. 범위와 정책 상태
 
@@ -12,7 +14,7 @@
 
 이전 V9 계약은 모든 AGENT의 답변을 허용했다. 10/24 사용자 동의로 O1~O6을 확정하고 별도의 구현 요청을 받았다. 신규 V10과 API 개정으로 적용하며 V1~V9는 보존한다. 기존 공개 시점, 고객 소유권, 정정의 추가 저장과 AI 입력 유지 원칙은 보존한다. 아래 SQL 예시는 설계이며 실제 Migration 및 통합 Test가 실행 근거다.
 
-| 항목 | 제안 계약 |
+| 항목 | 확정 계약 |
 |---|---|
 | 미배정 | assignee_user_id가 NULL. 배정 버전 초기값 0 |
 | 담당하기 | 권한 있는 직원이 명시적으로 요청. 서버가 현재 미배정과 예상 버전을 확인한 뒤 자기 ID로 배정 |
@@ -24,18 +26,18 @@
 
 직접 가져오기는 업무 분배의 공정성을 보장하지 않는다. 미배정 목록에 접수 시각과 오래된 문의의 확인 방법이 필요하다. 자동 분배와 임의 배정 해제는 첫 API 범위로 추가하지 않았다. O4의 Commit 즉시 인계와 O6의 배정 보존 및 관리자 재배정을 아래 흐름의 확정 기준으로 삼는다.
 
-## 2. 인증과 서비스 접근: O5~O6 권장안 포함
+## 2. 인증과 서비스 접근
 
-- 기존 Session과 고정 사용자 ID를 사용한다. 현재 Authentication의 AGENT Role에 더해 해당 서비스의 활성 직원 권한을 DB에서 검사하는 안이다.
+- 기존 Session과 고정 사용자 ID를 사용한다. 현재 Authentication의 AGENT Role에 더해 해당 서비스의 활성 직원 권한을 DB에서 검사한다.
 - 지원관리자는 아래 서비스별 SUPERVISOR 권한이며 시스템 전체 관리자나 AWS IAM Role과 다르다. 공식 답변 권한 우회는 주지 않는다.
 - 같은 조직이라도 서비스 A의 직원 권한만 있는 사람은 서비스 B의 문의에 접근하지 못한다. 여러 서비스에 참여할 수는 있다.
 - 고객 대화 조회는 기존 requester_user_id 소유권 검사를 유지한다. 직원용 배정 정보와 인계 사유는 고객 응답에 넣지 않는다.
 - Ticket의 service_id는 서버가 DB에서 읽어 사용한다. Browser가 보낸 Actor나 조직 ID를 권한 근거로 쓰지 않는다. 배정 중 service_id를 바꾸는 API는 만들지 않는다.
 - 여러 자사 앱의 username이 같다는 이유로 고객 계정을 합치지 않는다. 공통 Helpdesk 계정 또는 신뢰하는 인증 주체의 명시적 연결 방식은 실제 인증 설계에서 정한다.
 
-직원 조회 범위와 지원권한 비활성화의 업무 정책은 O5와 O6에서 확인한다. 아래 active 컬럼은 서비스의 직원 권한이며 모든 로그인 계정 관리가 구현됐다는 뜻이 아니다. 계정 전체 비활성화와 Session 취소는 실제 인증 모듈과 함께 구체화할 별도 계약이다.
+직원 조회 범위와 지원권한 비활성화는 합의한 O5와 O6을 적용한다. 아래 active 컬럼은 서비스의 직원 권한이며 모든 로그인 계정 관리가 구현됐다는 뜻이 아니다. 계정 전체 비활성화와 Session 취소는 실제 인증 모듈과 함께 구체화할 별도 계약이다.
 
-## 3. Schema 후보
+## 3. 확정 Schema
 
 ### 서비스와 직원 권한
 
@@ -54,7 +56,7 @@ CREATE TABLE support_service_memberships (
     active BOOLEAN NOT NULL DEFAULT TRUE,
     PRIMARY KEY (service_id, user_id)
 );
-CREATE INDEX support_membership_user_idx ON support_service_memberships(user_id);
+CREATE INDEX support_membership_user_idx ON support_service_memberships(user_id, service_id);
 ```
 
 실제 개인별 계정과 명시적으로 연결한 ID만 등록한다. 과거에 AGENT로 로그인한 적 있다는 이유로 모든 서비스 권한을 자동 부여하지 않는다. 이력에서 참조하는 직원 권한 Row는 물리 삭제 대신 비활성화하고, 최종 보관 및 삭제 정책은 별도로 정한다.
@@ -67,20 +69,21 @@ ALTER TABLE tickets
     ADD COLUMN assignee_user_id BIGINT,
     ADD COLUMN assignment_version BIGINT NOT NULL DEFAULT 0
         CHECK (assignment_version >= 0),
-    ADD CONSTRAINT ticket_service_identity UNIQUE (service_id, id),
-    ADD CONSTRAINT ticket_assignee_scope FOREIGN KEY (service_id, assignee_user_id)
+    ADD CONSTRAINT ticket_service_id_unique UNIQUE (service_id, id),
+    ADD CONSTRAINT ticket_assignee_membership FOREIGN KEY (service_id, assignee_user_id)
         REFERENCES support_service_memberships(service_id, user_id),
-    ADD CONSTRAINT ticket_assignee_version CHECK (
-        assignee_user_id IS NULL OR assignment_version > 0
+    ADD CONSTRAINT ticket_assignment_state CHECK (
+        (assignee_user_id IS NULL AND assignment_version = 0)
+        OR (service_id IS NOT NULL AND assignee_user_id IS NOT NULL AND assignment_version > 0)
     );
 
-CREATE INDEX ticket_service_assignee_id_idx
+CREATE INDEX ticket_service_assignee_idx
     ON tickets(service_id, assignee_user_id, id);
 ```
 
-현재 담당자는 한 컬럼이므로 한 Ticket에 여러 현재 담당자를 저장하지 않는다. FK는 같은 서비스의 직원 Row 존재만 보장한다. 활성 계정, active와 현재 Role 및 담당 자격은 Service에서 검사한다. 새 Ticket은 미배정 및 버전 0으로 시작하며 문의를 접수한 AGENT를 자동 담당자로 정하지 않는다.
+현재 담당자는 한 컬럼이므로 한 Ticket에 여러 현재 담당자를 저장하지 않는다. FK는 같은 서비스의 직원 Row 존재만 보장한다. 서비스 구성원의 active와 현재 Role 및 담당 자격은 Service에서 검사한다. 계정 전체의 로그인 활성화는 별도 인증 계약이다. 새 Ticket은 미배정 및 버전 0으로 시작하며 문의를 접수한 AGENT를 자동 담당자로 정하지 않는다.
 
-service_id는 구형 데이터 이관 때문에 위 단계에서 NULL을 허용한다. 운영 시작 전 검증된 서비스 매핑을 완료하고 NOT NULL로 강화한다. 미매핑 Ticket에 일반 직원의 배정 또는 새 답변을 허용하지 않으며, 이관 담당자의 제한된 확인 절차와 현재 조회 호환성을 별도로 검증한다. NULL을 다른 조직 또는 공용 서비스로 조용히 대체하지 않는다.
+service_id는 구형 데이터 때문에 V10에서 NULL을 허용한다. 신규 접수에는 서버 설정으로 등록된 서비스를 연결한다. 실운영 전 검증된 매핑 및 NOT NULL 강화 여부는 별도 관리 절차와 후속 Migration으로 다루며 이번에 실행하지 않는다. 미매핑 Ticket의 직원 조회/배정/새 답변은 닫고 기존 고객의 자기 대화 조회는 유지한다. NULL을 다른 조직 또는 공용 서비스로 조용히 대체하지 않는다.
 
 ### 배정 이벤트와 같은 제출의 중복 방지
 
@@ -119,6 +122,12 @@ CREATE TABLE ticket_assignment_events (
 );
 CREATE INDEX assignment_event_ticket_id_idx
     ON ticket_assignment_events(ticket_id, id);
+CREATE INDEX assignment_event_actor_idx
+    ON ticket_assignment_events(service_id, actor_user_id);
+CREATE INDEX assignment_event_from_idx
+    ON ticket_assignment_events(service_id, from_user_id);
+CREATE INDEX assignment_event_to_idx
+    ON ticket_assignment_events(service_id, to_user_id);
 ```
 
 CHECK만으로 변경 전 담당자와 갱신 시점의 자격을 확인할 수는 없다. Application의 최신 상태 확인과 같은 Transaction의 저장을 함께 사용한다. Ticket 변경과 이벤트의 일치도 FK만으로 증명되지 않으므로 공통 Repository 경로와 통합 Test로 확인한다.
@@ -136,16 +145,20 @@ ALTER TABLE ticket_messages
     ADD CONSTRAINT inquiry_without_reply_assignment_version CHECK (
         message_type <> 'INQUIRY' OR reply_assignment_version IS NULL
     );
+CREATE INDEX message_assignment_event_idx
+    ON ticket_messages(ticket_id, reply_assignment_version);
 ```
 
 과거 OFFICIAL_REPLY에는 당시 배정이 존재하지 않았으므로 NULL을 남긴다. 버전 1 같은 값을 만들어 채우지 않는다. 후속 버전의 새 답변은 Application 및 Repository에서 버전 저장을 필수로 하고 Test한다. 이 nullable CHECK만으로 신규 쓰기의 필수값까지 강제했다고 하지 않는다. 권한 있는 DB 운영 SQL과 모든 다른 쓰기 경로도 별도 통제 대상이다.
 
 ## 4. API 계약
 
-모든 JSON은 허용 필드, 정확한 자료형과 범위를 검사한다. ID는 양의 정수, UUID는 유효한 UUID, expectedAssignmentVersion은 0 이상의 정수다. 변경 POST는 Session과 유효 CSRF가 필수다. 응답은 Cache-Control: no-store를 유지한다.
+모든 JSON은 허용 필드, 정확한 자료형과 범위를 검사한다. ID는 양의 signed BIGINT 범위, UUID는 정규 UUID 문자열이다. 배정 요청의 expectedAssignmentVersion은 0 이상 Long.MAX_VALUE 미만이며 신규 답변은 양의 Long 값을 요구한다. Browser는 정확히 표현할 수 없는 Number ID/버전을 거부한다. 변경 POST는 Session과 유효 CSRF가 필수다. 응답은 Cache-Control: no-store를 유지한다.
 
 | 요청 | 목적 및 권한 |
 |---|---|
+| GET /api/services | 본인의 활성 서비스 목록. 고객용 전체 서비스 공개 API가 아님 |
+| GET /api/services/{serviceId}/assignment-queue?view=UNASSIGNED&afterId=0&limit=50 | view는 UNASSIGNED 또는 MINE. ID 순 페이지와 명시적 새로고침. 영속 분배 Cursor나 FIFO 보장은 아님 |
 | GET /api/tickets/{id}/assignment | 해당 서비스의 활성 직원이 현재 담당자와 버전 조회. 읽기 전용 |
 | GET /api/tickets/{id}/assignment-events?afterId=0&limit=50 | 같은 직원이 인계 이력 조회. ID 오름차순, 기본 50 및 최대 100, 기존 방식의 Cursor |
 | GET /api/services/{serviceId}/agents?afterId=0&limit=50 | 해당 서비스의 활성 직원이 인계 가능한 활성 직원 목록 조회. 사용자 ID 오름차순 Cursor, 기본 50 및 최대 100. 내부 선택용이며 고객에게 공개하지 않음 |
@@ -182,6 +195,8 @@ toAgentId는 검증할 대상이지 요청자의 권한 근거가 아니다. 같
 
 새 변경과 이벤트가 Commit되면 201, 동일 제출의 재확인은 200이다. 응답에는 원래 변경 이벤트와 현재 배정을 분리해 반환한다. 예를 들어 A의 배정 이벤트를 재확인하는 사이 이미 B에게 인계됐으면 원래 이벤트의 담당자 A를 '현재 담당자'로 표시하지 않는다.
 
+다음은 전체 응답이 아니라 두 정보의 차이를 설명하는 핵심 필드 발췌다.
+
 ```json
 {
   "event": {
@@ -192,19 +207,19 @@ toAgentId는 검증할 대상이지 요청자의 권한 근거가 아니다. 같
 }
 ```
 
-이는 재확인 예시다. 일반 신규 성공 직후에는 두 버전이 같다. 화면은 event가 아니라 assignment로 현재 상태를 갱신한다. 그 이후 발생한 변경까지 실시간 보장하지 않으므로 다음 쓰기에서 버전을 다시 확인한다. 별도 이벤트 단건 GET과 Location은 이번 초안에서 필수 계약으로 추가하지 않는다.
+이는 재확인 예시다. 신규 성공 응답의 Transaction 안에서는 두 버전이 같다. 화면은 event가 아니라 assignment로 현재 상태를 갱신한다. 응답 전송 뒤 발생한 변경까지 실시간 보장하지 않으므로 다음 쓰기에서 버전을 다시 확인한다. 별도 이벤트 단건 GET과 Location은 이번 계약에 추가하지 않는다.
 
 ## 5. 저장 절차와 권한 확인 순서
 
 1. Filter의 인증 및 AGENT Role, CSRF와 요청 구조를 확인한다. 서버 Actor와 고정 ID를 사용한다.
 2. 짧은 Transaction에서 Ticket을 FOR UPDATE로 잠그고 서버가 service_id를 읽는다. 서비스가 다르거나 조회 권한이 없으면 존재 정보를 공개하지 않는다.
-3. 같은 서비스의 Actor 권한과 계정 활성 상태를 확인한다. 직원 권한 Row를 잠글 필요가 있으면 Ticket 다음에 user_id 순으로 획득한다. 권한 변경 경로도 같은 잠금 규칙을 따라야 하며 계정 수명 계약과 함께 검증한다.
+3. 같은 서비스의 Actor 지원권한 active/Role을 확인한다. Ticket 다음에 Actor와 대상의 구성원 Row를 user_id 오름차순 FOR SHARE로 잠근다. 전체 계정의 로그인 수명 확인을 이 검사만으로 대체하지 않는다. 회수 UPDATE 경로는 구성원 잠금 이후 Ticket을 잠그지 않는다.
 4. 같은 Ticket, Actor 및 clientRequestId의 이벤트가 있으면 operation, 예상 버전, 대상과 reason을 비교한다. 동일하면 원래 이벤트와 현재 배정을 반환하고 새 쓰기는 하지 않는다. 달라지면 409다. 권한이 사라진 Actor에게는 이 조회도 허용하지 않는다.
 5. 새 요청이면 예상 배정 버전을 비교하고, 미배정 또는 현재 담당자 및 지원관리자 조건을 확인한다. 인계 대상의 같은 서비스 소속과 활성 자격도 확인한다.
-6. 현재 값을 기준으로 assignment_version을 1 증가시키고 담당자를 변경한다. 같은 Transaction으로 이벤트를 저장한다. 하나라도 실패하면 둘 다 Rollback한다.
+6. 현재 값을 기준으로 assignment_version을 1 증가시키고 담당자를 변경한다. 같은 Transaction으로 이벤트를 저장한다. 명확한 SQL 거부와 확인된 Rollback에서는 둘 다 취소된다. Commit 응답 유실에 따른 결과 미확인은 아래 구분을 따른다.
 7. Commit 뒤 Controller가 201을 만든다. AI, 이메일 또는 다른 외부 호출을 Transaction 안에서 수행하지 않는다.
 
-동일 요청 재확인은 현재 담당자가 아니더라도 아직 조회 가능한 원래 Actor에게 허용하는 기술안이다. 새 인계나 새 답변을 작성할 권한까지 되돌려 주는 것은 아니다. 반대로 새 요청이므로 권한과 현재 상태를 다시 검사해야 하는데 기존 이벤트를 성공 근거로 재사용해서도 안 된다.
+동일 요청 재확인은 현재 담당자가 아니더라도 아직 조회 가능한 원래 Actor에게 허용한다. 새 인계나 새 답변을 작성할 권한까지 되돌려 주는 것은 아니다. 새 요청은 권한과 현재 상태를 다시 검사하며 기존 이벤트를 성공 근거로 재사용하지 않는다.
 
 서비스 직원 권한 변경은 아래 9절의 공유 잠금과 회수 UPDATE로 직렬화한다. 현재 인증 설정만으로 계정 전체의 즉시 Session 폐기까지 완성됐다고 보지 않는다.
 
@@ -220,24 +235,39 @@ A→B 인계가 먼저 Commit되면 A의 새 답변은 거부한다. A→B→A �
 
 ## 7. 오류와 실패 사례
 
-| 조건 | 제안 결과와 불변 조건 |
+| 조건 | 결과와 불변 조건 |
 |---|---|
 | 익명 또는 USER가 직원 API 호출 | 401 또는 403. CSRF가 없으면 403이 먼저일 수 있음. 배정 쓰기 없음 |
 | 없는 Ticket 또는 지원 범위 밖 Ticket | 같은 404. 다른 서비스의 존재나 담당자 미노출 |
-| 추가 Actor 필드, 잘못된 ID/UUID/버전, 공백 사유 | 400 INVALID_ASSIGNMENT_REQUEST. 저장 Service 미호출 |
+| 추가 Actor 필드, 잘못된 ID/UUID/버전, 공백 사유 | 400 INVALID_ASSIGNMENT_REQUEST. 입력 변환 또는 Service 경계에서 거부하며 저장 변경 없음 |
 | 새 요청의 예상 버전 불일치 | 409 ASSIGNMENT_VERSION_CONFLICT. 현재 값 덮어쓰기 없음 |
 | 이미 배정된 문의의 새로운 claim | 409 ASSIGNMENT_NOT_UNASSIGNED. 같은 담당자라도 새 이벤트 없음 |
 | 현재 담당자도 지원관리자도 아닌 직원의 transfer | 403 ASSIGNMENT_FORBIDDEN |
 | 미배정 문의의 transfer | 409 ASSIGNMENT_REQUIRED. 먼저 claim 또는 별도 관리자 지정 정책 필요 |
 | 자기 자신에게 인계, 없는 또는 비활성/다른 서비스 대상 | 400 INVALID_ASSIGNEE. 다른 서비스 계정 상세 미노출 |
 | 같은 제출 UUID의 변경된 operation, 대상, 버전 또는 사유 | 409 ASSIGNMENT_REQUEST_CONFLICT. 기존 이벤트 불변 |
-| 이벤트 INSERT 또는 최종 Commit 실패 | 안전한 500. 담당자와 이벤트 둘 다 Rollback. 이미 접수한 문의와 AI 제안은 유지 |
-| 잠금 대기 제한 또는 일시적 DB 혼잡 | 503 ASSIGNMENT_BUSY 제안. 원문 및 SQL 미노출. 새 UUID로 자동 재전송하지 않음 |
+| 이벤트 INSERT 실패 또는 확인된 Commit 거부 | 안전한 500. 확인된 Rollback이면 담당자와 이벤트 둘 다 취소. 이미 접수한 문의와 AI 제안은 유지 |
+| Commit 또는 HTTP 응답 유실로 결과 미확인 | 실패 확정이나 Rollback으로 단정하지 않음. 원래 UUID와 내용을 유지하고 권한 검사 후 DB의 동일 제출 결과로 재확인 |
+| 잠금 대기 제한 | 503 SUPPORT_BUSY. 원문 및 SQL 미노출. 새 UUID로 자동 재전송하지 않음. 다른 DB 실패를 모두 503으로 묶지 않음 |
 | 이전 담당자의 새 답변 | 조회 가능하더라도 403 NOT_ASSIGNEE. 새 메시지 없음 |
 | 현재 담당자의 오래된 배정 버전 답변 | 409 ASSIGNMENT_VERSION_CONFLICT. A→B→A도 검증 |
 | 동일 성공의 재확인 시 이미 인계됨 | 아직 조회 가능한 Actor는 200. 원래 이벤트와 최신 배정을 구분. 새 변경 없음 |
 
-오류 코드는 실제 Lab 계약의 SupportException 및 기존 대화 예외와 대조한다. 잠금 대기는 SUPPORT_BUSY로 반환하며 위 ASSIGNMENT_BUSY 제안명을 그대로 구현했다고 하지 않는다. 잠금 제한 이후 Transaction이 중단됐다면 그 안에서 실패 예외만 잡고 정상 조회를 계속하지 않는다. 응답을 잃어 결과 미확인이면 다음 별도 요청에서 같은 제출 ID로 확인한다.
+오류 코드는 실제 Lab 계약의 SupportException 및 기존 대화 예외와 대조한다. 잠금 제한 이후 Transaction이 중단됐다면 그 안에서 실패 예외만 잡고 정상 조회를 계속하지 않는다. 응답을 잃어 결과 미확인이면 다음 별도 요청에서 같은 제출 ID로 확인한다.
+
+### Commit 결과를 모르는 경우
+
+DB가 Commit을 거부하고 Rollback된 Test와, Commit 처리는 됐을 수 있지만 ACK 또는 HTTP 응답을 못 받은 상황은 다르다. HTTP 5xx나 연결 종료만으로 "DB Row는 0건"이라고 판단하지 않는다. 현재 UI는 같은 UUID/예상 버전/본문 또는 대상/사유를 보존하고 자동 새 제출을 만들지 않는다. 다음 요청에서 동일 제출이 있으면 권한 확인 뒤 200으로 반환한다. 없더라도 원래 전제와 현재 권한/버전을 검사하므로 새 저장 201 또는 충돌/거부가 가능하다. 최신 버전을 원래 제출에 덮어쓰지 않는다.
+
+### 직원 권한 회수의 확정 시점
+
+active=true를 확인하고 구성원 공유 잠금을 먼저 얻은 Transaction이 있으면, 해당 Row의 회수 UPDATE는 그 Transaction 종료를 기다린다. 기존 작업이 먼저 Commit된 뒤 회수가 Commit될 수 있다. 반대로 회수 UPDATE가 먼저 잠금을 얻으면 새 권한 조회가 기다리고, 회수 Commit 이후 inactive를 읽으면 거부한다. 회수가 Rollback되면 미확정 inactive를 회수 완료로 취급하지 않는다. 대기 제한을 넘긴 요청은 정상 성공으로 취급하지 않는다.
+
+이 보장은 Transaction 순서에 따른 권한 확인이다. 이미 전송 중인 응답 취소, Browser 화면의 즉시 삭제, 전체 Session 폐기 또는 계정 전체 정지는 아니다. 서비스 지원권한 회수는 기존 배정/버전/원문/이력을 자동 변경하지 않으며 이후 지원관리자가 별도로 인계한다.
+
+### 화면과 조회 실패
+
+POST 201/200으로 저장을 확인한 뒤 GET이 실패하면 GET만 재시도한다. 결과 미확인인 POST는 원래 제출을 유지해 명시적으로 재확인하며 페이지 이동/새로고침으로 메모리의 키를 잃으면 자동 복구를 보장하지 않는다. Ticket/조회 순번이 다른 늦은 응답은 무시한다. 화면에서 무시해도 이미 Commit된 DB 변경이 취소되지는 않는다.
 
 ## 8. 실제 PostgreSQL 및 Browser 검증 기준
 
@@ -246,7 +276,7 @@ A→B 인계가 먼저 Commit되면 A의 새 답변은 거부한다. A→B→A �
 3. 동일 제출의 재확인은 200이며 이벤트 수와 버전은 불변이다. 인계가 이미 끝난 경우 현재 배정만 최신 상태로 반환한다.
 4. 인계 및 공식 답변의 경쟁을 두 Commit 순서로 각각 검증한다. 이력 수뿐 아니라 원문, 작성자, 등록자, 정정 참조와 현재 담당자를 대조한다.
 5. A→B→A 뒤 낡은 답변 버전을 거부하고, 기존 결과 미확인 재확인과 다른 정책으로 처리하는지 검증한다.
-6. Actor와 대상의 서비스 권한 및 계정 비활성화, 다른 서비스 ID 추측, strict JSON과 CSRF를 검사한다. 전역 AGENT Role만으로 통과시키지 않는다.
+6. Actor와 대상의 서비스 권한 및 구성원 비활성화, 다른 서비스 ID 추측, strict JSON과 CSRF를 검사한다. 전역 AGENT Role만으로 통과시키지 않는다. 계정 전체 비활성화는 별도 인증 과업이다.
 7. 배정과 이력 Rollback이 기존 Ticket, Message, Job, Attempt 및 Suggestion을 바꾸지 않는지 실제 Row로 확인한다. Provider 호출은 0회다.
 8. 구형 NULL 서비스 및 배정 정보와 기존 UUID 재확인의 호환성을 확인한다. V1~V9는 수정하지 않는다.
 9. USER A/B와 AGENT A/B 및 지원관리자 Browser에서 미배정 목록, 담당하기, 인계와 늦은 응답, 저장 뒤 조회 실패 및 계정 전환을 대조한다. 가짜 fetch 검증을 DB Commit 증거로 대체하지 않는다.
@@ -259,4 +289,17 @@ A→B 인계가 먼저 Commit되면 A의 새 답변은 거부한다. A→B→A �
 - 변경은 Ticket FOR UPDATE 다음 직원 Row의 사용자 ID 오름차순 FOR SHARE를 사용한다. 조회도 짧은 Transaction에서 구성원 Row를 FOR SHARE로 확인한다. 권한 회수 UPDATE는 해당 구성원 Row만 잠그며 이후 Ticket 잠금을 취하지 않는다. 먼저 Commit한 회수 이후 시작하는 요청은 거부하고, 이미 구성원 잠금을 얻은 요청이 있으면 회수는 그 Transaction 종료를 기다린다. 응답 전송 시각까지 원자적으로 취소한다는 보장은 아니다.
 - 기존 Ticket 단건, 대화 및 AI 제안 조회도 동일한 서비스 권한 검사를 적용해 우회 경로를 막는다. 고객의 자기 대화 조회와 전체 로그인 비활성화는 직원 권한과 구분한다.
 - 직원 서비스 목록과 미배정/내 담당 목록을 최소 화면에 제공한다. 목록은 한 번에 최대 100건이며 ID 순서와 새로고침을 사용한다. 다른 Ticket의 Commit 순서를 전역 ID가 보장하지 않으므로 업무 누락 방지용 영속 처리 Cursor로 주장하지 않는다.
-- 계정 전체 수명, 관리자 직접 첫 지정, 자동 배정, 배정 해제, 알림 및 외부 조직 SaaS는 추가하지 않는다. 구현 순서는 Migration/저장 경계, Service/API 및 실패 Test, UI/Browser, 전체 회귀다. Push, AWS와 실제 AI는 이번 승인 범위가 아니다.
+- 계정 전체 수명, 관리자 직접 첫 지정, 자동 배정, 배정 해제, 알림 및 외부 조직 SaaS는 추가하지 않는다. 구현 순서는 Migration/저장 경계, Service/API 및 실패 Test, UI/Browser, 전체 회귀다. 최초 구현은 로컬에 한정했고, 이후 문서 검토·Push 및 원격 CI 결과는 실행 보고서에 별도로 기록한다. 문서 공개에 AWS 변경이나 실제 AI 호출은 포함하지 않는다.
+
+## 10. 설계 마감과 구현 후속의 구분
+
+| 항목 | 마감 판정 |
+|---|---|
+| 정책 | O1~O6 합의 완료. 추가 업무 정책을 질문 답변으로 다시 확정할 필요 없음 |
+| 데이터/API | 실제 V10 및 현재 Service/Controller와 대조. 후보 이름과 실제 제약/오류 코드의 차이를 정리 |
+| 일관성 | Ticket 잠금, 구성원 공유 잠금, 배정/이력 동시 Commit, 제출 UUID와 버전의 별도 책임 확정 |
+| 실패/화면 | 확인된 Rollback과 결과 미확인 구분, 원래 제출 유지, 현재 assignment 표시와 과거 event 분리 확정 |
+| 구현 검증 | 24일 보고서의 로컬 근거를 재사용. 이번 문서 수정으로 Test를 다시 실행했다고 하지 않음 |
+| 학습 | 설명과 정답은 자율 학습 자료에 보존. 권한 회수의 두 Transaction 문답은 사용자 미응답으로 남김 |
+
+이 기능의 남은 필수 설계 질문은 없다. 향후 성능은 실제 실행 계획·DB 왕복·잠금 대기를 측정하고 권한 검사를 생략해 최적화하지 않는다. Commit ACK 유실의 직접 장애 주입, 중단된 Browser 제출 복원, 부하 검증은 후속 검증이며 완료 근거에 넣지 않는다. 개인별 인증, 여러 제품의 접수 라우팅, 고객 후속 메시지와 상태 API, 보관/삭제 및 운영 인수는 별도 설계와 승인 대상이다.
