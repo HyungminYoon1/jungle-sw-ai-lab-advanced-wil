@@ -45,8 +45,13 @@ Week 10에는 기존 Week 9의 취업 Baseline과 맞춤 지원을 함께 진행
 
 10/14 회차에서는 비Root RDS 생성·Private verify-full·App DB 권한과 Migration 7개, DB 인증 실패의 설정 복구를 확인했다. 자정 이후 같은 회차에서 ACM·Cloudflare 검증/서비스 CNAME·ALB와 새 App Task를 연결해 HTTPS Health 200/UP·로그인 페이지 200·익명 API 401을 확인했다. [10월 14일 노트](../week8-9/study-notes/2026-10-14-study-questions.md)에 개념을, [실제 10월 15일 보고서](../week8-9/lab-reports/2026-10-15-cloud-https-baseline.md)에 실행일과 확인 수단을 기록했다. 당시 남았던 로그인·업무 Row·복원은 후속 회차에서 검증했으며, 현재 잔여 과업은 위 통합 계획을 기준으로 확인한다.
 
+10/24 최신 요청으로 배정·인계 O1~O6 합의와 로컬 구현·Test·Commit이 승인됐다. 아래 초안의 이전 미실행 상태와 이후 실행 근거를 구분한다. 이번 요청에는 Push·Cloud·실제 AI 호출이 포함되지 않는다.
+
 ## 범위 결정
 
+- [Helpdesk 실사용 설계 초안](./helpdesk-operational-design-draft.md): 소규모 서비스 고객지원 또는 내부 IT 활용, 담당자 배정과 인계 검토안, 실제 운영 전의 조건. 현재 구현 완료나 정책 합의와 구분
+- [배정과 인계 기술 계약 초안](../week10/ticket-assignment-contract-draft.md): O1~O3 합의와 O4~O6의 추가 정책 검토를 구분한 Schema, API, 재확인 및 실패 Case. 구현과 SQL 실행은 미실행
+- [실사용 후속 목표 결정](./decisions/0012-helpdesk-operational-target.md): 10/24 사용자 요청 반영. 기존 학습과 시간 경계 유지
 - [학습 우선 범위 전환 Decision](./decisions/0001-learning-first-scope.md)
 - [깊은 수직 학습과 AI 보조 수평 확장 Decision](./decisions/0002-depth-first-ai-assisted-expansion.md)
 - [8–9주차 통합과 취업 일정 조정](./decisions/0004-combined-week8-9-deployment-learning.md)

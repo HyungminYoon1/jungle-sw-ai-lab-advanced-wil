@@ -1,7 +1,7 @@
 # SW AI Lab 심화과정 12주 학습 계획
 
 > 작성일: 2026-08-18
-> 최종 수정일: 2026-10-23
+> 최종 수정일: 2026-10-24
 > 상태: Active
 > 대상 기간: 전체 12주 유지 — 기술 학습 Week 1–9(배포 Week 8–9 통합), 취업 우선 Week 10–12
 > 대상 직무: AI/AX 개발자, Java Backend 개발자, AI Platform·LLMOps Backend 개발자
@@ -35,6 +35,8 @@ Week 1–9에는 기능 종류를 넓히지 않고 선택한 기술의 수직 �
 `AI Helpdesk Learning Lab`은 반복 설정 비용을 줄이고 여러 기술을 같은 Domain에서 비교하기 위한 작은 실습 대상이다.
 
 학습용이라는 말은 실제 연결을 생략한다는 뜻이 아니다. 선택한 수직 흐름에서는 Browser, Security, Application, PostgreSQL, AI, Test와 배포가 실제로 이어져야 한다. 최소화하는 대상은 기술의 깊이가 아니라 동시에 만드는 기능의 종류다.
+
+2026-10-24에는 작성자가 향후 소규모 서비스의 고객지원 또는 조직 내부 IT 문의 창구로 활용할 의사를 밝혔다. 이 후속 목표는 [실사용 설계 초안](./helpdesk-operational-design-draft.md)과 [ADR-0012](./decisions/0012-helpdesk-operational-target.md)로 구체화한다. 현재 학습 및 첫 기능 검증을 실서비스 출시 완료로 표현하지 않는다. 세부 배정과 인계, 실제 계정 및 데이터, 운영 정책은 검토 후 별도 구현하며 취업 우선, 주 6시간과 전체 12주 경계는 유지한다.
 
 ### 핵심 사용자 흐름
 
@@ -203,4 +205,5 @@ Git 운영 Baseline은 위 핵심 주제 완료 기준을 별도로 적용하지
 - [깊은 수직 학습과 AI 보조 수평 확장 Decision](./decisions/0002-depth-first-ai-assisted-expansion.md)
 - [8–9주차 통합과 취업 일정 조정](./decisions/0004-combined-week8-9-deployment-learning.md)
 - [10–12주차 통합 블로그와 주간 기록 유지](./decisions/0011-combined-week10-12-blog.md)
+- [Helpdesk 실사용 목표와 후속 설계](./decisions/0012-helpdesk-operational-target.md)
 - [AgentOps Lab 보류 안내](./agentops-lab-12-week-plan.md)
