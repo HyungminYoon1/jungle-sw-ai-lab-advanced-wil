@@ -15,6 +15,8 @@
 
 ## 현재 학습 일정
 
+**현재 회차는 12주차, 11/3~9의 7일 학습이다.** [주간 계획](../week12/weekly-plan.md)에 학회 참석으로 이어서 진행하지 못한 고객 후속 대화와 현재 담당자의 명시적 확인을 우선 배치했다. 마지막 이틀은 검증/실행 안내와 최종 회고에 사용한다. 취업 우선과 기술 과업 합계 6시간을 유지한다. 11/3 F03/F05/F12/F13과 공개 대화 활동 시각도 합의했으며 [기술 계약](../week12/customer-followup-contract-draft.md)을 작성했다. [Week 11](../week11/README.md)의 기록은 보존하고 상태 변경/재개 및 실제 운영 준비는 후속으로 구분한다.
+
 [Week 8–9 통합 학습 계획](../week8-9/weekly-plan.md)은 Docker·CI·System·AWS·HTTPS·AI 연결·관측·복구의 기존 범위를 유지한다. 초기 4일·40시간 배분을 넘겨 사용한 기간을 통합 명칭에 반영했으며, 미완료 과업을 완료 처리한 것은 아니다.
 
 16일 회차는 실제 17일에 이어진 Image 복귀·psql 17·Process 관찰까지 [16일 노트](../week8-9/study-notes/2026-10-16-study-questions.md)에 합쳤다. 실제 실행 보고서는 해당 날짜를 유지한다. 당시 HTTPS 접수/SQL Row·Snapshot 별도 복원·원본 복귀·B→P와 V8/데이터 보존을 확인했으며, 이후 AI·관측·DNS 결과와 현재 잔여 과업은 아래 최신 회차를 따른다.
@@ -50,6 +52,13 @@ Week 10에는 기존 Week 9의 취업 Baseline과 맞춤 지원을 함께 진행
 ## 범위 결정
 
 - [Helpdesk 실사용 설계 초안](./helpdesk-operational-design-draft.md): 소규모 서비스 고객지원 또는 내부 IT 활용, 담당자 배정과 인계 검토안, 실제 운영 전의 조건. 현재 구현 완료나 정책 합의와 구분
+- [고객 후속 정책 검토](../week11/customer-followup-policy-review.md): 아홉 항목과 활동 시각 합의, 기술 계약 연결. 정책 합의와 신규 구현을 구분
+- [12주차 학습 및 구현 계획](../week12/weekly-plan.md): 11/3~9 이월 과업, 기능별 구현/검증, 주간 기록과 최종 회고의 완료 기준
+- [고객 후속 대화 기술 계약](../week12/customer-followup-contract-draft.md): 후속 Message, 본인 목록과 배정별 확인 기록, API/Transaction/실패 검증
+- [11/3 V11 첫 저장 검증](../week12/lab-reports/2026-11-03-customer-followup-storage.md): 본인 후속 글/종류별 재확인, 실제 PostgreSQL/Commit 실패와 기존 데이터 보존
+- [11/3 목록과 고객 작성 화면](../week12/lab-reports/2026-11-03-my-tickets-and-followup-ui.md): 본인 목록/활동 Cursor, 실제 Browser→PostgreSQL의 후속 작성과 원문/AI Row 보존. 확인 API는 아래 별도 근거
+- [11/3 명시적 확인 API](../week12/lab-reports/2026-11-03-customer-message-confirmations.md): V12/현재 배정별 MAX와 기록 보존, 실제 잠금/Commit 검증. 직원 표시/확인 버튼은 후속
+- [11/3 문서·구현 전달](../week12/lab-reports/2026-11-03-documentation-publication.md): 문서 검토와 공개 결과, 정확한 Commit의 원격 CI/로컬 검증 구분
 - [배정과 인계 기술 계약](../week10/ticket-assignment-contract-draft.md): O1~O6 합의, Schema, API, 재확인과 실패 Case 및 로컬 구현 경계
 - [10/24 배정·인계 실행 기록](../week10/lab-reports/2026-10-24-ticket-assignment-lab.md): 단위별 Commit과 PostgreSQL·Browser 검증. 원격 CI·Cloud와 구분
 - [실사용 후속 목표 결정](./decisions/0012-helpdesk-operational-target.md): 10/24 사용자 요청 반영. 기존 학습과 시간 경계 유지

@@ -3,7 +3,7 @@
 > 상태: Active
 > 시작일: 2026-08-18
 > 전체 기간: 12주 유지 — 기술 학습 Week 1–9, 취업 우선 Week 10–12. 배포 과정은 Week 8–9 통합
-> 현재 단계: Week 1·2·3·4·6·7 완료 — Week 5 부분 완료·공개 제출 완료. Week 8–9는 핵심 실습과 리소스 정리, 원격 CI 및 저장소 WIL 마감을 마쳤고 10/23 블로그와 포럼 완료도 작성자가 확인했다. Week 10은 공식 답변·정정·대화 조회와 배정·인계의 기술 설계 및 로컬 검증을 마쳤다. 10/24 코드 문답 뒤 자율 학습 문서로 전환했으며 실제 가용시간 확인과 주간 기록 마감은 남아 있다. 개인정보 고도화는 후속으로 유지
+> 현재 단계: Week 1·2·3·4·6·7 완료 — Week 5 부분 완료·공개 제출 완료. Week 8–9는 핵심 실습과 리소스 정리, 원격 CI 및 저장소 WIL 마감을 마쳤고 10/23 블로그와 포럼 완료도 작성자가 확인했다. Week 10은 공식 답변·정정·대화 조회와 배정·인계의 기술 설계 및 로컬 검증을 마쳤다. 10/24 코드 문답 뒤 자율 학습 문서로 전환했으며 실제 가용시간 확인과 주간 기록 마감은 남아 있다. 학회 참석으로 미실시한 과업은 11/3~9의 Week 12에 이월한다. 11/3에는 고객 후속 핵심 정책을 합의하고 V11 고객 대화/목록/화면과 V12 확인 저장/API를 로컬 검증했다. 직원 확인 표시/버튼과 Browser 연결은 후속이며 학습 이해와 구현 근거를 구분한다. 개인정보 고도화도 후속으로 유지
 
 이 저장소는 SW AI Lab 심화과정에서 선택한 기술을 학습하고, 이해가 바뀐 과정과 재현 가능한 근거를 주차별로 기록한다. 목표는 큰 제품을 기간 안에 완성하는 것이 아니라 AI/AX·Java Backend 직무에 필요한 개념을 직접 설명하고, 작은 실험과 Test로 검증하며, 필요한 범위만 서비스에 적용할 수 있는 역량을 만드는 것이다.
 
@@ -61,8 +61,8 @@ Week 8–9는 같은 배포 학습을 이어온 기간으로 통합한다. Week 
 | 7 | LLM Structured Output·평가·Guardrail | Completed — 10/7 학습·평가·회귀 확인과 블로그 게시·포럼 등록 완료. 10/5 회차 이후 2일 추가 진행 | [Week 7 학습 계획](./week7/weekly-plan.md) · [WIL](./week7/wil.md) · [10/7 학습 노트](./week7/study-notes/2026-10-07-study-questions.md) |
 | 8–9 | Docker·CI·System·AWS Cloud·HTTPS 통합 | Completed — 핵심 실습과 검증, 리소스 정리, 원격 CI와 저장소 WIL 마감. 블로그 작성과 포럼 업로드도 10/23 작성자 확인 | [통합 학습 계획](./week8-9/weekly-plan.md), [WIL](./week8-9/wil.md), [정리 결과](./week8-9/lab-reports/2026-10-22-deployment-resource-closeout.md), [배포 계획](./week8-9/deployment-plan.md) |
 | 10 | 취업 우선과 공식 답변·대화 조회 및 배정/인계 | In Progress — P1~P8과 O1~O6 합의, 기술 설계 및 로컬 PostgreSQL/Browser 검증 완료. 코드 문답 일부 뒤 자율 학습 자료 정리. 실제 가용시간과 주간 기록 마감은 별도 | [주차 안내](./week10/README.md), [계획](./week10/weekly-plan.md), [답변 설계](./week10/official-reply-conversation-design-draft.md), [배정 설계](./week10/ticket-assignment-contract-draft.md), [24일 검증 보고서](./week10/lab-reports/2026-10-24-ticket-assignment-lab.md), [24일 학습 노트](./week10/study-notes/2026-10-24-study-questions.md) |
-| 11 | 면접·과제 대응과 취약 개념 재학습 | Not Started | 주차 시작 시 추가 |
-| 12 | 취업 결과 정리와 최종 회고 | Not Started | 주차 시작 시 추가 |
+| 11 | 면접·과제 대응과 취약 개념 재학습, 고객 후속 정책 검토 | In Progress — 10/27의 다섯 정책 합의 보존. 학회 참석으로 미실시한 후속 검토/구현은 Week 12로 이월. 주간 기록 전체의 완료 판정과 구분 | [주차 안내](./week11/README.md), [정책 검토](./week11/customer-followup-policy-review.md) |
+| 12 | 고객 후속 대화와 명시적 확인, 취업 근거 정리와 최종 회고 | In Progress — V11 고객 대화/목록/화면과 V12 확인 저장/API의 로컬 검증 완료. 직원 표시/버튼은 후속 | [주차 안내](./week12/README.md), [학습 계획](./week12/weekly-plan.md), [기술 계약](./week12/customer-followup-contract-draft.md), [확인 API 검증](./week12/lab-reports/2026-11-03-customer-message-confirmations.md) |
 
 상태는 `Planned`, `In Progress`, `Completed`, `Partially Completed`와 `Blocked`로 구분한다. 많은 코드를 작성했더라도 설명·재현·검증 근거가 없으면 완료로 표시하지 않는다.
 
@@ -86,6 +86,10 @@ Git은 별도 심화 학습 주차를 차지하는 핵심 주제가 아니라 �
 - [공식 답변과 대화 조회 설계](./week10/official-reply-conversation-design-draft.md): 합의한 공개·소유권·상태 분리·정정 및 기술 계약. 실제 SQL과 실행 근거는 Lab과 보고서로 연결
 - [배정과 인계 확정 설계](./week10/ticket-assignment-contract-draft.md): 서비스 권한, 현재 담당자와 배정 버전, 제출 UUID, 잠금 및 Commit 경계
 - [배정과 인계 자율 학습 자료](./week10/study-docs/ticket-assignment-and-commit-boundaries.md): 핵심 요약, 실제 코드와 실패 사례, 정답이 포함된 복습
+- [고객 후속 정책 검토](./week11/customer-followup-policy-review.md): 아홉 정책과 활동 시각 합의, 기술 계약 및 상태 API/실제 운영 전의 검토 순서
+- [Week 12 학습 및 구현 계획](./week12/weekly-plan.md): 11/3~9의 고객 후속 대화/명시적 확인, PostgreSQL/Browser 검증과 최종 회고. 취업 우선과 기술 과업 합계 6시간 유지
+- [고객 후속 대화 기술 계약](./week12/customer-followup-contract-draft.md): Message 종류, 내 문의 목록/활동 시각, 배정별 확인과 제출 재확인, Commit/실패 경계
+- [11/3 문서와 구현 전달](./week12/lab-reports/2026-11-03-documentation-publication.md): 문서 검토/Commit/Push와 정확한 Lab Commit의 CI 결과. 로컬 실행 및 Cloud 배포와 구분
 - [10월 8일 학습 노트](./week8-9/study-notes/2026-10-08-study-questions.md): JAR·Container·Volume·Session과 설정의 수명, Cache·Secret 전달의 이해 변화와 핵심 질문
 - [10월 9일 학습 노트](./week8-9/study-notes/2026-10-09-study-questions.md): 설정·Bean 조립, 개인정보 탐지·치환, 종료·Health·CI와 AWS 권한의 이해 변화와 핵심 질문
 - [10월 10일 학습 노트](./week8-9/study-notes/2026-10-10-study-questions.md): ECR·Task·Role·Network·TLS와 Cookie, Health·HttpOnly의 오해 수정과 실제 Image 업로드
