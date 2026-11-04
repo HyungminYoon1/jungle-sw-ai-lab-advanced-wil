@@ -185,6 +185,12 @@ Ticket 선택과 조회 순번을 함께 비교해 늦은 응답을 무시한다
 
 다른 409, 해석할 수 없는 오류 Body와 결과 미확인 응답은 이 초기화 조건이 아니다. 원래 제출 정보를 보존하고 자동 최신화/재전송하지 않는다. 저장 결과 조회가 배정 버전 검사보다 앞서는 현재 Service 계약을 근거로 조건을 좁혔다. 이 동작은 확인 영역에만 적용하며 다른 Form의 초안/버전 복구는 별도로 다룬다.
 
+이어서 공식 답변 Form에도 별도의 초안 검토를 연결했다. 아직 제출하지 않은 초안의 고정 버전과 새 GET의 현재 버전이 다르면 새 POST를 막고, 정확한 배정 버전 충돌로 거부된 제출도 자동 교체하지 않는다. 사용자가 '기존 초안 버리고 현재 배정 다시 조회'를 누를 때만 본문/정정 선택을 비우고 GET한다. 새 쓰기 권한을 다시 읽고 빈 Form에서 작성한 답변의 제출 시 새 UUID를 만든다.
+
+결과 미확인 답변이나 고객 후속 제출이 남아 있으면 이 초기화를 허용하지 않는다. 답변은 원래 UUID/본문/정정 대상/배정 버전으로 재확인하며 정정 대상이 재조회한 첫 페이지에 없더라도 선택을 보존한다. 저장 성공 뒤에는 선택만 비우고 읽어 온 정정 후보 목록은 유지한다. 초안 초기화는 메모리/UI 작업이며 저장된 메시지의 삭제나 Rollback이 아니다. [학습 자료 13절](./study-docs/confirmation-checkpoint-and-assignment.md#13-공식-답변-초안과-결과-미확인-제출)에 실제 Client의 제한 조건을 정리했다.
+
+이 화면 단위는 [답변 초안 복구 검증](./lab-reports/2026-11-04-reply-draft-review.md)의 Node 399개/Lint와 집중 Browser/PostgreSQL 4개로 대조했다. 기존 전체 Java 회귀를 다시 실행한 결과로 합산하지 않으며 Backend/Schema는 유지한다.
+
 ## 9 구현 단위와 검증
 
 | 순서 | 구현 단위 | 필요한 근거 |
@@ -213,5 +219,6 @@ Index는 기존 (ticket_id,id)와 requester_user_id를 우선 검토하고 확�
 | 소유권/답변 가능 여부로 직원 UI를 추측 또는 명시적 읽기 Capability | canViewConfirmations를 기존 활성 직원 검사 결과로 반환 | Conversation Service/DTO/Decoder. 비담당 직원의 읽기와 권한 회수 후 본인 고객 자격을 구분 |
 | 선택/제출을 새 상태에 자동 적응 또는 원래 범위 유지 | 선택 당시 배정 버전을 유지하고 저장된 이력과 GET 현재 상태를 분리 | 확인 Client/직원 UI. 새 글/인계/늦은 응답과 응답 유실 검증 |
 | 페이지 재진입, 모든 오류의 제출 삭제, 자동 버전 교체 또는 알려진 충돌의 명시적 재선택 | 409/ASSIGNMENT_VERSION_CONFLICT만 재선택 허용. GET 뒤 빈 선택에서 사용자가 새로 고르게 해 의도하지 않은 확인 방지 | 확인 Client/Page/HTML과 Node/Browser 검증. Service/Schema/이력 삭제 변경 없음. 다른 Form과 결과 미확인 제출 복구는 별도 유지 |
+| 오래된 공식 답변 초안의 자동 버전 교체, 페이지 이탈 또는 명시적 새 작성 | 미제출의 확인된 버전 차이/정확한 버전 거부에만 초안 폐기와 GET/빈 Form 제공. 미확인 제출은 보존 | Conversation Client/Page/HTML과 검증. 정정 선택 보존, 저장 후 후보 목록 유지. Server/Schema/권한/보관 정책은 변경하지 않음 |
 
 초안 작성 시 검토한 Source는 Lab의 공식 답변/배정 계약, V2/V9/V10, Message/Conversation Service·Repository·DTO, SupportAccess와 배정 Service다. 이 관련 파일은 VERIFIED이며 당시 Security는 라우팅 규칙만 PARTIAL로 확인했다. 이후 첫 구현에서는 새 라우팅/Service/Repository/입력 처리와 V11을 수정하고 보고서의 실행 검증을 진행했다. 전체 저장소 감사나 전체 보안/성능 평가로 확대하지 않는다.
