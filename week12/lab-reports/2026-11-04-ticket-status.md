@@ -67,7 +67,7 @@ V1~V12는 유지하고 V13에서 tickets.status_version과 ticket_status_events�
 
 ## 코드와 학습 연결
 
-[저장 순서 자료](../study-docs/status-change-transaction-flow.md)의 8~13절에 실제 Service/Repository/화면과 네 식별자, 조회 권한/기존 제출/새 변경 검사, Commit과 Ticket 잠금 경계를 연결했다. 사용자는 추가 이력 0건과 기존 글 참조/새 이력 ID, 상태 버전 충돌과 기존 제출 재확인을 변형 사례에서 정확히 구분했다. 이어 Commit 실패 시 201 금지와 Browser의 500만으로 저장 실패를 단정하지 않고 원래 제출로 재확인하는 점도 정확히 답했다. 실제 답변과 앞선 보충 과정은 [학습 기록](../study-notes/2026-11-04-study-questions.md)에 보존한다. 다음은 각 버전/고객 글 참조와 같은 Ticket 잠금의 역할을 적용하는 두 Commit 순서 문답이다. 문답 기록을 위해 코드를 바꾸거나 기존 테스트를 반복 실행하지 않았다.
+[저장 순서 자료](../study-docs/status-change-transaction-flow.md)의 8~13절에 실제 Service/Repository/화면과 식별자/조회 권한/버전/Commit/잠금의 역할을 연결했다. 사용자는 추가 이력 0건, 기존 글 참조/새 이력 ID, 상태 버전 충돌/기존 제출, Commit 실패/500의 의미를 변형 사례에서 구분했다. 마지막 새 글/해결의 두 Commit 순서에도 선택 대상/최신 글/명시적 확인 검사와 RESOLVED 유지/새 글 확인 필요를 정확히 답했다. [학습 기록](../study-notes/2026-11-04-study-questions.md)에 답변과 앞선 보충 과정을 보존하며 독립 구현 완료로 확대하지 않는다. 이후 [현재 절차와 증거 대조](./2026-11-04-local-verification-audit.md)에서 기존 결과를 확인하고 Lint만 별도로 재검증했다. 위 Java/Node/Browser 실행 수는 이 감사로 추가되지 않는다.
 
 | 검토 대상 | 확인 범위 |
 |---|---|
