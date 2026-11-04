@@ -263,3 +263,28 @@ TicketAssignmentService.queue는 최신 고객 글이 있고, 현재 배정의 �
 따라서 hasMore=false는 그 조회 경계 뒤의 페이지 유무에 대한 응답이다. 현재 모든 문의를 확인했다거나 이후 새 활동이 없다는 보장은 아니다. Ticket ID 중복 제거도 이미 반환된 항목의 표시 중복을 줄일 뿐, 응답에 포함되지 않은 변경을 찾아주지는 않는다. 알림이나 업무 누락 방지 체계를 이미 구현한 것으로 설명하지 않는다.
 
 이번에는 docs/my-tickets.md, 두 Repository의 관련 조회, TicketAssignmentService의 계산과 my-tickets-ui.mjs의 새로고침/합치기를 대조했다. 기존 MyTicketsHttpIntegrationTest의 이동한 문의/공개 활동 사례, AssignmentQueueConfirmationHttpIntegrationTest의 답변 제외/새 고객 글 사례와 JS 중복 제거 검사를 선택해 읽었다. 위 표와 Ticket 20/100은 설명용 예시이며 새 실행 결과가 아니다. 코드/Schema 변경이나 테스트 재실행은 없다.
+
+## 17 확인 완료와 해결 결정의 경계
+
+이 절은 아직 저장되지 않은 새 해결 요청을 기준으로 설명한다. 이미 저장된 UUID의 재확인은 11절의 기존 제출 조회 순서를 따른다.
+
+| 값 또는 응답 | 현재 계약에서의 의미 |
+|---|---|
+| needsConfirmation=false | 최신 고객 글까지 현재 배정의 명시적 확인 기록이 있음. 고객 글이 없는 경우도 false이므로 대화 존재 여부는 별도 |
+| canResolve=true | 조회 시점에 현재 담당자이고 IN_PROGRESS이며 등록자가 확인돼 있고, 최신 고객 글까지 명시적으로 확인된 상태 |
+| 새 RESOLVE 요청의 201 | 해결 상태/상태 버전과 그 변경 이력의 새 저장이 Commit됨 |
+
+TicketStatusService.staffCurrent는 canResolve를 계산할 때 해결 사유나 선택할 공식 답변 ID를 받지 않는다. 따라서 true는 아직 선택하지 않은 답변 참조까지 검사했다는 뜻이 아니다. 실제 POST는 사용자 권한과 배정/상태 버전을 다시 검사하고, validateResolution에서 같은 Ticket의 공식 답변, 선택한 최신 고객 글과 명시적 확인 범위를 검사한다.
+
+관련 답변 검사의 실제 코드 일부는 다음과 같다.
+
+```java
+messages.message(ticketId,cmd.relatedReplyMessageId())
+        .filter(m->m.type()==MessageType.OFFICIAL_REPLY)
+```
+
+여기서는 그 Ticket에 해당 번호의 공식 답변이 있는지 검사한다. 다른 Ticket의 답변을 가리키면 INVALID_STATUS_TARGET으로 거부하며 새 상태 이력을 저장하지 않는다. 답변 본문을 읽어 문제가 실제로 해결됐는지 판정하는 AI/업무 검사는 이 경로에 없다. 예를 들어 '확인 중입니다'라는 공식 답변도 종류와 소속 검사를 통과할 수 있다.
+
+담당자는 답변 내용과 실제 처리 결과를 확인하고 해결 사유를 작성해 RESOLVE를 결정한다. 서버는 그 결정을 허용된 권한/상태/참조와 Transaction 규칙에 따라 기록한다. 명시적 확인은 확인 범위의 선언이고, 해결 이력은 해결 결정의 기록이다. 둘 중 어느 것도 인간이 정확히 읽고 판단했거나 고객의 문제가 객관적으로 복구됐다는 자동 증명은 아니다. 이는 기존 T04와 상태 계약의 근거 범위를 설명한 것이며 새 정책을 추가한 것이 아니다.
+
+이번에는 TicketStatusService와 CreateTicketStatusChangeRequest 전체, docs/ticket-status.md의 관련 계약을 확인해 연결했다. 위 공식 답변 문장은 학습용 가정이며 실제 고객/운영 사건이나 새 테스트 결과가 아니다. 기존 업무 코드/Schema와 검증 결과는 그대로다.
