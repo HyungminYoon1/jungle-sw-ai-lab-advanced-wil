@@ -288,3 +288,34 @@ messages.message(ticketId,cmd.relatedReplyMessageId())
 담당자는 답변 내용과 실제 처리 결과를 확인하고 해결 사유를 작성해 RESOLVE를 결정한다. 서버는 그 결정을 허용된 권한/상태/참조와 Transaction 규칙에 따라 기록한다. 명시적 확인은 확인 범위의 선언이고, 해결 이력은 해결 결정의 기록이다. 둘 중 어느 것도 인간이 정확히 읽고 판단했거나 고객의 문제가 객관적으로 복구됐다는 자동 증명은 아니다. 이는 기존 T04와 상태 계약의 근거 범위를 설명한 것이며 새 정책을 추가한 것이 아니다.
 
 이번에는 TicketStatusService와 CreateTicketStatusChangeRequest 전체, docs/ticket-status.md의 관련 계약을 확인해 연결했다. 위 공식 답변 문장은 학습용 가정이며 실제 고객/운영 사건이나 새 테스트 결과가 아니다. 기존 업무 코드/Schema와 검증 결과는 그대로다.
+
+## 18 하나의 해결 요청을 직접 구성하기
+
+다음은 실제 전송/저장 결과가 아닌 가상의 Ticket 20 사례다. 현재 상태는 IN_PROGRESS, 상태 버전 4, 배정 버전 2다. 로그인한 직원은 이 서비스의 활성 직원이자 현재 담당자이며, 등록자는 확인된 상태다. 최신 고객 Message 80번까지 현재 배정의 명시적 확인이 있고 같은 Ticket의 공식 답변은 81번이다. 담당자가 실제 처리 결과를 확인하고 해결을 결정했다고 가정한다.
+
+POST /api/tickets/20/status-changes의 Body는 다음과 같이 구성한다. UUID도 예시이며 새 제출을 나타낸다.
+
+```json
+{
+  "clientRequestId": "11111111-1111-4111-8111-111111111111",
+  "action": "RESOLVE",
+  "expectedStatusVersion": 4,
+  "expectedAssignmentVersion": 2,
+  "reason": "합성 사례: 로그인 복구 결과를 확인했습니다.",
+  "relatedReplyMessageId": 81,
+  "throughCustomerMessageId": 80
+}
+```
+
+| 필드 | 요청에 담는 근거 |
+|---|---|
+| expectedStatusVersion | 작성 시 확인한 현재 상태 버전 4. 변경 후 버전 5를 미리 보내지 않음 |
+| expectedAssignmentVersion | 작성 시 확인한 현재 배정 버전 2 |
+| relatedReplyMessageId | 이미 저장된 같은 Ticket의 공식 답변 81번 |
+| throughCustomerMessageId | 명시적으로 고른 기존 최신 고객 글 80번. 새 상태 이력의 ID가 아님 |
+
+Ticket ID는 URL에서 받고 실제 작성자는 Authentication의 고정 신원에서 구한다. Body에 작성자나 저장 후 상태/버전을 추가하지 않는다. CreateTicketStatusChangeRequest가 허용한 필드를 변환하고 TicketStatusService가 현재 DB와 원래 제출을 검사한다. 이 새 요청의 조건이 유지돼 Commit까지 성공하면 RESOLVED/상태 버전 5가 되고 배정 버전은 2를 유지하며 새 상태 이력은 1건이다. Controller는 그 뒤 201을 반환한다. 이력 자체의 ID는 DB가 생성한다.
+
+이 설명은 TicketStatusController/CreateTicketStatusChangeRequest와 JdbcTicketStatusRepository.append의 기존 필드 연결을 대조한 것이다. 고객 글이나 인계가 먼저 Commit되면 같은 Body가 거부될 수 있고, 원래 UUID의 저장된 제출 재확인은 별도 계약을 따른다. 새 코드나 테스트/HTTP 실행은 없다.
+
+다음 적용 연습은 현재 상태 버전 9/배정 버전 3, 최신 고객 글과 명시적 확인 120번, 관련 공식 답변 121번이다. 새 해결 요청의 네 필드를 직접 구성하고, 나머지 조건이 유지돼 Commit된 뒤 두 버전이 각각 얼마인지 설명한다. 아직 답변을 받지 않았다.
