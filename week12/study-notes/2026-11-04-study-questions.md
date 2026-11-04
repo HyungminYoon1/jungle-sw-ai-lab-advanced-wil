@@ -258,3 +258,17 @@ ticket-status-ui.mjs의 validChange/submit/refresh와 기존 Node의 저장된 �
 처음 제시하는 메서드 선택 명령이 의도한 두 파라미터 사례만 실행하는지 Codex가 참고 실행했다. Lab fd879eb의 Clean 작업 트리에서 두 건/실패·오류·Skip 0, BUILD SUCCESS/exit 0과 새 Dump/남은 소유 fork JVM 0을 확인했다. 기존 28건 XML을 보존한 뒤 실행했으며 신규 테스트 두 건을 추가한 것이 아니다. Lab f226b53은 안내 문서만 추가한 Commit이다.
 
 참고 실행은 Lab target/week12-focused-reproduction-20261104에 명령/Commit/시각/종료 코드와 로그/XML을 남겼다. 학습자의 독립 재현은 아직 확인하지 않았다. 다음에는 Lab 6절의 명령을 직접 실행한 마지막 Tests run/Failures/Errors/Skipped, BUILD 결과와 exitCode를 확인한다. 전체 Java/Node/Browser/CI/상용 AI 실행으로 해석하지 않는다.
+
+## 사용자 직접 재현과 Mockito 경고
+
+사용자가 PowerShell 실행 결과 전체를 첨부하고 Mockito is currently self-attaching 문구가 빨간색으로 나온다고 문의했다. 첨부 전체를 UTF-8로 확인했다. PowerShell 7.6.9, Lab f226b53/Clean 작업 트리에서 안내한 메서드를 직접 실행했고 Tests run 2/Failures 0/Errors 0/Skipped 0, BUILD SUCCESS/exitCode 0이었다. 안내된 작은 검사의 사용자 직접 실행을 확인했다. 독립 설계/구현이나 전체 회귀의 실행으로 확대하지 않는다.
+
+해당 문구는 Mock/Spy를 위한 Instrumentation Agent를 실행 중 JVM에 연결한 데 대한 경고였다. Mockito의 해당 버전 공식 안내와 실제 POM/테스트의 Mock/Spy 설정을 대조했다. 경고 출력의 색과 실패를 구분하고 이번 두 업무 검사는 통과했다고 설명했다. 미래 JDK 호환성을 위해 테스트 JVM 시작 시 Agent를 등록하는 권장 설정으로 POM을 보완했다.
+
+Codex가 수정 후 같은 두 사례를 기본 조건과 동적 로딩 차단 조건에서 각각 실행했다. 모두 두 건/실패·오류·Skip 0, BUILD SUCCESS/exit 0이며 self-attaching/동적 로딩 경고는 0건이었다. 새 Dump 없이 해당 테스트 JVM도 종료됐다. Sharing is only supported for boot loader classes라는 별도 경고는 남았다. 이 변경 후 확인은 Codex 실행이며 사용자의 새 실행으로 기록하지 않는다.
+
+옵션 전달 진단 과정에서는 테스트 통과와 별개로 플래그 관찰이 처음에 실패했다. 시작 시 native 출력이 Surefire 통신 채널이 아닌 Dump에 기록된 것을 확인하고, 출력 진단 옵션을 뺀 최종 조건을 재실행했다. 업무 실패나 모든 경고 제거로 해석하지 않으며 세부 근거는 Lab 실행 안내 7절과 실험보고서에 연결했다. 공통 Surefire 설정 변경에 대한 전체 Maven verify는 별도 확인한다. 주간 WIL/회고는 11/9 일정을 유지한다.
+
+그 뒤 전체 Maven verify는 Java 1,223건/패키징 Failsafe 2건, 실패·오류·Skip 0, BUILD SUCCESS/exit 0이었다. 남은 동일 경고 한 건은 Failsafe의 별도 JVM에서 발생해 그 시작 설정도 보완했다. 마지막 Failsafe 두 건은 동적 로딩 차단 조건에서 다시 통과했고 관련 경고는 0건이었다. 이 마지막 부분 설정 뒤 전체 verify를 다시 수행한 것으로 확대하지 않는다. Node/Browser/원격 CI/상용 AI의 새 실행도 없다.
+
+마지막 부분 검사 첫 시도는 Codex 셸의 JAVA_HOME 경로 문제로 Maven 시작 전에 중단됐다. 해당 실패를 별도 기록하고 해당 명령에서만 설치된 JDK 25.0.5를 지정해 재개한 뒤 원래 환경값을 복원했다. 전체 확인의 Java 25.0.4와 마지막 부분 확인의 25.0.5를 구분하며 환경변수 값은 기록하지 않았다. Lab a12d61a에 POM/실행 안내를 함께 Commit했다. 사용자의 기존 두 건 성공과 Codex의 설정 보완 검증은 별도 근거로 유지한다.

@@ -1,8 +1,8 @@
 # 실행 안내와 로컬 검증 근거 대조
 
 > 기준일: 2026-11-04
-> 범위: 현재 V13의 선택한 실행 절차/소스/기존 로그 대조, ESLint 재검증, 혼합 저장 집중 28건과 학습용 재현 명령 선택 2건
-> 구분: 기존 감사, 이후 집중 Java 28건과 재현 명령 선택 2건을 구분한다. 기본 전체 Java/Node/Browser 재실행이나 Push/CI/Cloud/상용 AI 실행은 없음
+> 범위: V13 실행 근거 대조/선택 재현/사용자 직접 실행과 Mockito 테스트 JVM 설정 보완
+> 구분: 이전 실행과 이후 Agent 설정의 전체 Maven verify/마지막 Failsafe 검증을 구분한다. 이번 보완에서 Node/Browser/Push/CI/Cloud/상용 AI를 새로 실행하지 않음
 
 ## 확인한 문제와 정리
 
@@ -114,3 +114,26 @@ Lab fd879eb6758750afad6879e4c3a88094baa95b40의 Clean 작업 트리에서 2건/�
 Lab f226b53은 docs/local-verification.md 6절의 실행 순서/명령/예상 범위/로그 경로를 추가한 문서 Commit이다. PowerShell 예제 여섯 개의 구문 오류 0건과 UTF-8/BOM 없음/LF/링크/Diff를 검사했다. 실제 참고 실행은 Maven 선택 인자를 검증했고, 안내의 Tee-Object 파이프는 구문 점검과 구분했다.
 
 학습자의 독립 실행은 아직 확인하지 않았다. 이후 학습자가 마지막 요약과 종료 코드를 확인하면 그 실제 결과를 학습노트에 기록한다. 앞선 전체 회귀/28건과 이번 2건은 중복 실행이므로 합산하지 않는다. 업무 코드/Schema/정책 변경, 전체 회귀나 Browser/CI/Cloud/상용 AI 실행은 없다.
+
+## 사용자 실행과 테스트 Agent 설정 보완
+
+이후 사용자가 첨부한 PowerShell 출력 전체를 확인했다. Lab f226b53/Clean, 선택한 두 파라미터 사례/실패·오류·Skip 0, BUILD SUCCESS/exitCode 0이었다. 사용자 직접 재현은 이 범위에서 확인됐다. 같은 출력에 Mockito self-attaching/동적 Agent 경고가 있었지만 이 두 검사가 실패한 것은 아니었다. 원본 Log의 개인 경로/전체 출력은 공개 문서에 복제하지 않았다.
+
+POM에는 명시적 Mockito Agent가 없었다. Boot가 관리하는 Mockito 5.23.0의 공식 0.3절과 로컬 JAR의 Premain-Class를 대조하고, dependency:properties로 해석한 JAR을 Surefire 시작 옵션에 등록했다. 기본 빈 argLine과 명령행 JVM 옵션을 보존하는 구성을 사용했다. 업무 코드/DB 구조/전역 환경변수/배포 설정의 변경은 아니다.
+
+선택 검사는 최종 validated-default/validated-strict 조건에서 각각 2건/실패·오류·Skip 0, BUILD SUCCESS/exit 0이었다. self-attaching/동적 Agent 경고 0건, 새 Dump 0건과 해당 로그에서 확인한 테스트 PID의 종료를 확인했다. 별도의 클래스 공유 경고는 각 실행에 한 건 남았다. 같은 두 사례의 재실행이며 네 신규 사례를 추가하거나 기존 전체 수에 합산하지 않는다.
+
+초기 후평가 표현식과 옵션 관찰 시도에서는 요청한 JVM 플래그를 확인하지 못했다. 현재 구성의 출력 진단은 실제 플래그를 native Dump에서 확인했지만 Surefire 채널 경고를 만들었다. 관찰 스크립트 실패와 테스트 통과를 구분하고 그 진단 옵션을 뺀 최종 두 조건을 다시 실행했다. 해당 중간 기록을 지우거나 최종 실행처럼 바꾸지 않았다.
+
+Lab target/week12-mockito-startup-agent-20261104에 변경 전 사용자 Log/XML, 중간 관찰, 최종 두 조건의 Log/XML/result.json을 분리했다. POM SHA-256/명령/시각/종료 코드/경고 수를 보존했다. 공통 테스트 JVM 설정이 바뀌었으므로 전체 Maven verify는 별도로 확인한다. Node/Browser/CI/실제 AI의 새 실행으로 해석하지 않는다.
+
+전체 Maven verify는 full-verify/maven.log에서 Surefire 1,223/Failsafe 2, 실패·오류·Skip 0, BUILD SUCCESS/exit 0을 확인했다. 남은 self-attaching/동적 경고 각 한 건은 Failsafe 구간이었다. 그래서 같은 시작 Agent 설정을 Failsafe에도 추가한 뒤 initialize/failsafe:integration-test/failsafe:verify로 해당 두 건을 차단 조건에서 재검증했다. 두 건 통과/exit 0과 관련 경고 0건이며 근거는 validated-failsafe-jdk25에 보존했다. 마지막 Failsafe 설정 뒤 전체 verify를 다시 돌린 것은 아니다.
+
+후속 부분 검사 첫 시도는 Maven Wrapper가 기존 JAVA_HOME 경로를 사용할 수 없어 테스트 전에 종료됐다. 이 시도의 XML 복사본은 과거 실행 자료임을 표시해 성공 근거로 쓰지 않았다. 해당 명령에서만 정상 JDK 25를 지정해 재개하고 원래 값을 복원했다. 최종 부분 검사의 XML은 Java 25.0.5, 앞선 전체 확인은 25.0.4이다. 시스템 설정/환경값은 변경하거나 출력하지 않았다. 최종 POM SHA-256은 마지막 검증 메타데이터와 일치하며 Lab a12d61a로 Commit했다.
+
+| 이번에 확인한 Source | 범위 |
+|---|---|
+| 사용자 첨부 PowerShell 출력 | VERIFIED. 전체를 읽고 코드 기준/경고/테스트 종료와 exitCode 확인 |
+| POM/변경한 실행 안내 | VERIFIED. 기존 POM 전체와 변경 Diff/해당 안내를 대조 |
+| Mockito/Maven 공식 자료 | PARTIAL. Mockito 5.23.0의 0.3절과 dependency:properties/Surefire argLine 관련 절을 선택 |
+| 운영/상용 AI/원격 CI | NOT_INSPECTED. 이번 경고 확인/테스트 설정 보완 범위 밖 |
