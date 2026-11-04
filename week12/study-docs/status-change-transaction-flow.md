@@ -1,7 +1,7 @@
 # 상태 변경은 무엇을 함께 저장하는가
 
 > 기준: 2026-11-04 T05 설명 보충
-> 상태: T05는 설명/문답 뒤 2026-11-04 합의. 아래 값은 저장 계약을 설명하는 가상 예시이며 실제 실행/구현 결과와 구분
+> 상태: T01~T08 합의 뒤 V13/Service/API/화면을 로컬 구현했다. 1~7절의 값은 설명용 가상 예시이며, 실제 코드와 검증은 8절 및 실행 보고서로 구분
 > 관련 정책: [T05/T06](../../week11/customer-followup-policy-review.md#4-상태-변경-api-전에-정할-정책), [실제 문답](../study-notes/2026-11-04-study-questions.md)
 
 ## 1 먼저 무엇을 저장하는가
@@ -15,7 +15,7 @@
 
 문의 42는 이미 접수돼 Commit된 상태다. 담당자는 A, 배정 버전은 2라고 가정한다. 관련 공식 답변 82번도 이미 별도로 Commit됐다. 고객 글은 70번까지 있고 A가 그 범위를 명시적으로 확인했으며, 더 최신 글은 없다고 가정한다.
 
-새 요청의 UUID는 설명용으로 K라고 부른다. 실제 요청에는 유효한 UUID가 필요하다. 이 설명에서 상태 버전 3을 썼다고 해서 실제 DB에 그 필드/값이 이미 있다는 뜻은 아니다. 상태 API, 상태 버전 필드와 상태 변경 이력 테이블은 아직 구현하지 않았다.
+새 요청의 UUID는 설명용으로 K라고 부른다. 실제 요청에는 유효한 UUID가 필요하다. 이 예시는 구현 전에 작성했다. 이후 V13에 상태 버전과 이력을 추가했지만 문의 42/답변 82/고객 글 70은 실제 실행 결과가 아니다.
 
 ## 2 Service에서 처리하는 순서
 
@@ -71,8 +71,59 @@ Commit 결과를 받기 전에 DB 연결이 끊긴 경우에는 위처럼 Rollba
 
 ## 7 기존 코드에서 볼 수 있는 같은 구조
 
-Lab의 TicketAssignmentService는 public claim/transfer에 @Transactional을 적용하고, 내부 change에서 기존 제출/권한/버전을 검사한 뒤 repository.change와 repository.append를 호출한다. 현재 배정 갱신과 배정 이력을 함께 저장하는 기존 구조다. 이번 설명에서는 그 구조를 상태 변경에 적용하는 안을 제시했으며 새 상태 Service를 구현한 것은 아니다.
+Lab의 TicketAssignmentService는 public claim/transfer에 @Transactional을 적용하고, 내부 change에서 기존 제출/권한/버전을 검사한 뒤 repository.change와 repository.append를 호출한다. 현재 배정 갱신과 배정 이력을 함께 저장하는 기존 구조다. 이 자료를 처음 설명할 때 그 구조를 참고했으며 이후 추가한 실제 상태 Service는 8절에서 확인한다.
 
 Service 메서드 본문의 return만으로 Commit 성공을 판정하지 않는다. Spring의 트랜잭션 처리가 적용되는 호출 경로와 예외의 Rollback 규칙도 확인해야 한다. Annotation을 붙였다는 사실만으로 실제 Commit/Rollback 검증을 대체하지 않는다. [Spring 트랜잭션 경계](https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/tx-decl-explained.html), [@Transactional](https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/annotations.html), [Rollback 규칙](https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/rolling-back.html)
 
-상태 변경의 정확한 필드, 오류/응답 형태와 재확인 순서는 T05 및 남은 정책을 검토한 뒤 기술 계약으로 정하고, 구현 후 실제 PostgreSQL에서 성공/실패/응답 유실을 확인한다.
+상태 변경의 정확한 필드, 오류/응답 형태와 재확인 순서는 T01~T08 합의 후 Lab docs/ticket-status.md에 구체화했다. [실행 보고서](../lab-reports/2026-11-04-ticket-status.md)에서 실제 검증 범위와 한계를 확인한다.
+
+## 8 구현한 코드와 연결하기
+
+Lab의 src/main/java/lab/helpdesk/ticket/application/TicketStatusService.java가 저장 순서를 조정한다. Controller는 입력 해석과 응답 변환을 담당하고, Service가 권한/업무 조건을 검사한다. DB 접근은 TicketStatusRepository와 JDBC Adapter에 둔다.
+
+공개 메서드 changeStaff에는 @Transactional이 있고 내부 change를 호출한다. 핵심 순서는 다음과 같다. 아래 코드는 순서 설명이며 전체 구현을 대신하지 않는다.
+
+```text
+Ticket 잠금 획득
+→ 새 SQL로 현재 상태/최신 고객 글/현재 배정의 확인 범위 조회
+→ 현재 조회 권한 검사
+→ 같은 Ticket/작성자/UUID의 기존 제출 확인
+→ 새 제출이면 담당자/배정 버전/상태 버전/전이 조건 검사
+→ 해결이면 공식 답변/선택 고객 글/최신 글/명시적 확인 검사
+→ Ticket의 상태와 상태 버전 UPDATE
+→ ticket_status_events INSERT
+→ 현재 상태를 다시 읽고 Service 반환
+→ 트랜잭션 Commit 성공 후 Controller가 201 반환
+```
+
+잠금을 기다렸던 SQL 문장 자체의 조회 결과에 의존하지 않고, 잠금을 얻은 뒤 새 SQL로 읽는다. 기다리는 동안 먼저 끝난 고객 글의 Commit을 보고 오래된 해결 요청을 거부하기 위해서다. 외부 AI나 네트워크 호출은 이 Transaction 안에 없다.
+
+이미 같은 제출이 저장됐다면 새 변경 조건 검사 전에 기존 이력을 반환한다. 이때도 현재 조회 권한과 원래 요청 내용의 일치는 먼저 검사한다. Service가 반환하는 change는 그 제출의 이력이고 current는 다시 읽은 현재 상태다. 과거 해결 이력이 상태 버전 2여도 현재가 재개된 OPEN/3이면 둘을 함께 반환하며 상태를 2로 되돌리지 않는다.
+
+담당자 요청은 POST /api/tickets/{id}/status-changes로 보내며 선택한 배정 버전과 상태 버전을 모두 포함한다. 등록자 본인의 재개는 별도 POST /api/tickets/{id}/customer-status/reopen을 쓰고 상태 버전/UUID/사유만 보낸다. 고객에게 내부 배정 버전을 입력하게 하지 않으며 실제 작성자와 요청 범위는 서버에서 정한다.
+
+V13의 기존 Row는 상태 버전 0에서 시작한다. 이는 이번 기능을 도입한 기준값이며 과거 업무가 없었다는 뜻도, 과거 변경 이력을 복원했다는 뜻도 아니다. V1~V12를 고치거나 이미 저장된 원문/AI 제안을 바꾸지 않았다.
+
+## 9 화면에서 실패를 복구하는 순서
+
+- 저장한 이력과 201을 받았는데 현재 상태 GET만 실패하면 '처리 상태 새로고침'으로 GET만 다시 보낸다. 새 상태 변경을 제출하지 않는다.
+- POST 응답을 받지 못했다면 같은 UUID/사유/버전/근거를 그대로 재확인한다. 현재 상태가 같아 보인다는 것만으로 특정 제출의 저장을 확정하지 않는다.
+- 서버가 정확한 오류 코드로 오래된 요청을 거부했다면 사용자가 명시적으로 초안을 비우고 현재 상태/대화를 읽은 뒤 다시 결정한다. 이 초기화 자체는 GET만 수행한다.
+- 새 고객 글을 다른 창에서 확인해도 기존 해결 초안의 선택 대상을 자동으로 늘리지 않는다. 직접 새 글을 확인하고 다시 선택한다.
+
+화면 상태 제어는 static/ticket-status-ui.mjs, DOM 연결은 static/ticket-status-page.mjs에 있다. 대화 제목에는 이전 대화 조회의 상태를 반복 표시하지 않는다. 별도 상태 영역에서 읽은 값과 저장된 과거 이력이 서로 다른 기준이라는 점을 유지한다.
+
+이 설명과 테스트 통과는 Codex가 작성/실행한 구현 근거다. 사용자의 독립 구현이나 모든 실패 경계의 이해 완료와는 구분한다.
+
+## 10 고객 글 번호와 상태 이력 번호를 구분하기
+
+해결 요청의 throughCustomerMessageId는 이미 저장된 고객 글을 가리키는 외래 참조다. 고객 글 70번을 보고 해결하려다 71번이 추가됐다면, 새 글을 읽고 다시 결정한 요청은 기존 71번을 참조한다. 아직 없는 72번을 만들거나 고르는 것이 아니다. 해결 처리 자체는 새 고객 Message를 만들지 않는다.
+
+| 값 | 의미 | 누가 정하는가 |
+|---|---|---|
+| throughCustomerMessageId | 해결 판단에 포함한 기존 고객 글의 마지막 ID | 담당자가 불러온 글 중 직접 선택하고 서버가 최신 글/확인을 검사 |
+| ticket_status_events.id | 새 상태 변경 이력 자체의 식별자 | DB가 별도로 배정 |
+| resulting_status_version | 이 Ticket의 이번 변경 후 상태 버전 | 서버가 현재 버전에서 1 증가 |
+| clientRequestId | 이번 명령의 동일 제출 재확인 기준 | Browser가 생성하고 결과 미확인일 때 그대로 유지 |
+
+이미 해결 이력과 재개 이력이 Commit돼 있는 경우, 같은 해결 UUID를 재확인하는 요청은 이력을 0건 추가한다. 앞서 저장된 이력 수와 이번 요청이 추가한 Row 수는 다른 질문이다. 현재 화면은 새로 읽은 OPEN을 유지하고 과거 해결은 저장된 이력으로만 표시한다.
