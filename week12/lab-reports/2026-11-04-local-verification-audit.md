@@ -1,8 +1,8 @@
 # 실행 안내와 로컬 검증 근거 대조
 
 > 기준일: 2026-11-04
-> 범위: 현재 V13의 선택한 실행 절차/소스/기존 로그 대조, ESLint 한 번의 재검증과 필수 사례 대조 뒤 추가한 혼합 메시지 저장 검사
-> 구분: 아래 기존 감사와 이후 집중 Java 28건 실행을 구분한다. 기본 전체 Java/Node/Browser 재실행이나 Push/CI/Cloud/상용 AI 실행은 없음
+> 범위: 현재 V13의 선택한 실행 절차/소스/기존 로그 대조, ESLint 재검증, 혼합 저장 집중 28건과 학습용 재현 명령 선택 2건
+> 구분: 기존 감사, 이후 집중 Java 28건과 재현 명령 선택 2건을 구분한다. 기본 전체 Java/Node/Browser 재실행이나 Push/CI/Cloud/상용 AI 실행은 없음
 
 ## 확인한 문제와 정리
 
@@ -100,7 +100,17 @@ AI 조회의 실제 Controller는 ScopedTicketQueryService를 거쳐 현재 직�
 - 실행: mvnw.cmd -B -ntp -Dtest=TicketCustomerFollowupHttpIntegrationTest test
 - 결과: 28건, 실패/오류/Skip 0, exitCode 0, BUILD SUCCESS. 신규 두 사례와 기존 26건의 재실행이다.
 - 실행 기준: Lab dcf897d 위 테스트 수정본의 SHA-256을 메타데이터에 보존. 테스트와 설명은 Lab fd879eb로 Commit했다.
-- 근거: target/week12-followup-reply-order.log / target/week12-followup-reply-order-result.json / 해당 Surefire XML. 이번 실행 이후 새 Dump와 남은 프로젝트 소유 fork JVM은 0이었다.
+- 근거: target/week12-followup-reply-order.log / target/week12-followup-reply-order-result.json / 당시 Surefire XML. 이후 선택 실행 전에 XML을 아래 previous-class-report.xml로 보존했다. 이 28건 실행 이후 새 Dump와 남은 프로젝트 소유 fork JVM은 0이었다.
 - 한계: 실제 로컬 PostgreSQL/Service/Repository 검사다. 새 실제 Browser/HTTP 응답 경합 실험이나 전체 Java/Node/Lint/CI 실행은 아니다. 앞선 전체 1,221+2와 이번 28을 합산하지 않는다.
 
-선택한 필수 사례 대조와 이번 보완 뒤 추가 업무 코드/Schema 변경이 필요한 누락은 확인하지 못했다. 오늘의 다음 학습은 두 저장 순서를 실제 코드와 연결하고, 최초 AI 제안/현재 대화/확인/명시적 재개의 역할을 하나의 사례에서 구분하는 것이다. 해당 문답은 답변을 받은 뒤 학습노트에 이어 적는다.
+선택한 필수 사례 대조와 이번 보완 뒤 추가 업무 코드/Schema 변경이 필요한 누락은 확인하지 못했다. 이후 두 저장 순서와 최초 AI 제안/현재 대화/확인/명시적 재개, 실제 요청과 화면의 통합 문답으로 연결했다. 사용자의 실제 답변과 해당 사례의 이해 점검은 학습노트에 기록했으며 새로운 실행 근거와 구분한다.
+
+## 학습자 직접 재현을 위한 선택 명령 확인
+
+이후 정한 통합 문답을 마치고 실행 안내의 작은 재현 대상으로 연결했다. 처음 안내하는 메서드 선택 인자가 두 파라미터 사례만 실행하는지 확인하기 위해 Lab의 TicketCustomerFollowupHttpIntegrationTest#customer_and_official_reply_commit_in_parent_lock_order_without_skipping_a_page를 선택해 Maven test를 실행했다. 같은 기존 두 사례의 참고 실행이며 새 검증 사례 두 건을 추가한 것이 아니다.
+
+Lab fd879eb6758750afad6879e4c3a88094baa95b40의 Clean 작업 트리에서 2건/실패·오류·Skip 0, BUILD SUCCESS/exit 0을 확인했다. 새 Dump와 남은 소유 fork JVM은 0이었다. 명령/Commit/시각/종료 코드와 로그는 Lab target/week12-focused-reproduction-20261104의 result.json/maven.log에, 이번 XML은 focused-report.xml에 있다. 덮어쓰기 전 28건 XML은 previous-class-report.xml로 별도 보존했다.
+
+Lab f226b53은 docs/local-verification.md 6절의 실행 순서/명령/예상 범위/로그 경로를 추가한 문서 Commit이다. PowerShell 예제 여섯 개의 구문 오류 0건과 UTF-8/BOM 없음/LF/링크/Diff를 검사했다. 실제 참고 실행은 Maven 선택 인자를 검증했고, 안내의 Tee-Object 파이프는 구문 점검과 구분했다.
+
+학습자의 독립 실행은 아직 확인하지 않았다. 이후 학습자가 마지막 요약과 종료 코드를 확인하면 그 실제 결과를 학습노트에 기록한다. 앞선 전체 회귀/28건과 이번 2건은 중복 실행이므로 합산하지 않는다. 업무 코드/Schema/정책 변경, 전체 회귀나 Browser/CI/Cloud/상용 AI 실행은 없다.

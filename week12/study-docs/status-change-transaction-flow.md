@@ -347,4 +347,4 @@ ticket-status-ui.mjs는 validChange로 제출 내용과 응답을 대조하고, 
 
 기존 ticket-status-ui.test.mjs의 unknown saved resolution replays original UUID and fields after reopen and reassignment / saved success followed by GET failure retries only GET and retains its confirmed history를 선택해 읽었다. PostgreSQL 검사의 original_result_replays_after_reopening_and_handoff_without_reapplying_resolution도 같은 과거 결과/현재 상태 분리를 다룬다. 소스와 기존 검증의 연결이며 이번에 테스트/Browser/HTTP를 다시 실행한 것은 아니다.
 
-다음 두 문답은 후속 GET도 OPEN/11인 경우 현재 상태와 과거 저장 결과를 어떻게 표시할지, 재확인은 성공했으나 후속 GET이 503인 경우 어떤 요청을 재시도할지다. 아직 답변을 받지 않았으며, 이를 확인한 범위에서 오늘의 요청/Commit/화면 통합 점검을 정리한다.
+마지막 두 문답에서 사용자는 현재 OPEN/11과 과거 RESOLVED/10을 구분하고, 정상적인 저장 재확인 뒤 GET이 503이면 저장 결과를 유지하며 GET만 다시 보낸다고 정확히 답했다. 오늘 계획한 요청/Commit/화면 통합 사례의 적용 점검을 마쳤다. 실제 API 실행이나 독립 구현 능력을 확인한 것으로 확대하지 않는다. 다음은 Lab docs/local-verification.md 6절의 작은 검사를 학습자가 직접 재현하고 결과를 읽는 단계다.
