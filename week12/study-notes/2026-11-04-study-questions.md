@@ -165,4 +165,12 @@ Codex는 합의한 V13/Service/API와 상태 화면을 작은 단위로 구현�
 
 다음은 [저장 흐름 자료 12절](../study-docs/status-change-transaction-flow.md#12-service-본문의-return과-controller가-결과를-받는-시점)을 기준으로 Service 본문의 return과 Spring 트랜잭션 처리가 끝나 Controller가 결과를 받는 시점을 구분한다. TicketStatusController의 실제 호출/응답 코드, TicketStatusService의 공개 @Transactional 메서드와 기존 지연 Commit 실패 테스트의 해당 부분을 확인했다. Spring 공식 문서의 프록시/트랜잭션 설명도 대조했다. 코드 변경이나 새 테스트 실행은 없으며, 현재 1,221+2 등의 수치는 앞선 실행 보고서의 근거다.
 
-질문은 두 가지다. 첫째는 Service 본문이 반환한 뒤 Commit이 실패한 경우 Controller의 Service 호출이 정상 완료됐는지다. 둘째는 Commit 성공 후 응답 처리에서 500이 발생한 별도 가상 상황에서 새 UUID로 자동 제출해도 되는지다. 기존 검증에서 확인한 Rollback과 가상 상황/Browser에서 저장 여부를 모르는 경우를 구분한다. 아직 이 두 문항의 답변을 받거나 이해 완료로 판정한 것은 아니다.
+질문은 두 가지다. 첫째는 Service 본문이 반환한 뒤 Commit이 실패한 경우 Controller의 Service 호출이 정상 완료됐는지다. 둘째는 Commit 성공 후 응답 처리에서 500이 발생한 별도 가상 상황에서 새 UUID로 자동 제출해도 되는지다. 기존 검증에서 확인한 Rollback과 가상 상황/Browser에서 저장 여부를 모르는 경우를 구분한다.
+
+사용자는 첫 질문에 '아니요. Commit이 실패했으므로 호출이 정상 완료된 것이 아니며 201을 반환하면 안 됩니다.', 둘째에 '아니요. 원래 UUID와 요청 내용을 유지해 재확인하고 실제 DB 저장 여부를 확인해야 합니다.'라고 답했다. 이번 두 사례에서 Service 본문의 반환/Commit 성공과 Browser의 오류/DB 저장 여부를 정확히 구분했다. 실제 테스트의 새 실행이나 모든 장애 경계의 이해 완료로 확대하지 않는다.
+
+## Ticket 잠금과 서로 다른 변경 검사로 진행
+
+[저장 흐름 자료 13절](../study-docs/status-change-transaction-flow.md#13-ticket-잠금과-버전은-무엇을-각각-보호하는가)에 같은 Ticket의 상태 처리/고객 글 저장 순서, 상태 버전/배정 버전/고객 글 참조의 역할을 연결했다. JdbcTicketStatusRepository 전체와 Service의 잠금 뒤 새 조회, 고객 후속 글의 부모 Ticket 잠금 연결부, 기존 두 Commit 순서 테스트의 해당 부분을 확인했다. PostgreSQL 17 공식 문서의 Row Lock/Read Committed 설명도 대조했다. 기존 구현/검증을 설명하는 작업이며 코드를 변경하거나 PostgreSQL/Browser 테스트를 다시 실행하지 않았다.
+
+다음 두 문항은 상태 버전이 그대로인 동안 새 고객 글이 먼저 Commit된 경우의 해결 조건과, 해결이 먼저 Commit된 뒤 도착한 새 고객 글의 처리다. 답변을 확인한 뒤 상태 기능의 통합 개념 점검을 마무리하고 주간 계획의 실행 안내/검증 근거 대조와 마감 기록으로 진행한다. 아직 이 두 경합 사례의 이해 완료로 판정하지 않는다.

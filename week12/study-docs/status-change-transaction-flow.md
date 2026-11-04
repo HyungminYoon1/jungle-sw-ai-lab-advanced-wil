@@ -175,3 +175,30 @@ Controller가 service.changeStaff(...) 호출
 기존 TicketStatusHttpIntegrationTest의 deferred_commit_failure_never_returns_success_and_preserves_previous_rows는 이를 구체적으로 확인한다. 격리된 테스트 DB에 지연 검사되는 외래 키와 테스트용 Trigger를 두어 상태 이력 INSERT까지 진행한 뒤 Commit 시점에 실패시킨다. 500과 실행 전후 DB Snapshot 일치를 함께 검사한다. 앞선 실행에서 통과한 사례이며 이번 문답을 위해 다시 실행한 것은 아니다. 운영 DB에 이런 장치를 설치한 것도 아니다.
 
 반대로 Commit은 성공했지만 이후 응답 생성/전달에 문제가 생길 수도 있다. 이는 앞의 테스트와 다른 가상 실패 경계다. Browser가 받은 500이나 끊긴 연결만으로 Rollback을 확정하지 않는다. 원래 UUID/버전/사유/근거로 재확인하고 이미 저장됐다면 기존 결과만 받는다. 확정된 성공 이후 현재 상태 GET만 실패한 경우에는 GET만 다시 보낸다.
+
+## 13 Ticket 잠금과 버전은 무엇을 각각 보호하는가
+
+현재 JdbcTicketStatusRepository.lock은 다음 SQL을 실행한다.
+
+```sql
+SELECT id FROM tickets WHERE id=? FOR UPDATE
+```
+
+Service는 잠금을 얻은 뒤 required(ticketId)의 새 SQL로 현재 상태/배정과 최신 고객 글/확인 범위를 읽는다. 고객 후속 글도 TicketConversationService.followUp에서 access.ticket(ticketId,true)를 호출한 뒤 Message를 저장한다. 같은 Ticket의 판단과 저장이 이 부모 Row를 기준으로 순서를 갖게 하는 기존 구조다.
+
+이 Row Lock은 서버가 해당 Transaction을 처리하는 동안 유지한다. Browser에서 사람이 글을 읽거나 초안을 작성하는 동안 Transaction을 열어 두는 방식이 아니다. 또 Ticket Row의 잠금을 자식 테이블 전체에 일괄 잠금을 거는 것으로 해석하지 않는다. 관련 쓰기 Service가 같은 부모 잠금/검사 순서를 따르는지가 중요하며 외래 키에 따른 잠금은 별도 동작이다. [PostgreSQL 17 Row Lock 설명](https://www.postgresql.org/docs/17/explicit-locking.html#LOCKING-ROWS)
+
+READ COMMITTED에서 다른 Transaction의 변경은 새 조회 명령이 시작하기 전에 Commit된 자료를 기준으로 읽는다. 따라서 잠금 대기 전에 읽은 값을 재사용하지 않고, 잠금을 얻은 뒤 새 조회로 앞선 고객 글의 Commit을 확인한다. [PostgreSQL 17 격리 수준 설명](https://www.postgresql.org/docs/17/transaction-iso.html#XACT-READ-COMMITTED)
+
+| 검사 장치 | 현재 코드에서 구분하는 것 |
+|---|---|
+| Ticket Row Lock | 한 서버 Transaction의 검사/저장과 같은 Ticket의 관련 쓰기 순서 |
+| expectedAssignmentVersion | 작성 당시와 현재 담당 배정의 차이 |
+| expectedStatusVersion | 작성 당시와 현재 상태 변경 버전의 차이 |
+| throughCustomerMessageId와 최신 고객 글/확인 범위 비교 | 해결 초안 뒤 새 고객 글이 추가됐는지와 그 범위를 명시적으로 확인했는지 |
+
+상태 버전은 상태 변경만 세므로 고객 글이 추가됐다는 이유만으로 증가하지 않는다. 예를 들어 담당자가 IN_PROGRESS/상태 1에서 80번까지 고른 뒤 새 고객 글 81번이 먼저 Commit돼도 상태 버전은 1일 수 있다. 상태 버전 비교만으로는 오래된 해결 대상을 발견할 수 없으며 현재 최신 글/선택 대상과 확인 범위도 검사해야 한다.
+
+반대로 해결이 먼저 Commit된 뒤 새 고객 글이 저장됐다면 해결 당시의 이력은 유지한다. 새 글은 보존하고 확인 필요로 표시하며 RESOLVED에서 OPEN으로의 재개는 별도 명시적 요청이다. 이는 이미 합의한 T06의 두 순서이며 새 정책을 추가한 것이 아니다.
+
+기존 TicketStatusHttpIntegrationTest의 customer_commit_before_waiting_resolution_is_seen_by_a_fresh_post_lock_statement와 resolution_commit_before_waiting_message_preserves_the_original_response_snapshot가 두 순서의 실행 근거다. 현재 학습 자료 보완은 해당 소스와 공식 설명을 대조한 것이며 새로운 동시 실행/성능 측정 결과는 아니다.

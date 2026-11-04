@@ -67,7 +67,7 @@ V1~V12는 유지하고 V13에서 tickets.status_version과 ticket_status_events�
 
 ## 코드와 학습 연결
 
-[저장 순서 자료](../study-docs/status-change-transaction-flow.md)의 8~12절에 실제 Service/Repository/화면과 네 식별자, 조회 권한/기존 제출/새 변경 검사 및 Commit 경계를 연결했다. 이력 수와 참조 ID 혼동을 보충한 뒤 사용자는 추가 이력 0건과 기존 81번 참조/새 이력 ID의 별도 생성을 정확히 답했다. 이어 상태 문자열이 같아져도 버전이 다르면 새 요청을 거부하고, canResolve=false여도 현재 조회 권한이 있는 동일 저장 제출은 재확인한다는 점도 정확히 답했다. 실제 답변과 보충 과정은 [학습 기록](../study-notes/2026-11-04-study-questions.md)에 보존한다. 다음 Service 반환/Commit/응답 실패 문답은 별도이며 이해 완료로 확대하지 않는다. 문답 기록을 위해 코드를 바꾸거나 기존 테스트를 반복 실행하지 않았다.
+[저장 순서 자료](../study-docs/status-change-transaction-flow.md)의 8~13절에 실제 Service/Repository/화면과 네 식별자, 조회 권한/기존 제출/새 변경 검사, Commit과 Ticket 잠금 경계를 연결했다. 사용자는 추가 이력 0건과 기존 글 참조/새 이력 ID, 상태 버전 충돌과 기존 제출 재확인을 변형 사례에서 정확히 구분했다. 이어 Commit 실패 시 201 금지와 Browser의 500만으로 저장 실패를 단정하지 않고 원래 제출로 재확인하는 점도 정확히 답했다. 실제 답변과 앞선 보충 과정은 [학습 기록](../study-notes/2026-11-04-study-questions.md)에 보존한다. 다음은 각 버전/고객 글 참조와 같은 Ticket 잠금의 역할을 적용하는 두 Commit 순서 문답이다. 문답 기록을 위해 코드를 바꾸거나 기존 테스트를 반복 실행하지 않았다.
 
 | 검토 대상 | 확인 범위 |
 |---|---|
