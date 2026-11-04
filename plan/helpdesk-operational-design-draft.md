@@ -209,3 +209,5 @@ O4~O6 합의 후 기술 계약을 구체화하고, 별도의 구현·Test·Commi
 첫 저장 단위 Lab 645b3df/V11에서는 [PostgreSQL/회귀 검증](../week12/lab-reports/2026-11-03-customer-followup-storage.md)을 마쳤다. 당시 범위는 새 후속 저장과 공식 답변의 종류별 재확인, 기존 조회 호환이며 목록/작성 화면/확인 API는 아직 없었다.
 
 이후 7018c0b/104d031에서 [본인 목록과 고객 작성 화면](../week12/lab-reports/2026-11-03-my-tickets-and-followup-ui.md)을 실제 Browser/DB로 검증했다. 80e5de9/6b3ba1d의 V12는 [현재 배정별 명시적 확인 저장/API](../week12/lab-reports/2026-11-03-customer-message-confirmations.md)를 추가했고 집중 43개와 전체 Java 1,165+2가 통과했다. 기록 ID/시각이 아닌 MAX(through_message_id)를 같은 Ticket/배정에 적용하며 작은 확인의 삭제/만료나 새 배정으로의 복사는 하지 않는다. 직원 목록 표시/확인 버튼과 새 Browser 흐름은 후속이고 테스트 JVM 종료 지연도 미해결이다. 이 로컬 근거를 원격 CI/Cloud/실사용 출시 완료로 확대하지 않는다.
+
+11/4에는 [직원 업무 목록과 명시적 확인 화면](../week12/lab-reports/2026-11-04-staff-confirmation-ui.md)을 연결했다. 현재 배정의 최신 고객 Message/확인 범위를 한 SQL로 읽고, 화면에서 직접 선택한 대상과 선택 당시 배정 버전만 제출한다. 로컬 합성 Browser/PostgreSQL에서 메시지 6건, 배정 이력 4건과 확인 2건을 대조했다. 기존 V12/상태/원문/AI 처리와 출시 조건은 유지하며, 학습 이해와 남은 운영/실패 복구 검증의 완료로 확대하지 않는다.

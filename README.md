@@ -3,7 +3,7 @@
 > 상태: Active
 > 시작일: 2026-08-18
 > 전체 기간: 12주 유지 — 기술 학습 Week 1–9, 취업 우선 Week 10–12. 배포 과정은 Week 8–9 통합
-> 현재 단계: Week 1·2·3·4·6·7 완료 — Week 5 부분 완료·공개 제출 완료. Week 8–9는 핵심 실습과 리소스 정리, 원격 CI 및 저장소 WIL 마감을 마쳤고 10/23 블로그와 포럼 완료도 작성자가 확인했다. Week 10은 공식 답변·정정·대화 조회와 배정·인계의 기술 설계 및 로컬 검증을 마쳤다. 10/24 코드 문답 뒤 자율 학습 문서로 전환했으며 실제 가용시간 확인과 주간 기록 마감은 남아 있다. 학회 참석으로 미실시한 과업은 11/3~9의 Week 12에 이월한다. 11/3에는 고객 후속 핵심 정책을 합의하고 V11 고객 대화/목록/화면과 V12 확인 저장/API를 로컬 검증했다. 직원 확인 표시/버튼과 Browser 연결은 후속이며 학습 이해와 구현 근거를 구분한다. 개인정보 고도화도 후속으로 유지
+> 현재 단계: Week 1·2·3·4·6·7 완료 — Week 5 부분 완료·공개 제출 완료. Week 8–9는 핵심 실습과 리소스 정리, 원격 CI 및 저장소 WIL 마감을 마쳤고 10/23 블로그와 포럼 완료도 작성자가 확인했다. Week 10은 공식 답변·정정·대화 조회와 배정·인계의 기술 설계 및 로컬 검증을 마쳤다. 10/24 코드 문답 뒤 자율 학습 문서로 전환했으며 실제 가용시간 확인과 주간 기록 마감은 남아 있다. 학회 참석으로 미실시한 과업은 11/3~9의 Week 12에 이월한다. 11/3에는 고객 후속 핵심 정책을 합의하고 V11 고객 대화/목록/화면과 V12 확인 저장/API를 로컬 검증했다. 11/4에는 직원 업무 표시와 확인 버튼을 실제 Browser/PostgreSQL로 연결했으며 학습 이해와 구현 근거를 구분한다. 개인정보 고도화도 후속으로 유지
 
 이 저장소는 SW AI Lab 심화과정에서 선택한 기술을 학습하고, 이해가 바뀐 과정과 재현 가능한 근거를 주차별로 기록한다. 목표는 큰 제품을 기간 안에 완성하는 것이 아니라 AI/AX·Java Backend 직무에 필요한 개념을 직접 설명하고, 작은 실험과 Test로 검증하며, 필요한 범위만 서비스에 적용할 수 있는 역량을 만드는 것이다.
 
@@ -62,7 +62,7 @@ Week 8–9는 같은 배포 학습을 이어온 기간으로 통합한다. Week 
 | 8–9 | Docker·CI·System·AWS Cloud·HTTPS 통합 | Completed — 핵심 실습과 검증, 리소스 정리, 원격 CI와 저장소 WIL 마감. 블로그 작성과 포럼 업로드도 10/23 작성자 확인 | [통합 학습 계획](./week8-9/weekly-plan.md), [WIL](./week8-9/wil.md), [정리 결과](./week8-9/lab-reports/2026-10-22-deployment-resource-closeout.md), [배포 계획](./week8-9/deployment-plan.md) |
 | 10 | 취업 우선과 공식 답변·대화 조회 및 배정/인계 | In Progress — P1~P8과 O1~O6 합의, 기술 설계 및 로컬 PostgreSQL/Browser 검증 완료. 코드 문답 일부 뒤 자율 학습 자료 정리. 실제 가용시간과 주간 기록 마감은 별도 | [주차 안내](./week10/README.md), [계획](./week10/weekly-plan.md), [답변 설계](./week10/official-reply-conversation-design-draft.md), [배정 설계](./week10/ticket-assignment-contract-draft.md), [24일 검증 보고서](./week10/lab-reports/2026-10-24-ticket-assignment-lab.md), [24일 학습 노트](./week10/study-notes/2026-10-24-study-questions.md) |
 | 11 | 면접·과제 대응과 취약 개념 재학습, 고객 후속 정책 검토 | In Progress — 10/27의 다섯 정책 합의 보존. 학회 참석으로 미실시한 후속 검토/구현은 Week 12로 이월. 주간 기록 전체의 완료 판정과 구분 | [주차 안내](./week11/README.md), [정책 검토](./week11/customer-followup-policy-review.md) |
-| 12 | 고객 후속 대화와 명시적 확인, 취업 근거 정리와 최종 회고 | In Progress — V11 고객 대화/목록/화면과 V12 확인 저장/API의 로컬 검증 완료. 직원 표시/버튼은 후속 | [주차 안내](./week12/README.md), [학습 계획](./week12/weekly-plan.md), [기술 계약](./week12/customer-followup-contract-draft.md), [확인 API 검증](./week12/lab-reports/2026-11-03-customer-message-confirmations.md) |
+| 12 | 고객 후속 대화와 명시적 확인, 취업 근거 정리와 최종 회고 | In Progress — V11 고객 대화/목록/화면과 V12 확인 저장/API의 로컬 검증 완료. 직원 업무 표시/확인 버튼의 실제 Browser/DB 검증 완료. 실패 복구/학습 보충과 회고는 후속 | [주차 안내](./week12/README.md), [학습 계획](./week12/weekly-plan.md), [기술 계약](./week12/customer-followup-contract-draft.md), [확인 API 검증](./week12/lab-reports/2026-11-03-customer-message-confirmations.md), [11/4 직원 화면 검증](./week12/lab-reports/2026-11-04-staff-confirmation-ui.md) |
 
 상태는 `Planned`, `In Progress`, `Completed`, `Partially Completed`와 `Blocked`로 구분한다. 많은 코드를 작성했더라도 설명·재현·검증 근거가 없으면 완료로 표시하지 않는다.
 

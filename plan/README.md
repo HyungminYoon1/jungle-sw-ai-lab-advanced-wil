@@ -57,7 +57,8 @@ Week 10에는 기존 Week 9의 취업 Baseline과 맞춤 지원을 함께 진행
 - [고객 후속 대화 기술 계약](../week12/customer-followup-contract-draft.md): 후속 Message, 본인 목록과 배정별 확인 기록, API/Transaction/실패 검증
 - [11/3 V11 첫 저장 검증](../week12/lab-reports/2026-11-03-customer-followup-storage.md): 본인 후속 글/종류별 재확인, 실제 PostgreSQL/Commit 실패와 기존 데이터 보존
 - [11/3 목록과 고객 작성 화면](../week12/lab-reports/2026-11-03-my-tickets-and-followup-ui.md): 본인 목록/활동 Cursor, 실제 Browser→PostgreSQL의 후속 작성과 원문/AI Row 보존. 확인 API는 아래 별도 근거
-- [11/3 명시적 확인 API](../week12/lab-reports/2026-11-03-customer-message-confirmations.md): V12/현재 배정별 MAX와 기록 보존, 실제 잠금/Commit 검증. 직원 표시/확인 버튼은 후속
+- [11/3 명시적 확인 API](../week12/lab-reports/2026-11-03-customer-message-confirmations.md): V12/현재 배정별 MAX와 기록 보존, 실제 잠금/Commit 검증. 당시 직원 표시는 미구현이며 이후 11/4 근거와 구분
+- [11/4 직원 업무 목록과 확인 화면](../week12/lab-reports/2026-11-04-staff-confirmation-ui.md): 최신 고객 활동/배정별 MAX, 직접 선택한 범위와 실제 Browser/DB 대조
 - [11/3 문서·구현 전달](../week12/lab-reports/2026-11-03-documentation-publication.md): 문서 검토와 공개 결과, 정확한 Commit의 원격 CI/로컬 검증 구분
 - [배정과 인계 기술 계약](../week10/ticket-assignment-contract-draft.md): O1~O6 합의, Schema, API, 재확인과 실패 Case 및 로컬 구현 경계
 - [10/24 배정·인계 실행 기록](../week10/lab-reports/2026-10-24-ticket-assignment-lab.md): 단위별 Commit과 PostgreSQL·Browser 검증. 원격 CI·Cloud와 구분
