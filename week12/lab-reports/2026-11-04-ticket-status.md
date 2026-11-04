@@ -67,7 +67,7 @@ V1~V12는 유지하고 V13에서 tickets.status_version과 ticket_status_events�
 
 ## 코드와 학습 연결
 
-[저장 순서 자료](../study-docs/status-change-transaction-flow.md)의 8~10절에 실제 Service/Repository/화면과 네 식별자의 역할을 연결했다. 두 문항에서 사용자는 현재 OPEN과 오래된 요청의 자동 저장 금지 방향을 답했으나, 재확인의 추가 이력 수와 기존 고객 글 참조/새 이력 ID를 혼동했다. 추가 이력 0건과 기존 71번 참조를 보충하고 변형 두 문항을 제시했다. 실제 답변은 [학습 기록](../study-notes/2026-11-04-study-questions.md)에 남기며 구현 통과를 이해 완료로 판정하지 않는다.
+[저장 순서 자료](../study-docs/status-change-transaction-flow.md)의 8~11절에 실제 Service/Repository/화면과 네 식별자, 조회 권한/기존 제출/새 변경 검사 순서를 연결했다. 첫 문답의 이력 수와 참조 ID 혼동을 보충한 뒤, 사용자는 변형 사례에서 추가 이력 0건과 기존 81번 참조/새 이력 ID의 별도 생성을 정확히 답했다. 실제 답변과 보충 과정은 [학습 기록](../study-notes/2026-11-04-study-questions.md)에 보존한다. 이 두 사례의 이해 점검과 코드/검증 결과는 구분하며, 문답 기록을 위해 기존 테스트를 반복 실행하지 않았다.
 
 | 검토 대상 | 확인 범위 |
 |---|---|
