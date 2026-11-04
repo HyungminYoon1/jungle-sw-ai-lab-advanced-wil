@@ -15,7 +15,7 @@
 
 ## 현재 학습 일정
 
-**현재 회차는 12주차, 11/3~9의 7일 학습이다.** [주간 계획](../week12/weekly-plan.md)에 학회 참석으로 이어서 진행하지 못한 고객 후속 대화와 현재 담당자의 명시적 확인을 우선 배치했다. 마지막 이틀은 검증/실행 안내와 최종 회고에 사용한다. 취업 우선과 기술 과업 합계 6시간을 유지한다. 11/3 F03/F05/F12/F13과 공개 대화 활동 시각도 합의했으며 [기술 계약](../week12/customer-followup-contract-draft.md)을 작성했다. [Week 11](../week11/README.md)의 기록은 보존하고 상태 변경/재개 및 실제 운영 준비는 후속으로 구분한다.
+**현재 회차는 12주차, 11/3~9의 7일 학습이다.** [주간 계획](../week12/weekly-plan.md)에 학회 참석으로 이어서 진행하지 못한 고객 후속 대화와 현재 담당자의 명시적 확인을 우선 배치했다. 마지막 이틀은검증/실행 안내와 최종 회고에 사용한다. 취업 우선과 기술 과업 합계 6시간을 유지한다. V11 고객 대화/목록, V12 확인과 합의한 T01~T08의 V13 상태 변경/재개를 로컬 구현하고 PostgreSQL/대표 Browser로 검증했다. 11/4 통합 문답과 사용자 직접 재현의 범위를 기록했고 WIL/12주 회고는 11/9에 작성한다. [Week 11](../week11/README.md)의 기록과 실제 운영 전 준비 과업은 보존한다.
 
 [Week 8–9 통합 학습 계획](../week8-9/weekly-plan.md)은 Docker·CI·System·AWS·HTTPS·AI 연결·관측·복구의 기존 범위를 유지한다. 초기 4일·40시간 배분을 넘겨 사용한 기간을 통합 명칭에 반영했으며, 미완료 과업을 완료 처리한 것은 아니다.
 
@@ -59,6 +59,8 @@ Week 10에는 기존 Week 9의 취업 Baseline과 맞춤 지원을 함께 진행
 - [11/3 목록과 고객 작성 화면](../week12/lab-reports/2026-11-03-my-tickets-and-followup-ui.md): 본인 목록/활동 Cursor, 실제 Browser→PostgreSQL의 후속 작성과 원문/AI Row 보존. 확인 API는 아래 별도 근거
 - [11/3 명시적 확인 API](../week12/lab-reports/2026-11-03-customer-message-confirmations.md): V12/현재 배정별 MAX와 기록 보존, 실제 잠금/Commit 검증. 당시 직원 표시는 미구현이며 이후 11/4 근거와 구분
 - [11/4 직원 업무 목록과 확인 화면](../week12/lab-reports/2026-11-04-staff-confirmation-ui.md): 최신 고객 활동/배정별 MAX, 직접 선택한 범위와 실제 Browser/DB 대조
+- [11/4 상태 변경/명시적 재개](../week12/lab-reports/2026-11-04-ticket-status.md): T01~T08, V13 상태 버전/이력과 실제 PostgreSQL/Browser 검증
+- [11/4 최종 검토와 공개 기록](../week12/lab-reports/2026-11-04-final-review-publication.md): 두 저장소의 변경 범위, 로컬 근거, 문서 정합성과 정확한 Commit의 원격 CI
 - [11/3 문서·구현 전달](../week12/lab-reports/2026-11-03-documentation-publication.md): 문서 검토와 공개 결과, 정확한 Commit의 원격 CI/로컬 검증 구분
 - [배정과 인계 기술 계약](../week10/ticket-assignment-contract-draft.md): O1~O6 합의, Schema, API, 재확인과 실패 Case 및 로컬 구현 경계
 - [10/24 배정·인계 실행 기록](../week10/lab-reports/2026-10-24-ticket-assignment-lab.md): 단위별 Commit과 PostgreSQL·Browser 검증. 원격 CI·Cloud와 구분
