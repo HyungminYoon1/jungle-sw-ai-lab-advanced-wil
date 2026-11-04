@@ -1,7 +1,7 @@
 # 11/4 최종 검토와 저장소 공개
 
 > 검토 기준: Lab a12d61a, 학습 기록 8b372ef. 각 origin/main을 Fetch한 뒤 확인했다.
-> 상태: 문서 정합성 보완과 공개 전 검사 완료. 아래 원격 결과는 Push/CI 확인 후 확정한다.
+> 상태: 문서 정합성 보완, 두 저장소 Push와 정확한 Lab Commit의 원격 CI 확인 완료.
 
 ## 범위와 판정
 
@@ -50,6 +50,15 @@
 
 ## 원격 결과
 
-Push/CI 확인 대기. Lab의 일반 Push 검증 결과와 WIL의 문서 검사/원격 동기화를 각각 기록한다. WIL에는 CI Workflow가 없으므로 문서 공개를 CI 통과로 표현하지 않는다.
+| 저장소 | 공개 기준 | 확인 결과 |
+|---|---|---|
+| Lab | [fe9336d](https://github.com/HyungminYoon1/ai-helpdesk-learning-lab/commit/fe9336ddbc8166051b54858e870fc9abe07c810a) | main Push 완료. 같은 전체 SHA의 [CI 41839824046](https://github.com/HyungminYoon1/ai-helpdesk-learning-lab/actions/runs/41839824046) completed/success |
+| 학습 기록 | [e95cc0d](https://github.com/HyungminYoon1/jungle-sw-ai-lab-advanced-wil/commit/e95cc0dd3c5f1052e44da2204ae15d683ffb0014) | 진행 상태/검토 기록 Push와 원격 main 일치 확인. 이 CI 결과 기록은 별도 문서 Commit으로 공개 |
+
+Lab의 원격 Log에서 Surefire 1,223개/Failsafe 2개, 실패/오류/Skip 0과 BUILD SUCCESS를 확인했다. Node는 tests/pass 418, fail/cancelled/skipped 0이었다. Lint와 Docker Build도 성공했고 Mockito self-attaching/동적 Agent 경고는 각 0건이었다. 따라서 마지막 Failsafe 설정까지 포함한 정확한 Commit의 전체 검증 근거가 확보됐다. 앞선 로컬 부분 실행 기록을 이 결과로 덮어쓰거나 테스트 개수를 합산하지 않는다.
+
+verify Job은 5분 14초에 성공했다. Image Export와 Artifact 전송, Publish verified main image to ECR Job은 모두 skipped였다. Runner 내부 Build의 성공을 ECR 게시/Cloud 실행으로 표현하지 않는다. 원격 검증 Log는 Lab의 ignored target/publication-20261104/ci-41839824046.log에 보관했다.
+
+공개한 누적 변경 중 Markdown은 Lab 8개/학습 기록 23개다. UTF-8/BOM 없음/LF와 Code Fence, 상대 파일 링크 488개 및 누적 Diff를 검사해 오류 0건이었다. WIL의 Workflow 조회 결과는 total_count 0이므로 문서 검사/원격 동기화를 CI 통과로 표현하지 않는다.
 
 ECR 게시, AWS 리소스 변경, 재배포나 상용 AI 호출은 이번 요청의 범위에 포함하지 않는다.
