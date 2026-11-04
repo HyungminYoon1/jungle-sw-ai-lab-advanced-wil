@@ -318,4 +318,33 @@ Ticket ID는 URL에서 받고 실제 작성자는 Authentication의 고정 신�
 
 이 설명은 TicketStatusController/CreateTicketStatusChangeRequest와 JdbcTicketStatusRepository.append의 기존 필드 연결을 대조한 것이다. 고객 글이나 인계가 먼저 Commit되면 같은 Body가 거부될 수 있고, 원래 UUID의 저장된 제출 재확인은 별도 계약을 따른다. 새 코드나 테스트/HTTP 실행은 없다.
 
-다음 적용 연습은 현재 상태 버전 9/배정 버전 3, 최신 고객 글과 명시적 확인 120번, 관련 공식 답변 121번이다. 새 해결 요청의 네 필드를 직접 구성하고, 나머지 조건이 유지돼 Commit된 뒤 두 버전이 각각 얼마인지 설명한다. 아직 답변을 받지 않았다.
+적용 연습은 현재 상태 버전 9/배정 버전 3, 최신 고객 글과 명시적 확인 120번, 관련 공식 답변 121번이었다. 사용자는 네 필드에 9/3/120/121을 넣고, Commit 성공 뒤 상태 버전은 10/배정 버전은 3이라고 정확히 답했다. 가상 입력의 구성과 버전 변화를 적용한 결과이며 실제 API 실행과 구분한다.
+
+## 19 저장 결과와 현재 화면을 연결하기
+
+이 절은 요청부터 화면까지 연결하는 마지막 적용 예시다. 가상의 UUID K로 해결 요청이 Commit돼 RESOLVED/상태 버전 10이 됐지만 응답을 잃었다. 이후 등록자가 별도로 재개해 OPEN/상태 버전 11이 됐다. 직원의 조회 권한은 유지되고 배정 버전은 3이라고 가정한다.
+
+원래 K와 원래 내용으로 재확인하면 200/추가 상태 이력 0건이며, 응답은 과거 저장 결과와 그 요청에서 조회한 상태를 분리한다. 다음은 설명에 필요한 일부 필드만 발췌한 것으로, 실제 전체 응답이나 Client 검증용 Fixture가 아니다.
+
+```json
+{
+  "change": {
+    "toStatus": "RESOLVED",
+    "statusVersion": 10,
+    "assignmentVersion": 3
+  },
+  "current": {
+    "status": "OPEN",
+    "statusVersion": 11,
+    "assignmentVersion": 3
+  }
+}
+```
+
+change는 K가 저장한 변경 결과다. current는 재확인 응답을 구성할 때 조회한 상태이므로 둘이 달라도 모순이 아니다. 과거 결과를 반환하면서 현재 상태를 RESOLVED로 되돌리지 않는다. current도 그 조회의 기준 시점 값이며 이후 변화까지 보장하지 않는다.
+
+ticket-status-ui.mjs는 validChange로 제출 내용과 응답을 대조하고, 유효한 200/201 뒤 저장 결과를 saved에 보관한다. pending/draft를 비우고 current를 비운 뒤 refresh로 현재 상태를 다시 GET한다. 이 GET이 실패하면 saved-refresh-failed로 표시하고 저장된 이력은 유지한다. GET 실패를 새 해결 요청이나 저장 Rollback으로 해석하지 않는다.
+
+기존 ticket-status-ui.test.mjs의 unknown saved resolution replays original UUID and fields after reopen and reassignment / saved success followed by GET failure retries only GET and retains its confirmed history를 선택해 읽었다. PostgreSQL 검사의 original_result_replays_after_reopening_and_handoff_without_reapplying_resolution도 같은 과거 결과/현재 상태 분리를 다룬다. 소스와 기존 검증의 연결이며 이번에 테스트/Browser/HTTP를 다시 실행한 것은 아니다.
+
+다음 두 문답은 후속 GET도 OPEN/11인 경우 현재 상태와 과거 저장 결과를 어떻게 표시할지, 재확인은 성공했으나 후속 GET이 503인 경우 어떤 요청을 재시도할지다. 아직 답변을 받지 않았으며, 이를 확인한 범위에서 오늘의 요청/Commit/화면 통합 점검을 정리한다.
