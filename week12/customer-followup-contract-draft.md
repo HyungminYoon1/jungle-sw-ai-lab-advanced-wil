@@ -1,13 +1,13 @@
 # 고객 후속 대화와 담당자 확인의 기술 계약 초안
 
 > 작성일: 2026-11-03
-> 상태: V11 저장/목록/고객 화면과 V12 명시적 확인 저장/API Locally Verified. 직원 표시/확인 버튼은 기술 초안
+> 상태: V11/V12와 11/4 직원 확인 화면의 로컬 PostgreSQL/Browser 및 전체 회귀 통과. 설계 선택의 학습 이해/운영 완료는 별도
 > 설계 시작 기준: Lab 6eed98c, V10. 첫 저장 구현: 645b3df, V11
 > 적용 범위: 로컬 PostgreSQL의 고객 후속 쓰기, 내 문의 목록, 담당자 확인과 기존 대화/업무 화면 보완
 
 고객이 자신의 문의에 추가 내용을 남기고 담당자가 확인한 범위를 기록하는 흐름이다. 공식 답변, 배정/인계와 기존 AI 처리의 계약은 유지한다. 상태 변경/재개 API, 특정 답변 인용, 알림과 운영 계정 관리까지 이 기능에 포함하지 않는다.
 
-업무 선택과 이유는 [정책 검토](../week11/customer-followup-policy-review.md), 실제 일정과 시간 배분은 [주간 계획](./weekly-plan.md)을 따른다. 3절 저장은 [첫 검증 보고서](./lab-reports/2026-11-03-customer-followup-storage.md), 4절 목록/고객 Form은 [목록과 화면 검증](./lab-reports/2026-11-03-my-tickets-and-followup-ui.md), 5~6절 확인 저장/API는 [확인 API 검증](./lab-reports/2026-11-03-customer-message-confirmations.md)에 근거를 남긴다. 6절의 직원 업무 목록 표시와 확인 버튼/Browser 연결은 아직 초안이다.
+업무 선택과 이유는 [정책 검토](../week11/customer-followup-policy-review.md), 실제 일정과 시간 배분은 [주간 계획](./weekly-plan.md)을 따른다. 3절 저장은 [첫 검증 보고서](./lab-reports/2026-11-03-customer-followup-storage.md), 4절 목록/고객 Form은 [목록과 화면 검증](./lab-reports/2026-11-03-my-tickets-and-followup-ui.md), 5~6절 확인 저장/API는 [확인 API 검증](./lab-reports/2026-11-03-customer-message-confirmations.md)에 근거를 남긴다. 11/4의 [직원 업무 표시/확인 버튼 검증](./lab-reports/2026-11-04-staff-confirmation-ui.md)은 이 기반에 화면과 실제 Browser를 연결한 별도 근거다.
 
 ## 1 유지할 경계
 
@@ -146,7 +146,9 @@ A의 배정 2 확인이 Commit된 뒤 B의 배정 3으로 인계됐다면, A가 
 
 `GET /api/tickets/{ticketId}/customer-message-confirmations/current`는 같은 서비스의 활성 직원이 현재 확인 상태를 읽는 경로다. 확인 상태는 한 SQL에서 현재 배정/고객 Message/확인 범위를 함께 투영해 서로 다른 배정의 값을 섞지 않는다. 기존 권한 Transaction과 membership 공유 잠금은 유지한다. 모든 GET/HEAD는 읽기만 한다.
 
-다음 화면 단위에서는 직원 조회 응답과 업무 목록에 현재 배정의 최신 고객 ID/시각, 유효 확인 지점, 확인 필요와 확인 가능 여부를 연결한다. 이 직원 목록/확인 버튼 보완은 아직 미구현이다. 기존 UNASSIGNED/MINE, ID 순 페이지 계약은 유지하고 RESOLVED를 새로 제외하지 않는다. 미배정은 담당자 없음으로 표시하며 누구의 확인도 만들지 않는다. canConfirm은 현재 담당자/권한과 고객 Message 존재를 기준으로 계산한다.
+11/4 직원 업무 목록은 기존 id/title/status/createdAt/assignmentVersion에 latestCustomerMessageId, latestCustomerMessageAt, effectiveThroughMessageId, needsConfirmation과 canConfirm을 추가했다. 최신 고객 Message의 가장 큰 ID와 그 Row의 시각을 사용하고, 같은 SQL의 Snapshot에서 현재 배정의 확인 범위를 읽는다. 기존 UNASSIGNED/MINE, ID 순 페이지 계약을 유지하며 RESOLVED를 제외하지 않는다. 미배정은 담당자 없음으로 표시하며 누구의 확인도 만들지 않는다. canConfirm은 내 담당 목록과 고객 Message 존재를 기준으로 계산한다. 고객 Message가 없는 구형 문의의 고객 ID/시각/확인 지점은 NULL이며 두 Boolean은 false다.
+
+직원 확인 영역의 노출은 대화 Capability의 canViewConfirmations로 구분한다. 이는 기존 활성 서비스 직원 검사 결과이며, 본인 고객 소유권이나 canReply만으로 직원 조회 권한을 추측하지 않는다. 실제 확인 API의 인가는 그대로 유지한다. 고객용 공개 Message DTO에 확인 이력을 추가하지 않고 Server/엄격한 Client Decoder를 함께 갱신한다.
 
 Security에 새 후속/본인 목록은 USER 또는 AGENT, 확인 경로는 AGENT의 명시적 Matcher를 추가한다. 일반 authenticated fallback을 업무 인가의 대체로 사용하지 않고 Application 검사를 함께 적용한다. 새 경로를 위해 Session/CSRF를 끄지 않는다.
 
@@ -177,13 +179,15 @@ Security에 새 후속/본인 목록은 USER 또는 AGENT, 확인 경로는 AGEN
 
 Ticket 선택과 조회 순번을 함께 비교해 늦은 응답을 무시한다. pagehide에서 대화/초안/제출 정보를 정리하고 새로고침/이동 전 메모리 유실을 안내한다. LocalStorage에 원문이나 Secret을 영속 보관하지 않는다. 오래된 화면의 버튼이나 capability는 서버의 현재 권한 검사를 대체하지 않는다.
 
+확인 대상 선택 시점에 throughMessageId와 expectedAssignmentVersion을 함께 고정한다. 같은 Ticket의 새 조회도 그 버전을 자동 치환하지 않는다. 확인 POST 성공을 확인한 뒤에는 저장 이력을 별도로 표시하고 GET으로 현재 상태를 다시 읽는다. 이 GET만 실패했다면 저장을 반복하지 않는다. 목록의 대화 링크는 검증한 Ticket ID만 같은 Origin의 주소에 넣는다.
+
 ## 9 구현 단위와 검증
 
 | 순서 | 구현 단위 | 필요한 근거 |
 |---|---|---|
 | 1 | V11 종류/제약, 고객 후속 저장과 기존 공식 답변의 종류 비교 | V10 기존 Row 유지, 종류별 제약, 권한/입력/중복/Commit 실패/원문 및 AI Row 보존 Test |
 | 2 | 내 문의 Query/API와 고객 화면 | 본인 목록, NULL/동일 시각 Cursor, 새 글 도착, 대화 공개/역할 표시와 응답 유실 Test |
-| 3 | V12 기록/API 로컬 검증 완료. 직원 업무 표시/확인 버튼은 후속 | 새 글/늦은 확인/인계/재배정/권한 회수/재확인, GET 무변경 Test. 직원 Browser는 다음 검증 |
+| 3 | V12 기록/API와 11/4 직원 업무 표시/직접 선택한 확인 버튼 | 새 글/늦은 확인/인계/재배정/권한 회수/재확인, GET 무변경. 실제 직원 Browser/DB 대조와 남은 실패 복구 검증을 구분 |
 | 4 | 통합 검증과 문서 | 실제 PostgreSQL/대표 Browser/전체 회귀와 재현 절차, 정확한 Commit의 CI는 별도 기록 |
 
 두 명의 새 Message 작성, 확인과 새 글, 인계와 확인, membership 회수와 확인의 경쟁을 Commit 순서별로 재현한다. 유효 범위 계산과 실제 INSERT/Commit을 구분하며 기존 데이터는 행 수뿐 아니라 본문/소유자/참조/배정/Job/Attempt/제안/분류 값까지 대조한다.
@@ -201,5 +205,8 @@ Index는 기존 (ticket_id,id)와 requester_user_id를 우선 검토하고 확�
 | 가변 확인 Row만 저장, Row+이력 이중 저장, 확인 기록+MAX | append-only 확인 기록 한 종류와 배정별 MAX. 제출 재확인과 확인자/배정 경과를 함께 보존 | V12, 확인 Service/Repository. 중복 키/권한/이력 보관은 향후 데이터 수명 정책과 함께 검토 |
 | 확인 POST 성공 후 최신 ID를 서버가 대신 채움 또는 명시한 ID 유지 | 명시한 ID를 기록하고 현재 상태를 별도 반환 | 확인 API/UI. 새 글과 과거 응답의 경합 Test |
 | 원문 문자 수만 제한 또는 Body Byte도 제한 | 후속/확인 API 모두 32 KiB 실제 Stream 제한과 경계 검증 | Web 입력 처리. Escape/공백/작은 Content-Length와 실제 입력 경계 검증 |
+| 직원 확인 상태를 문의마다 추가 Query 또는 한 번의 목록 SQL로 조회 | 페이지를 제한한 뒤 현재 배정/최신 고객 글/MAX를 같은 SQL Snapshot에서 반환 | Support Repository/Service와 목록 DTO. 기존 ID 순서/세 상태/Index 유지, 성능 수치는 미측정 |
+| 소유권/답변 가능 여부로 직원 UI를 추측 또는 명시적 읽기 Capability | canViewConfirmations를 기존 활성 직원 검사 결과로 반환 | Conversation Service/DTO/Decoder. 비담당 직원의 읽기와 권한 회수 후 본인 고객 자격을 구분 |
+| 선택/제출을 새 상태에 자동 적응 또는 원래 범위 유지 | 선택 당시 배정 버전을 유지하고 저장된 이력과 GET 현재 상태를 분리 | 확인 Client/직원 UI. 새 글/인계/늦은 응답과 응답 유실 검증 |
 
 초안 작성 시 검토한 Source는 Lab의 공식 답변/배정 계약, V2/V9/V10, Message/Conversation Service·Repository·DTO, SupportAccess와 배정 Service다. 이 관련 파일은 VERIFIED이며 당시 Security는 라우팅 규칙만 PARTIAL로 확인했다. 이후 첫 구현에서는 새 라우팅/Service/Repository/입력 처리와 V11을 수정하고 보고서의 실행 검증을 진행했다. 전체 저장소 감사나 전체 보안/성능 평가로 확대하지 않는다.
