@@ -1,8 +1,8 @@
 # 실행 안내와 로컬 검증 근거 대조
 
 > 기준일: 2026-11-04
-> 범위: 현재 V13의 선택한 실행 절차/소스/기존 로그 대조와 ESLint 한 번의 재검증
-> 구분: Java/Node/Browser를 이번에 다시 실행하지 않았으며 Push/CI/Cloud/상용 AI 실행도 없음
+> 범위: 현재 V13의 선택한 실행 절차/소스/기존 로그 대조, ESLint 한 번의 재검증과 필수 사례 대조 뒤 추가한 혼합 메시지 저장 검사
+> 구분: 아래 기존 감사와 이후 집중 Java 28건 실행을 구분한다. 기본 전체 Java/Node/Browser 재실행이나 Push/CI/Cloud/상용 AI 실행은 없음
 
 ## 확인한 문제와 정리
 
@@ -44,7 +44,7 @@ SyntheticDeploymentPrivacyPackagedIT 전체를 읽고 POM의 Failsafe 연결과 
 - 메타데이터: Lab의 target/verification-audit-20261104-dcfd36ca/result.json
 - 함께 기록한 값: 명령/Commit/작업 트리 상태/시작·종료 UTC 시각/종료 코드/로그 크기
 
-환경변수 값/목록, 개인 암호, Cookie/CSRF/API Key는 기록하지 않았다. target은 Git에서 제외한 로컬 생성물이며 clean 시 사라진다. 공개 기록에는 결과/조건/한계를 정리하고 필요한 실행 증거는 별도로 보존한다. 이 문서의 신규 검증은 Lint 한 번이며 기존 418개나 1,221+2개를 다시 수행한 것으로 세지 않는다.
+환경변수 값/목록, 개인 암호, Cookie/CSRF/API Key는 기록하지 않았다. target은 Git에서 제외한 로컬 생성물이며 clean 시 사라진다. 공개 기록에는 결과/조건/한계를 정리하고 필요한 실행 증거는 별도로 보존한다. 이 시점의 신규 검증은 Lint 한 번이며 기존 418개나 1,221+2개를 다시 수행한 것으로 세지 않는다. 이후 추가한 집중 Java 실행은 문서 아래에 별도로 기록한다.
 
 작성한 문서는 변경 Markdown 8개를 대상으로 UTF-8/BOM 없음/LF, 코드 펜스, 상대 링크 193개와 앵커 19개를 검사했다. PowerShell 예제 5개도 구문 오류 0건을 확인했다. 이는 문서/구문 검사이며 예제의 Java/Node/Browser 명령을 이번에 실행했다는 뜻은 아니다.
 
@@ -57,6 +57,7 @@ SyntheticDeploymentPrivacyPackagedIT 전체를 읽고 POM의 Failsafe 연결과 
 | POM/README | PARTIAL. Java 기준, Failsafe 설정과 현재/과거 실행 요구사항 절을 선택. README 전체 최신화가 아님 |
 | Browser 세 클래스/Script | PARTIAL. 대상/ProcessBuilder/PowerShell 경로/격리 DB/Provider 검증과 기존 기록 연결. 이번 감사에서 실험 전체를 다시 실행하지 않음 |
 | 기존 Log/Report | PARTIAL. 성공·개수·고정 증거 줄만 선택해 대조. Raw Log 전체 검토/재실행과 구분 |
+| 이후 필수 사례 대조 | PARTIAL. 아래 표의 업무 Service/Query/화면과 검증 메서드를 선택해 확인. 새 혼합 저장 메서드/Helper와 변경 Diff는 전체 검토하고 해당 집중 클래스 28건 실행 |
 | AWS/상용 AI/CI/과거 모든 Browser 실험 | NOT_INSPECTED. 이번 감사 범위 밖 |
 
 ## 다음 학습과 마감
@@ -70,3 +71,36 @@ SyntheticDeploymentPrivacyPackagedIT 전체를 읽고 POM의 Failsafe 연결과 
 남은 마감 산출물은 주간 WIL, 12주 회고, 10~12주 통합 블로그 초안과 다음 단계 계획이다. 제한 Pilot의 출시 조건은 후속으로 유지하고 새 기능/인프라를 이번 감사의 선행 조건으로 늘리지 않는다. 실제 학습 시간은 미기록이며 기존 주간 기준을 초기화하지 않는다.
 
 주간 WIL/12주 회고 작성은 기존 계획의 11/9 일정을 유지한다. 그전에는 학습노트/실험보고서에 실제 진행을 누적하고 별도 WIL 초안을 앞당겨 만들지 않는다. 기능 검증이 선행 완료됐다고 주간 학습 전체를 조기 마감하지 않는다.
+
+## 주간 필수 사례와 현재 소스 대조
+
+이후 사용자가 오늘 남은 범위를 설명하고 계획대로 진행하도록 요청했다. 주간 계획의 필수 여덟 사례를 현재 소스와 연결했다. 아래 클래스명과 메서드는 Lab 저장소 기준이며, 소스 대조와 테스트 실행은 구분한다. 각 클래스 전체를 새로 실행한 것은 아니다.
+
+| 계획의 사례 | 선택한 구현/검증 근거 | 대조 결과 |
+|---|---|---|
+| 1 본인 소유권/추가 필드 거부 | TicketCustomerFollowupHttpIntegrationTest의 owner_identity_and_csrf_are_required_even_for_staff / invalid_payloads_are_rejected_before_storage | 비등록자 직원도 고객 소유권을 대신하지 못하며 잘못된 입력은 저장하지 않음 |
+| 2 새 저장/재확인/종류 충돌 | 같은 클래스의 exact_replay_is_200_changed_body_is_409_and_new_uuid_is_a_new_submission / shared_uuid_rejects_different_message_kinds_in_both_directions | 201/200/409와 추가 Row의 의미를 구분 |
+| 3 고객 글/공식 답변 경합과 실패 보존 | 같은 클래스의 새 customer_and_official_reply_commit_in_parent_lock_order_without_skipping_a_page, 기존 failure_after_insert_preserves_existing_reply_assignment_and_nonempty_ai_result / actual_deferred_commit_failure_never_returns_201_or_erases_prior_rows | 두 종류의 직접 경합 사례가 없던 공백을 보완. 두 순서의 잠금/Commit/페이지 및 기존 데이터 보존 검사 통과 |
+| 4 결과 미확인/조회 복구/늦은 응답 | conversation-ui.test.mjs의 unknown customer submission / saved customer submission with a failed refresh / latest read wins / late POST result 사례와 기존 응답 유실 Browser 보고서 | JS의 제출/화면 판단과 별도 실제 Browser/DB 근거를 구분 |
+| 5 최초 문의 AI 범위 | follow-up HTTP의 상태별 원문/Job 대조, JdbcAiSuggestionQueryRepository의 INQUIRY 선택, ai-suggestions.html의 최초 문의 안내 | 후속 글로 새 AI 작업을 만들거나 초기 제안을 최신 대화의 평가로 표시하지 않음 |
+| 6 확인 권한/버전/같은 Ticket/MAX | CustomerMessageConfirmationHttpIntegrationTest의 only_current_assignee_can_create_a_confirmation_and_version_is_not_automatically_updated / later_lower_confirmation_is_retained_but_progress_uses_customer_message_max_not_audit_id 및 읽기 전용 GET 사례 | 현재 배정의 명시적 확인과 누적 이력을 구분 |
+| 7 새 글/인계/해결 상태의 발견 | 같은 클래스의 handoff_and_a_to_b_to_a_never_copy_old_progress_but_old_submission_replay_is_separate, AssignmentQueueConfirmationHttpIntegrationTest의 latest_customer_uses_message_id_and_excludes_later_official_replies_even_on_resolved_tickets | 과거 확인을 새 배정으로 복사하지 않고 RESOLVED의 새 고객 글도 확인 필요로 조회 |
+| 8 내 목록/공개 활동/가변 Cursor | MyTicketsHttpIntegrationTest의 identity_scopes_get_and_head_and_does_not_expose_internal_data / last_public_message_id_defines_activity_not_max_timestamp_or_ticket_update / a_moved_ticket_requires_refresh_and_a_foreign_cursor_never_grants_ownership | 본인 범위와 공개 대화 기준 활동, 맨 앞으로 이동한 항목의 새로고침 필요를 구분 |
+
+AI 조회의 실제 Controller는 ScopedTicketQueryService를 거쳐 현재 직원 권한을 검사한 뒤 내부 조회를 호출한다. 내부 AiSuggestionQueryService에 Actor 인자가 없다는 사실만으로 HTTP 경로의 인가가 없다고 판단하지 않는다. 기존 !postgres 전용 Controller도 PostgreSQL 실행 경로와 구분했다.
+
+## 혼합 저장의 새 집중 실행
+
+같은 종류의 동일 UUID 경합 검사와 고객 글/확인 경합은 있었지만, 고객 후속 글과 공식 답변의 직접 경합은 필수 사례에 비해 부족했다. 업무 구현의 결함을 확인한 것은 아니며 이미 있는 부모 Ticket 잠금 계약을 직접 검사하도록 보완했다.
+
+첫 저장의 실제 Service가 테스트 소유 Transaction에 참여해 INSERT 뒤 Commit 전에 기다린다. 다른 종류의 두 번째 저장을 시작하고 정확한 두 PostgreSQL Backend PID의 차단 관계와 tickets FOR UPDATE 대기를 관찰한다. 두 번째 Repository INSERT는 아직 호출되지 않아야 한다. 단순 Sleep이나 INSERT 중 외래 키 대기만으로 이 조건을 통과시키지 않는다.
+
+고객 먼저/직원 먼저 두 사례에서 앞선 Commit 뒤 다음 Message ID와 페이지 연결을 확인했다. 2건 제한은 페이지 경계를 만들기 위한 테스트 값이며 실제 화면이 대화를 2건으로 제한한다는 뜻이 아니다. 최초 원문 Row 전체와 기존 Ticket/배정/AI Row를 대조하고 Provider 상호작용 0회를 검사했다.
+
+- 실행: mvnw.cmd -B -ntp -Dtest=TicketCustomerFollowupHttpIntegrationTest test
+- 결과: 28건, 실패/오류/Skip 0, exitCode 0, BUILD SUCCESS. 신규 두 사례와 기존 26건의 재실행이다.
+- 실행 기준: Lab dcf897d 위 테스트 수정본의 SHA-256을 메타데이터에 보존. 테스트와 설명은 Lab fd879eb로 Commit했다.
+- 근거: target/week12-followup-reply-order.log / target/week12-followup-reply-order-result.json / 해당 Surefire XML. 이번 실행 이후 새 Dump와 남은 프로젝트 소유 fork JVM은 0이었다.
+- 한계: 실제 로컬 PostgreSQL/Service/Repository 검사다. 새 실제 Browser/HTTP 응답 경합 실험이나 전체 Java/Node/Lint/CI 실행은 아니다. 앞선 전체 1,221+2와 이번 28을 합산하지 않는다.
+
+선택한 필수 사례 대조와 이번 보완 뒤 추가 업무 코드/Schema 변경이 필요한 누락은 확인하지 못했다. 오늘의 다음 학습은 두 저장 순서를 실제 코드와 연결하고, 최초 AI 제안/현재 대화/확인/명시적 재개의 역할을 하나의 사례에서 구분하는 것이다. 해당 문답은 답변을 받은 뒤 학습노트에 이어 적는다.
