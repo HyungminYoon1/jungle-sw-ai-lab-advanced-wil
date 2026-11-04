@@ -181,6 +181,10 @@ Ticket 선택과 조회 순번을 함께 비교해 늦은 응답을 무시한다
 
 확인 대상 선택 시점에 throughMessageId와 expectedAssignmentVersion을 함께 고정한다. 같은 Ticket의 새 조회도 그 버전을 자동 치환하지 않는다. 확인 POST 성공을 확인한 뒤에는 저장 이력을 별도로 표시하고 GET으로 현재 상태를 다시 읽는다. 이 GET만 실패했다면 저장을 반복하지 않는다. 목록의 대화 링크는 검증한 Ticket ID만 같은 Origin의 주소에 넣는다.
 
+11/4의 [재선택 UI](./lab-reports/2026-11-04-confirmation-reselection-ui.md)는 확인 POST의 409와 정확한 ASSIGNMENT_VERSION_CONFLICT 코드에만 명시적 초기화를 허용한다. 원래 선택은 일반 조회로 바꾸지 않으며, 사용자가 초기화 버튼을 누르면 선택을 비운 뒤 GET만 수행한다. 현재 상태/권한을 읽고 사용자가 고객 Message를 다시 선택해 제출할 때 새 UUID를 발급한다. GET 실패나 권한 없음 상태에서는 새 쓰기를 허용하지 않는다.
+
+다른 409, 해석할 수 없는 오류 Body와 결과 미확인 응답은 이 초기화 조건이 아니다. 원래 제출 정보를 보존하고 자동 최신화/재전송하지 않는다. 저장 결과 조회가 배정 버전 검사보다 앞서는 현재 Service 계약을 근거로 조건을 좁혔다. 이 동작은 확인 영역에만 적용하며 다른 Form의 초안/버전 복구는 별도로 다룬다.
+
 ## 9 구현 단위와 검증
 
 | 순서 | 구현 단위 | 필요한 근거 |
@@ -208,5 +212,6 @@ Index는 기존 (ticket_id,id)와 requester_user_id를 우선 검토하고 확�
 | 직원 확인 상태를 문의마다 추가 Query 또는 한 번의 목록 SQL로 조회 | 페이지를 제한한 뒤 현재 배정/최신 고객 글/MAX를 같은 SQL Snapshot에서 반환 | Support Repository/Service와 목록 DTO. 기존 ID 순서/세 상태/Index 유지, 성능 수치는 미측정 |
 | 소유권/답변 가능 여부로 직원 UI를 추측 또는 명시적 읽기 Capability | canViewConfirmations를 기존 활성 직원 검사 결과로 반환 | Conversation Service/DTO/Decoder. 비담당 직원의 읽기와 권한 회수 후 본인 고객 자격을 구분 |
 | 선택/제출을 새 상태에 자동 적응 또는 원래 범위 유지 | 선택 당시 배정 버전을 유지하고 저장된 이력과 GET 현재 상태를 분리 | 확인 Client/직원 UI. 새 글/인계/늦은 응답과 응답 유실 검증 |
+| 페이지 재진입, 모든 오류의 제출 삭제, 자동 버전 교체 또는 알려진 충돌의 명시적 재선택 | 409/ASSIGNMENT_VERSION_CONFLICT만 재선택 허용. GET 뒤 빈 선택에서 사용자가 새로 고르게 해 의도하지 않은 확인 방지 | 확인 Client/Page/HTML과 Node/Browser 검증. Service/Schema/이력 삭제 변경 없음. 다른 Form과 결과 미확인 제출 복구는 별도 유지 |
 
 초안 작성 시 검토한 Source는 Lab의 공식 답변/배정 계약, V2/V9/V10, Message/Conversation Service·Repository·DTO, SupportAccess와 배정 Service다. 이 관련 파일은 VERIFIED이며 당시 Security는 라우팅 규칙만 PARTIAL로 확인했다. 이후 첫 구현에서는 새 라우팅/Service/Repository/입력 처리와 V11을 수정하고 보고서의 실행 검증을 진행했다. 전체 저장소 감사나 전체 보안/성능 평가로 확대하지 않는다.
