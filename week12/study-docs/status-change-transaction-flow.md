@@ -145,3 +145,33 @@ TicketStatusService.change는 잠금 뒤 현재 자료를 읽고 다음 순서�
 상태 문자열과 상태 버전도 구분한다. 배정은 그대로인 채 IN_PROGRESS/1 → RESOLVED/2 → OPEN/3 → IN_PROGRESS/4가 됐다면, 아직 저장되지 않은 버전 1의 새 해결 요청은 현재 버전 4와 충돌한다. 문자열이 같다는 이유로 새 요청의 버전을 자동 교체하지 않는다.
 
 화면의 canResolve=false는 그 응답을 만들 때 새 해결 조건을 충족하지 않았다는 뜻이다. 결과 미확인인 과거 제출이 이미 저장돼 있는지까지 알려주는 값은 아니다. 그 제출은 원래 UUID/버전/근거로 재확인한다. 서버는 현재 조회 권한과 내용의 일치를 검사하고, 이미 저장됐다면 추가 변경 없이 기존 결과를 반환한다. 기록이 없다면 현재의 새 변경 조건을 통과해야 첫 저장이 가능하다.
+
+## 12 Service 본문의 return과 Controller가 결과를 받는 시점
+
+현재 Controller는 Spring이 주입한 TicketStatusService를 호출한다. 아래는 TicketStatusController.change의 실제 Service 호출 부분이다.
+
+```java
+var result = service.changeStaff(ticketId,
+        CreateTicketStatusChangeRequest.readStaff(body),
+        AuthenticatedActorFactory.from(authentication));
+```
+
+호출된 공개 changeStaff에는 @Transactional이 있다. 현재 동기식 HTTP 처리에서는 Controller가 Service의 실제 객체를 곧바로 호출하는 대신, Spring의 트랜잭션 처리가 둘러싼 호출 경로를 통과한다. 이 역할을 하는 대리 객체를 프록시라고 한다. 관련 [Spring 공식 설명](https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/tx-decl-explained.html)은 메서드 호출 전후를 트랜잭션 인터셉터/매니저가 관리하는 구조를 설명한다.
+
+현재 호출은 다음 순서로 이해한다. Controller에 별도 외부 Transaction이 없는 이 프로젝트의 경로를 설명하는 것이며 모든 전파 설정을 일반화한 설명은 아니다.
+
+```text
+Controller가 service.changeStaff(...) 호출
+→ Spring의 트랜잭션 처리 시작
+→ Service 본문: 검증/UPDATE/INSERT 후 결과 객체 반환
+→ Spring의 Commit 시도
+→ Commit 성공 후 Controller의 result가 결과를 받음
+→ Controller가 created에 따라 201 또는 200 응답을 구성
+→ 응답을 Browser에 전달
+```
+
+따라서 Service 본문에서 결과 객체를 return했다는 사실만으로 Controller의 호출이 정상 완료됐다고 판단하지 않는다. Commit이 실패해 예외가 전파되면 위 var result 대입은 정상 완료되지 않고, 그 아래 성공 응답을 만드는 코드도 실행되지 않는다. HTTP 성공을 먼저 반환해 놓고 나중에 Commit하는 구현이 아니다.
+
+기존 TicketStatusHttpIntegrationTest의 deferred_commit_failure_never_returns_success_and_preserves_previous_rows는 이를 구체적으로 확인한다. 격리된 테스트 DB에 지연 검사되는 외래 키와 테스트용 Trigger를 두어 상태 이력 INSERT까지 진행한 뒤 Commit 시점에 실패시킨다. 500과 실행 전후 DB Snapshot 일치를 함께 검사한다. 앞선 실행에서 통과한 사례이며 이번 문답을 위해 다시 실행한 것은 아니다. 운영 DB에 이런 장치를 설치한 것도 아니다.
+
+반대로 Commit은 성공했지만 이후 응답 생성/전달에 문제가 생길 수도 있다. 이는 앞의 테스트와 다른 가상 실패 경계다. Browser가 받은 500이나 끊긴 연결만으로 Rollback을 확정하지 않는다. 원래 UUID/버전/사유/근거로 재확인하고 이미 저장됐다면 기존 결과만 받는다. 확정된 성공 이후 현재 상태 GET만 실패한 경우에는 GET만 다시 보낸다.
