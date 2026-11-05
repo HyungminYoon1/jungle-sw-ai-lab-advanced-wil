@@ -250,3 +250,66 @@ GET도 조회한 시점의 결과다. 그 뒤 발생한 변경까지 계속 반�
 | 같은 UUID/배정 버전/대상의 확인이 이미 저장돼 있고 재확인 권한도 유효 | 200 | 0 |
 
 새 글 71번이 먼저 Commit됐더라도 70번의 새 확인 자체는 201로 성공할 수 있다. 이때 유효 확인 지점은 70, needsConfirmation은 true다. 저장 성공 여부와 아직 확인하지 않은 새 글의 존재는 별개의 정보다. 현재 상태 GET은 저장을 하지 않으므로 그 조회의 200과도 구분한다.
+
+## 15. 배정과 확인 지점이 같은 시점의 값이어야 하는 이유
+
+유효 확인 지점의 집계 범위는 Ticket ID와 현재 배정 버전이다. 인계 뒤에도 A가 해당 서비스를 조회할 수 있다면 A의 화면에 B가 담당하는 배정의 확인 지점이 표시된다. canConfirm은 고객 글이 있고 조회한 직원이 현재 담당자일 때 true다.
+
+JdbcCustomerMessageConfirmationRepository.current는 Ticket의 담당자/배정 버전과 유효 확인 지점을 한 SELECT로 읽는다. 아래는 유효 확인 지점을 계산하는 부분이다.
+
+```sql
+(SELECT MAX(c.through_message_id) FROM ticket_customer_message_confirmations c
+    WHERE c.ticket_id=t.id AND c.assignment_version=t.assignment_version) AS effective_through
+```
+
+확인 이력의 Ticket과 배정 버전을 이 SELECT에서 읽는 Ticket 행과 맞춘다. 최신 고객 Message도 같은 SELECT에서 읽는다. PostgreSQL의 Read Committed에서 일반 SELECT는 그 문장이 시작될 때의 스냅샷으로 계산한다. 따라서 담당자, 배정 버전과 그 배정의 확인 지점을 같은 시점으로 연결할 수 있다. [PostgreSQL 17의 Read Committed 설명](https://www.postgresql.org/docs/17/transaction-iso.html#XACT-READ-COMMITTED)
+
+기존 CustomerMessageConfirmationHttpIntegrationTest에는 다음 순서의 사례가 있다.
+
+1. A가 배정 버전 1에서 확인 기록을 저장한다.
+2. A의 조회 서비스 호출이 Repository의 현재 상태 SQL을 실행하기 직전에 대기한다.
+3. A에서 B로 인계하고 배정 버전 2를 Commit한다.
+4. 실제 SQL을 실행한다. 그 결과가 배정 버전 2, 유효 확인 지점 NULL, A의 canConfirm false인지 검사한다.
+
+이 사례에서 B의 배정에는 확인 이력이 아직 없다. A의 배정 1 기록은 이력으로 남는다. 조회 서비스의 시작과 실제 SELECT의 스냅샷 획득 사이에 인계가 완료되면, 그 SELECT에는 Commit된 새 배정과 새 배정의 확인 범위가 함께 보인다. 이 순서는 [기존 통합 테스트](https://github.com/HyungminYoon1/ai-helpdesk-learning-lab/blob/fe9336ddbc8166051b54858e870fc9abe07c810a/src/test/java/lab/helpdesk/ticket/web/CustomerMessageConfirmationHttpIntegrationTest.java#L345)의 근거다.
+
+조회한 시점의 needsConfirmation은 그때의 최신 고객 글과 유효 확인 지점을 비교한 값이다. 해당 SELECT가 시작된 뒤 새 확인이 Commit되면 다음 SELECT에서 반영된다. 이 개념의 적용 문항과 실제 답변은 [11/5 학습 기록](../study-notes/2026-11-05-study-questions.md)에 남긴다.
+
+## 16. 두 저장이 실제로 겹쳤다는 근거
+
+고객 글이 먼저 Commit되는 통합 테스트는 실제 INSERT 뒤 바깥 트랜잭션을 잠시 열어 둔다. `inserted.countDown()`은 INSERT 단계에 도달했다는 테스트 신호다. 이어 `await(release)`에서 기다리는 동안 담당자의 확인 작업을 시작한다. 테스트가 대기를 풀면 바깥 콜백이 반환되고 그 트랜잭션이 Commit된다. [새 글이 먼저 저장되는 통합 테스트](https://github.com/HyungminYoon1/ai-helpdesk-learning-lab/blob/fe9336ddbc8166051b54858e870fc9abe07c810a/src/test/java/lab/helpdesk/ticket/web/CustomerMessageConfirmationHttpIntegrationTest.java#L330)
+
+대기를 풀기 전에 `awaitDatabaseWaiter()`가 `pg_stat_activity`를 읽는다. 조건은 같은 테스트 DB의 다른 세션 중 `wait_event_type = 'Lock'`이 있는지다. 이 값은 PostgreSQL 서버 프로세스가 잠금을 기다리고 있음을 뜻한다. 현재 함수의 판정 범위는 격리 DB 안의 잠금 대기 존재 여부이며 테스트가 구성한 두 작업의 순서와 함께 해석한다. [PostgreSQL 17 대기 이벤트](https://www.postgresql.org/docs/17/monitoring-stats.html)
+
+| 기존 검사 | 두 요청의 순서 | 관찰한 결과 |
+|---|---|---|
+| PostgreSQL 통합 테스트 | 새 글 INSERT 뒤 트랜잭션 유지 → 확인 시작 → 잠금 대기 관찰 → 새 글 Commit | 확인은 선택한 메시지를 그대로 저장하고 새 글을 확인 필요로 반환 |
+| 실제 Browser 순차 검사 | 1번 선택 → 새 글 2번 Commit → Browser에 파일 신호 전달 → 1번 POST | 201, 확인 지점 1, 최신 고객 글 2, 확인 필요 true와 화면 선택 상태 |
+
+Browser 검사에서는 새 글 저장을 완료한 시점 이후에 확인 POST를 시작한다. 서버의 두 Commit 순서에 대한 관찰과 Browser의 응답/화면 관찰은 [11/4 확인 교차 흐름 보고서](../lab-reports/2026-11-04-confirmation-cross-flow.md)에 있다.
+
+## 17. 같은 Ticket 행을 잠그고 두 종류의 기록을 저장하기
+
+두 저장은 각각 `ticket_messages`와 `ticket_customer_message_confirmations`에 기록한다. 작업 순서를 맞추는 기준은 두 요청이 공통으로 사용하는 Ticket 행이다. 두 Service가 `access.ticket(ticketId, true)`를 호출하면 Repository가 해당 ID에 `FOR UPDATE`를 적용한다. [Ticket 행을 조회하는 코드](https://github.com/HyungminYoon1/ai-helpdesk-learning-lab/blob/fe9336ddbc8166051b54858e870fc9abe07c810a/src/main/java/lab/helpdesk/support/JdbcSupportRepository.java#L75)
+
+예를 들어 고객 글 저장이 Ticket 10을 잠갔다면 같은 Ticket 10에 확인을 저장하는 작업은 잠금을 얻을 때까지 기다린다. 그 행 잠금은 트랜잭션이 Commit 또는 Rollback될 때 풀린다. Ticket 20의 쓰기는 자기 Ticket 행을 사용한다. 일반 조회는 해당 행 잠금과 동시에 Commit된 데이터를 읽을 수 있다. [PostgreSQL 행 잠금](https://www.postgresql.org/docs/17/explicit-locking.html#LOCKING-ROWS)
+
+통합 테스트의 대기는 두 작업이 같은 Ticket에서 실제로 겹치도록 첫 트랜잭션 안에서 의도적으로 만든다. 아직 응답이 없다는 사실은 작업이 완료되지 않았다는 관찰이다. 잠금 대기 여부는 `pg_stat_activity`에서 확인한다.
+
+Browser 사례에는 순서대로 두 저장이 있다.
+
+| 순서 | 요청의 의미 | 저장된 값 |
+|---|---|---|
+| 먼저 | 고객이 후속 글을 남김 | `ticket_messages`의 고객 글 ID 2 |
+| 다음 | 담당자가 현재 배정에서 고객 글 1번까지 확인했다고 제출 | 확인 이력 한 건, `through_message_id = 1` |
+
+담당자의 POST는 `throughMessageId=1`을 전달한다. 이 값은 확인 이력의 자체 ID와 별도로 그 이력이 가리키는 고객 글의 ID다. Browser가 받은 201은 이 POST로 새 확인 이력이 생겼다는 응답이다. 응답의 현재 상태는 확인 지점 1, 최신 고객 글 2이므로 `needsConfirmation=true`다. [확인 POST Controller](https://github.com/HyungminYoon1/ai-helpdesk-learning-lab/blob/fe9336ddbc8166051b54858e870fc9abe07c810a/src/main/java/lab/helpdesk/ticket/web/CustomerMessageConfirmationController.java#L34)
+
+| 같은 Ticket의 Commit 순서 | 1번까지의 확인이 반환하는 상태 | 두 작업이 끝난 뒤 조회 |
+|---|---|---|
+| 새 고객 글 2번이 먼저 | 저장 대상 1, 최신 글 2, 확인 필요 true | 확인 지점 1, 최신 글 2, 확인 필요 true |
+| 1번까지의 확인이 먼저 | 저장 대상 1, 최신 글 1, 확인 필요 false | 확인 지점 1, 최신 글 2, 확인 필요 true |
+
+같은 배정에서 2번까지 확인한 뒤 별도의 1번 확인도 저장되면 두 이력이 남는다. 나중 확인의 자체 ID가 더 커도 유효 지점은 `MAX(through_message_id)`인 2다. [늦은 작은 확인 테스트](https://github.com/HyungminYoon1/ai-helpdesk-learning-lab/blob/fe9336ddbc8166051b54858e870fc9abe07c810a/src/test/java/lab/helpdesk/ticket/web/CustomerMessageConfirmationHttpIntegrationTest.java#L119)
+
+A→B→A로 담당자가 돌아오면 현재 배정은 버전 3이다. 버전 3의 이력이 비어 있으면 유효 확인 지점은 NULL이다. 조회 권한을 유지한 A가 원래 UUID와 제출 내용으로 재확인하면 이전 버전의 저장 결과와 버전 3의 현재 상태를 각각 받는다. [인계와 재배정 테스트](https://github.com/HyungminYoon1/ai-helpdesk-learning-lab/blob/fe9336ddbc8166051b54858e870fc9abe07c810a/src/test/java/lab/helpdesk/ticket/web/CustomerMessageConfirmationHttpIntegrationTest.java#L163)

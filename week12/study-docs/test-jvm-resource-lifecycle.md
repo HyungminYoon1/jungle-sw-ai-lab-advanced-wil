@@ -3,6 +3,8 @@
 > 기준: 2026-11-04 로컬 Java/PostgreSQL 검증
 > 실제 실행 근거: [테스트 자원 정리 보고서](../lab-reports/2026-11-04-test-jvm-cleanup.md)
 
+처음 읽을 때는 [테스트 클래스/Context/Pool 기초 설명](./spring-test-resources-basics.md)을 먼저 본다. 용어와 객체 사용 순서를 익힌 뒤 아래의 실제 진단/검사 코드로 이어간다.
+
 ## 테스트가 끝났는데 왜 프로세스가 남았나
 
 테스트 메서드의 검사가 끝나는 것과 그 테스트가 사용한 자원을 정리하는 것은 다른 단계다. 이번에는 문의 저장이나 확인 범위의 검사가 통과한 뒤, 테스트 JVM 종료 과정에서 Spring이 Hikari 연결 Pool을 닫기를 기다리는 상황이 이전 Dump에 남아 있었다.
@@ -57,6 +59,55 @@ Hikari Pool은 DB 연결을 재사용하기 위한 객체와 관리 Thread를 �
 | 해당 패턴 21개에 적용한 전체 verify | Surefire 1,173건, Failsafe 2건 통과. 이번 실행의 종료 제한 경고/새 Dump 0건 |
 
 전체 실행이 끝난 뒤 Lab 소유 Surefire JVM도 0개였다. 이 결과는 이번 로컬 테스트 환경의 정리 근거다. 운영 서버의 SIGTERM 처리, 진행 중 AI 요청의 중단 정책이나 실제 AWS Task 종료를 이번에 검증한 것은 아니다.
+
+## 실제 코드에서 객체와 시점을 연결하기
+
+Spring Context는 테스트 JVM 안에서 Service, Repository와 DataSource 등 Bean을 관리한다. 여기서 Context를 닫는 것과 별도 Docker PostgreSQL Container를 중지하는 것은 각각 다른 자원의 정리다. Context/Pool 정리는 이미 Commit된 문의를 Rollback하거나 DELETE하는 업무 명령도 아니다.
+
+CustomerMessageConfirmationHttpIntegrationTest에는 AFTER_CLASS와 실제 검사 Listener가 함께 등록돼 있다. 다른 메서드별 종료 설정이 없는 이 구성에서는 같은 클래스의 테스트 A 다음 테스트 B가 Context를 재사용한다. 정리 시점은 각 메서드 직후가 아니라 클래스 종료다. 같은 설정의 다음 클래스도 이 Context가 제거된 뒤 필요하면 새 Context를 준비한다.
+
+ClassOwnedContextCleanupVerifier는 첫 테스트 실행 전에 실제로 사용하는 객체 참조를 보관한다.
+
+```java
+testContext.setAttribute(RESOURCE,
+        new Captured(context, hikari, hikari.getPoolName()));
+```
+
+이후 클래스 종료 Callback에서 보관한 바로 그 객체를 검사한다. 새 Context나 Pool을 만들어 검사하면 기존 객체가 정리됐는지 확인하는 검사가 될 수 없기 때문이다.
+
+```java
+if (captured.context().isActive() || !captured.source().isClosed()) {
+    throw new AssertionError("class-owned context or data source remains open after the test class");
+}
+```
+
+이 조건은 Context가 아직 활성 상태이거나 Pool이 아직 닫히지 않았으면 실패한다. 둘 다 정상 정리돼야 다음 검사로 넘어간다. 이어서 해당 Pool 이름으로 식별한 관리 Thread가 정리되는지 최대 2초 동안 기다리고, 그래도 한 개 이상이면 실패한다. Thread를 강제로 죽여 통과시키지는 않는다.
+
+이번 정리는 클래스별 독립 DB Fixture에 맞춘 선택이다. AFTER_CLASS가 모든 Testcontainers/JUnit Callback의 상대 순서를 자동으로 보장한다고 해석하지 않으며, 실제 참조/Thread 검사와 전체 JVM 종료 관찰을 구분한다.
+
+코드는 [테스트 클래스](https://github.com/HyungminYoon1/ai-helpdesk-learning-lab/blob/fe9336ddbc8166051b54858e870fc9abe07c810a/src/test/java/lab/helpdesk/ticket/web/CustomerMessageConfirmationHttpIntegrationTest.java)와 [자원 검사 Listener](https://github.com/HyungminYoon1/ai-helpdesk-learning-lab/blob/fe9336ddbc8166051b54858e870fc9abe07c810a/src/test/java/lab/helpdesk/testing/ClassOwnedContextCleanupVerifier.java)에 있다. 11/5에는 이 코드를 설명/대조했으며 새로 전체 검사를 실행한 결과는 아니다.
+
+## 실제 검사 코드가 확인하는 범위
+
+livePoolThreads는 살아 있고 해당 Pool 이름에 속하는 Thread만 센다. 아래는 같은 메서드의 필터/집계 부분을 발췌한 코드다.
+
+```java
+.filter(thread -> thread.isAlive()
+        && thread.getName().startsWith(poolName + ":"))
+.count();
+```
+
+예를 들어 검사 대상이 Pool-A이면 Pool-A:housekeeper 같은 이름을 센다. 계속 사용 중인 다른 Pool-B의 Thread가 존재한다는 이유만으로 Pool-A의 검사를 실패시키거나 Pool-B를 종료하는 코드는 아니다. 실제 사용한 Pool의 생성된 이름을 식별자로 사용한다.
+
+또한 이 Verifier는 Context/Pool 종료를 수행하는 주체가 아니라 그 뒤의 상태를 확인하는 검사다. Context 정리 설정과 라이브러리의 종료 동작, 실제 자원 관찰을 각각 구분한다.
+
+| 관찰 범위 | 확인할 수 있는 내용 | 별도 근거가 필요한 내용 |
+|---|---|---|
+| 해당 Context/Pool/식별한 관리 Thread | 그 테스트 자원의 정리 조건 | 모든 JVM/OS 자원의 종료 |
+| 별도 테스트 JVM 종료 관찰 | 그 테스트 프로세스의 종료 | 운영 App의 SIGTERM/진행 중 요청 처리 |
+| 실제 업무/DB 검사 | 그 사례의 저장/거부/원문 보존 | 다른 기능과 모든 운영 데이터의 정확성 |
+
+이 표는 근거를 해석하는 기준이다. 11/5에 새 운영 실험이나 전체 회귀를 수행한 결과가 아니다.
 
 ## 읽고 구분할 핵심
 
